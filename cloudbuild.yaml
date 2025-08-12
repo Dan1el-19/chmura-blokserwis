@@ -1,0 +1,87 @@
+substitutions:
+  _NEXT_PUBLIC_FIREBASE_API_KEY: ""
+  _NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ""
+  _NEXT_PUBLIC_FIREBASE_PROJECT_ID: ""
+  _NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ""
+  _NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ""
+  _NEXT_PUBLIC_FIREBASE_APP_ID: ""
+  _R2_PUBLIC_HOSTNAME: ""
+
+steps:
+  # KROK 1: Pobierz najnowszą wersję obrazu, aby użyć jej jako cache.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: Pull-Latest-For-Cache
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - 'docker pull europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest || exit 0'
+
+  # KROK 2: Zbuduj obraz, używając pobranej wersji jako cache (`--cache-from`).
+  - name: 'gcr.io/cloud-builders/docker'
+    id: Build
+    args:
+      - 'build'
+      - '-t'
+      - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
+      - '--cache-from'
+      - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_API_KEY=${_NEXT_PUBLIC_FIREBASE_API_KEY}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_PROJECT_ID=${_NEXT_PUBLIC_FIREBASE_PROJECT_ID}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_APP_ID=${_NEXT_PUBLIC_FIREBASE_APP_ID}'
+      - '--build-arg'
+      - 'R2_PUBLIC_HOSTNAME=${_R2_PUBLIC_HOSTNAME}'
+      - '.'
+
+  # KROK 3: Dodaj tag "latest" do nowo zbudowanego obrazu.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: Tag-As-Latest
+    args:
+      - 'tag'
+      - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
+      - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest'
+
+  # KROK 4: Wypchnij obraz z unikalnym tagiem $SHORT_SHA.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: Push-SHA-Tag
+    args: ['push', 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA']
+
+  # KROK 5: Wypchnij obraz z tagiem "latest".
+  - name: 'gcr.io/cloud-builders/docker'
+    id: Push-Latest-Tag
+    args: ['push', 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest']
+
+  # KROK 6: Wdróż na Cloud Run.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: Deploy-To-Cloud-Run
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'chmura-blokserwis-app'
+      - '--image'
+      - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
+      - '--region'
+      - 'europe-central2'
+      - '--platform'
+      - 'managed'
+    waitFor:
+      - 'Push-SHA-Tag'
+
+# Opcje konfiguracji dla całej kompilacji
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+# Lista obrazów do zbudowania.
+images:
+  - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
+  - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest'
