@@ -1,4 +1,15 @@
 steps:
+
+  #Krok diagnostyczny 
+  - name: 'ubuntu'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "--- Zmienne srodowiskowe widoczne dla kroku budowania ---"
+        printenv | sort
+        echo "--- Koniec listy zmiennych ---"
+
   # KROK 1: Budowanie obrazu Dockera z unikalnym tagiem
   - name: 'gcr.io/cloud-builders/docker'
     args:
