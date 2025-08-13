@@ -39,7 +39,7 @@ export default function Home() {
             Bezpieczne przechowywanie plików w chmurze
           </h2>
           <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 md:mb-8 max-w-3xl mx-auto px-2">
-            Profesjonalna platforma do zarządzania plikami z zaawansowanym systemem uprawnien, 
+            Profesjonalna platforma do zarządzania plikami z zaawansowanym systemem uprawnień, 
             monitorowaniem wykorzystania przestrzeni i bezpiecznym udostępnianiem.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
