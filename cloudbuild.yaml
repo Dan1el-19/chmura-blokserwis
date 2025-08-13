@@ -27,6 +27,10 @@ steps:
       - 'europe-central2'
       - '--platform'
       - 'managed'
+      
+#options
+options:
+  logging: CLOUD_LOGGING_ONLY
 
 # Ta sekcja automatycznie wypycha obraz do Artifact Registry po kroku budowania
 images:
