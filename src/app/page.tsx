@@ -49,12 +49,6 @@ export default function Home() {
             >
               Rozpocznij
             </Link>
-            <Link 
-              href="/storage" 
-              className="border border-blue-600 text-blue-600 px-6 md:px-8 py-3 rounded-lg text-base md:text-lg font-medium hover:bg-blue-50 transition-colors text-center"
-            >
-              Zobacz demo
-            </Link>
           </div>
         </div>
 
