@@ -9,6 +9,13 @@ steps:
         echo "--- Zmienne srodowiskowe widoczne dla kroku budowania ---"
         printenv | sort
         echo "--- Koniec listy zmiennych ---"
+  #Kolejna Diagnostyka
+  - name: 'ubuntu'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      echo "SUBSTITUTION VALUE: ${_NEXT_PUBLIC_FIREBASE_API_KEY}"
 
   # KROK 1: Budowanie obrazu Dockera z unikalnym tagiem
   - name: 'gcr.io/cloud-builders/docker'
