@@ -17,6 +17,9 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy the rest of the app source
 COPY . .
 
+# Ensure `public` directory exists even if empty in repo, so later COPY won't fail
+RUN mkdir -p public
+
 # Public envs needed at build time (injected from Cloud Build as --build-arg)
 ARG NEXT_PUBLIC_FIREBASE_API_KEY
 ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
