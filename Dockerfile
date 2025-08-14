@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for Next.js 15 (React 19) app
+# Multi stage Dockerfile for Next.js 15 (React 19) app
 # Uses standalone output to minimize runtime image size
 FROM node:20-alpine AS deps
 WORKDIR /app
