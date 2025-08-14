@@ -19,8 +19,12 @@ steps:
     - 'NEXT_PUBLIC_FIREBASE_APP_ID=${_NEXT_PUBLIC_FIREBASE_APP_ID}'
     - '.'
 
+  # KROK 2: Wypchnięcie obrazu do Artifact Registry (NOWY KROK)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: Push
+    args: ['push', 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA']
 
-  # KROK 2: Wdrożenie obrazu na Cloud Run
+  # KROK 3: Wdrożenie obrazu na Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
