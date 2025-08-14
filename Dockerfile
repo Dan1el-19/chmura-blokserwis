@@ -1,6 +1,5 @@
 # Multi-stage Dockerfile for Next.js 15 (React 19) app
 # Uses standalone output to minimize runtime image size
-RUN npm install -g npm@latest
 FROM node:20-alpine AS deps
 WORKDIR /app
 
@@ -35,6 +34,7 @@ ENV NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY \
     NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
 
 # Build the Next.js app (standalone output configured in next.config.ts)
+RUN npm install -g npm@latest
 RUN npm run build
 
 
