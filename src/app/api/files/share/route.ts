@@ -1,7 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { generatePresignedUrl } from '@/lib/storage';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+
+// Funkcja do generowania czytelnego slug
+function generateReadableSlug(fileName: string): string {
+  // Usuń rozszerzenie pliku
+  const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+  
+  // Zamień spacje i znaki specjalne na myślniki
+  const cleanName = nameWithoutExt
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '') // Usuń znaki specjalne
+    .replace(/\s+/g, '-') // Zamień spacje na myślniki
+    .replace(/-+/g, '-') // Usuń wielokrotne myślniki
+    .trim();
+  
+  // Dodaj timestamp aby uniknąć kolizji
+  const timestamp = Date.now().toString(36);
+  
+  return `${cleanName}-${timestamp}`;
+}
+
+// Funkcja do sprawdzenia czy slug już istnieje
+async function checkSlugExists(slug: string): Promise<boolean> {
+  const db = getFirestore();
+  const doc = await db.collection('sharedFiles').doc(slug).get();
+  return doc.exists;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,20 +54,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Brak uprawnień do pliku' }, { status: 403 });
     }
 
-    // Zapisz ładny slug w Firestore i zwróć estetyczny link
-    const db = getFirestore();
-    const slugBase = key.split('/').pop() || 'file';
-    const slug = `${Date.now().toString(36)}-${slugBase}`.toLowerCase();
+    // Generuj czytelny slug
+    const fileName = key.split('/').pop() || 'file';
+    let slug = generateReadableSlug(fileName);
+    
+    // Sprawdź czy slug już istnieje i dodaj licznik jeśli tak
+    let counter = 1;
+    while (await checkSlugExists(slug)) {
+      slug = `${generateReadableSlug(fileName)}-${counter}`;
+      counter++;
+    }
+
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
+    // Zapisz w Firestore
+    const db = getFirestore();
     await db.collection('sharedFiles').doc(slug).set({
       key,
+      fileName,
       createdAt: FieldValue.serverTimestamp(),
       expiresAt,
       owner: decodedToken.uid,
+      originalName: fileName,
     });
 
-    const prettyUrl = `/files/${encodeURIComponent(slug)}`;
+    const prettyUrl = `/files/${slug}`;
 
     // Log share
     try {
@@ -50,13 +86,14 @@ export async function POST(request: NextRequest) {
         userId: decodedToken.uid,
         userEmail: decodedToken.email || '',
         action: 'share',
-        fileName: key.split('/').pop(),
+        fileName: fileName,
         timestamp: FieldValue.serverTimestamp(),
       });
     } catch {}
 
     return NextResponse.json({ 
       url: prettyUrl,
+      slug: slug,
       expiresIn,
       expiresAt
     });

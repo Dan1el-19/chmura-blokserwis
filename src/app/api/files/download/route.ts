@@ -14,7 +14,15 @@ export async function GET(request: NextRequest) {
     const doc = await db.collection('sharedFiles').doc(slug).get();
     if (!doc.exists) return NextResponse.json({ error: 'Nie znaleziono' }, { status: 404 });
 
-    const data = doc.data() as { key: string; expiresAt?: Timestamp | Date } | undefined;
+    const data = doc.data() as { 
+      key: string; 
+      fileName: string;
+      originalName: string;
+      createdAt?: Timestamp | Date;
+      expiresAt?: Timestamp | Date;
+      owner: string;
+    } | undefined;
+    
     if (!data?.key) return NextResponse.json({ error: 'Nieprawidłowy wpis' }, { status: 400 });
 
     // Check expiration
@@ -23,8 +31,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Link wygasł' }, { status: 410 });
     }
 
-    const url = await generatePresignedUrl(data.key, 'get', 60); // short-lived presign
-    return new NextResponse(url, { status: 200 });
+    const downloadUrl = await generatePresignedUrl(data.key, 'get', 60); // short-lived presign
+    
+    // Przygotuj dane pliku
+    const fileData = {
+      key: data.key,
+      fileName: data.fileName || data.key.split('/').pop() || 'file',
+      originalName: data.originalName || data.fileName || data.key.split('/').pop() || 'file',
+      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt || new Date(),
+      expiresAt: expiresAt || new Date(),
+      owner: data.owner || 'unknown'
+    };
+
+    return NextResponse.json({ 
+      fileData,
+      downloadUrl
+    });
   } catch (e) {
     console.error('GET /api/files/download error:', e);
     return NextResponse.json({ error: 'Błąd serwera' }, { status: 500 });
