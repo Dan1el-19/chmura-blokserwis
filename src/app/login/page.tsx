@@ -13,11 +13,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -25,8 +27,36 @@ export default function LoginPage() {
       router.push('/storage');
     } catch (error: unknown) {
       console.error('Login error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Błąd logowania';
-      toast.error(errorMessage);
+      
+      // Przetłumacz błędy Firebase na polskie komunikaty
+      let errorMessage = 'Błąd logowania';
+      if (error instanceof Error) {
+        const code = (error as { code?: string }).code;
+        switch (code) {
+          case 'auth/user-not-found':
+            errorMessage = 'Użytkownik o podanym adresie email nie istnieje';
+            break;
+          case 'auth/wrong-password':
+            errorMessage = 'Nieprawidłowe hasło';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Nieprawidłowy adres email';
+            break;
+          case 'auth/user-disabled':
+            errorMessage = 'Konto zostało wyłączone';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Zbyt wiele prób logowania. Spróbuj ponownie później';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'Błąd połączenia z serwerem';
+            break;
+          default:
+            errorMessage = 'Błąd logowania. Sprawdź dane i spróbuj ponownie';
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -34,6 +64,7 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
+    setError(null);
     const provider = new GoogleAuthProvider();
 
     try {
@@ -42,8 +73,33 @@ export default function LoginPage() {
       router.push('/storage');
     } catch (error: unknown) {
       console.error('Google login error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Błąd logowania przez Google';
-      toast.error(errorMessage);
+      
+      // Przetłumacz błędy Google na polskie komunikaty
+      let errorMessage = 'Błąd logowania przez Google';
+      if (error instanceof Error) {
+        const code = (error as { code?: string }).code;
+        switch (code) {
+          case 'auth/popup-closed-by-user':
+            errorMessage = 'Okno logowania zostało zamknięte';
+            break;
+          case 'auth/popup-blocked':
+            errorMessage = 'Okno logowania zostało zablokowane przez przeglądarkę';
+            break;
+          case 'auth/cancelled-popup-request':
+            errorMessage = 'Logowanie zostało anulowane';
+            break;
+          case 'auth/account-exists-with-different-credential':
+            errorMessage = 'Konto z tym adresem email już istnieje z inną metodą logowania';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'Błąd połączenia z serwerem';
+            break;
+          default:
+            errorMessage = 'Błąd logowania przez Google. Spróbuj ponownie';
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -126,6 +182,9 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              {error && (
+                <p className="mt-2 text-sm text-red-600">{error}</p>
+              )}
             </div>
 
             <div>
@@ -169,9 +228,9 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Nie masz jeszcze konta?{' '}
-              <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+              <span className="font-medium text-blue-600">
                 Skontaktuj się z administratorem
-              </Link>
+              </span>
             </p>
           </div>
         </div>

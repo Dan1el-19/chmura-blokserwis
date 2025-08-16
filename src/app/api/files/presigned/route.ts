@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { initializeS3Client, getBucketName } from '@/lib/storage';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { generatePresignedUrl } from '@/lib/storage';
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,40 +32,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Pobierz plik z S3
-    const client = initializeS3Client();
-    const bucket = getBucketName();
-    const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+    // Generuj presigned URL
+    const presignedUrl = await generatePresignedUrl(key, 'get', 300); // 5 minut
     
-    const response = await client.send(command);
-    
-    if (!response.Body) {
-      return NextResponse.json({ error: 'Plik nie istnieje' }, { status: 404 });
-    }
-
-    // Konwertuj stream na buffer
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
-      chunks.push(chunk);
-    }
-    const buffer = Buffer.concat(chunks);
-
-    // Pobierz nazwę pliku z klucza
-    const fileName = key.split('/').pop() || 'file';
-
-    // Zwróć plik z odpowiednimi nagłówkami do wymuszenia pobierania
-    return new NextResponse(buffer, {
-      headers: {
-        'Content-Type': response.ContentType || 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${encodeURIComponent(fileName)}"`,
-        'Content-Length': buffer.length.toString(),
-        'Cache-Control': 'no-cache',
-      },
-    });
+    return NextResponse.json({ presignedUrl });
   } catch (error) {
-    console.error('Error in files/download API:', error);
+    console.error('Error in files/presigned API:', error);
     return NextResponse.json({ error: 'Błąd serwera' }, { status: 500 });
   }
 }
-
-

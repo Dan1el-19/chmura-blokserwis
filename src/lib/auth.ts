@@ -14,20 +14,38 @@ function initializeAdminApp(): void {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
   // Sprawdzamy, czy mamy komplet danych do ręcznego uwierzytelnienia
+  console.log('Firebase Admin initialization - checking environment variables:');
+  console.log('FIREBASE_PROJECT_ID:', projectId ? 'SET' : 'NOT SET');
+  console.log('FIREBASE_CLIENT_EMAIL:', clientEmail ? 'SET' : 'NOT SET');
+  console.log('FIREBASE_PRIVATE_KEY:', privateKey ? 'SET' : 'NOT SET');
+  
   if (projectId && clientEmail && privateKey) {
     console.log('Initializing Firebase Admin with explicit credentials.');
-    initializeApp({
-      credential: cert({
-        projectId,
-        clientEmail,
-        // Klucz prywatny w zmiennej środowiskowej wymaga zamiany znaków nowej linii
-        privateKey: privateKey.replace(/\\n/g, '\n'),
-      }),
-    });
+    try {
+      initializeApp({
+        credential: cert({
+          projectId,
+          clientEmail,
+          // Klucz prywatny w zmiennej środowiskowej wymaga zamiany znaków nowej linii
+          privateKey: privateKey.replace(/\\n/g, '\n'),
+        }),
+      });
+      console.log('Firebase Admin initialized successfully with credentials.');
+    } catch (error) {
+      console.error('Error initializing Firebase Admin with credentials:', error);
+      // Fallback to default credentials
+      console.log('Falling back to default credentials.');
+      initializeApp();
+    }
   } else {
     // Jeśli brak zmiennych, zakładamy, że jesteśmy w środowisku Google Cloud
     console.log('Initializing Firebase Admin with default credentials.');
-    initializeApp();
+    try {
+      initializeApp();
+      console.log('Firebase Admin initialized successfully with default credentials.');
+    } catch (error) {
+      console.error('Error initializing Firebase Admin with default credentials:', error);
+    }
   }
 }
 

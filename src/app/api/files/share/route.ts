@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { key, expiresIn = 86400 } = body; // domyślnie 24 godziny
+    const { key, expiresIn, expiresAt: customExpiresAt, name } = body;
 
     if (!key) {
       return NextResponse.json({ error: 'Brak klucza pliku' }, { status: 400 });
@@ -65,7 +65,18 @@ export async function POST(request: NextRequest) {
       counter++;
     }
 
-    const expiresAt = new Date(Date.now() + expiresIn * 1000);
+    // Oblicz datę wygaśnięcia
+    let expiresAt: Date;
+    if (customExpiresAt) {
+      // Jeśli podano konkretną datę
+      expiresAt = new Date(customExpiresAt);
+    } else if (expiresIn) {
+      // Jeśli podano czas względny (w sekundach)
+      expiresAt = new Date(Date.now() + expiresIn * 1000);
+    } else {
+      // Domyślnie 24 godziny
+      expiresAt = new Date(Date.now() + 86400 * 1000);
+    }
 
     // Zapisz w Firestore
     const db = getFirestore();
@@ -76,9 +87,11 @@ export async function POST(request: NextRequest) {
       expiresAt,
       owner: decodedToken.uid,
       originalName: fileName,
+      name: name || 'Bez nazwy', // Dodaj nazwę linku
     });
 
-    const prettyUrl = `/files/${slug}`;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://chmura.blokserwis.pl';
+    const prettyUrl = `${baseUrl}/files/${slug}`;
 
     // Log share
     try {
@@ -91,11 +104,14 @@ export async function POST(request: NextRequest) {
       });
     } catch {}
 
+    console.log('Share API success:', { url: prettyUrl, slug, expiresIn, expiresAt, name });
+    
     return NextResponse.json({ 
       url: prettyUrl,
       slug: slug,
       expiresIn,
-      expiresAt
+      expiresAt,
+      name: name || 'Bez nazwy'
     });
   } catch (error) {
     console.error('Error in share API:', error);

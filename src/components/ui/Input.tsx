@@ -26,7 +26,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   }, ref) => {
     const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
     
-    const baseClasses = 'block w-full rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0';
+    const baseClasses = 'block w-full rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-0 text-gray-900';
     
     const variants = {
       default: 'border-gray-300 focus:border-blue-500 focus:ring-blue-500',

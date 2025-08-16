@@ -23,8 +23,19 @@ export async function GET(request: NextRequest) {
     
     // Sprawdź uprawnienia do folderu
     if (folder === 'main') {
-      // Tutaj sprawdź czy użytkownik ma rolę plus lub admin
-      // Na razie pozwalamy wszystkim
+      const db = getFirestore();
+      const userDocRef = db.doc(`users/${decodedToken.uid}`);
+      const userSnap = await userDocRef.get();
+      
+      let userRole = 'basic';
+      if (userSnap.exists) {
+        const data = userSnap.data();
+        if (data?.role) userRole = data.role;
+      }
+      
+      if (userRole !== 'admin' && userRole !== 'plus') {
+        return NextResponse.json({ error: 'Brak uprawnień do folderu głównego' }, { status: 403 });
+      }
     }
 
     const prefix = folder === 'personal' ? `users/${decodedToken.uid}/` : 'main/';

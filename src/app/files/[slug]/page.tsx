@@ -90,7 +90,7 @@ function FilePreview({ file, downloadUrl }: FilePreviewProps) {
       {previewUrl && !previewError && (
         <Card>
           <CardHeader>
-            <h3 className="text-lg font-semibold">Podgląd pliku</h3>
+                         <h3 className="text-lg font-semibold text-gray-900">Podgląd pliku</h3>
           </CardHeader>
           <CardContent>
             {isImage && (
@@ -162,7 +162,7 @@ export default function PublicFilePage() {
   useEffect(() => {
     const fetchFileData = async () => {
       try {
-        const response = await fetch(`/api/files/download?slug=${slug}`);
+        const response = await fetch(`/api/files/shared?slug=${slug}`);
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -242,7 +242,7 @@ export default function PublicFilePage() {
             {fileData.originalName}
           </h1>
           <p className="text-gray-600">
-            Udostępniony plik z Chmury Blokserwis
+            Plik udostępniony z chmury Blokserwis
           </p>
         </div>
 
@@ -251,14 +251,14 @@ export default function PublicFilePage() {
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
-                <h3 className="text-lg font-semibold">Informacje o pliku</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Informacje o pliku</h3>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center">
                   <FileText className="h-5 w-5 text-gray-400 mr-3" />
                   <div>
                     <p className="text-sm text-gray-600">Nazwa pliku</p>
-                    <p className="font-medium">{fileData.originalName}</p>
+                                         <p className="font-medium text-gray-900">{fileData.originalName}</p>
                   </div>
                 </div>
 
@@ -266,7 +266,7 @@ export default function PublicFilePage() {
                   <Calendar className="h-5 w-5 text-gray-400 mr-3" />
                   <div>
                     <p className="text-sm text-gray-600">Data utworzenia</p>
-                    <p className="font-medium">{formatDate(fileData.createdAt)}</p>
+                                         <p className="font-medium text-gray-900">{formatDate(fileData.createdAt)}</p>
                   </div>
                 </div>
 
@@ -274,15 +274,7 @@ export default function PublicFilePage() {
                   <Calendar className="h-5 w-5 text-gray-400 mr-3" />
                   <div>
                     <p className="text-sm text-gray-600">Wygasa</p>
-                    <p className="font-medium">{formatDate(fileData.expiresAt)}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <User className="h-5 w-5 text-gray-400 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-600">Udostępniony przez</p>
-                    <p className="font-medium">{fileData.owner}</p>
+                                         <p className="font-medium text-gray-900">{formatDate(fileData.expiresAt)}</p>
                   </div>
                 </div>
               </CardContent>

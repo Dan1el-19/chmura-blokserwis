@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Download, 
   Trash2, 
@@ -9,18 +9,22 @@ import {
   Grid3X3,
   List,
   Eye,
-  X
+  X,
+  BarChart3
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { formatBytes } from '@/lib/utils';
 import type { FileItem } from '@/types';
+import { auth } from '@/lib/firebase';
 
 interface FileGridProps {
   files: FileItem[];
   currentFolder: string;
   onDownload: (file: FileItem) => void;
   onShare: (file: FileItem) => void;
+  onManageLinks: (file: FileItem) => void;
+  onStats: (file: FileItem) => void;
   onDelete: (file: FileItem) => void;
 }
 
@@ -31,6 +35,8 @@ export default function FileGrid({
   currentFolder,
   onDownload,
   onShare,
+  onManageLinks,
+  onStats,
   onDelete
 }: FileGridProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -80,13 +86,7 @@ export default function FileGrid({
     return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(extension || '');
   };
 
-  const getThumbnailUrl = (file: FileItem) => {
-    // Dla obrazów używamy presigned URL jako thumbnail
-    if (isImage(file.name)) {
-      return `/api/files/download?key=${encodeURIComponent(file.key)}`;
-    }
-    return null;
-  };
+
 
   const handleFileClick = (file: FileItem) => {
     if (isImage(file.name)) {
@@ -144,10 +144,11 @@ export default function FileGrid({
                     file={file}
                     onDownload={onDownload}
                     onShare={onShare}
+                    onManageLinks={onManageLinks}
+                    onStats={onStats}
                     onDelete={onDelete}
                     onClick={handleFileClick}
                     getFileIcon={getFileIcon}
-                    getThumbnailUrl={getThumbnailUrl}
                     isImage={isImage}
                   />
                 ))}
@@ -160,10 +161,11 @@ export default function FileGrid({
                     file={file}
                     onDownload={onDownload}
                     onShare={onShare}
+                    onManageLinks={onManageLinks}
+                    onStats={onStats}
                     onDelete={onDelete}
                     onClick={handleFileClick}
                     getFileIcon={getFileIcon}
-                    getThumbnailUrl={getThumbnailUrl}
                     isImage={isImage}
                   />
                 ))}
@@ -188,17 +190,17 @@ export default function FileGrid({
             
             <div className="bg-white rounded-lg overflow-hidden">
               <div className="p-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold">{selectedFile.name}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{selectedFile.name}</h3>
                 <p className="text-sm text-gray-600">
                   {formatBytes(selectedFile.size)} • {new Date(selectedFile.lastModified).toLocaleDateString('pl-PL')}
                 </p>
               </div>
               
               <div className="flex justify-center p-4">
-                <img
-                  src={getThumbnailUrl(selectedFile) || ''}
-                  alt={selectedFile.name}
+                <ThumbnailImage
+                  file={selectedFile}
                   className="max-w-full max-h-96 object-contain rounded-lg"
+                  alt={selectedFile.name}
                 />
               </div>
               
@@ -219,6 +221,22 @@ export default function FileGrid({
                   <Share2 className="h-4 w-4 mr-2" />
                   Udostępnij
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => onManageLinks(selectedFile)}
+                  className="flex-1"
+                >
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Zarządzaj linkami
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => onStats(selectedFile)}
+                  className="flex-1"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Statystyki
+                </Button>
               </div>
             </div>
           </div>
@@ -232,10 +250,11 @@ interface FileItemProps {
   file: FileItem;
   onDownload: (file: FileItem) => void;
   onShare: (file: FileItem) => void;
+  onManageLinks: (file: FileItem) => void;
+  onStats: (file: FileItem) => void;
   onDelete: (file: FileItem) => void;
   onClick: (file: FileItem) => void;
   getFileIcon: (fileName: string) => string;
-  getThumbnailUrl: (file: FileItem) => string | null;
   isImage: (fileName: string) => boolean;
 }
 
@@ -243,14 +262,14 @@ function FileGridItem({
   file,
   onDownload,
   onShare,
+  onManageLinks,
+  onStats,
   onDelete,
   onClick,
   getFileIcon,
-  getThumbnailUrl,
   isImage
 }: FileItemProps) {
   const [showActions, setShowActions] = useState(false);
-  const thumbnailUrl = getThumbnailUrl(file);
 
   return (
     <div 
@@ -259,12 +278,11 @@ function FileGridItem({
     >
       {/* Thumbnail */}
       <div className="aspect-square mb-3 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
-        {thumbnailUrl ? (
-          <img
-            src={thumbnailUrl}
-            alt={file.name}
+        {isImage(file.name) ? (
+          <ThumbnailImage
+            file={file}
             className="w-full h-full object-cover"
-            loading="lazy"
+            alt={file.name}
           />
         ) : (
           <span className="text-4xl">{getFileIcon(file.name)}</span>
@@ -322,6 +340,28 @@ function FileGridItem({
               <Share2 className="h-4 w-4" />
               Udostępnij
             </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onManageLinks(file);
+                setShowActions(false);
+              }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Zarządzaj linkami
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onStats(file);
+                setShowActions(false);
+              }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Statystyki
+            </button>
             {isImage(file.name) && (
               <button
                 onClick={(e) => {
@@ -357,14 +397,14 @@ function FileListItem({
   file,
   onDownload,
   onShare,
+  onManageLinks,
+  onStats,
   onDelete,
   onClick,
   getFileIcon,
-  getThumbnailUrl,
   isImage
 }: FileItemProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const thumbnailUrl = getThumbnailUrl(file);
 
   return (
     <div className="px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50 transition-colors">
@@ -373,12 +413,11 @@ function FileListItem({
         <div className="flex items-center gap-3 sm:gap-4">
           {/* Thumbnail */}
           <div className="w-12 h-12 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
-            {thumbnailUrl ? (
-              <img
-                src={thumbnailUrl}
-                alt={file.name}
+            {isImage(file.name) ? (
+              <ThumbnailImage
+                file={file}
                 className="w-full h-full object-cover"
-                loading="lazy"
+                alt={file.name}
               />
             ) : (
               <span className="text-xl">{getFileIcon(file.name)}</span>
@@ -430,6 +469,26 @@ function FileListItem({
           <Button
             variant="ghost"
             size="sm"
+            onClick={() => onManageLinks(file)}
+            className="p-2"
+            title="Zarządzaj linkami"
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onStats(file)}
+            className="p-2"
+            title="Statystyki"
+          >
+            <BarChart3 className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => onDelete(file)}
             className="p-2 text-gray-400 hover:text-red-600"
             title="Usuń"
@@ -445,12 +504,11 @@ function FileListItem({
           <div className="flex items-center gap-3 flex-1 min-w-0">
             {/* Thumbnail */}
             <div className="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
-              {thumbnailUrl ? (
-                <img
-                  src={thumbnailUrl}
-                  alt={file.name}
+              {isImage(file.name) ? (
+                <ThumbnailImage
+                  file={file}
                   className="w-full h-full object-cover"
-                  loading="lazy"
+                  alt={file.name}
                 />
               ) : (
                 <span className="text-lg">{getFileIcon(file.name)}</span>
@@ -526,5 +584,79 @@ function FileListItem({
         )}
       </div>
     </div>
+  );
+}
+
+// Komponent do ładowania miniatur z autoryzacją
+interface ThumbnailImageProps {
+  file: FileItem;
+  className?: string;
+  alt?: string;
+}
+
+function ThumbnailImage({ file, className, alt }: ThumbnailImageProps) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+        
+        const user = auth.currentUser;
+        if (!user) {
+          setError(true);
+          return;
+        }
+
+        const token = await user.getIdToken();
+        const response = await fetch(`/api/files/presigned?key=${encodeURIComponent(file.key)}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const { presignedUrl } = await response.json();
+          setImageUrl(presignedUrl);
+        } else {
+          setError(true);
+        }
+      } catch (err) {
+        console.error('Error loading thumbnail:', err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadImage();
+  }, [file.key]);
+
+  if (loading) {
+    return (
+      <div className={`${className} bg-gray-100 animate-pulse flex items-center justify-center`}>
+        <div className="w-4 h-4 bg-gray-300 rounded"></div>
+      </div>
+    );
+  }
+
+  if (error || !imageUrl) {
+    return (
+      <div className={`${className} bg-gray-50 flex items-center justify-center`}>
+        <span className="text-gray-400">📄</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt={alt || file.name}
+      className={className}
+      loading="lazy"
+    />
   );
 }

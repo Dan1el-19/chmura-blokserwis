@@ -29,10 +29,20 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Brak uprawnień do pliku' }, { status: 403 });
     }
 
+    // Pobierz rozmiar pliku przed usunięciem
+    let fileSize = 0;
+    try {
+      const { listFiles } = await import('@/lib/storage');
+      const objects = await listFiles(key);
+      if (objects.length > 0) {
+        fileSize = objects[0].Size || 0;
+      }
+    } catch {}
+
     // Usuń plik
     await deleteFile(key);
 
-    // Log delete
+    // Log delete and update storage
     try {
       const db = getFirestore();
       await db.collection('activityLogs').add({
@@ -40,8 +50,21 @@ export async function DELETE(request: NextRequest) {
         userEmail: decodedToken.email || '',
         action: 'delete',
         fileName: key.split('/').pop(),
+        fileSize,
         timestamp: FieldValue.serverTimestamp(),
       });
+
+      // Aktualizuj używaną przestrzeń w profilu użytkownika
+      if (key.startsWith(`users/${decodedToken.uid}/`)) {
+        const userDocRef = db.doc(`users/${decodedToken.uid}`);
+        const userSnap = await userDocRef.get();
+        const currentStorageUsed = userSnap.exists ? (userSnap.data()?.storageUsed || 0) : 0;
+        const newStorageUsed = Math.max(0, currentStorageUsed - fileSize);
+        await userDocRef.set({ 
+          storageUsed: newStorageUsed,
+          lastLogin: FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
     } catch {}
 
     return NextResponse.json({ success: true });

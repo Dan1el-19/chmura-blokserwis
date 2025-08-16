@@ -25,6 +25,12 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState<'users' | 'logs' | 'stats'>('users');
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordUser, setPasswordUser] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [mainStorageUsed, setMainStorageUsed] = useState(0);
+  const [mainStorageLimit, setMainStorageLimit] = useState(50 * 1024 * 1024 * 1024); // 50GB
+  const [showMainStorageModal, setShowMainStorageModal] = useState(false);
 
   const router = useRouter();
 
@@ -63,10 +69,26 @@ export default function AdminPanel() {
     } catch {}
   }, [user]);
 
+  const fetchMainStorage = useCallback(async () => {
+    try {
+      const response = await fetch('/api/admin/main-storage', {
+        headers: { 'Authorization': `Bearer ${await user?.getIdToken()}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMainStorageUsed(data.storageUsed);
+      }
+    } catch {}
+  }, [user]);
+
   const fetchData = useCallback(async () => {
     if (activeTab === 'users') await fetchUsers();
     else if (activeTab === 'logs') await fetchLogs();
-  }, [activeTab, fetchUsers, fetchLogs]);
+    else if (activeTab === 'stats') {
+      await fetchUsers();
+      await fetchMainStorage();
+    }
+  }, [activeTab, fetchUsers, fetchLogs, fetchMainStorage]);
 
   useEffect(() => { if (!loading && !user) { router.push('/login'); } else if (user) { checkAdminRole(); } }, [user, loading, router, checkAdminRole]);
   useEffect(() => { if (user) { fetchData(); } }, [user, fetchData]);
@@ -98,14 +120,23 @@ export default function AdminPanel() {
     } catch { toast.error('Błąd podczas aktualizacji użytkownika'); }
   };
 
-  const handleChangePassword = async (userId: string) => {
+  const handleChangePassword = async (user: User) => {
+    setPasswordUser(user);
+    setNewPassword('');
+    setShowPasswordModal(true);
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordUser) return;
+
     try {
-      const manual = prompt('Podaj nowe hasło (min 6 znaków) lub zostaw puste, by wygenerować automatycznie:');
       const res = await fetch('/api/admin/users/password', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${await user?.getIdToken()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: userId, password: manual || undefined })
+        body: JSON.stringify({ uid: passwordUser.uid, password: newPassword || undefined })
       });
+      
       if (res.ok) {
         const data = await res.json();
         if (data.generated && data.password) {
@@ -114,8 +145,12 @@ export default function AdminPanel() {
         } else {
           toast.success('Hasło ustawione');
         }
+        setShowPasswordModal(false);
+        setPasswordUser(null);
+        setNewPassword('');
       } else {
-        toast.error('Błąd ustawiania hasła');
+        const errorData = await res.json();
+        toast.error(errorData.error || 'Błąd ustawiania hasła');
       }
     } catch {
       toast.error('Błąd ustawiania hasła');
@@ -307,7 +342,7 @@ export default function AdminPanel() {
                               <Edit className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => handleChangePassword(user.uid)}
+                              onClick={() => handleChangePassword(user)}
                               className="text-purple-600 hover:text-purple-900"
                               title="Zmień hasło"
                             >
@@ -398,11 +433,34 @@ export default function AdminPanel() {
                 <div className="flex items-center">
                   <HardDrive className="h-8 w-8 text-green-500" />
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Łączna przestrzeń używana</p>
+                    <p className="text-sm font-medium text-gray-500">Łączna przestrzeń użytkowników</p>
                     <p className="text-2xl font-semibold text-gray-900">
                       {formatBytes(users.reduce((acc, user) => acc + user.storageUsed, 0))}
                     </p>
                   </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <HardDrive className="h-8 w-8 text-blue-500" />
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Folder główny</p>
+                      <p className="text-2xl font-semibold text-gray-900">
+                        {formatBytes(mainStorageUsed)} / {formatBytes(mainStorageLimit)}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {Math.round((mainStorageUsed / mainStorageLimit) * 100)}% wykorzystane
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowMainStorageModal(true)}
+                    className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                  >
+                    Edytuj limit
+                  </button>
                 </div>
               </div>
 
@@ -448,7 +506,7 @@ export default function AdminPanel() {
                       type="email"
                       value={editingUser.email}
                       disabled
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-900"
                     />
                   </div>
                   
@@ -457,7 +515,7 @@ export default function AdminPanel() {
                     <select
                       name="role"
                       defaultValue={editingUser.role}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                     >
                       <option value="basic">Basic</option>
                       <option value="plus">Plus</option>
@@ -472,7 +530,7 @@ export default function AdminPanel() {
                       name="storageLimit"
                       defaultValue={Math.floor(editingUser.storageLimit / (1024 * 1024 * 1024))}
                       min="1"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                     />
                   </div>
                 </div>
@@ -543,6 +601,128 @@ export default function AdminPanel() {
                 <div className="mt-6 flex space-x-3">
                   <button type="submit" className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">Utwórz</button>
                   <button type="button" onClick={() => setShowCreate(false)} className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-400">Anuluj</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Change Modal */}
+      {showPasswordModal && passwordUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Zmień hasło użytkownika</h3>
+              <form onSubmit={handlePasswordSubmit}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      value={passwordUser.email}
+                      disabled
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-900"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Nowe hasło (min 6 znaków)
+                    </label>
+                    <input
+                      type="text"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Zostaw puste, by wygenerować automatycznie"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Jeśli zostawisz puste, zostanie wygenerowane hasło i skopiowane do schowka
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mt-6 flex space-x-3">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                  >
+                    Zmień hasło
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordModal(false);
+                      setPasswordUser(null);
+                      setNewPassword('');
+                    }}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-400"
+                  >
+                    Anuluj
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Storage Limit Modal */}
+      {showMainStorageModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Edytuj limit folderu głównego</h3>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const newLimit = parseInt(formData.get('limit') as string) * 1024 * 1024 * 1024;
+                setMainStorageLimit(newLimit);
+                setShowMainStorageModal(false);
+                toast.success('Limit folderu głównego został zaktualizowany');
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Aktualny limit</label>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {formatBytes(mainStorageLimit)}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Nowy limit (GB)</label>
+                    <input
+                      type="number"
+                      name="limit"
+                      defaultValue={Math.floor(mainStorageLimit / (1024 * 1024 * 1024))}
+                      min="1"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Aktualne użycie</label>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {formatBytes(mainStorageUsed)} ({Math.round((mainStorageUsed / mainStorageLimit) * 100)}%)
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mt-6 flex space-x-3">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                  >
+                    Zapisz
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowMainStorageModal(false)}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-400"
+                  >
+                    Anuluj
+                  </button>
                 </div>
               </form>
             </div>

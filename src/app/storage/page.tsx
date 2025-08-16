@@ -9,6 +9,10 @@ import { UserRole, FileItem } from '@/types';
 import Header from '@/components/layout/Header';
 import UploadSection from '@/components/file/UploadSection';
 import FileGrid from '@/components/file/FileGrid';
+import ShareModal from '@/components/ui/ShareModal';
+import ShareOptionsModal from '@/components/ui/ShareOptionsModal';
+import ManageLinksModal from '@/components/ui/ManageLinksModal';
+import StatsModal from '@/components/ui/StatsModal';
 
 export default function StoragePage() {
   const [user, loading] = useAuthState(auth);
@@ -19,6 +23,14 @@ export default function StoragePage() {
   const [currentFolder, setCurrentFolder] = useState('personal');
   const [uploading, setUploading] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showShareOptionsModal, setShowShareOptionsModal] = useState(false);
+  const [showManageLinksModal, setShowManageLinksModal] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [shareData, setShareData] = useState<{ url: string; fileName: string; expiresAt?: string } | null>(null);
+  const [selectedFileForShare, setSelectedFileForShare] = useState<FileItem | null>(null);
+  const [selectedFileForManage, setSelectedFileForManage] = useState<FileItem | null>(null);
+  const [selectedFileForStats, setSelectedFileForStats] = useState<FileItem | null>(null);
   const router = useRouter();
 
   const refreshIdToken = useCallback(async () => {
@@ -135,6 +147,7 @@ export default function StoragePage() {
 
   const handleFileDownload = async (file: FileItem) => {
     try {
+      // Użyj nowego endpointu który zwraca plik bezpośrednio
       const response = await fetch(`/api/files/download?key=${encodeURIComponent(file.key)}`, {
         headers: {
           'Authorization': `Bearer ${await user?.getIdToken()}`
@@ -142,18 +155,31 @@ export default function StoragePage() {
       });
 
       if (response.ok) {
-        const url = await response.text();
+        // Pobierz plik jako blob
+        const blob = await response.blob();
+        
+        // Utwórz URL dla blob
+        const url = window.URL.createObjectURL(blob);
+        
+        // Utwórz link i wymuś pobieranie
         const link = document.createElement('a');
         link.href = url;
         link.download = file.name;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        
+        // Wyczyść URL
+        window.URL.revokeObjectURL(url);
+        
         toast.success('Pobieranie rozpoczęte');
       } else {
-        toast.error('Błąd podczas pobierania pliku');
+        const errorData = await response.json();
+        console.error('Download API error:', errorData);
+        toast.error(`Błąd podczas pobierania pliku: ${errorData.error || 'Nieznany błąd'}`);
       }
-    } catch {
+    } catch (error) {
+      console.error('Download error:', error);
       toast.error('Błąd podczas pobierania pliku');
     }
   };
@@ -186,24 +212,68 @@ export default function StoragePage() {
   };
 
   const handleShare = async (file: FileItem) => {
+    setSelectedFileForShare(file);
+    setShowShareOptionsModal(true);
+  };
+
+  const handleShareConfirm = async (expiresIn?: number, expiresAt?: Date, name?: string) => {
+    if (!selectedFileForShare) return;
+
     try {
+      console.log('Sharing file:', selectedFileForShare.key);
+      
+      const requestBody: Record<string, unknown> = { key: selectedFileForShare.key };
+      if (expiresIn) {
+        requestBody.expiresIn = expiresIn;
+      }
+      if (expiresAt) {
+        requestBody.expiresAt = expiresAt.toISOString();
+      }
+      if (name) {
+        requestBody.name = name;
+      }
+      
       const response = await fetch('/api/files/share', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${await user?.getIdToken()}`
         },
-        body: JSON.stringify({ key: file.key })
+        body: JSON.stringify(requestBody)
       });
 
+      console.log('Share response status:', response.status);
+
       if (response.ok) {
-        const { url } = await response.json();
-        navigator.clipboard.writeText(url);
-        toast.success('Link do udostępnienia skopiowany do schowka');
+        const data = await response.json();
+        console.log('Share response data:', data);
+        
+        const { url, expiresAt: responseExpiresAt } = data;
+        setShareData({
+          url,
+          fileName: selectedFileForShare.name,
+          expiresAt: responseExpiresAt
+        });
+        setShowShareModal(true);
+      } else {
+        const errorData = await response.json();
+        console.error('Share API error:', errorData);
+        toast.error(`Błąd podczas generowania linku: ${errorData.error || 'Nieznany błąd'}`);
       }
-    } catch {
+    } catch (error) {
+      console.error('Share error:', error);
       toast.error('Błąd podczas generowania linku');
     }
+  };
+
+  const handleManageLinks = async (file: FileItem) => {
+    setSelectedFileForManage(file);
+    setShowManageLinksModal(true);
+  };
+
+  const handleStats = async (file: FileItem) => {
+    setSelectedFileForStats(file);
+    setShowStatsModal(true);
   };
 
   const handleLogout = async () => {
@@ -272,10 +342,65 @@ export default function StoragePage() {
             currentFolder={currentFolder}
             onDownload={handleFileDownload}
             onShare={handleShare}
+            onManageLinks={handleManageLinks}
+            onStats={handleStats}
             onDelete={handleFileDelete}
           />
         </div>
       </main>
+
+      {/* Share Modal */}
+      {shareData && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => {
+            setShowShareModal(false);
+            setShareData(null);
+          }}
+          shareUrl={shareData.url}
+          fileName={shareData.fileName}
+          expiresAt={shareData.expiresAt}
+        />
+      )}
+
+      {/* Share Options Modal */}
+      {selectedFileForShare && (
+        <ShareOptionsModal
+          isOpen={showShareOptionsModal}
+          onClose={() => {
+            setShowShareOptionsModal(false);
+            setSelectedFileForShare(null);
+          }}
+          onConfirm={handleShareConfirm}
+          fileName={selectedFileForShare.name}
+        />
+      )}
+
+      {/* Manage Links Modal */}
+      {selectedFileForManage && (
+        <ManageLinksModal
+          isOpen={showManageLinksModal}
+          onClose={() => {
+            setShowManageLinksModal(false);
+            setSelectedFileForManage(null);
+          }}
+          fileKey={selectedFileForManage.key}
+          fileName={selectedFileForManage.name}
+        />
+      )}
+
+      {/* Stats Modal */}
+      {selectedFileForStats && (
+        <StatsModal
+          isOpen={showStatsModal}
+          onClose={() => {
+            setShowStatsModal(false);
+            setSelectedFileForStats(null);
+          }}
+          fileKey={selectedFileForStats.key}
+          fileName={selectedFileForStats.name}
+        />
+      )}
     </div>
   );
 }
