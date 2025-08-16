@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth, ListUsersResult, UserRecord } from 'firebase-admin/auth';
 
 type Decoded = { uid: string; email?: string; role?: 'basic' | 'plus' | 'admin' } | null;

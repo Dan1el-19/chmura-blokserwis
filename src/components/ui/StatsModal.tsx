@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, BarChart3, Users, MousePointer, Clock, TrendingUp } from 'lucide-react';
+import { X, BarChart3, Users, MousePointer, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { formatDate } from '@/lib/utils';

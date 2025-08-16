@@ -4,13 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Cloud, 
-  Upload, 
-  Download, 
   FileText, 
-  HardDrive, 
-  Users, 
-  Activity,
-  ArrowRight,
   CheckCircle,
   XCircle
 } from 'lucide-react';

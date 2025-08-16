@@ -14,7 +14,7 @@ import type { FileItem } from '@/types';
 
 interface FileListProps {
   files: FileItem[];
-  currentFolder: string;
+
   onDownload: (file: FileItem) => void;
   onShare: (file: FileItem) => void;
   onDelete: (file: FileItem) => void;
@@ -22,7 +22,6 @@ interface FileListProps {
 
 export default function FileList({
   files,
-  currentFolder,
   onDownload,
   onShare,
   onDelete

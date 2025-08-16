@@ -25,7 +25,7 @@ export default function ShareModal({
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       // Fallback dla przeglądarek bez Clipboard API
       const textArea = document.createElement('textarea');
       textArea.value = shareUrl;

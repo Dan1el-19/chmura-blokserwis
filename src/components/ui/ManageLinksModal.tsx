@@ -66,10 +66,9 @@ export default function ManageLinksModal({
 
       const data = await response.json();
       setLinks(data.links);
-    } catch (err) {
-      console.error('Error fetching links:', err);
-      setError('Błąd podczas ładowania linków');
-    } finally {
+          } catch {
+        setError('Błąd podczas ładowania linków');
+      } finally {
       setLoading(false);
     }
   }, [fileKey]);
@@ -85,7 +84,7 @@ export default function ManageLinksModal({
       await navigator.clipboard.writeText(url);
       setCopiedId(linkId);
       setTimeout(() => setCopiedId(null), 2000);
-    } catch (error) {
+    } catch {
       // Fallback
       const textArea = document.createElement('textarea');
       textArea.value = url;
@@ -128,8 +127,7 @@ export default function ManageLinksModal({
 
       // Usuń link z listy
       setLinks(links.filter(link => link.id !== linkId));
-    } catch (err) {
-      console.error('Error deleting link:', err);
+    } catch {
       alert('Błąd podczas usuwania linku');
     }
   };

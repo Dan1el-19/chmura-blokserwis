@@ -3,7 +3,6 @@ import {
   Download, 
   Trash2, 
   Share2, 
-  File, 
   Folder,
   MoreVertical,
   Grid3X3,
@@ -20,7 +19,7 @@ import { auth } from '@/lib/firebase';
 
 interface FileGridProps {
   files: FileItem[];
-  currentFolder: string;
+
   onDownload: (file: FileItem) => void;
   onShare: (file: FileItem) => void;
   onManageLinks: (file: FileItem) => void;
@@ -32,7 +31,6 @@ type ViewMode = 'grid' | 'list';
 
 export default function FileGrid({
   files,
-  currentFolder,
   onDownload,
   onShare,
   onManageLinks,

@@ -6,15 +6,12 @@ import {
   Download, 
   FileText, 
   Image, 
-  File, 
   Calendar,
-  User,
-  AlertCircle,
-  ExternalLink
+  AlertCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { formatBytes, formatDate } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 
 interface FileData {
   key: string;
@@ -179,7 +176,7 @@ export default function PublicFilePage() {
         const data = await response.json();
         setFileData(data.fileData);
         setDownloadUrl(data.downloadUrl);
-      } catch (err) {
+      } catch {
         setError('Błąd podczas ładowania pliku');
       } finally {
         setIsLoading(false);

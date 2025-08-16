@@ -74,6 +74,7 @@
 - [x] Poprawa responsywności statusu systemu - lepsze wykorzystanie przestrzeni
 - [x] Ulepszenie logiki sprawdzania statusu usług - lepsze rozróżnianie błędów połączenia od braku danych
 - [x] Uproszczenie statusu usług na stronie publicznej - statyczne statusy zamiast dynamicznego sprawdzania
+- [x] Naprawa błędów TypeScript i ESLint - usunięcie nieużywanych importów i dodanie typów dla błędów
 
 ## 🐛 Znane problemy
 - Clipboard API nie działa w niektórych przeglądarkach (naprawione przez modal)

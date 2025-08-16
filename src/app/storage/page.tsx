@@ -130,7 +130,7 @@ export default function StoragePage() {
           toast.error(`Błąd podczas przesyłania ${file.name}: ${error.error}`);
           return false;
         }
-      } catch (error) {
+      } catch {
         toast.error(`Błąd podczas przesyłania ${file.name}`);
         return false;
       }
@@ -178,8 +178,7 @@ export default function StoragePage() {
         console.error('Download API error:', errorData);
         toast.error(`Błąd podczas pobierania pliku: ${errorData.error || 'Nieznany błąd'}`);
       }
-    } catch (error) {
-      console.error('Download error:', error);
+    } catch {
       toast.error('Błąd podczas pobierania pliku');
     }
   };
@@ -339,7 +338,6 @@ export default function StoragePage() {
 
           <FileGrid
             files={files}
-            currentFolder={currentFolder}
             onDownload={handleFileDownload}
             onShare={handleShare}
             onManageLinks={handleManageLinks}
