@@ -37,7 +37,6 @@ ENV NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY \
     NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
 
 # Build the Next.js app (standalone output configured in next.config.ts)
-RUN npm install -g npm@latest
 RUN npm run build
 
 

@@ -6,15 +6,20 @@ import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { UserRole, FileItem } from '@/types';
-import Header from '@/components/layout/Header';
+import StorageHeader from '@/components/layout/StorageHeader';
 import UploadSection from '@/components/file/UploadSection';
 import FileGrid from '@/components/file/FileGrid';
+import DragDropUpload from '@/components/file/DragDropUpload';
+import { UploadProvider, useUpload } from '@/context/UploadContext';
+import UploadProgressBadge from '@/components/file/UploadProgressBadge';
 import ShareModal from '@/components/ui/ShareModal';
 import ShareOptionsModal from '@/components/ui/ShareOptionsModal';
 import ManageLinksModal from '@/components/ui/ManageLinksModal';
 import StatsModal from '@/components/ui/StatsModal';
+import CostCalculatorModal from '@/components/ui/CostCalculatorModal';
+import StorageUsageBars from '@/components/ui/StorageUsageBars';
 
-export default function StoragePage() {
+function StoragePageInner() {
   const [user, loading] = useAuthState(auth);
   const [userRole, setUserRole] = useState<UserRole>('basic');
   const [storageUsed, setStorageUsed] = useState(0);
@@ -27,10 +32,13 @@ export default function StoragePage() {
   const [showShareOptionsModal, setShowShareOptionsModal] = useState(false);
   const [showManageLinksModal, setShowManageLinksModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showCostCalculatorModal, setShowCostCalculatorModal] = useState(false);
   const [shareData, setShareData] = useState<{ url: string; fileName: string; expiresAt?: string } | null>(null);
   const [selectedFileForShare, setSelectedFileForShare] = useState<FileItem | null>(null);
   const [selectedFileForManage, setSelectedFileForManage] = useState<FileItem | null>(null);
   const [selectedFileForStats, setSelectedFileForStats] = useState<FileItem | null>(null);
+  const [selectedFileForUpload, setSelectedFileForUpload] = useState<File | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const router = useRouter();
 
   const refreshIdToken = useCallback(async () => {
@@ -103,46 +111,127 @@ export default function StoragePage() {
     }
   }, [user, fetchUserData, fetchFiles]);
 
+  // Ochrona przed odświeżeniem/wyjściem podczas uploadu
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (uploading) {
+        e.preventDefault();
+        // Chrome wymaga ustawienia returnValue
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [uploading]);
+
+  const { enqueue, uploads } = useUpload();
+
+  // Odśwież listę plików gdy upload się zakończy
+  useEffect(() => {
+    const completedUploads = uploads.filter(upload => upload.status === 'completed');
+    if (completedUploads.length > 0) {
+      // Odśwież listę plików po krótkim opóźnieniu (żeby backend zdążył przetworzyć)
+      const timer = setTimeout(() => {
+        fetchFiles();
+        fetchUserData(); // Odśwież też dane użytkownika (storage used)
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [uploads, fetchFiles, fetchUserData]);
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    setUploading(true);
-    const uploadPromises = Array.from(files).map(async (file) => {
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folder', currentFolder);
-
-        const response = await fetch('/api/files/upload', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${await user?.getIdToken()}`
-          },
-          body: formData
-        });
-
-        if (response.ok) {
-          toast.success(`Plik ${file.name} został przesłany`);
-          return true;
-        } else {
-          const error = await response.json();
-          toast.error(`Błąd podczas przesyłania ${file.name}: ${error.error}`);
-          return false;
+    // Obsługujemy wiele plików
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Sprawdź rozmiar pliku (1MB = 1024 * 1024 bajtów)
+      const MIN_SIZE_FOR_CALCULATOR = 1 * 1024 * 1024; // 1MB
+      
+      if (file.size >= MIN_SIZE_FOR_CALCULATOR) {
+        // Pokaż kalkulator kosztów dla pierwszego dużego pliku
+        if (i === 0) {
+          setSelectedFileForUpload(file);
+          setShowCostCalculatorModal(true);
+          break; // Zatrzymaj się na pierwszym dużym pliku
         }
-      } catch {
-        toast.error(`Błąd podczas przesyłania ${file.name}`);
-        return false;
+      } else {
+        // Bezpośredni upload dla małych plików
+        await enqueue(file, currentFolder as 'personal' | 'main');
       }
-    });
-
-    await Promise.all(uploadPromises);
-    setUploading(false);
-    event.target.value = '';
+    }
     
-    // Refresh data
-    fetchUserData();
-    fetchFiles();
+    event.target.value = '';
+  };
+
+  const handleFilesSelected = async (files: File[]) => {
+    // Obsługujemy wiele plików z drag&drop
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Sprawdź rozmiar pliku (1MB = 1024 * 1024 bajtów)
+      const MIN_SIZE_FOR_CALCULATOR = 1 * 1024 * 1024; // 1MB
+      
+      if (file.size >= MIN_SIZE_FOR_CALCULATOR) {
+        // Pokaż kalkulator kosztów dla pierwszego dużego pliku
+        if (i === 0) {
+          setSelectedFileForUpload(file);
+          setShowCostCalculatorModal(true);
+          break; // Zatrzymaj się na pierwszym dużym pliku
+        }
+      } else {
+        // Bezpośredni upload dla małych plików
+        await enqueue(file, currentFolder as 'personal' | 'main');
+      }
+    }
+  };
+
+  const performFileUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', currentFolder);
+
+      const response = await fetch('/api/files/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${await user?.getIdToken()}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        toast.success(`Plik ${file.name} został przesłany`);
+      } else {
+        const error = await response.json();
+        toast.error(`Błąd podczas przesyłania ${file.name}: ${error.error}`);
+      }
+    } catch {
+      toast.error(`Błąd podczas przesyłania ${file.name}`);
+    } finally {
+      setUploading(false);
+      // Refresh data
+      fetchUserData();
+      fetchFiles();
+    }
+  };
+
+  const handleCostCalculatorConfirm = async () => {
+    if (selectedFileForUpload) {
+      await enqueue(selectedFileForUpload, currentFolder as 'personal' | 'main');
+      setShowCostCalculatorModal(false);
+      setSelectedFileForUpload(null);
+    }
+  };
+
+  const handleCostCalculatorClose = () => {
+    setShowCostCalculatorModal(false);
+    setSelectedFileForUpload(null);
   };
 
   const handleFileDownload = async (file: FileItem) => {
@@ -158,19 +247,22 @@ export default function StoragePage() {
         // Pobierz plik jako blob
         const blob = await response.blob();
         
-        // Utwórz URL dla blob
-        const url = window.URL.createObjectURL(blob);
-        
-        // Utwórz link i wymuś pobieranie
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = file.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Wyczyść URL
-        window.URL.revokeObjectURL(url);
+        // Sprawdź czy jesteśmy w przeglądarce
+        if (typeof window !== 'undefined') {
+          // Utwórz URL dla blob
+          const url = window.URL.createObjectURL(blob);
+          
+          // Utwórz link i wymuś pobieranie
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = file.name;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Wyczyść URL
+          window.URL.revokeObjectURL(url);
+        }
         
         toast.success('Pobieranie rozpoczęte');
       } else {
@@ -188,22 +280,21 @@ export default function StoragePage() {
       return;
     }
 
-    try {
-      const response = await fetch('/api/files/delete', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await user?.getIdToken()}`
-        },
-        body: JSON.stringify({ key: file.key })
-      });
+          try {
+        const response = await fetch(`/api/files/delete?key=${encodeURIComponent(file.key)}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${await user?.getIdToken()}`
+          }
+        });
 
       if (response.ok) {
         toast.success('Plik został usunięty');
         fetchUserData();
         fetchFiles();
       } else {
-        toast.error('Błąd podczas usuwania pliku');
+        const errorData = await response.json();
+        toast.error(`Błąd podczas usuwania pliku: ${errorData.error || 'Nieznany błąd'}`);
       }
     } catch {
       toast.error('Błąd podczas usuwania pliku');
@@ -215,54 +306,48 @@ export default function StoragePage() {
     setShowShareOptionsModal(true);
   };
 
-  const handleShareConfirm = async (expiresIn?: number, expiresAt?: Date, name?: string) => {
+  const handleShareConfirm = async (options: { minutes?: number; hours?: number; days?: number; months?: number; until?: string; }) => {
     if (!selectedFileForShare) return;
-
     try {
-      console.log('Sharing file:', selectedFileForShare.key);
-      
-      const requestBody: Record<string, unknown> = { key: selectedFileForShare.key };
-      if (expiresIn) {
-        requestBody.expiresIn = expiresIn;
-      }
-      if (expiresAt) {
-        requestBody.expiresAt = expiresAt.toISOString();
-      }
-      if (name) {
-        requestBody.name = name;
-      }
-      
       const response = await fetch('/api/files/share', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${await user?.getIdToken()}`
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify({ key: selectedFileForShare.key, options })
       });
 
-      console.log('Share response status:', response.status);
-
       if (response.ok) {
-        const data = await response.json();
-        console.log('Share response data:', data);
-        
-        const { url, expiresAt: responseExpiresAt } = data;
-        setShareData({
-          url,
-          fileName: selectedFileForShare.name,
-          expiresAt: responseExpiresAt
-        });
+        const { url, expiresAt } = await response.json();
+        setShareData({ url, fileName: selectedFileForShare.name, expiresAt });
         setShowShareModal(true);
       } else {
-        const errorData = await response.json();
-        console.error('Share API error:', errorData);
-        toast.error(`Błąd podczas generowania linku: ${errorData.error || 'Nieznany błąd'}`);
+        toast.error('Błąd podczas tworzenia linku');
       }
-    } catch (error) {
-      console.error('Share error:', error);
-      toast.error('Błąd podczas generowania linku');
+    } catch {
+      toast.error('Błąd podczas tworzenia linku');
+    } finally {
+      setShowShareOptionsModal(false);
+      setSelectedFileForShare(null);
     }
+  };
+
+  // Adapter: dopasowanie do sygnatury ShareOptionsModal
+  const handleShareConfirmLegacy = async (
+    expiresIn?: number,
+    expiresAt?: Date
+  ) => {
+    const options: { minutes?: number; hours?: number; days?: number; months?: number; until?: string } = {};
+
+    if (expiresAt instanceof Date) {
+      options.until = expiresAt.toISOString();
+    } else if (typeof expiresIn === 'number' && expiresIn > 0) {
+      // Konwertuj sekundy na minuty w górę
+      options.minutes = Math.ceil(expiresIn / 60);
+    }
+
+    await handleShareConfirm(options);
   };
 
   const handleManageLinks = async (file: FileItem) => {
@@ -313,12 +398,10 @@ export default function StoragePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header
+      <StorageHeader
         title="Chmura Blokserwis"
         userEmail={user.email || ''}
         userRole={userRole}
-        storageUsed={storageUsed}
-        storageLimit={storageLimit}
         currentFolder={currentFolder}
         onFolderChange={handleFolderChange}
         onLogout={handleLogout}
@@ -329,21 +412,86 @@ export default function StoragePage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="space-y-6">
-          <UploadSection
-            currentFolder={currentFolder}
-            uploading={uploading}
-            storagePercentage={storagePercentage}
-            onFileUpload={handleFileUpload}
+          {/* Storage Usage Bars */}
+                    <StorageUsageBars
+            onRefresh={() => {
+              fetchUserData();
+              fetchFiles();
+            }}
           />
+          
+          <DragDropUpload onFilesSelected={handleFilesSelected}>
+            <UploadSection
+              currentFolder={currentFolder}
+              uploading={uploading}
+              storagePercentage={storagePercentage}
+              onFileUpload={handleFileUpload}
+            />
 
-          <FileGrid
-            files={files}
-            onDownload={handleFileDownload}
-            onShare={handleShare}
-            onManageLinks={handleManageLinks}
-            onStats={handleStats}
-            onDelete={handleFileDelete}
-          />
+            {/* Files Section Header */}
+            <div className="rounded-lg transition-all duration-200 bg-white border border-gray-200 shadow-sm">
+              <div className="px-6 py-4 border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900">Pliki</h3>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setViewMode('grid')}
+                      className={`inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 text-sm p-2 ${
+                        viewMode === 'grid' 
+                          ? 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-sm' 
+                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500'
+                      }`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-grid3x3 h-4 w-4">
+                        <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+                        <path d="M3 9h18"></path>
+                        <path d="M3 15h18"></path>
+                        <path d="M9 3v18"></path>
+                        <path d="M15 3v18"></path>
+                      </svg>
+                    </button>
+                    <button 
+                      onClick={() => setViewMode('list')}
+                      className={`inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 text-sm p-2 ${
+                        viewMode === 'list' 
+                          ? 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-sm' 
+                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500'
+                      }`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-list h-4 w-4">
+                        <line x1="8" x2="21" y1="6" y2="6"></line>
+                        <line x1="8" x2="21" y1="12" y2="12"></line>
+                        <line x1="8" x2="21" y1="18" y2="18"></line>
+                        <line x1="3" x2="3.01" y1="6" y2="6"></line>
+                        <line x1="3" x2="3.01" y1="12" y2="12"></line>
+                        <line x1="3" x2="3.01" y1="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="px-6 py-4 p-0">
+                <FileGrid
+                  files={files}
+                  currentFolder={currentFolder}
+                  viewMode={viewMode}
+                  onDownload={handleFileDownload}
+                  onDelete={handleFileDelete}
+                  onShare={handleShare}
+                  onStats={handleStats}
+                  onManageLinks={handleManageLinks}
+                />
+              </div>
+            </div>
+
+            {uploads.length > 0 && (
+              <div className="space-y-2">
+                {uploads.map(task => (
+                  <UploadProgressBadge key={task.id} task={task} />
+                ))}
+              </div>
+            )}
+          </DragDropUpload>
         </div>
       </main>
 
@@ -369,7 +517,7 @@ export default function StoragePage() {
             setShowShareOptionsModal(false);
             setSelectedFileForShare(null);
           }}
-          onConfirm={handleShareConfirm}
+                          onConfirm={(expiresIn?: number, expiresAt?: Date) => handleShareConfirmLegacy(expiresIn, expiresAt)}
           fileName={selectedFileForShare.name}
         />
       )}
@@ -399,6 +547,25 @@ export default function StoragePage() {
           fileName={selectedFileForStats.name}
         />
       )}
+
+      {/* Cost Calculator Modal */}
+      <CostCalculatorModal
+        isOpen={showCostCalculatorModal}
+        onClose={handleCostCalculatorClose}
+        onConfirm={handleCostCalculatorConfirm}
+        file={selectedFileForUpload}
+      />
     </div>
+  );
+}
+
+export default function StoragePage() {
+  return (
+    <UploadProvider onUploadComplete={() => {
+      // Odśwież listę plików po zakończeniu uploadu
+      // To będzie wywołane w StoragePageInner przez useEffect
+    }}>
+      <StoragePageInner />
+    </UploadProvider>
   );
 }

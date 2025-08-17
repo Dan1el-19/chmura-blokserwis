@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation';
 import { 
   Download, 
   FileText, 
-  Image, 
   Calendar,
   AlertCircle
 } from 'lucide-react';
@@ -25,9 +24,10 @@ interface FileData {
 interface FilePreviewProps {
   file: FileData;
   downloadUrl: string;
+  slug: string;
 }
 
-function FilePreview({ file, downloadUrl }: FilePreviewProps) {
+function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,13 +64,48 @@ function FilePreview({ file, downloadUrl }: FilePreviewProps) {
     }
   }, [downloadUrl, isImage, isPdf, isText]);
 
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = file.originalName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async () => {
+    try {
+      // Użyj nowego endpointu dla publicznego pobierania
+      const response = await fetch(`/api/files/public-download?slug=${encodeURIComponent(slug)}`);
+      
+      if (response.ok) {
+        // Pobierz plik jako blob
+        const blob = await response.blob();
+        
+        // Utwórz URL dla blob
+        const url = window.URL.createObjectURL(blob);
+        
+        // Utwórz link i wymuś pobieranie
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = file.originalName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Wyczyść URL
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Błąd podczas pobierania pliku');
+        // Fallback do presigned URL
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = file.originalName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Błąd podczas pobierania pliku:', error);
+      // Fallback do presigned URL
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = file.originalName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   if (isLoading) {
@@ -280,7 +315,7 @@ export default function PublicFilePage() {
 
           {/* Podgląd i pobieranie */}
           <div className="lg:col-span-2">
-            <FilePreview file={fileData} downloadUrl={downloadUrl} />
+            <FilePreview file={fileData} downloadUrl={downloadUrl} slug={slug} />
           </div>
         </div>
       </div>

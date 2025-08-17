@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
 
     const token = authHeader.split('Bearer ')[1];
     const decodedToken = await verifyToken(token);
+    
     if (!decodedToken) {
       return NextResponse.json({ error: 'Nieprawidłowy token' }, { status: 401 });
     }

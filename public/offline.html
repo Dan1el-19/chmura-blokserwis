@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Chmura Blokserwis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .offline-container {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .offline-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: #f3f4f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        p {
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .retry-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .retry-button:hover {
+            background: #2563eb;
+        }
+
+        .retry-button:active {
+            transform: translateY(1px);
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #fef3c7;
+            color: #92400e;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-indicator.offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-indicator.online {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .features {
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+
+        .features h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #1f2937;
+        }
+
+        .features ul {
+            list-style: none;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .features li {
+            padding: 0.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .features li::before {
+            content: "✓";
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .offline-container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📶</div>
+        
+        <div class="status-indicator offline" id="statusIndicator">
+            <span>🔴</span>
+            <span>Brak połączenia z internetem</span>
+        </div>
+        
+        <h1>Jesteś offline</h1>
+        <p>
+            Nie możesz połączyć się z serwerem. Sprawdź swoje połączenie internetowe i spróbuj ponownie.
+        </p>
+        
+        <button class="retry-button" onclick="retryConnection()">
+            Spróbuj ponownie
+        </button>
+        
+        <div class="features">
+            <h3>Co możesz zrobić offline:</h3>
+            <ul>
+                <li>Przeglądać wcześniej odwiedzone strony</li>
+                <li>Korzystać z cache'owanych plików</li>
+                <li>Zarządzać kolejką uploadów</li>
+                <li>Eksportować sesje uploadu</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function retryConnection() {
+            const button = document.querySelector('.retry-button');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            button.textContent = 'Sprawdzanie...';
+            button.disabled = true;
+            
+            // Sprawdź połączenie
+            fetch('/api/system/stats', { 
+                method: 'HEAD',
+                cache: 'no-cache'
+            })
+            .then(response => {
+                if (response.ok) {
+                    statusIndicator.className = 'status-indicator online';
+                    statusIndicator.innerHTML = '<span>🟢</span><span>Połączenie przywrócone</span>';
+                    button.textContent = 'Przekieruj do aplikacji';
+                    button.onclick = () => window.location.href = '/storage';
+                } else {
+                    throw new Error('Server error');
+                }
+            })
+            .catch(error => {
+                statusIndicator.className = 'status-indicator offline';
+                statusIndicator.innerHTML = '<span>🔴</span><span>Brak połączenia z internetem</span>';
+                button.textContent = 'Spróbuj ponownie';
+                button.disabled = false;
+            });
+        }
+
+        // Automatyczne sprawdzanie połączenia co 30 sekund
+        setInterval(() => {
+            if (navigator.onLine) {
+                retryConnection();
+            }
+        }, 30000);
+
+        // Nasłuchuj zmian połączenia
+        window.addEventListener('online', () => {
+            retryConnection();
+        });
+
+        window.addEventListener('offline', () => {
+            const statusIndicator = document.getElementById('statusIndicator');
+            statusIndicator.className = 'status-indicator offline';
+            statusIndicator.innerHTML = '<span>🔴</span><span>Brak połączenia z internetem</span>';
+        });
+    </script>
+</body>
+</html>

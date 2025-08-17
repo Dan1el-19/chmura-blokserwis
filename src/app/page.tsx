@@ -4,13 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Cloud, 
-  FileText, 
   CheckCircle,
   XCircle
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { formatBytes } from '@/lib/utils';
 
 interface SystemStats {
   totalFiles: number;
@@ -22,11 +20,6 @@ interface SystemStats {
     firebase: boolean;
     api: boolean;
   };
-  recentFiles: Array<{
-    name: string;
-    size: number;
-    uploadedAt: string;
-  }>;
 }
 
 export default function Home() {
@@ -39,8 +32,7 @@ export default function Home() {
       cloudflare: true, // Statyczny status - Cloudflare R2 działa
       firebase: true,   // Statyczny status - Firebase Auth działa
       api: true         // Statyczny status - API działa
-    },
-    recentFiles: []
+    }
   });
   const [loading, setLoading] = useState(true);
 
@@ -89,7 +81,7 @@ export default function Home() {
             <div className="flex items-center justify-between sm:justify-start">
               <div className="flex items-center">
                 <Cloud className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600" />
-                <h1 className="ml-2 text-xl sm:text-2xl font-bold text-gray-900">Chmura Blokserwis</h1>
+                <h1 className="ml-2 text-xl sm:text-2xl font-bold text-gray-900 font-roboto">Chmura Blokserwis</h1>
               </div>
             </div>
             <div className="flex flex-col xs:flex-row gap-2 sm:gap-4">
@@ -106,12 +98,9 @@ export default function Home() {
 
       {/* Dashboard */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-
         {/* System Status */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 mb-8">
-          {/* Status systemu - główna karta */}
-          <div className="md:col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+          <div className="md:col-span-2 lg:col-span-3 xl:col-span-4">
             <Card className="h-full">
               <CardContent className="p-6 lg:p-8">
                 <h3 className="text-xl lg:text-2xl font-semibold text-gray-900 mb-6">Status systemu</h3>
@@ -206,51 +195,14 @@ export default function Home() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Ostatnie pliki - widoczne tylko na bardzo dużych ekranach */}
-          <div className="hidden 2xl:block">
-            <Card className="h-full">
-              <CardContent className="p-6 lg:p-8">
-                <h3 className="text-xl lg:text-2xl font-semibold text-gray-900 mb-6">Ostatnie pliki</h3>
-                <div className="space-y-4">
-                  {loading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 lg:h-10 lg:w-10 border-b-2 border-blue-600 mx-auto"></div>
-                      <p className="mt-3 text-sm lg:text-base text-gray-500">Ładowanie...</p>
-                    </div>
-                  ) : stats.recentFiles.length > 0 ? (
-                    stats.recentFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 lg:p-5 rounded-lg bg-gray-50">
-                        <div className="flex items-center">
-                          <FileText className="h-6 w-6 lg:h-7 lg:w-7 text-gray-600 mr-4" />
-                          <div>
-                            <p className="font-medium text-gray-900 text-lg lg:text-xl">{file.name}</p>
-                            <p className="text-sm lg:text-base text-gray-500">
-                              {formatBytes(file.size)} • {file.uploadedAt}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-sm lg:text-base text-gray-500">Brak ostatnich plików</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
-
-
       </main>
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <p>&copy; {new Date().getFullYear()} Chmura Blokserwis. Wszystkie prawa zastrzeżone.</p>
+            <p>&copy; {new Date().getFullYear()} <span className="font-roboto">Chmura Blokserwis</span>. Wszystkie prawa zastrzeżone.</p>
             <p className="mt-2 text-sm text-gray-400">
               Bezpieczna platforma do zarządzania plikami dla Twojej firmy
             </p>

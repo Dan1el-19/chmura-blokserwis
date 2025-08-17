@@ -1,219 +1,191 @@
-import React from 'react';
+"use client";
+import { useState } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { 
-  HardDrive, 
+  Cloud, 
   User, 
-  Settings, 
   LogOut, 
   Menu, 
-  X 
+  X, 
+  Settings,
+  Home
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { formatBytes } from '@/lib/utils';
+import toast from 'react-hot-toast';
 
-interface HeaderProps {
-  title: string;
-  userEmail: string;
-  userRole: string;
-  storageUsed: number;
-  storageLimit: number;
-  currentFolder: string;
-  onFolderChange: (folder: string) => void;
-  onLogout: () => void;
-  onAdminPanel?: () => void;
-  showMobileMenu?: boolean;
-  onToggleMobileMenu?: () => void;
-}
+export default function Header() {
+  const [user] = useAuthState(auth);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const router = useRouter();
 
-export default function Header({
-  title,
-  userEmail,
-  userRole,
-  storageUsed,
-  storageLimit,
-  currentFolder,
-  onFolderChange,
-  onLogout,
-  onAdminPanel,
-  showMobileMenu = false,
-  onToggleMobileMenu
-}: HeaderProps) {
-  const storagePercentage = (storageUsed / storageLimit) * 100;
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast.success('Wylogowano pomyślnie!');
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Błąd podczas wylogowywania');
+    }
+  };
+
+  const toggleMobileMenu = () => {
+    setShowMobileMenu(!showMobileMenu);
+  };
+
+  const closeMobileMenu = () => {
+    setShowMobileMenu(false);
+  };
 
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Desktop Header */}
-        <div className="hidden md:flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center py-3 sm:py-4">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h1>
-            <div className="flex gap-2">
-              <button
-                onClick={() => onFolderChange('personal')}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  currentFolder === 'personal'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                Mój folder
-              </button>
-              {userRole !== 'basic' && (
-                <button
-                  onClick={() => onFolderChange('main')}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    currentFolder === 'main'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                  }`}
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link 
+            href="/" 
+            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
+            onClick={closeMobileMenu}
+          >
+            <Cloud className="h-8 w-8" aria-hidden="true" />
+            <span className="text-xl font-bold font-roboto">Chmura Blokserwis</span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-4">
+            {user ? (
+              <>
+                <Link 
+                  href="/storage" 
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
-                  Folder główny
-                </button>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="flex items-center gap-2">
-              <HardDrive className="h-5 w-5 text-gray-400" />
-              <span className="text-sm text-gray-600">
-                {formatBytes(storageUsed)} / {formatBytes(storageLimit)}
-              </span>
-            </div>
-            
-            <div className="w-28 sm:w-32 bg-gray-200 rounded-full h-2">
-              <div 
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  storagePercentage > 90 ? 'bg-red-500' : 
-                  storagePercentage > 70 ? 'bg-yellow-500' : 'bg-blue-500'
-                }`}
-                style={{ width: `${Math.min(storagePercentage, 100)}%` }}
-              ></div>
-            </div>
+                  Moje pliki
+                </Link>
+                <Link 
+                  href="/admin-panel" 
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Panel admina
+                </Link>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-700">
+                    {user.email}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    aria-label="Wyloguj się"
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                    <span className="sr-only">Wyloguj</span>
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link href="/login">
+                  <Button variant="outline" size="sm">
+                    Zaloguj się
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </nav>
 
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5 text-gray-400" />
-              <span className="text-sm text-gray-600">{userEmail}</span>
-            </div>
-
-            {userRole === 'admin' && onAdminPanel && (
-              <Button
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+                          <Button
                 variant="ghost"
                 size="sm"
-                onClick={onAdminPanel}
-                className="p-2"
+                onClick={toggleMobileMenu}
+                aria-label={showMobileMenu ? "Zamknij menu" : "Otwórz menu"}
+                aria-expanded={showMobileMenu}
+                aria-haspopup={true}
               >
-                <Settings className="h-5 w-5" />
-              </Button>
-            )}
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onLogout}
-              className="p-2"
-            >
-              <LogOut className="h-5 w-5" />
+              {showMobileMenu ? (
+                <X className="h-6 w-6" aria-hidden="true" />
+              ) : (
+                <Menu className="h-6 w-6" aria-hidden="true" />
+              )}
             </Button>
           </div>
         </div>
 
-        {/* Mobile Header */}
-        <div className="md:hidden py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="text-lg font-bold text-gray-900">{title}</h1>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onToggleMobileMenu}
-                className="p-2"
-              >
-                {showMobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <div className="w-20 bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    storagePercentage > 90 ? 'bg-red-500' : 
-                    storagePercentage > 70 ? 'bg-yellow-500' : 'bg-blue-500'
-                  }`}
-                  style={{ width: `${Math.min(storagePercentage, 100)}%` }}
-                ></div>
-              </div>
-              <span className="text-xs text-gray-600">
-                {formatBytes(storageUsed)}
-              </span>
+        {/* Mobile Navigation */}
+        {showMobileMenu && (
+          <div 
+            className="md:hidden border-t border-gray-200 bg-white"
+            role="navigation"
+            aria-label="Menu mobilne"
+          >
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {user ? (
+                <>
+                  <Link
+                    href="/"
+                    className="flex items-center px-3 py-3 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors"
+                    onClick={closeMobileMenu}
+                  >
+                    <Home className="h-5 w-5 mr-3" aria-hidden="true" />
+                    Strona główna
+                  </Link>
+                  <Link
+                    href="/storage"
+                    className="flex items-center px-3 py-3 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors"
+                    onClick={closeMobileMenu}
+                  >
+                    <Cloud className="h-5 w-5 mr-3" aria-hidden="true" />
+                    Moje pliki
+                  </Link>
+                  <Link
+                    href="/admin-panel"
+                    className="flex items-center px-3 py-3 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors"
+                    onClick={closeMobileMenu}
+                  >
+                    <Settings className="h-5 w-5 mr-3" aria-hidden="true" />
+                    Panel admina
+                  </Link>
+                  <div className="border-t border-gray-200 pt-4 pb-3">
+                    <div className="flex items-center px-3">
+                      <User className="h-5 w-5 mr-3 text-gray-400" aria-hidden="true" />
+                      <div className="text-base font-medium text-gray-800">
+                        {user.email}
+                      </div>
+                    </div>
+                    <div className="mt-3 px-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          handleLogout();
+                          closeMobileMenu();
+                        }}
+                        className="w-full justify-center"
+                        aria-label="Wyloguj się"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Wyloguj się
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="px-3 py-3">
+                  <Link href="/login" onClick={closeMobileMenu}>
+                    <Button variant="primary" size="lg" className="w-full">
+                      Zaloguj się
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
-
-          {/* Mobile Menu */}
-          {showMobileMenu && (
-            <Card className="mt-3">
-              <CardContent className="p-4 space-y-4">
-                {/* Folder Navigation */}
-                <div className="flex gap-2">
-                  <Button
-                    variant={currentFolder === 'personal' ? 'primary' : 'outline'}
-                    size="sm"
-                    onClick={() => onFolderChange('personal')}
-                    className="flex-1"
-                  >
-                    Mój folder
-                  </Button>
-                  {userRole !== 'basic' && (
-                    <Button
-                      variant={currentFolder === 'main' ? 'primary' : 'outline'}
-                      size="sm"
-                      onClick={() => onFolderChange('main')}
-                      className="flex-1"
-                    >
-                      Folder główny
-                    </Button>
-                  )}
-                </div>
-
-                {/* User Info */}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <User className="h-4 w-4" />
-                  <span className="truncate">{userEmail}</span>
-                </div>
-
-                {/* Storage Info */}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <HardDrive className="h-4 w-4" />
-                  <span>{formatBytes(storageUsed)} / {formatBytes(storageLimit)}</span>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-2 border-t border-gray-200">
-                  {userRole === 'admin' && onAdminPanel && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={onAdminPanel}
-                      className="flex-1"
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Admin
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onLogout}
-                    className="flex-1"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Wyloguj
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        )}
       </div>
     </header>
   );

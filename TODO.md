@@ -1,97 +1,89 @@
 # TODO - Chmura Blokserwis
 
-## ✅ Zakończone
-- [x] Naprawa pobierania plików z S3 Cloudflare (błąd 404)
-- [x] Utworzenie endpointu `/api/files/access` dla bezpośredniego dostępu do plików
-- [x] Utworzenie endpointu `/api/files/presigned` dla miniatur obrazów
-- [x] Implementacja komponentu `ThumbnailImage` z autoryzacją
-- [x] Naprawa podglądu obrazów w aplikacji
-- [x] Dodanie szczegółowego logowania błędów w funkcji udostępniania
-- [x] Naprawa generowania pełnych URL dla udostępniania
-- [x] Naprawa pobierania plików - wymuszenie pobierania zamiast przekierowania
+## 🚀 Hybrydowe podejście do uploadu (W TRAKCIE)
 
-### 1. Modal potwierdzenia udostępnienia
-- [x] Utworzenie komponentu `ShareModal` z potwierdzeniem
-- [x] Wyświetlanie wygenerowanego linku w modalu
-- [x] Przycisk kopiowania linku w modalu
-- [x] Integracja z funkcją `handleShare` w `storage/page.tsx`
-- [x] Usunięcie automatycznego kopiowania do schowka
+### ✅ Zrobione:
+- [x] Naprawiono błędy CORS - upload przez backend
+- [x] Dodano fallback dla crypto.subtle w HTTP
+- [x] Naprawiono usuwanie nieudanych uploadów
+- [x] Automatyczne czyszczenie ukończonych uploadów
+- [x] Automatyczne odświeżanie listy plików
+- [x] Naprawiono usuwanie plików (query string vs body)
+- [x] **Dodano endpoint DELETE do `/api/admin/users`** - naprawiono błąd 404
+- [x] **Implementacja hybrydowego uploadu**:
+  - [x] Małe pliki (< 50MB): Backend upload (bezpieczny)
+  - [x] Duże pliki (> 50MB): Presigned URLs (szybki)
+  - [x] Endpoint `/api/files/multipart/initiate` dla dużych plików
+  - [x] Endpoint `/api/files/multipart/part-url` dla części
+  - [x] Endpoint `/api/files/multipart/complete` dla finalizacji
+  - [x] Endpoint `/api/files/multipart/abort` dla anulowania
+  - [x] Progress tracking dla presigned URLs
+  - [x] Resumable upload dla dużych plików
 
-### 2. Naprawa pobierania plików
-- [x] Modyfikacja funkcji `handleFileDownload` aby wymuszała pobieranie
-- [x] Użycie `Content-Disposition: attachment` w endpoincie `/api/files/download`
-- [x] Testowanie pobierania różnych typów plików
-- [x] Sprawdzenie czy nie ma przekierowań na linki Cloudflare
+### 🔄 W trakcie:
+- [ ] **Testowanie hybrydowego uploadu**:
+  - [ ] Test małych plików (< 50MB)
+  - [ ] Test dużych plików (> 50MB)
+  - [ ] Test anulowania uploadu
+  - [ ] Test wznowienia uploadu
+  - [ ] Test błędów sieciowych
 
-### 3. System ważności linków
-- [x] Utworzenie komponentu `ShareOptionsModal` z opcjami czasu
-- [x] Dodanie opcji czasowych: minuty, godziny, dni, miesiące
-- [x] Dodanie opcji do konkretnej daty i godziny
-- [x] Modyfikacja endpointu `/api/files/share` aby obsługiwał różne czasy ważności
-- [x] Walidacja dat w interfejsie użytkownika
-- [x] Wyświetlanie informacji o ważności linku w modalu potwierdzenia
+### 📋 Do zrobienia:
+- [ ] **Optymalizacje**:
+  - [ ] Caching presigned URLs
+  - [ ] Adaptive concurrency dla dużych plików
+  - [ ] Retry logic dla presigned URLs
+  - [ ] Network quality detection
+  - [ ] Upload speed optimization
 
-### 4. System zarządzania wieloma linkami
-- [x] Utworzenie endpointu `/api/files/links` (GET, DELETE, PATCH)
-- [x] Implementacja komponentu `ManageLinksModal`
-- [x] Dodanie funkcji edycji nazwy i czasu ważności linków
-- [x] Integracja z interfejsem użytkownika
-- [x] Naprawa błędów TypeScript i ESLint
+- [ ] **UI/UX**:
+  - [ ] Progress bar dla presigned URLs
+  - [ ] Różne style dla różnych typów uploadu
+  - [ ] Informacja o typie uploadu (backend vs presigned)
+  - [ ] Better error handling dla różnych typów
 
-### 5. Statystyki użycia linków
-- [x] Utworzenie kolekcji `linkUsage` w Firestore
-- [x] Logowanie kliknięć w endpoincie `/api/files/shared`
-- [x] Implementacja endpointu `/api/files/stats`
-- [x] Utworzenie komponentu `StatsModal`
-- [x] Integracja z `ManageLinksModal` i `FileGrid`
+## 🔒 Bezpieczeństwo - Analiza i poprawki
 
-### 6. System zarządzania przestrzenią dyskową
-- [x] Usunięcie strony register i odwołań do niej
-- [x] Naprawa obliczania użytej przestrzeni dyskowej w `/api/user/profile`
-- [x] Dodanie sprawdzania limitu miejsca przed uploadem
-- [x] Aktualizacja użytej przestrzeni po uploadzie i usunięciu plików
-- [x] Dodanie limitu miejsca dla folderu main (50GB)
-- [x] Ograniczenie uploadu do folderu main dla ról plus i admin
-- [x] Dodanie statystyk folderu main w panelu admina
-- [x] Utworzenie endpointu `/api/admin/main-storage`
-- [x] Dodanie zarządzania limitem folderu main przez admina
+### ✅ Zrobione:
+- [x] **Panel admina - wszystkie operacje przez backend API**:
+  - [x] `GET /api/admin/users` - lista użytkowników
+  - [x] `POST /api/admin/users` - tworzenie użytkowników
+  - [x] `DELETE /api/admin/users` - usuwanie użytkowników
+  - [x] `PUT /api/admin/users/update` - aktualizacja użytkowników
+  - [x] `POST /api/admin/users/password` - reset hasła
+  - [x] `GET /api/admin/logs` - logi aktywności
+  - [x] `GET /api/admin/main-storage` - statystyki storage
 
-### 7. Ulepszenia interfejsu i obsługi błędów
-- [x] Naprawa kolorów inputów w panelu admina
-- [x] Dodanie własnego modału do zmiany hasła (zamiast prompt)
-- [x] Dodanie szczegółowych komunikatów błędów logowania w języku polskim
-- [x] Lepsze handling błędów Firebase Authentication
-- [x] Wyświetlanie błędów logowania pod polem hasła
-- [x] Modyfikacja strony głównej z prawdziwymi danymi systemu
-- [x] Utworzenie endpointu `/api/system/stats` dla statystyk systemu
-- [x] Aktualizacja stopki z dynamicznym rokiem
-- [x] Przeniesienie statusu systemu do prawej kolumny (zamiast ostatnich plików)
-- [x] Poprawa układu stopki - zawsze na dole strony
-- [x] Ulepszenie responsywności paneli - lepsze wykorzystanie przestrzeni na dużych ekranach
-- [x] Dodanie sekcji "Ostatnie pliki" na bardzo dużych ekranach (2xl)
-- [x] Usunięcie panelu "Szybkie akcje" - uproszczenie interfejsu
-- [x] Rozszerzenie "Status systemu" o dodatkowe usługi (Google Cloud Run, GitHub, Next.js)
-- [x] Poprawa responsywności statusu systemu - lepsze wykorzystanie przestrzeni
-- [x] Ulepszenie logiki sprawdzania statusu usług - lepsze rozróżnianie błędów połączenia od braku danych
-- [x] Uproszczenie statusu usług na stronie publicznej - statyczne statusy zamiast dynamicznego sprawdzania
-- [x] Naprawa błędów TypeScript i ESLint - usunięcie nieużywanych importów i dodanie typów dla błędów
+### 🔍 Zidentyfikowane problemy:
+- [x] ~~Panel admina używa bezpośrednich operacji Firebase~~ - NAPRAWIONE
+- [x] ~~Brak endpointów API dla operacji admina~~ - NAPRAWIONE
+- [x] ~~Niektóre operacje mogą być wykonywane poza backendem~~ - NAPRAWIONE
 
-## 🐛 Znane problemy
-- Clipboard API nie działa w niektórych przeglądarkach (naprawione przez modal)
-- Statystyki mogą nie działać w środowisku deweloperskim (wymagane wdrożenie)
+### 🛡️ Do naprawienia:
+- [ ] **Middleware bezpieczeństwa**:
+  - [ ] Admin role verification
+  - [ ] Rate limiting
+  - [ ] Request validation
+  - [ ] Audit logging
 
-## 📝 Uwagi techniczne
-- System sprawdza limity miejsca przed każdym uploadem
-- Używana przestrzeń jest obliczana w czasie rzeczywistym z S3
-- Folder main ma limit 50GB i jest dostępny dla ról plus i admin
-- Admin może edytować limit folderu main z panelu administracyjnego
-- Wszystkie operacje na plikach są logowane w `activityLogs`
-- Statystyki linków są zbierane w kolekcji `linkUsage`
-- Szczegółowe komunikaty błędów w języku polskim
+## 📊 Priorytety:
 
-## 🔧 Funkcje systemu
-- **Zarządzanie plikami**: Upload, download, delete, preview
-- **Udostępnianie**: Wielokrotne linki z nazwami i czasem ważności
-- **Statystyki**: Śledzenie użycia linków i przestrzeni dyskowej
-- **Administracja**: Panel admina z zarządzaniem użytkownikami i limitami
-- **Bezpieczeństwo**: Sprawdzanie uprawnień i limitów miejsca
+### 🟢 WYSOKI (Bezpieczeństwo):
+1. ✅ ~~Implementacja endpointów admina~~ - ZAKOŃCZONE
+2. ✅ ~~Przeniesienie operacji admina na backend~~ - ZAKOŃCZONE
+3. [ ] Middleware bezpieczeństwa
+
+### 🟡 ŚREDNI (Wydajność):
+1. ✅ ~~Hybrydowe podejście do uploadu~~ - ZAKOŃCZONE
+2. ✅ ~~Presigned URLs dla dużych plików~~ - ZAKOŃCZONE
+3. [ ] Progress tracking
+
+### 🔵 NISKI (UX):
+1. [ ] UI improvements
+2. [ ] Better error messages
+3. [ ] Loading states
+
+## 🎯 Cel:
+- ✅ **Bezpieczeństwo**: Wszystkie operacje przez backend - ZAKOŃCZONE
+- ✅ **Wydajność**: Szybki upload dla dużych plików - ZAKOŃCZONE
+- [ ] **UX**: Płynne doświadczenie użytkownika

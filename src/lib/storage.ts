@@ -1,4 +1,16 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  ListObjectsV2Command,
+  CreateMultipartUploadCommand,
+  UploadPartCommand,
+  CompleteMultipartUploadCommand,
+  AbortMultipartUploadCommand,
+  ListPartsCommand,
+  HeadObjectCommand
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 let s3Client: S3Client | null = null;
@@ -56,6 +68,64 @@ export async function deleteFile(key: string) {
   const bucket = getBucketName();
   const cmd = new DeleteObjectCommand({ Bucket: bucket, Key: key });
   return client.send(cmd);
+}
+
+// Multipart helpers
+export async function createMultipartUpload(key: string, contentType?: string): Promise<{ uploadId: string }> {
+  const client = initializeS3Client();
+  const bucket = getBucketName();
+  const res = await client.send(new CreateMultipartUploadCommand({
+    Bucket: bucket,
+    Key: key,
+    ContentType: contentType || 'application/octet-stream'
+  }));
+  if (!res.UploadId) {
+    throw new Error('Failed to initiate multipart upload');
+  }
+  return { uploadId: res.UploadId };
+}
+
+export async function getPresignedPartUrl(key: string, uploadId: string, partNumber: number, expiresIn = 3600) {
+  const client = initializeS3Client();
+  const bucket = getBucketName();
+  const cmd = new UploadPartCommand({ Bucket: bucket, Key: key, UploadId: uploadId, PartNumber: partNumber });
+  return getSignedUrl(client, cmd, { expiresIn });
+}
+
+export async function completeMultipartUpload(key: string, uploadId: string, parts: Array<{ ETag: string; PartNumber: number }>) {
+  const client = initializeS3Client();
+  const bucket = getBucketName();
+  await client.send(new CompleteMultipartUploadCommand({
+    Bucket: bucket,
+    Key: key,
+    UploadId: uploadId,
+    MultipartUpload: { Parts: parts.sort((a, b) => a.PartNumber - b.PartNumber) }
+  }));
+}
+
+export async function abortMultipartUpload(key: string, uploadId: string) {
+  const client = initializeS3Client();
+  const bucket = getBucketName();
+  await client.send(new AbortMultipartUploadCommand({ Bucket: bucket, Key: key, UploadId: uploadId }));
+}
+
+export async function listUploadedParts(key: string, uploadId: string) {
+  const client = initializeS3Client();
+  const bucket = getBucketName();
+  const res = await client.send(new ListPartsCommand({ Bucket: bucket, Key: key, UploadId: uploadId }));
+  return res.Parts || [];
+}
+
+// Alias dla kompatybilności z nowym endpointem
+export async function listMultipartUploadParts(key: string, uploadId: string) {
+  return listUploadedParts(key, uploadId);
+}
+
+export async function headObjectSize(key: string): Promise<number | null> {
+  const client = initializeS3Client();
+  const bucket = getBucketName();
+  const res = await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+  return typeof res.ContentLength === 'number' ? res.ContentLength : null;
 }
 
 

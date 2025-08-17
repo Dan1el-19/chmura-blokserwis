@@ -1,21 +1,49 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Roboto, Inter } from 'next/font/google';
 import "./globals.css";
 import { Toaster } from 'react-hot-toast';
+import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// Google Fonts
+const roboto = Roboto({
+  weight: ['100', '300', '400', '500', '700', '900'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-roboto',
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const inter = Inter({
+  weight: ['300', '400', '500', '600', '700', '800'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-funnel-sans',
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#3B82F6',
+  colorScheme: 'light dark',
+};
 
 export const metadata: Metadata = {
   title: "Chmura Blokserwis - Bezpieczne przechowywanie plików",
   description: "Profesjonalna platforma do zarządzania plikami z zaawansowanym systemem uprawnień",
+  keywords: ["chmura", "plik", "storage", "cloud", "bezpieczeństwo"],
+  authors: [{ name: "Chmura Blokserwis" }],
+  robots: "index, follow",
+  openGraph: {
+    title: "Chmura Blokserwis - Bezpieczne przechowywanie plików",
+    description: "Profesjonalna platforma do zarządzania plikami z zaawansowanym systemem uprawnień",
+    type: "website",
+    locale: "pl_PL",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Chmura Blokserwis - Bezpieczne przechowywanie plików",
+    description: "Profesjonalna platforma do zarządzania plikami z zaawansowanym systemem uprawnień",
+  },
 };
 
 export default function RootLayout({
@@ -24,12 +52,41 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pl">
+    <html lang="pl" className={`scroll-smooth ${roboto.variable} ${inter.variable}`}>
+      <head>
+        {/* Google Fonts backup */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&family=Inter:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet" />
+        
+        <meta name="application-name" content="Chmura Blokserwis" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Chmura Blokserwis" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#3B82F6" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+        <link rel="icon" type="image/svg+xml" href="/icons/icon-192x192.svg" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased"
         suppressHydrationWarning={true}
       >
-        {children}
+        <div id="skip-to-content" className="sr-only">
+          <a href="#main-content" className="block p-4 bg-blue-600 text-white text-center">
+            Przejdź do głównej zawartości
+          </a>
+        </div>
+        
+        <main id="main-content" tabIndex={-1}>
+          {children}
+        </main>
+        
         <Toaster 
           position="top-right"
           toastOptions={{
@@ -54,6 +111,8 @@ export default function RootLayout({
             },
           }}
         />
+        
+        <PWAInstallPrompt />
       </body>
     </html>
   );

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getFirestore } from 'firebase-admin/firestore';
-import { getAuth } from 'firebase-admin/auth';
+import { db, auth } from '@/lib/firebaseAdmin';
 import { listFiles } from '@/lib/storage';
 
 export async function GET() {
@@ -8,10 +7,11 @@ export async function GET() {
     console.log('System stats endpoint called');
     
          // Sprawdź czy Firebase Admin jest zainicjalizowany
-     try {
-       getFirestore();
-       console.log('Firestore initialized successfully');
-     } catch (error) {
+    // Sprawdź czy Firebase Admin jest zainicjalizowany (db pochodzi z inicjalizatora)
+    try {
+      if (!db) throw new Error('Firestore not initialized');
+      console.log('Firestore initialized successfully');
+    } catch (error) {
       console.error('Firestore initialization error:', error);
       return NextResponse.json({
         totalFiles: 0,
@@ -27,40 +27,38 @@ export async function GET() {
         error: 'Firebase not configured'
       });
     }
-    
-         const db = getFirestore();
      
      // Sprawdź status Firebase Auth
      let totalUsers = 0;
      let firebaseWorking = false;
-     try {
-       getAuth();
-       // Sprawdź czy Firebase Auth działa - spróbuj pobrać listę użytkowników
-       const result = await getAuth().listUsers(1000);
-       totalUsers = result.users.length;
-       firebaseWorking = true;
-       console.log('Firebase Auth working, users count:', totalUsers);
-          } catch (error: unknown) {
-        console.error('Error fetching users:', error);
-        // Sprawdź czy to błąd braku użytkowników czy rzeczywisty problem z Firebase
-        if (error && typeof error === 'object' && 'code' in error && 
-            (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
-         // Firebase działa, ale nie ma użytkowników lub problem z credentials
-         firebaseWorking = true;
-         console.log('Firebase Auth working but no users or credential issue');
-       } else {
-         // Spróbuj prostszą operację - sprawdź czy Firebase Admin jest zainicjalizowany
-         try {
-           getAuth();
-           // Jeśli nie ma błędu, Firebase Admin działa
-           firebaseWorking = true;
-           console.log('Firebase Auth working (admin initialized)');
-                  } catch (adminError: unknown) {
-            firebaseWorking = false;
-            console.error('Firebase Auth not working:', adminError);
-         }
-       }
-     }
+    try {
+      // Sprawdź czy Firebase Auth działa - spróbuj pobrać listę użytkowników
+      if (!auth) throw new Error('Firebase Admin auth not configured');
+      const result = await auth.listUsers(1000);
+      totalUsers = result.users.length;
+      firebaseWorking = true;
+      console.log('Firebase Auth working, users count:', totalUsers);
+    } catch (error: unknown) {
+      console.error('Error fetching users:', error);
+      // Sprawdź czy to błąd braku użytkowników czy rzeczywisty problem z Firebase
+      if (error && typeof error === 'object' && 'code' in error &&
+          (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
+        // Firebase działa, ale nie ma użytkowników lub problem z credentials
+        firebaseWorking = true;
+        console.log('Firebase Auth working but no users or credential issue');
+      } else {
+        // Spróbuj prostszą operację - sprawdź czy Firebase Admin jest zainicjalizowany
+        try {
+          if (!auth) throw new Error('Auth not initialized');
+          // Jeśli nie ma błędu, Firebase Admin działa
+          firebaseWorking = true;
+          console.log('Firebase Auth working (admin initialized)');
+        } catch (adminError: unknown) {
+          firebaseWorking = false;
+          console.error('Firebase Auth not working:', adminError);
+        }
+      }
+    }
 
     // Sprawdź status Cloudflare R2
     let totalFiles = 0;
@@ -118,6 +116,7 @@ export async function GET() {
        const yesterday = new Date();
        yesterday.setDate(yesterday.getDate() - 1);
        
+       if (!db) throw new Error('Firestore not initialized');
        const logsSnapshot = await db.collection('activityLogs')
          .where('timestamp', '>=', yesterday)
          .get();
