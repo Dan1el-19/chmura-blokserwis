@@ -110,7 +110,7 @@ src/
 ### Administracja
 - `GET /api/admin/users` - Lista użytkowników
 - `PUT /api/admin/users/update` - Aktualizuj użytkownika
-- `DELETE /api/admin/users/delete` - Usuń użytkownika
+- `DELETE /api/admin/users?userId=<id>` - Usuń użytkownika
 - `GET /api/admin/logs` - Logi aktywności
 
 ## Deployment

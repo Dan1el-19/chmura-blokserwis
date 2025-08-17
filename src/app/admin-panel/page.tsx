@@ -160,7 +160,7 @@ export default function AdminPanel() {
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Czy na pewno chcesz usunąć tego użytkownika?')) return;
     try {
-      const response = await fetch(`/api/admin/users/delete?userId=${userId}`, {
+      const response = await fetch(`/api/admin/users?userId=${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${await user?.getIdToken()}` }
       });
