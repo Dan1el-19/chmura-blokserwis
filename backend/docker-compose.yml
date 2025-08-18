@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  tus-server:
+    build: .
+    env_file:
+      - .env.local
+    ports:
+      - "1080:1080"
+    restart: unless-stopped

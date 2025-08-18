@@ -3,8 +3,5 @@ npm-debug.log
 .DS_Store
 .env.local
 .env
-.next
-dist
-coverage
 .vscode
 .idea

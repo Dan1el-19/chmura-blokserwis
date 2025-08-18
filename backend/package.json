@@ -1,0 +1,31 @@
+{
+	"name": "red-darkness-05dc",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start-wrangler": "wrangler dev",
+		"start": "node -r dotenv/config tus-server.mjs",
+		"start-tus-local": "node -r dotenv/config tus-server.mjs",
+		"test": "vitest",
+		"cf-typegen": "wrangler types",
+		"start-tus": "node tus-server.mjs",
+		"tus:docker-build": "docker build -t tus-server:latest .",
+		"tus:docker-run": "docker run --env-file .env.local -p 1080:1080 tus-server:latest"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.8.19",
+		"@cloudflare/workers-types": "^4.20250816.0",
+		"@types/node": "^18.16.19",
+		"dotenv": "^16.3.1",
+		"typescript": "^5.5.2",
+		"vitest": "~3.2.0",
+		"wrangler": "^4.31.0"
+	},
+	"dependencies": {
+		"@aws-sdk/client-s3": "^3.864.0",
+		"@tus/s3-store": "^2.0.0",
+		"@tus/server": "^2.3.0"
+	}
+}

@@ -1,0 +1,27 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: tus-server
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+        - image: gcr.io/YOUR_PROJECT_ID/tus-server:latest
+          env:
+            - name: R2_BUCKET
+              value: "your-bucket"
+            - name: R2_ENDPOINT
+              value: "https://<account>.r2.cloudflarestorage.com"
+            - name: ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: r2-credentials
+                  key: accessKeyId
+            - name: SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: r2-credentials
+                  key: secretAccessKey
+          ports:
+            - containerPort: 1080
