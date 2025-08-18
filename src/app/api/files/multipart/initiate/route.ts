@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Brak wymaganych parametrów' }, { status: 400 });
     }
 
+    console.log('Initiating multipart upload:', { fileName, fileSize, contentType, folder });
+
     // Sprawdź uprawnienia dla folderu main
     if (folder === 'main') {
       const db = getFirestore();

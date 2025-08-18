@@ -158,3 +158,43 @@ h1, h2, h3, h4, h5, h6 {
     text-decoration: underline !important;
   }
 }
+
+/* Autofill styles - poprawiają wygląd autouzupełniania w przeglądarkach */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #000000 !important;
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  box-shadow: 0 0 0 30px white inset !important;
+  background-color: white !important;
+  background-image: none !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Firefox autofill styles */
+input:-moz-autofill,
+input:-moz-autofill:focus {
+  background-color: white !important;
+  color: #000000 !important;
+}
+
+/* Edge autofill styles */
+input:-ms-input-placeholder {
+  color: #6b7280 !important;
+}
+
+/* Placeholder styles */
+input::placeholder {
+  color: #6b7280 !important;
+  opacity: 1;
+}
+
+/* Focus styles for better accessibility */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid #3B82F6 !important;
+  outline-offset: 2px !important;
+  border-color: #3B82F6 !important;
+}

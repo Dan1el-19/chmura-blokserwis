@@ -25,6 +25,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Brak wymaganych parametrów' }, { status: 400 });
     }
 
+    // Sprawdź czy wszystkie części mają wymagane pola
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (!part.PartNumber || !part.ETag) {
+        return NextResponse.json({ 
+          error: `Nieprawidłowa część ${i + 1}: brak PartNumber lub ETag` 
+        }, { status: 400 });
+      }
+      
+      // Sprawdź czy PartNumber jest liczbą
+      if (typeof part.PartNumber !== 'number' || part.PartNumber < 1) {
+        return NextResponse.json({ 
+          error: `Nieprawidłowa część ${i + 1}: PartNumber musi być liczbą większą od 0` 
+        }, { status: 400 });
+      }
+      
+      // Sprawdź czy ETag jest stringiem
+      if (typeof part.ETag !== 'string' || part.ETag.length === 0) {
+        return NextResponse.json({ 
+          error: `Nieprawidłowa część ${i + 1}: ETag musi być niepustym stringiem` 
+        }, { status: 400 });
+      }
+    }
+
+    console.log('Completing multipart upload:', { uploadId, partsCount: parts.length });
+
     // Sprawdź czy upload należy do użytkownika
     const db = getFirestore();
     const uploadDoc = await db.collection('multipartUploads').doc(uploadId).get();
@@ -58,10 +84,20 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log('Completing multipart upload with parts:', parts);
+
     const result = await client.send(command);
 
+    console.log('R2 complete response:', {
+      location: result.Location,
+      etag: result.ETag,
+      bucket: result.Bucket,
+      key: result.Key
+    });
+
     if (!result.Location) {
-      return NextResponse.json({ error: 'Nie udało się finalizować uploadu' }, { status: 500 });
+      console.error('R2 complete response missing Location:', result);
+      return NextResponse.json({ error: 'Nie udało się finalizować uploadu - brak Location w odpowiedzi' }, { status: 500 });
     }
 
     // Aktualizuj status uploadu w Firestore

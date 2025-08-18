@@ -106,7 +106,7 @@ export function UploadProvider({ children, onUploadComplete }: { children: React
 			importSessions: (exportData) => managerRef.current!.importSessions(exportData),
 			cleanupOldSessions: (maxAgeHours) => managerRef.current!.cleanupOldSessions(maxAgeHours)
 		};
-	}, [uploads, queueStats]);
+	}, [uploads, queueStats, onUploadComplete]);
 
 	// Auto-wznawianie sesji po załadowaniu strony
 	useEffect(() => {

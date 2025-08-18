@@ -26,7 +26,7 @@ function StoragePageInner() {
   const [storageLimit, setStorageLimit] = useState(5 * 1024 * 1024 * 1024); // 5GB
   const [files, setFiles] = useState<FileItem[]>([]);
   const [currentFolder, setCurrentFolder] = useState('personal');
-  const [uploading, setUploading] = useState(false);
+
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showShareOptionsModal, setShowShareOptionsModal] = useState(false);
@@ -111,12 +111,17 @@ function StoragePageInner() {
     }
   }, [user, fetchUserData, fetchFiles]);
 
+  const { enqueue, uploads } = useUpload();
+  
+  // Check if there are any active uploads
+  const hasActiveUploads = uploads.some(upload => upload.status === 'uploading' || upload.status === 'queued');
+
   // Ochrona przed odświeżeniem/wyjściem podczas uploadu
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (uploading) {
+      if (hasActiveUploads) {
         e.preventDefault();
         // Chrome wymaga ustawienia returnValue
         e.returnValue = '';
@@ -124,9 +129,7 @@ function StoragePageInner() {
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [uploading]);
-
-  const { enqueue, uploads } = useUpload();
+  }, [hasActiveUploads]);
 
   // Odśwież listę plików gdy upload się zakończy
   useEffect(() => {
@@ -190,36 +193,7 @@ function StoragePageInner() {
     }
   };
 
-  const performFileUpload = async (file: File) => {
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('folder', currentFolder);
 
-      const response = await fetch('/api/files/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${await user?.getIdToken()}`
-        },
-        body: formData
-      });
-
-      if (response.ok) {
-        toast.success(`Plik ${file.name} został przesłany`);
-      } else {
-        const error = await response.json();
-        toast.error(`Błąd podczas przesyłania ${file.name}: ${error.error}`);
-      }
-    } catch {
-      toast.error(`Błąd podczas przesyłania ${file.name}`);
-    } finally {
-      setUploading(false);
-      // Refresh data
-      fetchUserData();
-      fetchFiles();
-    }
-  };
 
   const handleCostCalculatorConfirm = async () => {
     if (selectedFileForUpload) {
@@ -423,7 +397,7 @@ function StoragePageInner() {
           <DragDropUpload onFilesSelected={handleFilesSelected}>
             <UploadSection
               currentFolder={currentFolder}
-              uploading={uploading}
+              uploading={hasActiveUploads}
               storagePercentage={storagePercentage}
               onFileUpload={handleFileUpload}
             />

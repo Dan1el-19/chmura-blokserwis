@@ -62,11 +62,17 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               'focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
               'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
               'transition-colors duration-200',
+              'autofill:bg-white autofill:text-black autofill:shadow-[0_0_0_30px_white_inset]',
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',
               error && 'border-red-300 focus:border-red-500 focus:ring-red-500',
               className
             )}
+            style={{
+              WebkitTextFillColor: 'black',
+              WebkitBoxShadow: '0 0 0 30px white inset',
+              boxShadow: '0 0 0 30px white inset'
+            }}
             aria-label={ariaLabel}
             aria-describedby={describedBy || undefined}
             aria-invalid={ariaInvalid || !!error}

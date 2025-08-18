@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { formatBytes } from '@/lib/utils';
@@ -31,7 +31,7 @@ export default function StorageUsageBars({ onRefresh }: StorageUsageBarsProps) {
   const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchStorageStats = async () => {
+  const fetchStorageStats = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -50,17 +50,17 @@ export default function StorageUsageBars({ onRefresh }: StorageUsageBarsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchStorageStats();
-  }, [user]);
+  }, [fetchStorageStats]);
 
   useEffect(() => {
     if (onRefresh) {
       fetchStorageStats();
     }
-  }, [onRefresh]);
+  }, [onRefresh, fetchStorageStats]);
 
   if (loading) {
     return (

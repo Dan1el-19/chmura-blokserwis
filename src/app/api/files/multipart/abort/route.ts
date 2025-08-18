@@ -19,11 +19,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { uploadId } = body;
+    const { uploadId, key } = body;
 
     if (!uploadId) {
       return NextResponse.json({ error: 'Brak ID uploadu' }, { status: 400 });
     }
+
+    console.log('Aborting multipart upload:', { uploadId, key });
 
     // Sprawdź czy upload należy do użytkownika
     const db = getFirestore();
@@ -48,11 +50,16 @@ export async function POST(request: NextRequest) {
 
     const command = new AbortMultipartUploadCommand({
       Bucket: bucket,
-      Key: uploadData.key,
+      Key: key || uploadData.key,
       UploadId: uploadId,
     });
 
-    await client.send(command);
+    try {
+      await client.send(command);
+    } catch (error) {
+      console.error('Error aborting multipart upload in R2:', error);
+      // Nie rzucaj błędu - nadal aktualizuj status w Firestore
+    }
 
     // Aktualizuj status uploadu w Firestore
     await db.collection('multipartUploads').doc(uploadId).update({
@@ -63,6 +70,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error in multipart abort:', error);
-    return NextResponse.json({ error: 'Błąd serwera' }, { status: 500 });
+    
+    // Sprawdź czy to błąd związany z R2
+    if (error instanceof Error) {
+      if (error.message.includes('NoSuchUpload')) {
+        return NextResponse.json({ error: 'Upload już nie istnieje' }, { status: 404 });
+      }
+      if (error.message.includes('AccessDenied')) {
+        return NextResponse.json({ error: 'Brak uprawnień do anulowania uploadu' }, { status: 403 });
+      }
+    }
+    
+    return NextResponse.json({ error: 'Błąd serwera podczas anulowania uploadu' }, { status: 500 });
   }
 }

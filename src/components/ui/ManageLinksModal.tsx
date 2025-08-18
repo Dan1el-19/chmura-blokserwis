@@ -274,7 +274,12 @@ export default function ManageLinksModal({
                           type="text"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900"
+                          className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900 autofill:bg-white autofill:text-black"
+                          style={{
+                            WebkitTextFillColor: 'black',
+                            WebkitBoxShadow: '0 0 0 30px white inset',
+                            boxShadow: '0 0 0 30px white inset'
+                          }}
                         />
                       </div>
 
@@ -300,7 +305,12 @@ export default function ManageLinksModal({
                               min="1"
                               value={editExpiresIn}
                               onChange={(e) => setEditExpiresIn(parseInt(e.target.value) || 1)}
-                              className="w-20 px-3 py-2 border border-gray-200 rounded text-sm text-gray-900"
+                              className="w-20 px-3 py-2 border border-gray-200 rounded text-sm text-gray-900 autofill:bg-white autofill:text-black"
+                              style={{
+                                WebkitTextFillColor: 'black',
+                                WebkitBoxShadow: '0 0 0 30px white inset',
+                                boxShadow: '0 0 0 30px white inset'
+                              }}
                             />
                             <select
                               value={editTimeUnit}
@@ -338,7 +348,12 @@ export default function ManageLinksModal({
                                 value={editCustomDate}
                                 onChange={(e) => setEditCustomDate(e.target.value)}
                                 min={new Date().toISOString().split('T')[0]}
-                                className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900"
+                                className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900 autofill:bg-white autofill:text-black"
+                                style={{
+                                  WebkitTextFillColor: 'black',
+                                  WebkitBoxShadow: '0 0 0 30px white inset',
+                                  boxShadow: '0 0 0 30px white inset'
+                                }}
                               />
                             </div>
                             <div>
@@ -347,7 +362,12 @@ export default function ManageLinksModal({
                                 type="time"
                                 value={editCustomTime}
                                 onChange={(e) => setEditCustomTime(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900"
+                                className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900 autofill:bg-white autofill:text-black"
+                                style={{
+                                  WebkitTextFillColor: 'black',
+                                  WebkitBoxShadow: '0 0 0 30px white inset',
+                                  boxShadow: '0 0 0 30px white inset'
+                                }}
                               />
                             </div>
                           </div>

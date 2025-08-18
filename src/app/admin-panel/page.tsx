@@ -530,7 +530,8 @@ export default function AdminPanel() {
                       name="storageLimit"
                       defaultValue={Math.floor(editingUser.storageLimit / (1024 * 1024 * 1024))}
                       min="1"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 autofill:bg-white autofill:text-black"
+                      style={{ WebkitTextFillColor: 'black', WebkitBoxShadow: '0 0 0 30px white inset', boxShadow: '0 0 0 30px white inset' }}
                     />
                   </div>
                 </div>
@@ -575,11 +576,11 @@ export default function AdminPanel() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Email</label>
-                    <input name="email" type="email" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-black placeholder-gray-400" />
+                    <input name="email" type="email" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-black placeholder-gray-400 autofill:bg-white autofill:text-black" style={{ WebkitTextFillColor: 'black', WebkitBoxShadow: '0 0 0 30px white inset', boxShadow: '0 0 0 30px white inset' }} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Nazwa</label>
-                    <input name="displayName" type="text" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-black placeholder-gray-400" />
+                    <input name="displayName" type="text" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-black placeholder-gray-400 autofill:bg-white autofill:text-black" style={{ WebkitTextFillColor: 'black', WebkitBoxShadow: '0 0 0 30px white inset', boxShadow: '0 0 0 30px white inset' }} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Rola</label>
@@ -591,11 +592,11 @@ export default function AdminPanel() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Limit (GB)</label>
-                    <input name="storageLimit" type="number" min="1" defaultValue={5} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-black" />
+                    <input name="storageLimit" type="number" min="1" defaultValue={5} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-black autofill:bg-white autofill:text-black" style={{ WebkitTextFillColor: 'black', WebkitBoxShadow: '0 0 0 30px white inset', boxShadow: '0 0 0 30px white inset' }} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Hasło (opcjonalne)</label>
-                    <input name="password" type="text" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-black placeholder-gray-400" />
+                    <input name="password" type="text" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-black placeholder-gray-400 autofill:bg-white autofill:text-black" style={{ WebkitTextFillColor: 'black', WebkitBoxShadow: '0 0 0 30px white inset', boxShadow: '0 0 0 30px white inset' }} />
                   </div>
                 </div>
                 <div className="mt-6 flex space-x-3">
@@ -635,7 +636,8 @@ export default function AdminPanel() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Zostaw puste, by wygenerować automatycznie"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 autofill:bg-white autofill:text-black"
+                      style={{ WebkitTextFillColor: 'black', WebkitBoxShadow: '0 0 0 30px white inset', boxShadow: '0 0 0 30px white inset' }}
                     />
                     <p className="mt-1 text-xs text-gray-500">
                       Jeśli zostawisz puste, zostanie wygenerowane hasło i skopiowane do schowka
@@ -697,7 +699,8 @@ export default function AdminPanel() {
                       name="limit"
                       defaultValue={Math.floor(mainStorageLimit / (1024 * 1024 * 1024))}
                       min="1"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 autofill:bg-white autofill:text-black"
+                      style={{ WebkitTextFillColor: 'black', WebkitBoxShadow: '0 0 0 30px white inset', boxShadow: '0 0 0 30px white inset' }}
                     />
                   </div>
 

@@ -135,7 +135,7 @@ export class SessionExportManager {
 			}
 
 			return { valid: true };
-		} catch (error) {
+		} catch {
 			return { valid: false, error: 'Nieprawidłowy plik JSON' };
 		}
 	}

@@ -145,8 +145,13 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black"
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-500 autofill:bg-white autofill:text-black autofill:shadow-[0_0_0_30px_white_inset]"
                   placeholder="twoj@email.com"
+                  style={{
+                    WebkitTextFillColor: 'black',
+                    WebkitBoxShadow: '0 0 0 30px white inset',
+                    boxShadow: '0 0 0 30px white inset'
+                  }}
                 />
               </div>
             </div>
@@ -167,8 +172,13 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black"
+                  className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-500 autofill:bg-white autofill:text-black autofill:shadow-[0_0_0_30px_white_inset]"
                   placeholder="Twoje hasło"
+                  style={{
+                    WebkitTextFillColor: 'black',
+                    WebkitBoxShadow: '0 0 0 30px white inset',
+                    boxShadow: '0 0 0 30px white inset'
+                  }}
                 />
                 <button
                   type="button"

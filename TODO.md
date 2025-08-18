@@ -19,6 +19,7 @@
   - [x] Endpoint `/api/files/multipart/abort` dla anulowania
   - [x] Progress tracking dla presigned URLs
   - [x] Resumable upload dla dużych plików
+- [x] **Proxy upload dla części** - rozwiązanie problemów CORS w dev
 
 ### 🔄 W trakcie:
 - [ ] **Testowanie hybrydowego uploadu**:
@@ -29,6 +30,18 @@
   - [ ] Test błędów sieciowych
 
 ### 📋 Do zrobienia:
+- [ ] **Dynamiczny algorytm rozmiaru części**:
+  - [ ] Zastąpić hardcoded wartości (100-1000 części)
+  - [ ] Implementacja adaptacyjnego algorytmu bazującego na:
+    - [ ] Wielkości pliku
+    - [ ] Dostępnej przepustowości sieci
+    - [ ] Wydajności systemu (CPU/memory)
+    - [ ] Historii udanych uploadów
+  - [ ] Machine learning dla optymalizacji rozmiaru części
+  - [ ] Real-time adjustment podczas uploadu
+  - [ ] A/B testing różnych strategii dla różnych typów plików
+  - [ ] Benchmarking wydajności różnych algorytmów
+
 - [ ] **Optymalizacje**:
   - [ ] Caching presigned URLs
   - [ ] Adaptive concurrency dla dużych plików
@@ -76,7 +89,8 @@
 ### 🟡 ŚREDNI (Wydajność):
 1. ✅ ~~Hybrydowe podejście do uploadu~~ - ZAKOŃCZONE
 2. ✅ ~~Presigned URLs dla dużych plików~~ - ZAKOŃCZONE
-3. [ ] Progress tracking
+3. [ ] **Dynamiczny algorytm rozmiaru części** - NOWY PRIORYTET
+4. [ ] Progress tracking
 
 ### 🔵 NISKI (UX):
 1. [ ] UI improvements
@@ -86,4 +100,5 @@
 ## 🎯 Cel:
 - ✅ **Bezpieczeństwo**: Wszystkie operacje przez backend - ZAKOŃCZONE
 - ✅ **Wydajność**: Szybki upload dla dużych plików - ZAKOŃCZONE
+- [ ] **Inteligentna optymalizacja**: Dynamiczne dostosowanie do warunków
 - [ ] **UX**: Płynne doświadczenie użytkownika

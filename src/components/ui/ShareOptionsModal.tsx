@@ -97,7 +97,12 @@ export default function ShareOptionsModal({
               value={linkName}
               onChange={(e) => setLinkName(e.target.value)}
               placeholder="np. Link dla klienta, Link tymczasowy..."
-              className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900"
+              className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900 autofill:bg-white autofill:text-black"
+              style={{
+                WebkitTextFillColor: 'black',
+                WebkitBoxShadow: '0 0 0 30px white inset',
+                boxShadow: '0 0 0 30px white inset'
+              }}
             />
           </div>
 
@@ -124,7 +129,12 @@ export default function ShareOptionsModal({
                    min="1"
                    value={timeValue}
                    onChange={(e) => setTimeValue(parseInt(e.target.value) || 1)}
-                   className="w-20 px-3 py-2 border border-gray-200 rounded text-sm text-gray-900"
+                   className="w-20 px-3 py-2 border border-gray-200 rounded text-sm text-gray-900 autofill:bg-white autofill:text-black"
+                   style={{
+                     WebkitTextFillColor: 'black',
+                     WebkitBoxShadow: '0 0 0 30px white inset',
+                     boxShadow: '0 0 0 30px white inset'
+                   }}
                  />
                                  <select
                    value={timeUnit}
@@ -165,7 +175,12 @@ export default function ShareOptionsModal({
                      value={customDate}
                      onChange={(e) => setCustomDate(e.target.value)}
                      min={new Date().toISOString().split('T')[0]}
-                     className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900"
+                     className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900 autofill:bg-white autofill:text-black"
+                     style={{
+                       WebkitTextFillColor: 'black',
+                       WebkitBoxShadow: '0 0 0 30px white inset',
+                       boxShadow: '0 0 0 30px white inset'
+                     }}
                    />
                 </div>
                 <div>
@@ -174,7 +189,12 @@ export default function ShareOptionsModal({
                      type="time"
                      value={customTime}
                      onChange={(e) => setCustomTime(e.target.value)}
-                     className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900"
+                     className="w-full px-3 py-2 border border-gray-200 rounded text-sm text-gray-900 autofill:bg-white autofill:text-black"
+                     style={{
+                       WebkitTextFillColor: 'black',
+                       WebkitBoxShadow: '0 0 0 30px white inset',
+                       boxShadow: '0 0 0 30px white inset'
+                     }}
                    />
                 </div>
               </div>

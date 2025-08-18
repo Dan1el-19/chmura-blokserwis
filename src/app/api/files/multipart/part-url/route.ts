@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Brak wymaganych parametrów' }, { status: 400 });
     }
 
+    console.log('Generating presigned URL for part:', { uploadId, partNumber, key });
+
     // Sprawdź czy upload należy do użytkownika
     const db = getFirestore();
     const uploadDoc = await db.collection('multipartUploads').doc(uploadId).get();
