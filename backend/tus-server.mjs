@@ -8,14 +8,15 @@ import { Server } from '@tus/server';
 import http from 'node:http';
 
 const port = process.env.TUS_PORT || 1080;
-const bucket = process.env.CLOUDFLARE_R2_BUCKET_NAME || process.env.R2_BUCKET || process.env.R2_BUCKET_NAME;
+// Robust bucket detection: check common env names and provide clear error if missing
+const bucket = process.env.CLOUDFLARE_R2_BUCKET_NAME || process.env.R2_BUCKET || process.env.R2_BUCKET_NAME || process.env.CLOUDFLARE_BUCKET_NAME || '';
 const endpoint = process.env.CLOUDFLARE_R2_ENDPOINT || process.env.R2_ENDPOINT || 'https://0435db96c4078cd58f12162e0b83cee0.r2.cloudflarestorage.com';
 
 // CORS configuration: comma-separated origins in ALLOWED_ORIGINS, defaults to localhost:3000
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',').map(s => s.trim()).filter(Boolean);
 
 if (!bucket) {
-	console.error('R2 bucket name not set (R2_BUCKET or R2_BUCKET_NAME)');
+	console.error('R2 bucket name not set. Provide one of: R2_BUCKET (binding), R2_BUCKET_NAME, or CLOUDFLARE_R2_BUCKET_NAME environment variable.');
 	process.exit(1);
 }
 

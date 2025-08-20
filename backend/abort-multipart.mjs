@@ -16,7 +16,8 @@ for (let i = 0; i < argv.length; i++) {
   }
 }
 
-const BUCKET = opts.bucket || process.env.R2_BUCKET || process.env.R2_BUCKET_NAME;
+// Robust bucket detection: prefer explicit option, then common env names.
+const BUCKET = opts.bucket || process.env.R2_BUCKET || process.env.R2_BUCKET_NAME || process.env.CLOUDFLARE_R2_BUCKET_NAME || process.env.CLOUDFLARE_BUCKET_NAME || '';
 const ENDPOINT = opts.endpoint || process.env.R2_ENDPOINT || process.env.CLOUDFLARE_R2_ENDPOINT;
 const ACCESS_KEY_ID = opts.accessKeyId || process.env.ACCESS_KEY_ID || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
 const SECRET_ACCESS_KEY = opts.secretAccessKey || process.env.SECRET_ACCESS_KEY || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
@@ -26,7 +27,7 @@ const OLDER_THAN_DAYS = Number(opts['older-than'] || opts.days || 7);
 const MAX_TO_PROCESS = Number(opts.limit || 1000);
 
 if (!BUCKET || !ENDPOINT || !ACCESS_KEY_ID || !SECRET_ACCESS_KEY) {
-  console.error('Missing R2 configuration. Set R2_BUCKET, R2_ENDPOINT, ACCESS_KEY_ID and SECRET_ACCESS_KEY in .env.local or provide via CLI args.');
+  console.error('Missing R2 configuration. Set R2_BUCKET (or R2_BUCKET_NAME / CLOUDFLARE_R2_BUCKET_NAME), R2_ENDPOINT, ACCESS_KEY_ID and SECRET_ACCESS_KEY in .env.local or provide via CLI args.');
   process.exit(2);
 }
 

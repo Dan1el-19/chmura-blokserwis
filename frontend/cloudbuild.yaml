@@ -2,27 +2,31 @@ steps:
   # KROK 1: Budowanie obrazu Dockera z unikalnym tagiem
   - name: 'gcr.io/cloud-builders/docker'
     args:
-    - 'build'
-    - '--tag'
-    - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
-    - '--build-arg'
-    - 'NEXT_PUBLIC_FIREBASE_API_KEY=${_NEXT_PUBLIC_FIREBASE_API_KEY}'
-    - '--build-arg'
-    - 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}'
-    - '--build-arg'
-    - 'NEXT_PUBLIC_FIREBASE_PROJECT_ID=${_NEXT_PUBLIC_FIREBASE_PROJECT_ID}'
-    - '--build-arg'
-    - 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}'
-    - '--build-arg'
-    - 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}'
-    - '--build-arg'
-    - 'NEXT_PUBLIC_FIREBASE_APP_ID=${_NEXT_PUBLIC_FIREBASE_APP_ID}'
-    - '.'
+      - 'build'
+      - '--tag'
+      - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_API_KEY=${_NEXT_PUBLIC_FIREBASE_API_KEY}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_PROJECT_ID=${_NEXT_PUBLIC_FIREBASE_PROJECT_ID}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_APP_ID=${_NEXT_PUBLIC_FIREBASE_APP_ID}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_TUS_ENDPOINT=${_NEXT_PUBLIC_TUS_ENDPOINT}'
+      - '.' 
 
-  # KROK 2: Wypchnięcie obrazu do Artifact Registry (NOWY KROK)
+  # KROK 2: Wypchnięcie obrazu do Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     id: Push
-    args: ['push', 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA']
+    args:
+      - 'push'
+      - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
 
   # KROK 3: Wdrożenie obrazu na Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -37,11 +41,10 @@ steps:
       - 'europe-central2'
       - '--platform'
       - 'managed'
-      
-#options
+
 options:
   logging: CLOUD_LOGGING_ONLY
 
-# Ta sekcja automatycznie wypycha obraz do Artifact Registry po kroku budowania
+# Ta sekcja może spowodować, że Cloud Build automatycznie wypchnie obraz po kroku budowania.
 images:
   - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'

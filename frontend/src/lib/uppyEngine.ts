@@ -47,7 +47,7 @@ export async function startUppyUploadWithProgress(
 ): Promise<UppyUploadHandle> {
   const currentUser = auth.currentUser;
   // Dla TUS nie potrzebujemy presigned PUT; użyj konfigurowalnego endpointu TUS
-  const tusEndpoint = process.env.NEXT_PUBLIC_TUS_ENDPOINT || '';
+  const tusEndpoint = process.env.NEXT_PUBLIC_TUS_ENDPOINT;
   if (!tusEndpoint) {
     callbacks.onError?.('Brak konfiguracji TUS: ustaw NEXT_PUBLIC_TUS_ENDPOINT');
     throw new Error('Missing NEXT_PUBLIC_TUS_ENDPOINT');

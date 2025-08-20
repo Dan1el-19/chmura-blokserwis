@@ -1,10 +1,10 @@
-import { S3Client } from '@aws-sdk/client-s3';
 import { S3Store } from '@tus/s3-store';
 import { Server } from '@tus/server';
 import { R2Bucket, ExecutionContext } from '@cloudflare/workers-types';
 
 export interface Env {
 	R2_BUCKET: R2Bucket;
+	R2_ENDPOINT: string;
 	ACCOUNT_ID: string;
 	ACCESS_KEY_ID: string;
 	SECRET_ACCESS_KEY: string;
@@ -14,8 +14,7 @@ export interface Env {
 const allowedOrigins = [
 	'http://localhost:3000',
 	'http://192.168.1.136:3000',
-	'http://chmura.blokserwis.pl',
-	// 'https://twoja-inna-produkcyjna-domena.com'
+	'https://chmura.blokserwis.pl',
 ];
 
 export default {
@@ -41,7 +40,7 @@ export default {
 		}
 
 		const s3ClientConfig = {
-			endpoint: `https://0435db96c4078cd58f12162e0b83cee0.r2.cloudflarestorage.com`,
+			endpoint: env.R2_ENDPOINT,
 			region: 'auto',
 			credentials: {
 				accessKeyId: env.ACCESS_KEY_ID,
@@ -50,7 +49,25 @@ export default {
 		};
 
 		// Initialize S3-backed store (using Cloudflare R2 via S3-compatible client)
-		const bucketName = (env.R2_BUCKET as any)?.name || process.env.R2_BUCKET || '';
+		// Derive bucket name robustly from the Worker binding or environment.
+		let bucketName = '';
+		if (typeof (env as any).R2_BUCKET === 'string' && (env as any).R2_BUCKET) {
+			bucketName = (env as any).R2_BUCKET;
+		} else if ((env as any).R2_BUCKET && (env as any).R2_BUCKET.name) {
+			bucketName = (env as any).R2_BUCKET.name;
+		} else if ((env as any).R2_BUCKET_NAME) {
+			bucketName = (env as any).R2_BUCKET_NAME;
+		} else if ((env as any).CLOUDFLARE_R2_BUCKET_NAME) {
+			bucketName = (env as any).CLOUDFLARE_R2_BUCKET_NAME;
+		} else if (typeof process !== 'undefined' && process.env) {
+			bucketName = process.env.R2_BUCKET || process.env.R2_BUCKET_NAME || process.env.CLOUDFLARE_R2_BUCKET_NAME || process.env.CLOUDFLARE_BUCKET_NAME || '';
+		}
+
+		if (!bucketName) {
+			// Throw a clear error so the catch block returns a helpful message.
+			throw new Error('Missing R2 bucket name. Provide one of: Worker binding `R2_BUCKET`, binding `R2_BUCKET_NAME`, or env var `CLOUDFLARE_R2_BUCKET_NAME`/`R2_BUCKET`.');
+		}
+
 		const store = new S3Store({
 			s3ClientConfig: Object.assign({}, s3ClientConfig, { bucket: bucketName }),
 		});
