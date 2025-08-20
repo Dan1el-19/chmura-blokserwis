@@ -1,0 +1,9 @@
+{
+  "name": "chmura-blokserwis-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "commit-ish": "node frontend/scripts/hist.mjs",
+    "hist": "node frontend/scripts/hist.mjs"
+  }
+}
