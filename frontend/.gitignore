@@ -50,6 +50,9 @@ next-env.d.ts
 *.swo
 *~
 
+# Old UI folder (React Router app)
+/ui/
+
 # OS generated files
 Thumbs.db
 ehthumbs.db

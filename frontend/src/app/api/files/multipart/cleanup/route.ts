@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
             UploadId: uploadId,
           })
         );
-      } catch (err) {
+      } catch {
         // kontynuuj mimo błędów R2, i tak oznacz jako aborted w Firestore
       }
 

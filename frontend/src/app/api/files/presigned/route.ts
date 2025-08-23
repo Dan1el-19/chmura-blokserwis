@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { generatePresignedUrl } from '@/lib/storage';
-import { getFirestore } from 'firebase-admin/firestore';
+
 
 export async function GET(request: NextRequest) {
   try {

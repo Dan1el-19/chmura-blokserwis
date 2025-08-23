@@ -82,14 +82,16 @@ export default function StorageUsageBars({ onRefresh }: StorageUsageBarsProps) {
   };
 
   return (
-    <div className="space-y-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <HardDrive className="h-5 w-5 text-gray-400" />
-        <h3 className="text-sm font-medium text-gray-900">Zajętość folderów</h3>
+    <div className="rounded-lg transition-all duration-200 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-xl">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center gap-2">
+          <HardDrive className="h-5 w-5 text-gray-400" />
+          <h3 className="text-sm font-medium text-gray-900">Zajętość folderów</h3>
+        </div>
       </div>
-      
-      {/* Personal Folder Storage */}
-      <div className="space-y-2">
+      <div className="px-6 py-4 space-y-4">
+        {/* Personal Folder Storage */}
+        <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-700">Mój folder</span>
           <span className="text-sm text-gray-500">
@@ -127,8 +129,7 @@ export default function StorageUsageBars({ onRefresh }: StorageUsageBarsProps) {
           </div>
         </div>
       )}
-
-      
+      </div>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   File, 
-  Image, 
+  Image as ImageIcon, 
   Video, 
   Music, 
   Archive, 
@@ -51,6 +52,10 @@ export default function FileGrid({
 
   const [showActions, setShowActions] = useState<string | null>(null);
   const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>({});
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [activeFile, setActiveFile] = useState<FileItem | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const clickAnchorRef = useRef<DOMRect | null>(null);
 
   // Ładuj thumbnail URL-e dla obrazów
   useEffect(() => {
@@ -93,7 +98,7 @@ export default function FileGrid({
     const archiveExts = ['zip', 'rar', '7z', 'tar', 'gz'];
     const docExts = ['pdf', 'doc', 'docx', 'txt', 'rtf'];
     
-    if (imageExts.includes(extension)) return <Image className="h-8 w-8" />;
+  if (imageExts.includes(extension)) return <ImageIcon className="h-8 w-8" />;
     if (videoExts.includes(extension)) return <Video className="h-8 w-8" />;
     if (audioExts.includes(extension)) return <Music className="h-8 w-8" />;
     if (archiveExts.includes(extension)) return <Archive className="h-8 w-8" />;
@@ -141,31 +146,87 @@ export default function FileGrid({
     // File click handler - can be extended later
   };
 
-  const handleActionClick = (fileId: string, event: React.MouseEvent) => {
+  const handleActionClick = (fileId: string, file: FileItem, event: React.MouseEvent) => {
     event.stopPropagation();
-    setShowActions(showActions === fileId ? null : fileId);
+    if (showActions === fileId) {
+      setShowActions(null);
+      setMenuPosition(null);
+      setActiveFile(null);
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    clickAnchorRef.current = rect;
+    // Wstępna pozycja (poniżej i wyrównanie do prawej krawędzi przycisku)
+    setMenuPosition({ top: rect.bottom + 6, left: rect.right - 192 });
+    setShowActions(fileId);
+    setActiveFile(file);
   };
 
-  const handleAction = (action: string, file: FileItem) => {
+  const closeMenu = useCallback(() => {
     setShowActions(null);
+    setMenuPosition(null);
+    setActiveFile(null);
+  }, []);
+
+  const handleAction = (action: string, file: FileItem) => {
+    closeMenu();
     switch (action) {
       case 'download':
-        onDownload(file);
-        break;
+        onDownload(file); break;
       case 'share':
-        onShare(file);
-        break;
+        onShare(file); break;
       case 'delete':
-        onDelete(file);
-        break;
+        onDelete(file); break;
       case 'manage':
-        onManageLinks(file);
-        break;
+        onManageLinks(file); break;
       case 'stats':
-        onStats(file);
-        break;
+        onStats(file); break;
     }
   };
+
+  // Close on click outside / escape / resize / scroll
+  useEffect(() => {
+    if (!showActions) return;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-file-menu]')) return;
+      closeMenu();
+    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeMenu(); };
+    const handleWindowChange = () => closeMenu();
+    window.addEventListener('mousedown', handleClick);
+    window.addEventListener('keydown', handleKey);
+    window.addEventListener('resize', handleWindowChange);
+    window.addEventListener('scroll', handleWindowChange, true);
+    return () => {
+      window.removeEventListener('mousedown', handleClick);
+      window.removeEventListener('keydown', handleKey);
+      window.removeEventListener('resize', handleWindowChange);
+      window.removeEventListener('scroll', handleWindowChange, true);
+    };
+  }, [showActions, closeMenu]);
+
+  // Reposition after render & on size/position change
+  useEffect(() => {
+    if (!showActions) return;
+    requestAnimationFrame(() => {
+      const el = menuRef.current;
+      const anchor = clickAnchorRef.current;
+      if (!el || !anchor) return;
+      const rect = el.getBoundingClientRect();
+      let { top, left } = menuPosition || { top: anchor.bottom + 6, left: anchor.right - rect.width };
+      if (left < 8) left = 8;
+      if (left + rect.width > window.innerWidth - 8) left = window.innerWidth - rect.width - 8;
+      if (top + rect.height > window.innerHeight - 8) {
+        const aboveTop = anchor.top - rect.height - 6;
+        if (aboveTop >= 8) top = aboveTop;
+      }
+      if (!menuPosition || top !== menuPosition.top || left !== menuPosition.left) {
+        setMenuPosition({ top, left });
+      }
+    });
+  }, [showActions, menuPosition]);
 
   const filteredUploads = uploads.filter(upload => upload.folder === currentFolder);
 
@@ -203,13 +264,14 @@ export default function FileGrid({
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {files.map((file) => {
+          {files.map((file, idx) => {
             const thumbnailUrl = thumbnailUrls[file.key] || getThumbnailUrl(file);
             
             return (
               <div
                 key={file.key}
-                className="group relative bg-white border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+                className="group relative glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg p-3 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer file-tile-animate"
+                style={{ animationDelay: `${idx * 40}ms` }}
                 onClick={() => handleFileClick()}
                 role="button"
                 tabIndex={0}
@@ -224,112 +286,46 @@ export default function FileGrid({
                 {/* Thumbnail/Icon */}
                 <div className="aspect-square mb-3 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
                   {thumbnailUrl && isImageFile(file.name) ? (
-                    <img 
-                      alt={file.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      src={thumbnailUrl}
-                      onError={(e) => {
-                        // Fallback do ikony jeśli obraz się nie załaduje
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        alt={file.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        src={thumbnailUrl}
+                        onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                          // Fallback do ikony jeśli obraz się nie załaduje
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    </>
                   ) : null}
                   <div className={`${thumbnailUrl && isImageFile(file.name) ? 'hidden' : ''} flex items-center justify-center`}>
                     {getFileIcon(file.name)}
                   </div>
                 </div>
 
-                {/* File Info */}
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-900 truncate mb-1" title={file.name}>
-                    {file.name}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {formatBytes(file.size)}
-                  </p>
-                </div>
-
-                {/* Actions Menu */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={(e) => handleActionClick(file.key, e)}
-                    className="inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:ring-gray-500 px-3 py-1.5 text-sm p-1 bg-white bg-opacity-90 hover:bg-opacity-100"
-                    aria-label="Opcje pliku"
-                    aria-haspopup={true}
-                    aria-expanded={showActions === file.key}
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </button>
-                  
-                  {showActions === file.key && (
-                    <div 
-                      className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10"
-                      role="menu"
-                      aria-label="Opcje pliku"
-                    >
-                      <div className="py-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAction('download', file);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                          role="menuitem"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Pobierz
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAction('share', file);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                          role="menuitem"
-                        >
-                          <Share2 className="h-4 w-4 mr-2" />
-                          Udostępnij
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAction('manage', file);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                          role="menuitem"
-                        >
-                          <Share2 className="h-4 w-4 mr-2" />
-                          Zarządzaj linkami
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAction('stats', file);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                          role="menuitem"
-                        >
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Statystyki
-                        </button>
-                        <hr className="my-1" />
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAction('delete', file);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
-                          role="menuitem"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Usuń
-                        </button>
-                      </div>
+                {/* File Info + Actions (inline) */}
+                <div className="mt-1">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate" title={file.name}>
+                        {file.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{formatBytes(file.size)}</p>
                     </div>
-                  )}
+                    <button
+                      onClick={(e) => handleActionClick(file.key, file, e)}
+                      className="mt-0.5 inline-flex items-center justify-center rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 p-1 transition-colors"
+                      aria-label="Opcje pliku"
+                      aria-haspopup={true}
+                      aria-expanded={showActions === file.key}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -337,11 +333,11 @@ export default function FileGrid({
         </div>
       ) : (
         // List View
-        <div className="space-y-2">
+        <div className="space-y-2 relative overflow-visible">
           {files.map((file) => (
             <div
               key={file.key}
-              className="group relative flex items-center space-x-4 p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+                             className="group relative flex items-center space-x-4 p-4 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer overflow-visible"
                               onClick={() => handleFileClick()}
               role="button"
               tabIndex={0}
@@ -368,10 +364,10 @@ export default function FileGrid({
                 </p>
               </div>
 
-              {/* Actions Menu */}
-              <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Actions Menu (always visible) */}
+              <div className="flex-shrink-0">
                 <button
-                  onClick={(e) => handleActionClick(file.key, e)}
+                  onClick={(e) => handleActionClick(file.key, file, e)}
                   className="inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:ring-gray-500 px-3 py-1.5 text-sm p-1"
                   aria-label="Opcje pliku"
                   aria-haspopup={true}
@@ -379,77 +375,66 @@ export default function FileGrid({
                 >
                   <MoreVertical className="h-4 w-4" />
                 </button>
-                
-                {showActions === file.key && (
-                  <div 
-                    className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10"
-                    role="menu"
-                    aria-label="Opcje pliku"
-                  >
-                    <div className="py-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAction('download', file);
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                        role="menuitem"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Pobierz
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAction('share', file);
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                        role="menuitem"
-                      >
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Udostępnij
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAction('manage', file);
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                        role="menuitem"
-                      >
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Zarządzaj linkami
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAction('stats', file);
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                        role="menuitem"
-                      >
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        Statystyki
-                      </button>
-                      <hr className="my-1" />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAction('delete', file);
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
-                        role="menuitem"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Usuń
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           ))}
         </div>
+      )}
+      {/* Portal dla menu akcji */}
+      {showActions && menuPosition && activeFile && createPortal(
+        <div
+          data-file-menu
+          ref={menuRef}
+          className="fixed z-[9999] w-48 bg-white border border-gray-200 rounded-lg shadow-lg animate-in fade-in data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 will-change-transform"
+          role="menu"
+          aria-label="Opcje pliku"
+          style={{ top: menuPosition.top, left: menuPosition.left }}
+        >
+          <div className="py-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleAction('download', activeFile); }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+              role="menuitem"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Pobierz
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleAction('share', activeFile); }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+              role="menuitem"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Udostępnij
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleAction('manage', activeFile); }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+              role="menuitem"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Zarządzaj linkami
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleAction('stats', activeFile); }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+              role="menuitem"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Statystyki
+            </button>
+            <hr className="my-1" />
+            <button
+              onClick={(e) => { e.stopPropagation(); handleAction('delete', activeFile); }}
+              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+              role="menuitem"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Usuń
+            </button>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

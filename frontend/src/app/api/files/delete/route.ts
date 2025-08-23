@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { deleteFile } from '@/lib/storage';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { deleteSchema } from '@/lib/validation';
+
 
 export async function DELETE(request: NextRequest) {
   try {

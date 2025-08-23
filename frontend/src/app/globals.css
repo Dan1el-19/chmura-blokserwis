@@ -27,6 +27,23 @@ body {
   font-family: var(--font-funnel-sans), 'Inter', Arial, Helvetica, sans-serif;
 }
 
+/* Animacja wejścia kafelków plików */
+@keyframes fileTileIn {
+  0% { opacity: 0; transform: translateY(14px) scale(.96); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.file-tile-animate {
+  animation: fileTileIn .5s cubic-bezier(.16,.84,.44,1) both;
+  will-change: transform, opacity;
+}
+
+.file-tile-animate:hover {
+  transform: translateY(-2px) scale(1.015);
+  transition: transform .25s ease;
+}
+
 /* Font utility classes */
 .font-roboto {
   font-family: var(--font-roboto), 'Roboto', sans-serif !important;
@@ -186,7 +203,7 @@ input:-ms-input-placeholder {
 
 /* Placeholder styles */
 input::placeholder {
-  color: #6b7280 !important;
+  color: #9ca3af; /* Jasnoszary kolor */
   opacity: 1;
 }
 

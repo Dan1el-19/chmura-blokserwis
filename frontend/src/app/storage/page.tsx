@@ -536,7 +536,7 @@ function StoragePageInner() {
             )}
 
             {/* Files Section Header */}
-            <div className="rounded-lg transition-all duration-200 bg-white border border-gray-200 shadow-sm">
+            <div className="rounded-lg transition-all duration-200 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-xl">
               <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-medium text-gray-900">Pliki</h3>

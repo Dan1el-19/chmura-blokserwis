@@ -56,6 +56,44 @@ const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
   }
 );
 
+interface CardTitleProps {
+  className?: string;
+  children: React.ReactNode;
+}
+
+const CardTitle = React.forwardRef<HTMLHeadingElement, CardTitleProps>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <h3
+        ref={ref}
+        className={clsx('text-lg font-semibold text-gray-900', className)}
+        {...props}
+      >
+        {children}
+      </h3>
+    );
+  }
+);
+
+interface CardDescriptionProps {
+  className?: string;
+  children: React.ReactNode;
+}
+
+const CardDescription = React.forwardRef<HTMLParagraphElement, CardDescriptionProps>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <p
+        ref={ref}
+        className={clsx('text-sm text-muted-foreground', className)}
+        {...props}
+      >
+        {children}
+      </p>
+    );
+  }
+);
+
 interface CardContentProps {
   className?: string;
   children: React.ReactNode;
@@ -96,7 +134,9 @@ const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
 
 Card.displayName = 'Card';
 CardHeader.displayName = 'CardHeader';
+CardTitle.displayName = 'CardTitle';
+CardDescription.displayName = 'CardDescription';
 CardContent.displayName = 'CardContent';
 CardFooter.displayName = 'CardFooter';
 
-export { Card, CardHeader, CardContent, CardFooter };
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter };
