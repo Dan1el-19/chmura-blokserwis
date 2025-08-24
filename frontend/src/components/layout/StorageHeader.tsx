@@ -79,7 +79,7 @@ export default function StorageHeader({
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Mój folder
+                Personal
               </button>
               <button
                 onClick={() => onFolderChange('main')}
@@ -89,7 +89,7 @@ export default function StorageHeader({
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Folder główny
+                Main
               </button>
             </div>
           </div>

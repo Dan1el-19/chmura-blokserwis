@@ -13,9 +13,14 @@ export default function DragDropUpload({ onFilesSelected, className = '', childr
 	const [dragCounter, setDragCounter] = useState(0);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
+	const isInternalDrag = (e: React.DragEvent) => {
+		return Array.from(e.dataTransfer.types || []).includes('application/x-file-key');
+	};
+
 	const handleDragEnter = useCallback((e: React.DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
+		if (Array.from(e.dataTransfer.types || []).includes('application/x-file-key')) return; // ignore internal file move
 		setDragCounter(prev => prev + 1);
 		if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
 			setIsDragOver(true);
@@ -25,6 +30,7 @@ export default function DragDropUpload({ onFilesSelected, className = '', childr
 	const handleDragLeave = useCallback((e: React.DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
+		if (isInternalDrag(e)) return;
 		setDragCounter(prev => prev - 1);
 		if (dragCounter === 0) {
 			setIsDragOver(false);
@@ -34,11 +40,16 @@ export default function DragDropUpload({ onFilesSelected, className = '', childr
 	const handleDragOver = useCallback((e: React.DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-	}, []);
+		if (isInternalDrag(e)) {
+			// Ensure overlay hidden for internal drags
+			if (isDragOver) setIsDragOver(false);
+		}
+	}, [isDragOver]);
 
 	const handleDrop = useCallback((e: React.DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
+		if (isInternalDrag(e)) return; // folder move will handle itself
 		setIsDragOver(false);
 		setDragCounter(0);
 

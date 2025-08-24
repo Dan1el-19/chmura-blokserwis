@@ -8,7 +8,8 @@ import toast from 'react-hot-toast';
 
 export default function UploadProgressBadge({ task }: { task: UploadTaskState }) {
 	// Użyj płynnego progress jeśli dostępny, w przeciwnym razie oblicz standardowy
-	const percent = (task.smoothProgress !== undefined && !Number.isNaN(task.smoothProgress)) ? task.smoothProgress : (task.size ? (task.uploadedBytes / task.size) * 100 : 0);
+	const raw = (task.smoothProgress !== undefined && !Number.isNaN(task.smoothProgress)) ? task.smoothProgress : (task.size ? (task.uploadedBytes / task.size) * 100 : 0);
+	const percent = Math.min(100, Math.max(0, raw));
 	const { pause, resume, cancel, remove, enqueue } = useUpload();
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
 	const [resuming, setResuming] = useState(false);
@@ -84,7 +85,7 @@ export default function UploadProgressBadge({ task }: { task: UploadTaskState })
 						: '—'}
 				</span>
 				<div className="flex items-center gap-2">
-					<div className="text-sm text-gray-700 mr-3">{Math.round(percent)}%</div>
+					<div className="text-sm text-gray-700 mr-3">{Math.min(100, Math.max(0, Math.round(percent)))}%</div>
 					{task.status === 'uploading' && task.etaSec !== null && (
 						<span>~{formatWaitTime(task.etaSec)}</span>
 					)}

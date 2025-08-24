@@ -8,7 +8,7 @@ import { auth } from '@/lib/firebase';
 interface UploadContextValue {
 	uploads: UploadTaskState[];
 	queueStats: QueueStats;
-	enqueue: (file: File, folder: 'personal' | 'main') => Promise<void>;
+	enqueue: (file: File, folder: 'personal' | 'main', subPath?: string) => Promise<void>;
 	pause: (id: string) => void;
 	resume: (id: string) => void;
 	cancel: (id: string) => void;
@@ -98,8 +98,8 @@ export function UploadProvider({ children, onUploadComplete }: { children: React
 		return {
 			uploads,
 			queueStats,
-			enqueue: async (file, folder) => {
-				await managerRef.current!.enqueue(file, folder);
+			enqueue: async (file, folder, subPath) => {
+				await managerRef.current!.enqueue(file, folder, subPath);
 			},
 			pause: (id) => managerRef.current!.pause(id),
 			resume: (id) => managerRef.current!.resume(id),

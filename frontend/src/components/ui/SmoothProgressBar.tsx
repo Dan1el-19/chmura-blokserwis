@@ -49,19 +49,20 @@ export default function SmoothProgressBar({ progress, className }: SmoothProgres
     // Płynna animacja do docelowego progress
     const timer = setInterval(() => {
       setDisplayProgress((prev) => {
-        if (Math.abs(prev - progress) < 0.5) {
-          return progress;
+        const target = Math.min(100, Math.max(0, progress));
+        if (Math.abs(prev - target) < 0.5) {
+          return target;
         }
-        return prev + (progress - prev) * 0.1;
+        const next = prev + (target - prev) * 0.15; // nieco szybsza interpolacja
+        return next > target ? target : next;
       });
     }, 50);
-
     return () => clearInterval(timer);
   }, [progress]);
 
   return (
     <Box sx={{ width: '100%' }} className={className}>
-      <LinearProgressWithLabel value={displayProgress} />
+  <LinearProgressWithLabel value={Math.min(100, Math.max(0, displayProgress))} />
     </Box>
   );
 }

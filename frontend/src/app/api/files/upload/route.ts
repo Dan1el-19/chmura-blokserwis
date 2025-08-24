@@ -29,7 +29,16 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-    const folder = (formData.get('folder') as string) || 'personal';
+  const folder = (formData.get('folder') as string) || 'personal';
+  const rawSubPath = (formData.get('subPath') as string | null) || null;
+  const cleanSub = rawSubPath
+    ? rawSubPath
+      .replace(/^[\\/]+/, '')
+      .replace(/\.\./g, '')
+      .replace(/[\\]+/g, '/')
+      .replace(/\s+$/, '')
+      .replace(/^\s+/, '')
+    : null;
 
     if (!file) {
       return NextResponse.json({ error: 'Brak pliku' }, { status: 400 });
@@ -84,9 +93,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Wylicz docelowy klucz w buckecie
+    const nested = cleanSub ? cleanSub.replace(/\/$/, '') + '/' : '';
     const key = folder === 'personal'
-      ? `users/${decodedToken.uid}/${file.name}`
-      : `main/${file.name}`;
+      ? `users/${decodedToken.uid}/${nested}${file.name}`
+      : `main/${nested}${file.name}`;
 
     // Konwersja File -> Buffer
     const arrayBuffer = await file.arrayBuffer();
@@ -114,7 +124,8 @@ export async function POST(request: NextRequest) {
         fileName: file.name,
         fileSize: file.size,
         folder,
-        key,
+  key,
+  subPath: cleanSub || null,
         timestamp: FieldValue.serverTimestamp(),
         ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
         userAgent: request.headers.get('user-agent') || undefined,

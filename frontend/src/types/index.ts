@@ -24,6 +24,24 @@ export interface FileItem {
   expiresAt?: Date;
 }
 
+export interface FolderItem {
+  type: 'folder';
+  id?: string; // Firestore doc id
+  shortId?: string; // 4-char unique id for routing
+  slug?: string; // name-shortId convenience for routes
+  name: string;
+  path: string; // pełny prefix np. users/{uid}/photos/
+  parentPath: string; // bez nazwy folderu na końcu
+  owner: string; // uid lub 'main'
+  space: 'personal' | 'main';
+  createdAt?: Date;
+  updatedAt?: Date;
+  itemCount?: number;
+  sizeSum?: number; // sumaryczny rozmiar (opcjonalnie cache)
+}
+
+export type FileSystemItem = (FileItem & { type?: 'file' }) | FolderItem;
+
 export interface ActivityLog {
   id: string;
   userId: string;

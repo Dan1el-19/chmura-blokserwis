@@ -33,16 +33,19 @@ export interface UppyUploadHandle {
   supportsResume: boolean;
 }
 
-function buildObjectKey(folder: 'personal' | 'main', fileName: string, userId?: string): string {
+function buildObjectKey(folder: 'personal' | 'main', fileName: string, userId?: string, subPath?: string): string {
+  const cleanSub = (subPath || '').replace(/^[\/]+/, '').replace(/\.\./g,'').replace(/\/+/g,'/').replace(/\s+$/,'').replace(/^\s+/,'');
+  const nested = cleanSub ? `${cleanSub.replace(/\/$/,'')}/` : '';
   if (folder === 'personal') {
-    return `users/${userId || 'unknown'}/${fileName}`;
+    return `users/${userId || 'unknown'}/${nested}${fileName}`;
   }
-  return `main/${fileName}`;
+  return `main/${nested}${fileName}`;
 }
 
 export async function startUppyUploadWithProgress(
   file: File,
   folder: 'personal' | 'main',
+  subPath?: string,
   callbacks: UppyUploadCallbacks = {}
 ): Promise<UppyUploadHandle> {
   const currentUser = auth.currentUser;
@@ -174,7 +177,7 @@ export async function startUppyUploadWithProgress(
     source: 'Local',
     // provide a canonical object key so server can store the file under users/<uid>/...
     meta: {
-      key: buildObjectKey(folder, file.name, currentUser?.uid)
+      key: buildObjectKey(folder, file.name, currentUser?.uid, subPath)
     }
   } as any);
 

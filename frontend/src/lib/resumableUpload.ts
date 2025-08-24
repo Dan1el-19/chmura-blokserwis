@@ -10,6 +10,7 @@ export interface UploadTaskState {
 	file: File;
 	fileName: string;
 	folder: 'personal' | 'main';
+	subPath?: string; // nested relative path (no leading slash, no trailing slash)
 	size: number;
 	uploadedBytes: number;
 	partsDone: number;
@@ -270,19 +271,20 @@ export class ResumableUploadManager {
 		return this.queueManager.getQueueStats();
 	}
 
-	public async enqueue(file: File, folder: 'personal' | 'main'): Promise<UploadTaskState> {
+	public async enqueue(file: File, folder: 'personal' | 'main', subPath?: string): Promise<UploadTaskState> {
 		const id = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
 		const fileFingerprint = await generateFileFingerprint(file);
 		
 		// Sprawdź czy istnieje sesja dla tego pliku
 		const existingSessions = await uploadSessionDB.getSessionsByFingerprint(fileFingerprint);
-		const existingSession = existingSessions.find(s => s.folder === folder);
+		const existingSession = existingSessions.find(s => s.folder === folder && s.subPath === subPath);
 		
 		const initial: UploadTaskState = {
 			id,
 			file,
 			fileName: file.name,
 			folder,
+			subPath,
 			size: file.size,
 			uploadedBytes: 0,
 			partsDone: 0,
@@ -584,6 +586,7 @@ export class ResumableUploadManager {
 					file: null as any, // Plik nie jest dostępny po odświeżeniu (spróbujemy auto-reattach)
 					fileName: session.fileName,
 					folder: session.folder,
+					subPath: session.subPath,
 					size: session.size,
 					uploadedBytes: uploadedBytes, // Dokładniejsze
 					partsDone,
@@ -640,6 +643,7 @@ export class ResumableUploadManager {
 					fileFingerprint: task.fileFingerprint,
 					fileName: task.fileName,
 					folder: task.folder,
+					subPath: task.subPath,
 					size: task.size,
 					key: task.key,
 					uploadId: task.uploadId,
@@ -797,6 +801,7 @@ export class ResumableUploadManager {
 			const form = new FormData();
 			form.append('file', task.file);
 			form.append('folder', task.folder);
+			if (task.subPath) form.append('subPath', task.subPath);
 
 			xhr.send(form);
 		});
@@ -845,7 +850,8 @@ export class ResumableUploadManager {
 					fileName: task.fileName,
 					fileSize: task.size,
 					contentType: task.file.type || 'application/octet-stream',
-					folder: task.folder
+					folder: task.folder,
+					subPath: task.subPath
 				})
 			});
 				if (initiateResponse.ok) break;
@@ -1240,6 +1246,7 @@ export class ResumableUploadManager {
 						file: null as any,
 						fileName: newSession.fileName,
 						folder: newSession.folder,
+						subPath: newSession.subPath,
 						size: newSession.size,
 						uploadedBytes: 0,
 						partsDone: 0,

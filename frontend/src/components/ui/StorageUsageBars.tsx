@@ -23,10 +23,10 @@ interface StorageStats {
 }
 
 interface StorageUsageBarsProps {
-  onRefresh?: () => void;
+  refreshToken?: number; // increments when size-affecting operations happen
 }
 
-export default function StorageUsageBars({ onRefresh }: StorageUsageBarsProps) {
+export default function StorageUsageBars({ refreshToken }: StorageUsageBarsProps) {
   const [user] = useAuthState(auth);
   const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,11 +56,12 @@ export default function StorageUsageBars({ onRefresh }: StorageUsageBarsProps) {
     fetchStorageStats();
   }, [fetchStorageStats]);
 
+  // Only refetch when refreshToken changes (explicit trigger)
   useEffect(() => {
-    if (onRefresh) {
+    if (refreshToken !== undefined) {
       fetchStorageStats();
     }
-  }, [onRefresh, fetchStorageStats]);
+  }, [refreshToken, fetchStorageStats]);
 
   if (loading) {
     return (

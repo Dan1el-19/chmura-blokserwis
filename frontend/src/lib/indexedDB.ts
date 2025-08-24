@@ -3,6 +3,7 @@ export interface UploadSession {
 	fileFingerprint: string;
 	fileName: string;
 	folder: 'personal' | 'main';
+	subPath?: string; // nested relative path inside folder space (e.g. "docs/reports")
 	size: number;
 	key: string;
 	uploadId: string;
@@ -18,7 +19,7 @@ export interface UploadSession {
 
 class UploadSessionDB {
 	private dbName = 'uploadSessions';
-	private version = 2;
+	private version = 3; // bump for subPath field (no new indexes required)
 	private db: IDBDatabase | null = null;
 
 	async init(): Promise<void> {

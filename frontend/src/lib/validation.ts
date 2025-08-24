@@ -4,7 +4,8 @@ export const initiateSchema = z.object({
   fileName: z.string().min(1).max(512),
   fileSize: z.number().int().nonnegative().max(10 * 1024 * 1024 * 1024 * 1024), // 10 TB max safeguard
   contentType: z.string().min(1).max(256),
-  folder: z.enum(['personal', 'main']).default('personal')
+  folder: z.enum(['personal', 'main']).default('personal'),
+  subPath: z.string().max(1024).optional().refine(v => !v || !v.includes('..'), 'Invalid path').refine(v => !v || !v.startsWith('/'), 'No leading slash')
 });
 
 export const partUrlSchema = z.object({

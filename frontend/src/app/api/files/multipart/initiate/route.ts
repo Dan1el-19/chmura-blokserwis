@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Nieprawidłowe dane', details: parsed.error.flatten() }, { status: 400 });
     }
-    const { fileName, fileSize, contentType, folder } = parsed.data;
+  const { fileName, fileSize, contentType, folder, subPath } = parsed.data;
 
     // wymagane pola zweryfikowane przez zod
 
@@ -75,9 +75,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Wylicz docelowy klucz w buckecie
+    const cleanSub = (subPath || '').replace(/^[\/]+/, '').replace(/\.\./g,'').replace(/\/+/g,'/').replace(/\s+$/,'').replace(/^\s+/, '');
+    const nested = cleanSub ? cleanSub.replace(/\/$/, '') + '/' : '';
     const key = folder === 'personal'
-      ? `users/${decodedToken.uid}/${fileName}`
-      : `main/${fileName}`;
+      ? `users/${decodedToken.uid}/${nested}${fileName}`
+      : `main/${nested}${fileName}`;
 
     // Inicjuj multipart upload w R2
     const client = initializeS3Client();
@@ -105,7 +107,8 @@ export async function POST(request: NextRequest) {
       fileSize,
       contentType,
       folder,
-      key,
+  key,
+  subPath: cleanSub || null,
       bucket,
       status: 'initiated',
       createdAt: FieldValue.serverTimestamp(),
