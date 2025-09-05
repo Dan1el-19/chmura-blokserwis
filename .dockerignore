@@ -1,10 +1,22 @@
+# Pliki konfiguracyjne Dockera
+Dockerfile
+.dockerignore
+
+# Zależności i logi
 node_modules
 npm-debug.log
-.DS_Store
-.env.local
+yarn-error.log
+
+# Katalogi budowania Next.js (zostaną stworzone wewnątrz kontenera)
+.next/
+out/
+
+# Pliki środowiskowe (nigdy nie powinny trafić do obrazu!)
 .env
-.next
-dist
-coverage
-.vscode
-.idea
+.env*.local
+
+# Metadane i konfiguracja edytora
+.git
+.gitignore
+.vscode/
+README.md

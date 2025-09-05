@@ -5,7 +5,7 @@ substitutions:
   _NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ""
   _NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ""
   _NEXT_PUBLIC_FIREBASE_APP_ID: ""
-  _NEXT_PUBLIC_TUS_ENDPOINT: ""
+  _R2_PUBLIC_HOSTNAME: ""
 
 steps:
   # KROK 1: Pobierz najnowszą wersję obrazu, aby użyć jej jako cache.
@@ -25,8 +25,6 @@ steps:
       - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
       - '--cache-from'
       - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest'
-      - '-f'
-      - 'frontend/Dockerfile'
       - '--build-arg'
       - 'NEXT_PUBLIC_FIREBASE_API_KEY=${_NEXT_PUBLIC_FIREBASE_API_KEY}'
       - '--build-arg'
@@ -40,8 +38,8 @@ steps:
       - '--build-arg'
       - 'NEXT_PUBLIC_FIREBASE_APP_ID=${_NEXT_PUBLIC_FIREBASE_APP_ID}'
       - '--build-arg'
-      - 'NEXT_PUBLIC_TUS_ENDPOINT=${_NEXT_PUBLIC_TUS_ENDPOINT}'
-      - 'frontend'
+      - 'R2_PUBLIC_HOSTNAME=${_R2_PUBLIC_HOSTNAME}'
+      - '.'
 
   # KROK 3: Dodaj tag "latest" do nowo zbudowanego obrazu.
   - name: 'gcr.io/cloud-builders/docker'
