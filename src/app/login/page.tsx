@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import PasswordResetModal from '@/components/ui/PasswordResetModal';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const router = useRouter();
   // Fix 100vh na mobilnych przeglądarkach (eliminuje biały pasek na dole)
   use100vh();
@@ -144,55 +146,66 @@ export default function LoginPage() {
           <CardContent className="p-8">
             <form className="space-y-6" onSubmit={handleEmailLogin}>
               <Input
-                label="Adres email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="nazwa@email.com"
-                leftIcon={<Mail className="h-4 w-4" />}
-                required
-                autoComplete="email"
-                className="placeholder-gray-400 text-gray-800"
-                style={{ '::placeholder': { color: '#9ca3af' } } as React.CSSProperties & { '::placeholder'?: { color: string } }}
+              label={<span className="ml-1">Adres email</span>}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="nazwa@email.com"
+              leftIcon={<Mail className="h-4 w-4" />}
+              required
+              autoComplete="email"
+              className="placeholder-gray-400 text-gray-800 -mb-2"
+              style={{ '::placeholder': { color: '#9ca3af' } } as React.CSSProperties & { '::placeholder'?: { color: string } }}
               />
 
               {/* Password Input */}
+              <div>
               <Input
-                label="Hasło"
+                label={<span className="ml-1">Hasło</span>}
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 leftIcon={<Lock className="h-4 w-4" />}
                 rightIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="hover:text-gray-600 transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
                 }
                 required
                 autoComplete="current-password"
               />
+              <div className="mt-2 -mb-3 text-left">
+                <button
+                type="button"
+                onClick={() => setIsResetModalOpen(true)}
+                className="text-sm text-blue-600 hover:text-blue-700 transition-colors ml-1"
+                >
+                Zapomniałeś hasła?
+                </button>
+              </div>
+              </div>
 
               {/* Error Message */}
               {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
               )}
 
               {/* Login Button */}
               <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                loading={loading}
-                className="w-full"
-                disabled={loading}
+              type="submit"
+              variant="primary"
+              size="lg"
+              loading={loading}
+              className="w-full"
+              disabled={loading}
               >
-                {loading ? 'Logowanie...' : 'Zaloguj się'}
+              {loading ? 'Logowanie...' : 'Zaloguj się'}
               </Button>
             </form>
 
@@ -225,6 +238,12 @@ export default function LoginPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Password Reset Modal */}
+      <PasswordResetModal 
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+      />
 
       <style jsx>{`
         @keyframes blob {

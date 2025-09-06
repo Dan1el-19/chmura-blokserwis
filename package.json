@@ -13,7 +13,10 @@
     "deploy:functions": "firebase deploy --only functions",
     "all": "npm run build && firebase deploy",
     "light": "npm run build && firebase deploy --only hosting",
-    "back": "node scripts/back.mjs"
+    "back": "node scripts/back.mjs",
+    "hist": "node scripts/hist.mjs",
+    "clear-list": "node scripts/abort-multipart.mjs",
+    "clear": "node scripts/abort-multipart.mjs --dry-run=false --older-than=0"
   },
   "engines": {
     "node": "20"
