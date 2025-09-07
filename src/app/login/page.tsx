@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -16,16 +16,36 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // Oddzielne stany ładowania dla email i Google, by nie blokować UI po anulowaniu popupu
+  const [loadingEmail, setLoadingEmail] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const router = useRouter();
   // Fix 100vh na mobilnych przeglądarkach (eliminuje biały pasek na dole)
   use100vh();
 
+  // Ref do śledzenia stanu trwającego flow Google oraz zarejestrowanych listenerów
+  const googleFlowRef = useRef<{ active: boolean; completed: boolean }>({ active: false, completed: false });
+  const listenersRef = useRef<{ onFocus?: () => void; onVisibility?: () => void } | null>(null);
+
+  // Cleanup listenerów na odmontowanie komponentu (na wszelki wypadek)
+  useEffect(() => {
+    return () => {
+      if (listenersRef.current?.onFocus) {
+        window.removeEventListener('focus', listenersRef.current.onFocus);
+      }
+      if (listenersRef.current?.onVisibility) {
+        document.removeEventListener('visibilitychange', listenersRef.current.onVisibility);
+      }
+      listenersRef.current = null;
+      googleFlowRef.current.active = false;
+    };
+  }, []);
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingEmail(true);
     setError(null);
 
     try {
@@ -34,7 +54,7 @@ export default function LoginPage() {
       router.push('/storage');
     } catch (error: unknown) {
       console.error('Login error:', error);
-      
+
       // Przetłumacz błędy Firebase na polskie komunikaty
       let errorMessage = 'Błąd logowania';
       if (error instanceof Error) {
@@ -62,38 +82,80 @@ export default function LoginPage() {
             errorMessage = 'Błąd logowania. Sprawdź dane i spróbuj ponownie';
         }
       }
-      
+
       setError(errorMessage);
     } finally {
-      setLoading(false);
+      setLoadingEmail(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
+  const handleGoogleLogin = () => {
+    setLoadingGoogle(true);
     setError(null);
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
 
-    try {
-      await signInWithPopup(auth, provider);
-      toast.success('Zalogowano pomyślnie!');
-      router.push('/storage');
-    } catch (error: unknown) {
-      console.error('Google login error:', error);
-      
-      // Przetłumacz błędy Google na polskie komunikaty
-      let errorMessage = 'Błąd logowania przez Google';
-      if (error instanceof Error) {
-        const code = (error as { code?: string }).code;
+    // Zaznacz start flow Google
+    googleFlowRef.current = { active: true, completed: false };
+
+    // Funkcja do czyszczenia listenerów
+    const detach = () => {
+      if (listenersRef.current?.onFocus) {
+        window.removeEventListener('focus', listenersRef.current.onFocus);
+      }
+      if (listenersRef.current?.onVisibility) {
+        document.removeEventListener('visibilitychange', listenersRef.current.onVisibility);
+      }
+      listenersRef.current = null;
+    };
+
+    // Gdy okno wróci na pierwszy plan po zamknięciu popupu, natychmiast wyłącz loader
+    const onFocus = () => {
+      const { active, completed } = googleFlowRef.current;
+      if (!active || completed) return;
+      // Jeśli nie doszło do zalogowania, traktuj jako anulowanie (COOP potrafi opóźniać błędy SDK)
+      if (!auth.currentUser) {
+        setLoadingGoogle(false);
+        setError(null);
+        try { toast('Anulowano logowanie przez Google'); } catch {}
+        googleFlowRef.current.active = false;
+        detach();
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') onFocus();
+    };
+
+    // Zarejestruj listenery natychmiast po kliknięciu
+    listenersRef.current = { onFocus, onVisibility };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    // Uruchom popup bez await – obsłuż obietnicę ręcznie, by nie blokować UI
+    signInWithPopup(auth, provider)
+      .then(() => {
+        googleFlowRef.current.completed = true;
+        googleFlowRef.current.active = false;
+        detach();
+        try { toast.success('Zalogowano pomyślnie!'); } catch {}
+        router.push('/storage');
+      })
+      .catch((error: unknown) => {
+        console.error('Google login error:', error);
+        const code: string | undefined = (error as { code?: string } | undefined)?.code;
+        // Jeśli już wyłączyliśmy loader poprzez onFocus, zignoruj “popup closed”
+        if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+          detach();
+          googleFlowRef.current.active = false;
+          setLoadingGoogle(false);
+          return;
+        }
+
+        // Inne błędy – pokaż komunikat
+        let errorMessage = 'Błąd logowania przez Google';
         switch (code) {
-          case 'auth/popup-closed-by-user':
-            errorMessage = 'Okno logowania zostało zamknięte';
-            break;
           case 'auth/popup-blocked':
             errorMessage = 'Okno logowania zostało zablokowane przez przeglądarkę';
-            break;
-          case 'auth/cancelled-popup-request':
-            errorMessage = 'Logowanie zostało anulowane';
             break;
           case 'auth/account-exists-with-different-credential':
             errorMessage = 'Konto z tym adresem email już istnieje z inną metodą logowania';
@@ -101,15 +163,19 @@ export default function LoginPage() {
           case 'auth/network-request-failed':
             errorMessage = 'Błąd połączenia z serwerem';
             break;
+          case 'auth/operation-not-supported-in-this-environment':
+            errorMessage = 'Ta metoda logowania nie jest wspierana w tej przeglądarce/środowisku';
+            break;
           default:
             errorMessage = 'Błąd logowania przez Google. Spróbuj ponownie';
         }
-      }
-      
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+        setError(errorMessage);
+      })
+      .finally(() => {
+        setLoadingGoogle(false);
+        detach();
+        googleFlowRef.current.active = false;
+      });
   };
 
   return (
@@ -201,11 +267,11 @@ export default function LoginPage() {
               type="submit"
               variant="primary"
               size="lg"
-              loading={loading}
+              loading={loadingEmail}
               className="w-full"
-              disabled={loading}
+              disabled={loadingEmail || loadingGoogle}
               >
-              {loading ? 'Logowanie...' : 'Zaloguj się'}
+              {loadingEmail ? 'Logowanie...' : 'Zaloguj się'}
               </Button>
             </form>
 
@@ -224,7 +290,8 @@ export default function LoginPage() {
               variant="outline"
               size="lg"
               onClick={handleGoogleLogin}
-              disabled={loading}
+              loading={loadingGoogle}
+              disabled={loadingEmail || loadingGoogle}
               className="w-full"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
