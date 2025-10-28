@@ -56,6 +56,8 @@ export type DecodedIdToken = {
   uid: string;
   email?: string;
   role?: 'basic' | 'plus' | 'admin';
+  iat?: number;
+  exp?: number;
   [key: string]: unknown;
 };
 
@@ -65,10 +67,41 @@ export async function verifyToken(token: string): Promise<DecodedIdToken | null>
   try {
     // Nie ma już potrzeby wywoływania ensureAdminInitialized() tutaj.
     // Aplikacja jest już zainicjalizowana.
-    const decodedToken = await getAuth().verifyIdToken(token);
+    const decodedToken = await getAuth().verifyIdToken(token, true); // Check revocation
+    
+    // Additional token freshness check
+    const now = Math.floor(Date.now() / 1000);
+    const tokenAge = now - (decodedToken.iat || 0);
+    
+    // Tokens older than 1 hour should be refreshed
+    if (tokenAge > 3600) {
+      console.warn('Token is older than 1 hour, should be refreshed');
+      // Don't reject here, but log for monitoring
+    }
+    
     return decodedToken as unknown as DecodedIdToken;
   } catch (error) {
     console.error('Error verifying token:', error);
+    return null;
+  }
+}
+
+export async function verifyTokenStrict(token: string, maxAge = 3600): Promise<DecodedIdToken | null> {
+  try {
+    const decodedToken = await getAuth().verifyIdToken(token, true);
+    
+    // Strict token freshness check
+    const now = Math.floor(Date.now() / 1000);
+    const tokenAge = now - (decodedToken.iat || 0);
+    
+    if (tokenAge > maxAge) {
+      console.warn(`Token too old: ${tokenAge}s > ${maxAge}s`);
+      return null;
+    }
+    
+    return decodedToken as unknown as DecodedIdToken;
+  } catch (error) {
+    console.error('Error verifying token (strict):', error);
     return null;
   }
 }

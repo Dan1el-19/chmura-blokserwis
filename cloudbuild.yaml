@@ -79,7 +79,6 @@ steps:
 # Opcje konfiguracji dla całej kompilacji
 options:
   logging: CLOUD_LOGGING_ONLY
-  machineType: 'E2_HIGHCPU_8'
 
 # Lista obrazów do zbudowania.
 images:

@@ -49,7 +49,18 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Get the ID token and set it in cookie for middleware
+      const token = await userCredential.user.getIdToken();
+      await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
       toast.success('Zalogowano pomyślnie!');
       router.push('/storage');
     } catch (error: unknown) {
@@ -133,10 +144,21 @@ export default function LoginPage() {
 
     // Uruchom popup bez await – obsłuż obietnicę ręcznie, by nie blokować UI
     signInWithPopup(auth, provider)
-      .then(() => {
+      .then(async (userCredential) => {
         googleFlowRef.current.completed = true;
         googleFlowRef.current.active = false;
         detach();
+        
+        // Get the ID token and set it in cookie for middleware
+        const token = await userCredential.user.getIdToken();
+        await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        });
+
         try { toast.success('Zalogowano pomyślnie!'); } catch {}
         router.push('/storage');
       })

@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import toast from 'react-hot-toast';
 import { UserRole, FileItem, FolderItem } from '@/types';
@@ -11,6 +10,7 @@ import DragDropUpload from '@/components/file/DragDropUpload';
 import { startUppyUploadWithProgress, UppyUploadHandle } from '@/lib/uppyEngine';
 import { UploadProvider, useUpload } from '@/context/UploadContext';
 import UnifiedUploadPanel from '@/components/file/UnifiedUploadPanel';
+import { RouteGuard, useAuth } from '@/components/auth/RouteGuard';
 
 import ShareModal from '@/components/ui/ShareModal';
 import MobileActionsFab from '../../../components/ui/MobileActionsFab';
@@ -33,7 +33,7 @@ function StoragePageInner() {
 	// =============================
 	// Auth & Basic State
 	// =============================
-	const [user, loading] = useAuthState(auth);
+	const { user, loading } = useAuth(); // Use RouteGuard's auth hook
 	const [userRole, setUserRole] = useState<UserRole>('basic');
 	const router = useRouter();
 	const pathname = usePathname();
@@ -787,6 +787,11 @@ function StoragePageInner() {
 	// =============================
 	const handleLogout = async () => {
 		try {
+			// Clear the session cookie first
+			await fetch('/api/auth/session', {
+				method: 'DELETE',
+			});
+			
 			await auth.signOut();
 			router.push('/');
 			toast.success('Wylogowano pomyślnie');
@@ -895,6 +900,8 @@ function StoragePageInner() {
 				</div>
 			</div>
 		);
+
+	// RouteGuard ensures user is never null at this point
 	if (!user) return null;
 
 	// =============================
@@ -1222,5 +1229,11 @@ function StoragePageInner() {
 }
 
 export default function StoragePage() {
-	return <UploadProvider onUploadComplete={()=>{}}><StoragePageInner /></UploadProvider>;
+	return (
+		<RouteGuard>
+			<UploadProvider onUploadComplete={() => {}}>
+				<StoragePageInner />
+			</UploadProvider>
+		</RouteGuard>
+	);
 }

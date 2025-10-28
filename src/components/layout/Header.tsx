@@ -24,6 +24,11 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
+      // Clear the session cookie first
+      await fetch('/api/auth/session', {
+        method: 'DELETE',
+      });
+      
       await signOut(auth);
       toast.success('Wylogowano pomyślnie!');
       router.push('/');

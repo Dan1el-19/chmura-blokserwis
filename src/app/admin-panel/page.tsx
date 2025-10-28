@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { RouteGuard, useAuth } from '@/components/auth/RouteGuard';
 import { 
   Users, 
   FileText, 
@@ -18,8 +17,8 @@ import toast from 'react-hot-toast';
 import { formatBytes, formatDate } from '@/lib/utils';
 import { User, UserRole, ActivityLog } from '@/types';
 
-export default function AdminPanel() {
-  const [user, loading] = useAuthState(auth);
+function AdminPanelInner() {
+  const { user, loading } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [activeTab, setActiveTab] = useState<'users' | 'logs' | 'stats'>('users');
@@ -33,23 +32,6 @@ export default function AdminPanel() {
   const [showMainStorageModal, setShowMainStorageModal] = useState(false);
 
   const router = useRouter();
-
-  const refreshIdToken = useCallback(async () => {
-    try { if (auth.currentUser) { await auth.currentUser.getIdToken(true); } } catch {}
-  }, []);
-
-  const checkAdminRole = useCallback(async () => {
-    try {
-      await refreshIdToken();
-      const response = await fetch('/api/user/profile', {
-        headers: { 'Authorization': `Bearer ${await user?.getIdToken()}` }
-      });
-      if (response.ok) {
-        const userData = await response.json();
-        if (userData.role !== 'admin') { router.push('/storage'); toast.error('Brak uprawnień administratora'); }
-      }
-    } catch {}
-  }, [user, router, refreshIdToken]);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -90,7 +72,6 @@ export default function AdminPanel() {
     }
   }, [activeTab, fetchUsers, fetchLogs, fetchMainStorage]);
 
-  useEffect(() => { if (!loading && !user) { router.push('/login'); } else if (user) { checkAdminRole(); } }, [user, loading, router, checkAdminRole]);
   useEffect(() => { if (user) { fetchData(); } }, [user, fetchData]);
 
   const handleCreateUser = async (form: { email: string; displayName?: string; role: UserRole; storageLimitGb: number; password?: string; }) => {
@@ -733,5 +714,13 @@ export default function AdminPanel() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AdminPanel() {
+  return (
+    <RouteGuard requiredRole="admin">
+      <AdminPanelInner />
+    </RouteGuard>
   );
 }
