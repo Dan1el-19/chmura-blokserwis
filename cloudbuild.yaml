@@ -13,6 +13,11 @@ steps:
     id: Unshallow-Git
     args: ['fetch', '--unshallow']
 
+  # KROK 0.1: Checkout main explicitly
+  - name: 'gcr.io/cloud-builders/git'
+    id: Checkout-Main
+    args: ['checkout', 'main']
+
   # KROK 0.5: Semantic Release
   - name: 'node:20'
     id: Semantic-Release
@@ -28,7 +33,6 @@ steps:
     secretEnv: ['GITHUB_TOKEN']
     env:
       - 'CI=true'
-      - 'BRANCH_NAME=${BRANCH_NAME}'
 
   # KROK 1: Pull cache
   - name: 'gcr.io/cloud-builders/docker'
