@@ -26,6 +26,9 @@ steps:
       - '@semantic-release/git'
       - 'semantic-release'
     secretEnv: ['GITHUB_TOKEN']
+    env:
+      - 'CI=true'
+      - 'BRANCH_NAME=${BRANCH_NAME}'
 
   # KROK 1: Pull cache
   - name: 'gcr.io/cloud-builders/docker'
