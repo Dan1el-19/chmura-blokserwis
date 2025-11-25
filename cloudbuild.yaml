@@ -17,8 +17,15 @@ steps:
   - name: 'node:20'
     id: Semantic-Release
     entrypoint: 'npx'
-    args: ['semantic-release']
-    secretEnv: ['GITHUB_TOKEN'] 
+    args:
+      - '-p'
+      - 'semantic-release'
+      - '-p'
+      - '@semantic-release/changelog'
+      - '-p'
+      - '@semantic-release/git'
+      - 'semantic-release'
+    secretEnv: ['GITHUB_TOKEN']
 
   # KROK 1: Pull cache
   - name: 'gcr.io/cloud-builders/docker'
