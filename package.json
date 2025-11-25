@@ -1,6 +1,10 @@
 {
   "name": "chmura-blokserwis",
   "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dan1el-19/chmura-blokserwis.git"
+  },
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -60,6 +64,9 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/npm": "^13.1.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -68,6 +75,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.0",
     "postcss": "^8.5.6",
+    "semantic-release": "^25.0.2",
     "tailwindcss": "^4.1.12",
     "typescript": "^5"
   }

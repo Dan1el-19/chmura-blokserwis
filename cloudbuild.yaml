@@ -8,7 +8,19 @@ substitutions:
   _R2_PUBLIC_HOSTNAME: ""
 
 steps:
-  # KROK 1: Pobierz najnowszą wersję obrazu, aby użyć jej jako cache.
+  # KROK 0: Repair git shallow clone 
+  - name: 'gcr.io/cloud-builders/git'
+    id: Unshallow-Git
+    args: ['fetch', '--unshallow']
+
+  # KROK 0.5: Semantic Release
+  - name: 'node:20'
+    id: Semantic-Release
+    entrypoint: 'npx'
+    args: ['semantic-release']
+    secretEnv: ['GITHUB_TOKEN'] 
+
+  # KROK 1: Pull cache
   - name: 'gcr.io/cloud-builders/docker'
     id: Pull-Latest-For-Cache
     entrypoint: 'bash'
@@ -16,7 +28,7 @@ steps:
       - '-c'
       - 'docker pull europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest || exit 0'
 
-  # KROK 2: Zbuduj obraz, używając pobranej wersji jako cache (`--cache-from`).
+  # KROK 2: Build
   - name: 'gcr.io/cloud-builders/docker'
     id: Build
     args:
@@ -40,8 +52,9 @@ steps:
       - '--build-arg'
       - 'R2_PUBLIC_HOSTNAME=${_R2_PUBLIC_HOSTNAME}'
       - '.'
+    secretEnv: ['GITHUB_TOKEN']
 
-  # KROK 3: Dodaj tag "latest" do nowo zbudowanego obrazu.
+  # KROK 3: Tag Latest
   - name: 'gcr.io/cloud-builders/docker'
     id: Tag-As-Latest
     args:
@@ -49,17 +62,17 @@ steps:
       - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
       - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest'
 
-  # KROK 4: Wypchnij obraz z unikalnym tagiem $SHORT_SHA.
+  # KROK 4: Push SHA
   - name: 'gcr.io/cloud-builders/docker'
     id: Push-SHA-Tag
     args: ['push', 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA']
 
-  # KROK 5: Wypchnij obraz z tagiem "latest".
+  # KROK 5: Push Latest
   - name: 'gcr.io/cloud-builders/docker'
     id: Push-Latest-Tag
     args: ['push', 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest']
 
-  # KROK 6: Wdróż na Cloud Run.
+  # KROK 6: Deploy Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: Deploy-To-Cloud-Run
     entrypoint: gcloud
@@ -76,12 +89,15 @@ steps:
     waitFor:
       - 'Push-SHA-Tag'
 
-# Opcje konfiguracji dla całej kompilacji
 options:
   logging: CLOUD_LOGGING_ONLY
-  machineType: 'E2_HIGHCPU_8'
 
-# Lista obrazów do zbudowania.
 images:
   - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
   - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest'
+
+# NOWA SEKCJA: Mapowanie Secret Managera na zmienne środowiskowe
+availableSecrets:
+  secretManager:
+  - versionName: projects/$PROJECT_ID/secrets/github_token/versions/latest
+    env: 'GITHUB_TOKEN'
