@@ -308,18 +308,18 @@ export default function FileGrid({
   const filteredUploads = uploads.filter(upload => upload.folder === currentFolder);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full overflow-hidden">
       {/* Upload Progress Section */}
       {filteredUploads.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-blue-900 mb-3">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+          <h3 className="text-sm font-medium text-blue-900 mb-2 sm:mb-3">
             Uploady w toku ({filteredUploads.length})
           </h3>
           <div className="space-y-2">
             {filteredUploads.map((upload) => (
-              <div key={upload.id} className="flex items-center justify-between text-sm">
-                <span className="text-blue-800 truncate">{upload.fileName}</span>
-                <span className="text-blue-600">
+              <div key={upload.id} className="flex items-center justify-between gap-2 text-sm">
+                <span className="text-blue-800 truncate min-w-0 flex-1">{upload.fileName}</span>
+                <span className="text-blue-600 shrink-0">
                   {Math.round((upload.uploadedBytes / upload.size) * 100)}%
                 </span>
               </div>
@@ -330,17 +330,17 @@ export default function FileGrid({
 
       {/* Files Grid */}
       {files.length === 0 && folders.length === 0 ? (
-        <div className="text-center py-12">
-          <HardDrive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2 font-roboto">
+        <div className="text-center py-8 sm:py-12 px-4">
+          <HardDrive className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2 font-roboto">
             Brak plików w tym folderze
           </h3>
-          <p className="text-gray-500">
+          <p className="text-sm text-gray-500">
             {currentFolder === 'personal' ? 'Twój folder jest pusty' : 'Folder główny jest pusty'}
           </p>
         </div>
       ) : viewMode === 'grid' ? (
-  <div className="grid gap-4 sm:gap-5 file-grid-mobile sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 grid-cols-2">
+  <div className="grid gap-2.5 sm:gap-4 md:gap-5 file-grid-mobile sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 grid-cols-2">
           {showRootEntry && (
             <div
               className="group relative glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg p-3 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer file-tile-animate"
@@ -371,19 +371,19 @@ export default function FileGrid({
                 } catch { toast.error('Błąd przenoszenia'); }
               }}
             >
-              <div className="aspect-square mb-3 flex items-center justify-center bg-slate-50 rounded-lg overflow-hidden">
-                <HardDrive className="h-8 w-8 text-slate-500" />
+              <div className="aspect-square mb-2 sm:mb-3 flex items-center justify-center bg-slate-50 rounded-lg overflow-hidden">
+                <HardDrive className="h-6 w-6 sm:h-8 sm:w-8 text-slate-500" />
               </div>
               <div className="mt-1">
-                <p className="text-sm font-medium text-gray-900 truncate" title="Storage">Storage</p>
-                <p className="text-xs text-gray-500">Root</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-900 truncate" title="Storage">Storage</p>
+                <p className="text-[10px] sm:text-xs text-gray-500">Root</p>
               </div>
             </div>
           )}
           {folders.map((folder, idx) => (
             <div
               key={folder.path}
-              className="group relative glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg p-3 sm:p-4 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer file-tile-animate text-[13px]"
+              className="group relative glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg p-2.5 sm:p-3 md:p-4 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer file-tile-animate"
               style={{ animationDelay: `${idx * 40}ms` }}
               role="button"
               tabIndex={0}
@@ -420,13 +420,13 @@ export default function FileGrid({
                 } catch { toast.error('Błąd przenoszenia'); }
               }}
             >
-              <div data-square className="aspect-square mb-3 flex items-center justify-center bg-amber-50 rounded-lg overflow-hidden">
+              <div data-square className="aspect-square mb-2 sm:mb-3 flex items-center justify-center bg-amber-50 rounded-lg overflow-hidden">
                 <FolderIcon />
               </div>
-              <div className="mt-1 flex items-start gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate" title={folder.name}>{folder.name}</p>
-                  <p className="text-xs text-gray-500">Folder</p>
+              <div className="mt-1 flex items-start gap-1 sm:gap-2">
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="text-xs sm:text-sm font-medium text-gray-900 truncate" title={folder.name}>{folder.name}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500">Folder</p>
                 </div>
                 <button
                   onClick={(e)=>handleFolderActionClick(folder,e)}
@@ -444,7 +444,7 @@ export default function FileGrid({
             return (
               <div
                 key={file.key}
-                className={`group relative glass-card bg-white/80 backdrop-blur-sm border ${selectedKeys.includes(file.key) && multiSelect ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200/50'} rounded-lg p-3 sm:p-4 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer file-tile-animate text-[13px]`}
+                className={`group relative glass-card bg-white/80 backdrop-blur-sm border ${selectedKeys.includes(file.key) && multiSelect ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200/50'} rounded-lg p-2.5 sm:p-3 md:p-4 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer file-tile-animate`}
                 style={{ animationDelay: `${idx * 40}ms` }}
                 onClick={() => { if (multiSelect) { onToggleSelect?.(file.key); return; } handleFileClick(file); }}
                 role="button"
@@ -474,7 +474,7 @@ export default function FileGrid({
                   </button>
                 )}
                 {/* Thumbnail/Icon */}
-                <div data-square className="aspect-square mb-3 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
+                <div data-square className="aspect-square mb-2 sm:mb-3 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
                   {thumbnailUrl && isImageFile(file.name) ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -499,16 +499,16 @@ export default function FileGrid({
 
                 {/* File Info + Actions (inline) */}
                 <div className="mt-1">
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 line-clamp-2 leading-tight min-h-[2.4em]" title={file.name}>
+                  <div className="flex items-start gap-1 sm:gap-2">
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <p className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-2 leading-tight min-h-[2em] sm:min-h-[2.4em]" title={file.name}>
                         {file.name}
                       </p>
-                      <p className="text-xs text-gray-500">{formatBytes(file.size)}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">{formatBytes(file.size)}</p>
                     </div>
                     <button
                       onClick={(e) => handleActionClick(file.key, file, e)}
-                      className="mt-0.5 inline-flex items-center justify-center rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 p-1 transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100"
+                      className="no-min-touch mt-0.5 inline-flex items-center justify-center rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 p-1 transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100"
                       aria-label="Opcje pliku"
                       aria-haspopup={true}
                       aria-expanded={showActions === file.key}
@@ -523,10 +523,10 @@ export default function FileGrid({
         </div>
       ) : (
         // List View
-  <div className="space-y-2 relative overflow-visible">
+  <div className="w-full space-y-1.5 sm:space-y-2 relative overflow-hidden">
           {showRootEntry && (
             <div
-              className="group relative flex items-center space-x-4 p-4 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer overflow-visible"
+              className="group relative flex items-center space-x-2 sm:space-x-4 p-2.5 sm:p-4 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
               role="button"
               tabIndex={0}
               aria-label="Powrót do root"
@@ -554,17 +554,17 @@ export default function FileGrid({
                 } catch { toast.error('Błąd przenoszenia'); }
               }}
             >
-              <div className="flex-shrink-0"><HardDrive className="h-8 w-8 text-slate-500" /></div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate" title="Storage">Storage</p>
-                <p className="text-xs text-gray-500">Root</p>
+              <div className="flex-shrink-0"><HardDrive className="h-6 w-6 sm:h-8 sm:w-8 text-slate-500" /></div>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <p className="text-xs sm:text-sm font-medium text-gray-900 truncate" title="Storage">Storage</p>
+                <p className="text-[10px] sm:text-xs text-gray-500">Root</p>
               </div>
             </div>
           )}
           {folders.map(folder => (
             <div
               key={folder.path}
-              className="group relative flex items-center space-x-4 p-4 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer overflow-visible"
+              className="group relative flex items-center space-x-2 sm:space-x-4 p-2.5 sm:p-4 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
               role="button"
               tabIndex={0}
               aria-label={`Folder: ${folder.name}`}
@@ -593,14 +593,14 @@ export default function FileGrid({
               }}
             >
               <div className="flex-shrink-0"><FolderIcon /></div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate" title={folder.name}>{folder.name}</p>
-                <p className="text-xs text-gray-500">Folder</p>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <p className="text-xs sm:text-sm font-medium text-gray-900 truncate" title={folder.name}>{folder.name}</p>
+                <p className="text-[10px] sm:text-xs text-gray-500">Folder</p>
               </div>
               <div className="flex-shrink-0">
                 <button
                   onClick={(e)=>handleFolderActionClick(folder,e)}
-                  className="inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:ring-gray-500 px-3 py-1.5 text-sm p-1"
+                  className="no-min-touch inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:ring-gray-500 px-2 sm:px-3 py-1 sm:py-1.5 text-sm p-1"
                   aria-label="Opcje folderu"
                   aria-haspopup={true}
                   aria-expanded={showFolderActions === folder.path}
@@ -613,7 +613,7 @@ export default function FileGrid({
           {files.map((file) => (
             <div
               key={file.key}
-                            className={`group relative flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 glass-card bg-white/80 backdrop-blur-sm border ${selectedKeys.includes(file.key) && multiSelect ? 'border-blue-500 ring-1 ring-blue-300' : 'border-gray-200/50'} rounded-lg hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer overflow-visible`}
+                            className={`group relative flex items-center space-x-2 sm:space-x-4 p-2.5 sm:p-4 glass-card bg-white/80 backdrop-blur-sm border ${selectedKeys.includes(file.key) && multiSelect ? 'border-blue-500 ring-1 ring-blue-300' : 'border-gray-200/50'} rounded-lg hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer overflow-hidden`}
                               onClick={() => { if (multiSelect) { onToggleSelect?.(file.key); return; } handleFileClick(file); }}
               role="button"
               tabIndex={0}
@@ -636,7 +636,7 @@ export default function FileGrid({
                   type="button"
                   aria-label={selectedKeys.includes(file.key)?'Odznacz plik':'Zaznacz plik'}
                   onClick={(e)=>{ e.stopPropagation(); onToggleSelect?.(file.key); }}
-                  className={`flex-shrink-0 h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-semibold border transition-colors ${selectedKeys.includes(file.key) ? 'bg-blue-600 border-blue-600 text-white shadow' : 'bg-white/80 border-gray-300 text-gray-400 hover:text-gray-600'}`}
+                  className={`no-min-touch flex-shrink-0 h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-semibold border transition-colors ${selectedKeys.includes(file.key) ? 'bg-blue-600 border-blue-600 text-white shadow' : 'bg-white/80 border-gray-300 text-gray-400 hover:text-gray-600'}`}
                 >
                   {selectedKeys.includes(file.key) ? '✓' : ''}
                 </button>
@@ -647,11 +647,11 @@ export default function FileGrid({
               </div>
 
               {/* File Info */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 line-clamp-2 leading-tight" title={file.name}>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <p className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-2 leading-tight" title={file.name}>
                   {file.name}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-[10px] sm:text-xs text-gray-500 truncate">
                   {formatBytes(file.size)} • {formatDate(file.lastModified)}
                 </p>
               </div>
@@ -660,7 +660,7 @@ export default function FileGrid({
               <div className="flex-shrink-0">
                 <button
                   onClick={(e) => handleActionClick(file.key, file, e)}
-                  className="inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:ring-gray-500 px-2 sm:px-3 py-1.5 text-sm p-1"
+                  className="no-min-touch inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:ring-gray-500 px-2 py-1 sm:py-1.5 text-sm p-1"
                   aria-label="Opcje pliku"
                   aria-haspopup={true}
                   aria-expanded={showActions === file.key}

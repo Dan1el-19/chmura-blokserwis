@@ -197,32 +197,32 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
 
   return (
     <div
-      className={`fixed inset-0 z-[10000] bg-black/50 flex items-center justify-center p-4 transition-opacity duration-200 ${entered ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed inset-0 z-[10000] bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-200 ${entered ? 'opacity-100' : 'opacity-0'}`}
       role="dialog"
       aria-modal="true"
       onClick={onClose}
     >
       <Card
-        className={`w-full max-w-[min(100vw-2rem,48rem)] sm:max-w-lg md:max-w-3xl lg:max-w-4xl max-h-[85vh] overflow-hidden rounded-lg transition-all duration-200 ease-out text-gray-900 ${entered ? 'translate-y-0 md:scale-100 opacity-100' : 'translate-y-4 md:translate-y-0 md:scale-[0.98] opacity-0'}`}
+        className={`w-full sm:max-w-lg md:max-w-3xl lg:max-w-4xl max-h-[95vh] sm:max-h-[85vh] overflow-hidden rounded-t-2xl sm:rounded-xl transition-all duration-200 ease-out text-gray-900 ${entered ? 'translate-y-0 md:scale-100 opacity-100' : 'translate-y-4 md:translate-y-0 md:scale-[0.98] opacity-0'}`}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
-  <CardHeader className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-3 text-gray-900">
-          <div className="flex flex-1 items-center gap-3 min-w-0 overflow-hidden">
+  <CardHeader className="sticky top-0 z-10 bg-white border-b border-gray-200 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3 text-gray-900">
+          <div className="flex flex-1 items-center gap-2 sm:gap-3 min-w-0 overflow-hidden">
             {getFileIcon()}
             <div className="min-w-0 flex-1 overflow-hidden">
-              <h3 className="text-base md:text-lg font-semibold text-gray-900 truncate" title={file.name}>
+              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 truncate" title={file.name}>
                 {file.name}
               </h3>
-              <p className="text-xs md:text-sm text-gray-600">{getFileType()}</p>
+              <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">{getFileType()}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" onClick={() => onDownload(file)} aria-label="Pobierz">
-              <Download className="h-4 w-4 mr-0 sm:mr-2" />
-              <span className="text-sm hidden sm:inline">Pobierz</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <Button variant="outline" size="sm" onClick={() => onDownload(file)} aria-label="Pobierz" className="px-2 sm:px-3 py-1.5">
+              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-0 sm:mr-2" />
+              <span className="text-xs sm:text-sm hidden sm:inline">Pobierz</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={onClose} aria-label="Zamknij">
-              <X className="h-5 w-5" />
+            <Button variant="ghost" size="sm" onClick={onClose} aria-label="Zamknij" className="no-min-touch p-1.5 sm:p-2">
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
         </CardHeader>

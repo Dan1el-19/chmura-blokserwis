@@ -16,31 +16,34 @@ export default function UploadQueueBadge() {
 	}
 
 	return (
-		<div className="w-full bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
-			<div className="flex justify-between items-center mb-2">
-				<h3 className="text-sm font-medium text-blue-900">Status uploadów</h3>
-				<div className="flex gap-2">
+		<div className="w-full bg-blue-50 border border-blue-200 rounded-md p-2 sm:p-3 mb-3 sm:mb-4">
+			<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-2">
+				<h3 className="text-xs sm:text-sm font-medium text-blue-900">Status uploadów</h3>
+				<div className="flex gap-1.5 sm:gap-2 flex-wrap">
 					<button
 						onClick={pauseAll}
-						className="px-2 py-1 bg-yellow-600 text-white rounded text-xs hover:bg-yellow-700"
+						className="px-1.5 sm:px-2 py-1 bg-yellow-600 text-white rounded text-[10px] sm:text-xs hover:bg-yellow-700"
 					>
-						Wstrzymaj wszystkie
+						<span className="hidden sm:inline">Wstrzymaj wszystkie</span>
+						<span className="sm:hidden">Wstrzymaj</span>
 					</button>
 					<button
 						onClick={resumeAll}
-						className="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
+						className="px-1.5 sm:px-2 py-1 bg-green-600 text-white rounded text-[10px] sm:text-xs hover:bg-green-700"
 					>
-						Wznów wszystkie
+						<span className="hidden sm:inline">Wznów wszystkie</span>
+						<span className="sm:hidden">Wznów</span>
 					</button>
 					<button
 						onClick={cancelAll}
-						className="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+						className="px-1.5 sm:px-2 py-1 bg-red-600 text-white rounded text-[10px] sm:text-xs hover:bg-red-700"
 					>
-						Anuluj wszystkie
+						<span className="hidden sm:inline">Anuluj wszystkie</span>
+						<span className="sm:hidden">Anuluj</span>
 					</button>
 				</div>
 			</div>
-			<div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+			<div className="grid grid-cols-4 gap-1.5 sm:gap-4 text-[10px] sm:text-xs">
 				<div className="text-center">
 					<div className="text-blue-900 font-medium">{queueStats.activeUploads || 0}</div>
 					<div className="text-blue-600">Aktywne</div>
@@ -51,7 +54,7 @@ export default function UploadQueueBadge() {
 				</div>
 				<div className="text-center">
 					<div className="text-blue-900 font-medium">{formatTime(queueStats.averageWaitTime || 0)}</div>
-					<div className="text-blue-600">Średni czas oczekiwania</div>
+					<div className="text-blue-600 truncate">Śr. czas</div>
 				</div>
 				<div className="text-center">
 					<div className="text-blue-900 font-medium">{(queueStats.estimatedThroughput || 0).toFixed(1)}</div>

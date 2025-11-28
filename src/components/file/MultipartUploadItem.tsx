@@ -96,23 +96,23 @@ export function MultipartUploadItem({
   const canCancel = ['uploading', 'paused', 'initializing'].includes(upload.status);
 
   return (
-    <Card className="p-4 space-y-4">
+    <Card className="p-2.5 sm:p-4 space-y-2.5 sm:space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      <div className="flex items-start sm:items-center justify-between gap-2">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
           {getStatusIcon()}
-          <div>
-            <h3 className="font-medium text-gray-900 truncate max-w-xs">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-medium text-gray-900 truncate text-xs sm:text-sm">
               {upload.fileName}
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-[10px] sm:text-sm text-gray-500">
               {formatFileSize(upload.fileSize)}
             </p>
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <Badge className={getStatusColor()}>
+        <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+          <Badge className={`${getStatusColor()} text-[10px] sm:text-xs px-1.5 sm:px-2`}>
             {getStatusText()}
           </Badge>
           
@@ -121,57 +121,55 @@ export function MultipartUploadItem({
               variant="ghost"
               size="sm"
               onClick={() => onRemove(upload.id)}
-              className="text-gray-400 hover:text-gray-600"
+              className="no-min-touch text-gray-400 hover:text-gray-600 p-1"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Button>
           )}
         </div>
       </div>
 
       {/* Progress Section */}
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         {/* Main Progress */}
         <div>
           <SmoothProgressBar 
             progress={upload.progress} 
-            className="h-2"
+            className="h-1.5 sm:h-2"
           />
         </div>
 
         {/* Progress Details */}
-        <div className="grid grid-cols-1 gap-4 text-sm">
-          <div>
-            <span className="text-gray-500">Wgranych:</span>
-            <span className="ml-2 font-medium">
-              {formatFileSize(upload.bytesUploaded)} / {formatFileSize(upload.fileSize)}
-            </span>
-          </div>
+        <div className="text-[10px] sm:text-sm">
+          <span className="text-gray-500">Wgranych:</span>
+          <span className="ml-1 sm:ml-2 font-medium">
+            {formatFileSize(upload.bytesUploaded)} / {formatFileSize(upload.fileSize)}
+          </span>
         </div>
       </div>
 
       {/* Error Message */}
       {upload.errorMessage && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3">
+        <div className="bg-red-50 border border-red-200 rounded-md p-2 sm:p-3">
           <div className="flex items-center space-x-2">
-            <AlertTriangle className="w-4 h-4 text-red-500" />
-            <span className="text-sm text-red-700">{upload.errorMessage}</span>
+            <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 shrink-0" />
+            <span className="text-[10px] sm:text-sm text-red-700">{upload.errorMessage}</span>
           </div>
         </div>
       )}
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1.5 sm:space-x-2">
           {canPause && onPause && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => onPause(upload.id)}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-1 sm:space-x-2 text-[10px] sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5"
             >
-              <Pause className="w-4 h-4" />
-              <span>Wstrzymaj</span>
+              <Pause className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Wstrzymaj</span>
             </Button>
           )}
           
@@ -180,10 +178,10 @@ export function MultipartUploadItem({
               variant="outline"
               size="sm"
               onClick={() => onResume(upload.id)}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-1 sm:space-x-2 text-[10px] sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5"
             >
-              <Play className="w-4 h-4" />
-              <span>Wznów</span>
+              <Play className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Wznów</span>
             </Button>
           )}
           
@@ -192,10 +190,10 @@ export function MultipartUploadItem({
               variant="outline"
               size="sm"
               onClick={() => onCancel(upload.id)}
-              className="flex items-center space-x-2 text-red-600 border-red-200 hover:bg-red-50"
+              className="flex items-center space-x-1 sm:space-x-2 text-[10px] sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 text-red-600 border-red-200 hover:bg-red-50"
             >
-              <X className="w-4 h-4" />
-              <span>Anuluj</span>
+              <X className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Anuluj</span>
             </Button>
           )}
         </div>

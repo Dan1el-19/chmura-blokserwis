@@ -84,48 +84,48 @@ export default function StorageUsageBars({ refreshToken }: StorageUsageBarsProps
 
   return (
     <div className="rounded-lg transition-all duration-200 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-xl">
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-3 sm:px-6 py-2.5 sm:py-4 border-b border-gray-200">
         <div className="flex items-center gap-2">
-          <HardDrive className="h-5 w-5 text-gray-400" />
-          <h3 className="text-sm font-medium text-gray-900">Zajętość folderów</h3>
+          <HardDrive className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          <h3 className="text-xs sm:text-sm font-medium text-gray-900">Zajętość folderów</h3>
         </div>
       </div>
-      <div className="px-6 py-4 space-y-4">
+      <div className="px-3 sm:px-6 py-2.5 sm:py-4 space-y-3 sm:space-y-4">
         {/* Personal Folder Storage */}
-        <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700">Mój folder</span>
-          <span className="text-sm text-gray-500">
+        <div className="space-y-1.5 sm:space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs sm:text-sm font-medium text-gray-700">Mój folder</span>
+          <span className="text-[10px] sm:text-sm text-gray-500 shrink-0">
             {formatBytes(storageStats.personal.used)} / {formatBytes(storageStats.personal.limit)}
           </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
           <div 
-            className={`h-2 rounded-full transition-all duration-300 ${getBarColor(storageStats.personal.percentage)}`}
+            className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${getBarColor(storageStats.personal.percentage)}`}
             style={{ width: `${Math.min(storageStats.personal.percentage, 100)}%` }}
           />
         </div>
-        <div className="text-xs text-gray-500">
+        <div className="text-[10px] sm:text-xs text-gray-500">
           {storageStats.personal.percentage.toFixed(1)}% zajęte
         </div>
       </div>
 
       {/* Main Folder Storage - only show if user has access */}
       {storageStats.main.limit > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">Folder główny</span>
-            <span className="text-sm text-gray-500">
+        <div className="space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Folder główny</span>
+            <span className="text-[10px] sm:text-sm text-gray-500 shrink-0">
               {formatBytes(storageStats.main.used)} / {formatBytes(storageStats.main.limit)}
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
             <div 
-              className={`h-2 rounded-full transition-all duration-300 ${getBarColor(storageStats.main.percentage)}`}
+              className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${getBarColor(storageStats.main.percentage)}`}
               style={{ width: `${Math.min(storageStats.main.percentage, 100)}%` }}
             />
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="text-[10px] sm:text-xs text-gray-500">
             {storageStats.main.percentage.toFixed(1)}% zajęte
           </div>
         </div>

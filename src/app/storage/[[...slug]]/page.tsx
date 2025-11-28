@@ -901,7 +901,7 @@ function StoragePageInner() {
 	// Render
 	// =============================
 	return (
-		<div className="min-h-screen bg-gray-50">
+		<div className="min-h-screen bg-gray-50 overflow-x-hidden">
 			<StorageHeader
 				title="Chmura Blokserwis"
 				userEmail={user.email || ''}
@@ -913,25 +913,26 @@ function StoragePageInner() {
 				showMobileMenu={showMobileMenu}
 				onToggleMobileMenu={() => setShowMobileMenu(!showMobileMenu)}
 			/>
-			<main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-				<div className="space-y-4">
+			<main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 overflow-hidden">
+				<div className="space-y-3 sm:space-y-4">
 					{path.length > 0 && (
 						<nav
-							className="text-sm text-gray-600 flex items-center gap-1 overflow-x-auto no-scrollbar flex-nowrap -mx-1 px-1"
+							className="text-xs sm:text-sm text-gray-600 flex items-center gap-0.5 sm:gap-1 overflow-x-auto no-scrollbar flex-nowrap -mx-1 px-1 py-1"
 							aria-label="Ścieżka"
 						>
 							<button
-								className="hover:underline"
+								className="hover:underline shrink-0"
 								onClick={() => handleBreadcrumbClick(-1)}
 							>
 								{currentFolder === 'main' ? 'main' : 'root'}
 							</button>
 							{path.map((seg, idx) => (
-								<span key={idx} className="flex items-center gap-1">
-									<span>/</span>
+								<span key={idx} className="flex items-center gap-0.5 sm:gap-1 min-w-0">
+									<span className="shrink-0">/</span>
 									<button
-										className="hover:underline"
+										className="hover:underline truncate max-w-[100px] sm:max-w-[150px]"
 										onClick={() => handleBreadcrumbClick(idx)}
+										title={seg}
 									>
 										{seg}
 									</button>
@@ -972,15 +973,15 @@ function StoragePageInner() {
 							/>
 
 						{/* Main File Section */}
-						<div className="mt-6 rounded-lg transition-all duration-200 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-xl overflow-hidden">
-							<div className="px-4 sm:px-6 py-3 border-b border-gray-200">
+						<div className="mt-4 sm:mt-6 rounded-lg transition-all duration-200 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-xl overflow-hidden">
+							<div className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 border-b border-gray-200">
 								<div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full">
-									<h3 className="text-base sm:text-lg font-medium text-gray-900 leading-none h-9 flex items-center">Pliki</h3>
-									<span className="hidden sm:inline-flex items-center h-9 text-xs text-gray-500 leading-none">{files.length} pozycji</span>
-									<div className="ml-auto flex items-center gap-2">
+									<h3 className="text-sm sm:text-base md:text-lg font-medium text-gray-900 leading-none flex items-center">Pliki</h3>
+									<span className="hidden sm:inline-flex items-center text-[10px] sm:text-xs text-gray-500 leading-none">{files.length} pozycji</span>
+									<div className="ml-auto flex items-center gap-1.5 sm:gap-2">
 										<select
 											aria-label="Sortowanie"
-											className="control-size rounded-md border border-gray-300 bg-white px-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+											className="control-size rounded-md border border-gray-300 bg-white px-1.5 sm:px-2 text-[10px] sm:text-xs md:text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
 											value={`${sortField}:${sortDir}`}
 											onChange={(e) => { const [f,d]= e.target.value.split(':') as [typeof sortField, typeof sortDir]; setSortField(f); setSortDir(d); }}
 										>
@@ -991,20 +992,20 @@ function StoragePageInner() {
 											<option value="lastModified:desc">Najnowsze</option>
 											<option value="lastModified:asc">Najstarsze</option>
 										</select>
-										<div className="flex items-center gap-1">
+										<div className="flex items-center gap-0.5 sm:gap-1">
 											<button
 												onClick={() => setViewMode('grid')}
 												aria-label="Widok siatki"
-												className={`control-icon-btn rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 text-gray-600 ${viewMode === 'grid' ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}
+												className={`no-min-touch control-icon-btn rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 text-gray-600 ${viewMode === 'grid' ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}
 											>
-												<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" /><path d="M9 3v18" /><path d="M15 3v18" /></svg>
+												<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 sm:h-4 sm:w-4"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" /><path d="M9 3v18" /><path d="M15 3v18" /></svg>
 											</button>
 											<button
 												onClick={() => setViewMode('list')}
 												aria-label="Widok listy"
-												className={`control-icon-btn rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 text-gray-600 ${viewMode === 'list' ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}
+												className={`no-min-touch control-icon-btn rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 text-gray-600 ${viewMode === 'list' ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-gray-300 hover:bg-gray-50'}`}
 											>
-												<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><rect x="4" y="5" width="16" height="2" rx="1" /><rect x="4" y="11" width="16" height="2" rx="1" /><rect x="4" y="17" width="16" height="2" rx="1" /></svg>
+												<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 sm:h-4 sm:w-4"><rect x="4" y="5" width="16" height="2" rx="1" /><rect x="4" y="11" width="16" height="2" rx="1" /><rect x="4" y="17" width="16" height="2" rx="1" /></svg>
 											</button>
 										</div>
 										<button

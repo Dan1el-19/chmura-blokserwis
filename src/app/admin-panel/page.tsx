@@ -267,15 +267,16 @@ export default function AdminPanel() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'users' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-gray-900">Zarządzanie użytkownikami</h2>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900">Zarządzanie użytkownikami</h2>
               <button
                 onClick={() => setShowCreate(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                className="bg-blue-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium hover:bg-blue-700 self-start sm:self-auto"
               >
-                <UserPlus className="h-4 w-4 inline mr-2" />
-                Dodaj użytkownika
+                <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4 inline mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Dodaj użytkownika</span>
+                <span className="sm:hidden">Dodaj</span>
               </button>
             </div>
 
@@ -366,24 +367,24 @@ export default function AdminPanel() {
         )}
 
         {activeTab === 'logs' && (
-          <div className="space-y-6">
-            <h2 className="text-lg font-semibold text-gray-900">Logi aktywności</h2>
+          <div className="space-y-4 sm:space-y-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900">Logi aktywności</h2>
             
             <div className="bg-white shadow-sm rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Użytkownik
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Akcja
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                         Plik
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Data
                       </th>
                     </tr>
@@ -391,18 +392,18 @@ export default function AdminPanel() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {logs.map((log) => (
                       <tr key={log.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{log.userEmail}</div>
+                        <td className="px-2 sm:px-6 py-2 sm:py-4">
+                          <div className="text-[10px] sm:text-sm text-gray-900 truncate max-w-[80px] sm:max-w-none">{log.userEmail}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getActionColor(log.action)}`}>
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold rounded-full ${getActionColor(log.action)}`}>
                             {log.action}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-[10px] sm:text-sm text-gray-500 hidden sm:table-cell">
                           {log.fileName || '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-[10px] sm:text-sm text-gray-500">
                           {formatDate(log.timestamp)}
                         </td>
                       </tr>
@@ -415,61 +416,62 @@ export default function AdminPanel() {
         )}
 
         {activeTab === 'stats' && (
-          <div className="space-y-6">
-            <h2 className="text-lg font-semibold text-gray-900">Statystyki systemu</h2>
+          <div className="space-y-4 sm:space-y-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900">Statystyki systemu</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
+              <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm">
                 <div className="flex items-center">
-                  <Users className="h-8 w-8 text-blue-500" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Łączna liczba użytkowników</p>
-                    <p className="text-2xl font-semibold text-gray-900">{users.length}</p>
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 shrink-0" />
+                  <div className="ml-2 sm:ml-4 min-w-0">
+                    <p className="text-[10px] sm:text-sm font-medium text-gray-500">Użytkownicy</p>
+                    <p className="text-lg sm:text-2xl font-semibold text-gray-900">{users.length}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm">
                 <div className="flex items-center">
-                  <HardDrive className="h-8 w-8 text-green-500" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Łączna przestrzeń użytkowników</p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                  <HardDrive className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 shrink-0" />
+                  <div className="ml-2 sm:ml-4 min-w-0">
+                    <p className="text-[10px] sm:text-sm font-medium text-gray-500">Przestrzeń</p>
+                    <p className="text-lg sm:text-2xl font-semibold text-gray-900 truncate">
                       {formatBytes(users.reduce((acc, user) => acc + user.storageUsed, 0))}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <HardDrive className="h-8 w-8 text-blue-500" />
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">Folder główny</p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {formatBytes(mainStorageUsed)} / {formatBytes(mainStorageLimit)}
+              <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm col-span-2 md:col-span-1">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center min-w-0">
+                    <HardDrive className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 shrink-0" />
+                    <div className="ml-2 sm:ml-4 min-w-0">
+                      <p className="text-[10px] sm:text-sm font-medium text-gray-500">Folder główny</p>
+                      <p className="text-base sm:text-2xl font-semibold text-gray-900">
+                        <span className="hidden sm:inline">{formatBytes(mainStorageUsed)} / {formatBytes(mainStorageLimit)}</span>
+                        <span className="sm:hidden">{formatBytes(mainStorageUsed)}</span>
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-[10px] sm:text-sm text-gray-500">
                         {Math.round((mainStorageUsed / mainStorageLimit) * 100)}% wykorzystane
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowMainStorageModal(true)}
-                    className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                    className="text-blue-600 hover:text-blue-900 text-[10px] sm:text-sm font-medium shrink-0"
                   >
-                    Edytuj limit
+                    Edytuj
                   </button>
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm">
                 <div className="flex items-center">
-                  <Activity className="h-8 w-8 text-purple-500" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Akcje dzisiaj</p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                  <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 shrink-0" />
+                  <div className="ml-2 sm:ml-4 min-w-0">
+                    <p className="text-[10px] sm:text-sm font-medium text-gray-500">Akcje dzisiaj</p>
+                    <p className="text-lg sm:text-2xl font-semibold text-gray-900">
                       {logs.filter(log => {
                         const today = new Date();
                         const logDate = new Date(log.timestamp);
@@ -486,8 +488,8 @@ export default function AdminPanel() {
 
       {/* User Edit Modal */}
       {editingUser && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="relative w-full sm:w-96 p-4 sm:p-5 border shadow-lg rounded-t-2xl sm:rounded-xl bg-white max-h-[90vh] overflow-y-auto">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Edytuj użytkownika</h3>
               <form onSubmit={(e) => {
@@ -558,8 +560,8 @@ export default function AdminPanel() {
       )}
 
       {showCreate && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="relative w-full sm:w-96 p-4 sm:p-5 border shadow-lg rounded-t-2xl sm:rounded-xl bg-white max-h-[90vh] overflow-y-auto">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Nowy użytkownik</h3>
               <form onSubmit={async (e) => {
@@ -611,8 +613,8 @@ export default function AdminPanel() {
 
       {/* Password Change Modal */}
       {showPasswordModal && passwordUser && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="relative w-full sm:w-96 p-4 sm:p-5 border shadow-lg rounded-t-2xl sm:rounded-xl bg-white max-h-[90vh] overflow-y-auto">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Zmień hasło użytkownika</h3>
               <form onSubmit={handlePasswordSubmit}>
@@ -672,8 +674,8 @@ export default function AdminPanel() {
 
       {/* Main Storage Limit Modal */}
       {showMainStorageModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="relative w-full sm:w-96 p-4 sm:p-5 border shadow-lg rounded-t-2xl sm:rounded-xl bg-white max-h-[90vh] overflow-y-auto">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Edytuj limit folderu głównego</h3>
               <form onSubmit={(e) => {

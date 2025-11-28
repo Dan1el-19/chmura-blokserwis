@@ -45,10 +45,10 @@ export default function StorageHeader({
   }, []);
 
   return (
-    <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50 w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Desktop Navigation */}
-        <div className="hidden md:flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center py-3 sm:py-4">
+        <div className="hidden md:flex flex-row justify-between items-center py-3 md:py-4">
           {/* Logo + Folder Toggle */}
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-3 group">
@@ -145,18 +145,20 @@ export default function StorageHeader({
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="md:hidden py-2 px-1">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            {/* Logo - compact on mobile */}
+            <div className="flex items-center gap-2 min-w-0 flex-shrink">
+              <div className="w-7 h-7 flex-shrink-0 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                 </svg>
               </div>
-              <h1 className="text-base font-bold text-gray-900 font-roboto tracking-tight">{title}</h1>
+              <h1 className="text-sm font-bold text-gray-900 font-roboto tracking-tight truncate max-w-[120px] xs:max-w-[160px]">{title}</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <span className={`px-2 py-0.5 rounded text-[11px] font-medium inline-flex ${
+            {/* Right side - role badge + menu */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap ${
                 userRole === 'admin'
                   ? 'bg-red-100 text-red-700'
                   : userRole === 'plus'
@@ -170,12 +172,12 @@ export default function StorageHeader({
                 aria-label="Menu"
                 aria-expanded={showMobileMenu}
                 aria-haspopup={true}
-                className="p-2"
+                className="p-1.5 no-min-touch"
               >
                 {showMobileMenu ? (
-                  <X className="h-6 w-6" />
+                  <X className="h-5 w-5" />
                 ) : (
-                  <Menu className="h-6 w-6" />
+                  <Menu className="h-5 w-5" />
                 )}
               </Button>
             </div>
@@ -184,36 +186,38 @@ export default function StorageHeader({
 
         {/* Mobile menu */}
         {showMobileMenu && (
-          <div className="md:hidden border-t border-gray-200 py-3 animate-in fade-in">
-            <div className="px-4 flex items-center mb-4">
+          <div className="md:hidden border-t border-gray-200 py-3 animate-in fade-in overflow-hidden">
+            {/* User email row */}
+            <div className="px-3 flex items-center justify-between gap-2 mb-3">
               <p
-                className="text-sm font-medium text-gray-900 truncate flex-1 min-w-0 pr-4"
+                className="text-xs font-medium text-gray-900 truncate min-w-0 flex-1"
                 title={userEmail}
               >
                 {userEmail}
               </p>
-              <div className="flex items-center shrink-0 space-x-2">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
                 {userRole === 'admin' && (
-                  <Button variant="outline" size="sm" onClick={onAdminPanel} aria-label="Panel admina">
+                  <Button variant="outline" size="sm" onClick={onAdminPanel} aria-label="Panel admina" className="p-1.5 no-min-touch">
                     <Settings className="h-4 w-4" />
                   </Button>
                 )}
-                <Button variant="outline" size="sm" onClick={onLogout} aria-label="Wyloguj się">
+                <Button variant="outline" size="sm" onClick={onLogout} aria-label="Wyloguj się" className="p-1.5 no-min-touch">
                   <LogOut className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col gap-2 items-stretch px-4">
+            {/* Folder buttons */}
+            <div className="flex gap-2 px-3">
               <button
                 onClick={() => onFolderChange('personal')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  currentFolder === 'personal' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                className={`flex-1 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                  currentFolder === 'personal' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 active:bg-gray-200'
                 }`}
               >Personal</button>
               <button
                 onClick={() => onFolderChange('main')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  currentFolder === 'main' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                className={`flex-1 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                  currentFolder === 'main' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 active:bg-gray-200'
                 }`}
               >Main</button>
             </div>

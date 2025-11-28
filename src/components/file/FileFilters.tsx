@@ -59,51 +59,55 @@ export default function FileFilters({ filters, onFiltersChange, totalFiles, filt
 	];
 
 	return (
-		<div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
-			<div className="flex items-center justify-between mb-4">
-				<div className="flex items-center gap-4">
-					<h3 className="text-lg font-medium text-gray-900">Filtry i sortowanie</h3>
-					<span className="text-sm text-gray-500">
-						{filteredFiles} z {totalFiles} plików
+		<div className="bg-white border border-gray-200 rounded-lg p-2.5 sm:p-4 mb-3 sm:mb-4">
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 sm:mb-4">
+				<div className="flex items-center gap-2 sm:gap-4">
+					<h3 className="text-sm sm:text-lg font-medium text-gray-900">Filtry i sortowanie</h3>
+					<span className="text-[10px] sm:text-sm text-gray-500">
+						{filteredFiles} z {totalFiles}
 					</span>
 				</div>
-				<div className="flex items-center gap-2">
+				<div className="flex items-center gap-1.5 sm:gap-2">
 					<Button
 						variant="outline"
 						size="sm"
 						onClick={() => setShowAdvanced(!showAdvanced)}
+						className="text-[10px] sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5"
 					>
-						<Filter className="h-4 w-4 mr-2" />
-						{showAdvanced ? 'Ukryj' : 'Zaawansowane'}
+						<Filter className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+						<span className="hidden sm:inline">{showAdvanced ? 'Ukryj' : 'Zaawansowane'}</span>
+						<span className="sm:hidden">{showAdvanced ? 'Ukryj' : 'Więcej'}</span>
 					</Button>
 					<Button
 						variant="outline"
 						size="sm"
 						onClick={clearFilters}
+						className="text-[10px] sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5"
 					>
-						Wyczyść filtry
+						<span className="hidden sm:inline">Wyczyść filtry</span>
+						<span className="sm:hidden">Wyczyść</span>
 					</Button>
 				</div>
 			</div>
 
 			{/* Podstawowe filtry */}
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 mb-3 sm:mb-4">
 				<div className="relative">
-					<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+					<Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
 					<Input
 						type="text"
 						placeholder="Szukaj plików..."
 						value={filters.search}
 						onChange={(e) => updateFilter('search', e.target.value)}
-						className="pl-10"
+						className="pl-8 sm:pl-10 text-xs sm:text-sm py-1.5 sm:py-2"
 					/>
 				</div>
 
-				<div className="flex gap-2">
+				<div className="flex gap-1.5 sm:gap-2">
 					<select
 						value={filters.sortBy}
 						onChange={(e) => updateFilter('sortBy', e.target.value)}
-						className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+						className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 					>
 						<option value="name">Nazwa</option>
 						<option value="size">Rozmiar</option>
@@ -114,11 +118,12 @@ export default function FileFilters({ filters, onFiltersChange, totalFiles, filt
 						variant="outline"
 						size="sm"
 						onClick={() => updateFilter('sortOrder', filters.sortOrder === 'asc' ? 'desc' : 'asc')}
+						className="px-2 sm:px-3"
 					>
 						{filters.sortOrder === 'asc' ? (
-							<SortAsc className="h-4 w-4" />
+							<SortAsc className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
 						) : (
-							<SortDesc className="h-4 w-4" />
+							<SortDesc className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
 						)}
 					</Button>
 				</div>
@@ -126,7 +131,7 @@ export default function FileFilters({ filters, onFiltersChange, totalFiles, filt
 				<select
 					value={filters.fileType}
 					onChange={(e) => updateFilter('fileType', e.target.value)}
-					className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+					className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 				>
 					{fileTypeOptions.map(option => (
 						<option key={option.value} value={option.value}>
@@ -138,11 +143,11 @@ export default function FileFilters({ filters, onFiltersChange, totalFiles, filt
 
 			{/* Zaawansowane filtry */}
 			{showAdvanced && (
-				<div className="border-t border-gray-200 pt-4">
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+				<div className="border-t border-gray-200 pt-3 sm:pt-4">
+					<div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
-								<HardDrive className="h-4 w-4 inline mr-1" />
+							<label className="block text-[10px] sm:text-sm font-medium text-gray-700 mb-1">
+								<HardDrive className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
 								Min. rozmiar
 							</label>
 							<Input
@@ -150,13 +155,13 @@ export default function FileFilters({ filters, onFiltersChange, totalFiles, filt
 								placeholder="0 B"
 								value={filters.minSize || ''}
 								onChange={(e) => updateFilter('minSize', parseInt(e.target.value) || 0)}
-								className="text-sm"
+								className="text-xs sm:text-sm"
 							/>
 						</div>
 
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
-								<HardDrive className="h-4 w-4 inline mr-1" />
+							<label className="block text-[10px] sm:text-sm font-medium text-gray-700 mb-1">
+								<HardDrive className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
 								Max. rozmiar
 							</label>
 							<Input
@@ -164,33 +169,33 @@ export default function FileFilters({ filters, onFiltersChange, totalFiles, filt
 								placeholder="∞"
 								value={filters.maxSize || ''}
 								onChange={(e) => updateFilter('maxSize', parseInt(e.target.value) || 0)}
-								className="text-sm"
+								className="text-xs sm:text-sm"
 							/>
 						</div>
 
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
-								<Calendar className="h-4 w-4 inline mr-1" />
+							<label className="block text-[10px] sm:text-sm font-medium text-gray-700 mb-1">
+								<Calendar className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
 								Od daty
 							</label>
 							<Input
 								type="date"
 								value={filters.dateFrom}
 								onChange={(e) => updateFilter('dateFrom', e.target.value)}
-								className="text-sm"
+								className="text-xs sm:text-sm"
 							/>
 						</div>
 
 						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">
-								<Calendar className="h-4 w-4 inline mr-1" />
+							<label className="block text-[10px] sm:text-sm font-medium text-gray-700 mb-1">
+								<Calendar className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
 								Do daty
 							</label>
 							<Input
 								type="date"
 								value={filters.dateTo}
 								onChange={(e) => updateFilter('dateTo', e.target.value)}
-								className="text-sm"
+								className="text-xs sm:text-sm"
 							/>
 						</div>
 					</div>
