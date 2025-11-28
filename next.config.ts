@@ -4,9 +4,7 @@ const r2Host = process.env.R2_PUBLIC_HOSTNAME;
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-
   images: {
-    // Umożliwia ładowanie obrazów z Cloudflare R2 presigned URLs
     remotePatterns: r2Host ? [
       {
         protocol: 'https',
@@ -14,7 +12,6 @@ const nextConfig: NextConfig = {
       },
     ] : [],
   },
-
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },

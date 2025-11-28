@@ -25,7 +25,7 @@ export default function RootRedirectDecider() {
 
   // Proste, lekkie UI (nie migamy starą stroną informacyjną)
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100">
       <div className="text-center">
         <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent mx-auto mb-4" />
         <p className="text-sm text-gray-600">

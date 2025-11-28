@@ -11,7 +11,7 @@ const STATIC_FILES = [
   '/manifest.json',
   '/icons/icon-192x192.svg',
   '/icons/icon-512x512.svg',
-  '/favicon.ico'
+  '/favicon.svg'
 ];
 
 // Strategie cache'owania
