@@ -176,7 +176,7 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
               </div>
             )}
             {isText && rawText && (
-              <div className="bg-gray-900 text-gray-100 p-3 sm:p-4 rounded-md max-h-[60vh] overflow-auto text-sm font-mono">
+              <div className="bg-gray-900 text-gray-100 p-2 sm:p-3 md:p-4 rounded-md max-h-[50vh] sm:max-h-[60vh] overflow-auto text-xs sm:text-sm font-mono">
                 <pre>
                   <code
                     id="code-preview"
@@ -188,9 +188,9 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
               </div>
             )}
             {!isImage && !isPdf && !isVideo && !isAudio && !isText && (
-              <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
+              <div className="flex flex-col items-center justify-center py-6 sm:py-10 gap-3 sm:gap-4 text-center">
                 <FileTypeIcon fileName={file.fileName} size="lg" />
-                <p className="text-sm text-gray-600 max-w-xs">
+                <p className="text-xs sm:text-sm text-gray-600 max-w-xs">
                   Brak wbudowanego podglądu dla tego typu pliku.
                 </p>
               </div>
@@ -200,9 +200,9 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
       )}
       {previewError && (
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center text-yellow-600">
-              <AlertCircle className="h-5 w-5 mr-2" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center text-yellow-600 text-xs sm:text-sm">
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2 shrink-0" />
               <span>{previewError}</span>
             </div>
           </CardContent>
@@ -216,12 +216,12 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
       />
       {lightbox && previewUrl && (isImage || isVideo) && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4"
           onClick={() => setLightbox(false)}
         >
           <button
             aria-label="Zamknij podgląd"
-            className="absolute top-4 right-4 text-white text-sm bg-black/40 px-3 py-1 rounded-md hover:bg-black/60"
+            className="absolute top-2 sm:top-4 right-2 sm:right-4 text-white text-xs sm:text-sm bg-black/40 px-2 sm:px-3 py-1 rounded-md hover:bg-black/60"
             onClick={() => setLightbox(false)}
           >
             Zamknij
@@ -294,10 +294,10 @@ export default function PublicFilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Ładowanie pliku...</p>
+          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600 mx-auto mb-3 sm:mb-4" />
+          <p className="text-sm sm:text-base text-gray-600">Ładowanie pliku...</p>
         </div>
       </div>
     );
@@ -305,13 +305,13 @@ export default function PublicFilePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-3 sm:px-4">
         <Card className="max-w-md w-full">
-          <CardContent className="p-8 text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Błąd</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <Button variant="outline" onClick={() => window.history.back()}>
+          <CardContent className="p-5 sm:p-8 text-center">
+            <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-3 sm:mb-4" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1.5 sm:mb-2">Błąd</h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">{error}</p>
+            <Button variant="outline" onClick={() => window.history.back()} className="text-sm">
               Wróć
             </Button>
           </CardContent>
@@ -322,12 +322,12 @@ export default function PublicFilePage() {
 
   if (!fileData || !downloadUrl) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-3 sm:px-4">
         <Card className="max-w-md w-full">
-          <CardContent className="p-8 text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Błąd</h2>
-            <p className="text-gray-600">Nie można załadować danych pliku</p>
+          <CardContent className="p-5 sm:p-8 text-center">
+            <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-3 sm:mb-4" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1.5 sm:mb-2">Błąd</h2>
+            <p className="text-sm sm:text-base text-gray-600">Nie można załadować danych pliku</p>
           </CardContent>
         </Card>
       </div>
@@ -336,75 +336,77 @@ export default function PublicFilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="mx-auto w-full max-w-5xl px-3 sm:px-4 py-6 sm:py-8 flex flex-col gap-6">
+      <div className="mx-auto w-full max-w-5xl px-3 sm:px-4 py-4 sm:py-6 md:py-8 flex flex-col gap-4 sm:gap-6">
         {/* Header */}
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <FileTypeIcon fileName={fileData.fileName} size="md" />
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-all">{fileData.originalName}</h1>
-              <p className="text-gray-600 text-sm sm:text-base">Plik udostępniony z chmury Blokserwis</p>
+        <header className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="shrink-0">
+              <FileTypeIcon fileName={fileData.fileName} size="md" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-all">{fileData.originalName}</h1>
+              <p className="text-gray-600 text-xs sm:text-sm md:text-base">Plik udostępniony z chmury Blokserwis</p>
             </div>
           </div>
-          <div className="flex sm:flex-col md:flex-row gap-3 w-full sm:w-auto">
-            <Button onClick={() => window.location.reload()} variant="outline" className="flex-1 sm:flex-none">Odśwież</Button>
+          <div className="flex gap-2 sm:gap-3">
+            <Button onClick={() => window.location.reload()} variant="outline" size="sm" className="text-xs sm:text-sm">Odśwież</Button>
           </div>
         </header>
 
-        <div className="grid gap-6 lg:gap-8 grid-cols-1 xl:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 lg:gap-8 grid-cols-1 xl:grid-cols-3">
           {/* Info panel */}
-          <aside className="order-2 xl:order-1 xl:col-span-1 flex flex-col gap-6">
+          <aside className="order-2 xl:order-1 xl:col-span-1 flex flex-col gap-4 sm:gap-6">
             <Card>
-              <CardHeader>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Informacje</h3>
+              <CardHeader className="p-3 sm:p-4">
+                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">Informacje</h3>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm sm:text-[0.95rem]">
-                <div className="flex items-start gap-3">
-                  <FileText className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+              <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4 text-xs sm:text-sm">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 shrink-0 mt-0.5" />
                   <div className="min-w-0">
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Nazwa</p>
-                    <p className="font-medium text-gray-900 break-all">{fileData.originalName}</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">Nazwa</p>
+                    <p className="font-medium text-gray-900 break-all text-xs sm:text-sm">{fileData.originalName}</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Utworzono</p>
-                    <p className="font-medium text-gray-900">{formatDate(fileData.createdAt)}</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">Utworzono</p>
+                    <p className="font-medium text-gray-900 text-xs sm:text-sm">{formatDate(fileData.createdAt)}</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Wygasa</p>
-                    <p className="font-medium text-gray-900">{formatDate(fileData.expiresAt)}</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">Wygasa</p>
+                    <p className="font-medium text-gray-900 text-xs sm:text-sm">{formatDate(fileData.expiresAt)}</p>
                   </div>
                 </div>
                 {fileData.size !== undefined && fileData.size !== null && (
-                  <div className="flex items-start gap-3">
-                    <FileText className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Rozmiar</p>
-                      <p className="font-medium text-gray-900">{formatBytes(fileData.size)}</p>
+                      <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">Rozmiar</p>
+                      <p className="font-medium text-gray-900 text-xs sm:text-sm">{formatBytes(fileData.size)}</p>
                     </div>
                   </div>
                 )}
                 {fileData.mime && (
-                  <div className="flex items-start gap-3">
-                    <FileText className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Typ MIME</p>
-                      <p className="font-medium text-gray-900 break-all">{fileData.mime}</p>
+                      <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">Typ MIME</p>
+                      <p className="font-medium text-gray-900 break-all text-xs sm:text-sm">{fileData.mime}</p>
                     </div>
                   </div>
                 )}
-                <div className="pt-3 border-t border-gray-200 flex flex-col gap-2">
+                <div className="pt-2 sm:pt-3 border-t border-gray-200 flex flex-col gap-2">
                   <Button
                     onClick={() => document.querySelector<HTMLButtonElement>('#download-direct')?.click()}
-                    size="md"
-                    className="w-full gap-2"
+                    size="sm"
+                    className="w-full gap-2 text-xs sm:text-sm"
                   >
-                    <Download className="h-5 w-5" /> Pobierz
+                    <Download className="h-4 w-4 sm:h-5 sm:w-5" /> Pobierz
                   </Button>
                 </div>
               </CardContent>

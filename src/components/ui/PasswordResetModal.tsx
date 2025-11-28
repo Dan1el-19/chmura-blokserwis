@@ -138,22 +138,22 @@ export default function PasswordResetModal({ isOpen, onClose }: PasswordResetMod
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000] p-4" role="dialog" aria-modal="true" aria-label="Reset hasła">
-      <Card className="max-w-md w-full">
-        <CardHeader className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900">
-            <KeyRound className="h-5 w-5"/>
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[10000] p-0 sm:p-4" role="dialog" aria-modal="true" aria-label="Reset hasła">
+      <Card className="w-full sm:max-w-md rounded-t-2xl sm:rounded-xl max-h-[90vh] overflow-y-auto">
+        <CardHeader className="flex items-center justify-between p-3 sm:p-4">
+          <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2 text-gray-900">
+            <KeyRound className="h-4 w-4 sm:h-5 sm:w-5"/>
             Reset hasła
           </h3>
-          <Button variant="ghost" size="sm" onClick={handleClose} className="p-2">
-            <X className="h-5 w-5" />
+          <Button variant="ghost" size="sm" onClick={handleClose} className="no-min-touch p-1.5 sm:p-2">
+            <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-4">
           {!sent ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                   Podaj swój adres email, a wyślemy Ci link do resetu hasła.
                 </p>
                 <Input
@@ -170,14 +170,14 @@ export default function PasswordResetModal({ isOpen, onClose }: PasswordResetMod
                   style={{ '::placeholder': { color: '#9ca3af' } } as React.CSSProperties & { '::placeholder'?: { color: string } }}
                 />
               </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handleClose}>
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={handleClose} className="w-full sm:w-auto text-sm">
                   Anuluj
                 </Button>
-                <Button type="submit" variant="primary" disabled={loading || !email.trim()}>
+                <Button type="submit" variant="primary" disabled={loading || !email.trim()} className="w-full sm:w-auto text-sm">
                   {loading ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2"/>
+                      <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin mr-2"/>
                       Wysyłanie...
                     </>
                   ) : (
@@ -187,20 +187,20 @@ export default function PasswordResetModal({ isOpen, onClose }: PasswordResetMod
               </div>
             </form>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div className="text-center">
-                <div className="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-4">
-                  <Mail className="h-6 w-6 text-green-600" />
+                <div className="mx-auto flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 mb-3 sm:mb-4">
+                  <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
-                <h4 className="text-lg font-medium text-gray-900 mb-2">
+                <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-1.5 sm:mb-2">
                   Email wysłany!
                 </h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   Sprawdź swoją skrzynkę email. Jeśli nie widzisz wiadomości, sprawdź folder spam.
                 </p>
               </div>
-              <div className="flex justify-center">
-                <Button variant="primary" onClick={handleClose}>
+              <div className="flex justify-center pt-2">
+                <Button variant="primary" onClick={handleClose} className="w-full sm:w-auto text-sm">
                   Zamknij
                 </Button>
               </div>

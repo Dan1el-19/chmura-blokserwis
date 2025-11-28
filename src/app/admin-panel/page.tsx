@@ -208,56 +208,55 @@ export default function AdminPanel() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 sm:py-4 gap-3">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/storage')}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <h1 className="text-2xl font-bold text-gray-900 font-roboto">Panel Administracyjny</h1>
-            </div>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex items-center py-2.5 sm:py-3 md:py-4 gap-2 sm:gap-3">
+            <button
+              onClick={() => router.push('/storage')}
+              className="text-gray-600 hover:text-gray-900 p-1"
+            >
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 font-roboto">Panel Administracyjny</h1>
           </div>
         </div>
       </header>
 
       {/* Navigation Tabs */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex overflow-x-auto gap-6 sm:gap-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <nav className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 -mb-px">
             <button
               onClick={() => setActiveTab('users')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2.5 sm:py-3 md:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'users'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <Users className="h-4 w-4 inline mr-2" />
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 inline mr-1 sm:mr-2" />
               Użytkownicy
             </button>
             <button
               onClick={() => setActiveTab('logs')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2.5 sm:py-3 md:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'logs'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <Activity className="h-4 w-4 inline mr-2" />
-              Logi aktywności
+              <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 inline mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Logi aktywności</span>
+              <span className="sm:hidden">Logi</span>
             </button>
             <button
               onClick={() => setActiveTab('stats')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2.5 sm:py-3 md:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'stats'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <FileText className="h-4 w-4 inline mr-2" />
+              <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 inline mr-1 sm:mr-2" />
               Statystyki
             </button>
           </nav>
@@ -265,7 +264,7 @@ export default function AdminPanel() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {activeTab === 'users' && (
           <div className="space-y-4 sm:space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
@@ -282,22 +281,22 @@ export default function AdminPanel() {
 
             <div className="bg-white shadow-sm rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Użytkownik
                       </th>
-                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Rola
                       </th>
-                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                         Przestrzeń
                       </th>
-                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                         Ostatnie logowanie
                       </th>
-                      <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Akcje
                       </th>
                     </tr>
@@ -305,21 +304,21 @@ export default function AdminPanel() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.map((user) => (
                       <tr key={user.uid} className="hover:bg-gray-50">
-                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{user.displayName}</div>
-                            <div className="text-sm text-gray-500">{user.email}</div>
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4">
+                          <div className="min-w-0">
+                            <div className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-[100px] sm:max-w-none">{user.displayName}</div>
+                            <div className="text-[10px] sm:text-sm text-gray-500 truncate max-w-[100px] sm:max-w-none">{user.email}</div>
                           </div>
                         </td>
-                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
                             {user.role}
                           </span>
                         </td>
-                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <div className="flex items-center space-x-2">
-                            <HardDrive className="h-4 w-4 text-gray-400" />
-                            <span>{formatBytes(user.storageUsed)} / {formatBytes(user.storageLimit)}</span>
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 hidden sm:table-cell">
+                          <div className="flex items-center space-x-1 sm:space-x-2">
+                            <HardDrive className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
+                            <span className="text-[10px] sm:text-sm">{formatBytes(user.storageUsed)} / {formatBytes(user.storageLimit)}</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
                             <div 
@@ -331,29 +330,29 @@ export default function AdminPanel() {
                             ></div>
                           </div>
                         </td>
-                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 whitespace-nowrap text-[10px] sm:text-sm text-gray-500 hidden md:table-cell">
                           {formatDate(user.lastLogin)}
                         </td>
-                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex gap-2">
+                        <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex gap-1 sm:gap-2">
                             <button
                               onClick={() => setEditingUser(user)}
-                              className="text-blue-600 hover:text-blue-900"
+                              className="text-blue-600 hover:text-blue-900 p-1"
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </button>
                             <button
                               onClick={() => handleChangePassword(user)}
-                              className="text-purple-600 hover:text-purple-900"
+                              className="text-purple-600 hover:text-purple-900 p-1"
                               title="Zmień hasło"
                             >
-                              <span className="text-xs font-semibold">PWD</span>
+                              <span className="text-[10px] sm:text-xs font-semibold">PWD</span>
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user.uid)}
-                              className="text-red-600 hover:text-red-900"
+                              className="text-red-600 hover:text-red-900 p-1"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </button>
                           </div>
                         </td>

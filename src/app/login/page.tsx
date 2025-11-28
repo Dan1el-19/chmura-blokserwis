@@ -179,29 +179,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-app-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="h-app-screen w-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-6 sm:py-12 px-3 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute -top-20 sm:-top-40 -right-20 sm:-right-40 w-40 sm:w-80 h-40 sm:h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute -bottom-20 sm:-bottom-40 -left-20 sm:-left-40 w-40 sm:w-80 h-40 sm:h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-20 sm:top-40 left-20 sm:left-40 w-40 sm:w-80 h-40 sm:h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
-      <div className="relative max-w-md w-full space-y-8">
+      <div className="relative max-w-md w-full space-y-6 sm:space-y-8">
   {/* Usunięto przycisk powrotu na stronę główną (root przekierowuje do /login) */}
 
         {/* Header */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-3 sm:space-y-4">
           <div className="flex justify-center">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Cloud className="h-8 w-8 text-blue-600" />
+            <div className="p-2.5 sm:p-3 bg-blue-100 rounded-full">
+              <Cloud className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
             </div>
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 font-roboto">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 font-roboto">
               Witaj w Chmurze
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-1.5 sm:mt-2 text-sm sm:text-base text-gray-600">
               Zaloguj się
             </p>
           </div>
@@ -209,7 +209,7 @@ export default function LoginPage() {
 
         {/* Login Card */}
         <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-          <CardContent className="p-8">
+          <CardContent className="p-4 sm:p-6 md:p-8">
             <form className="space-y-6" onSubmit={handleEmailLogin}>
               <Input
               label={<span className="ml-1">Adres email</span>}
