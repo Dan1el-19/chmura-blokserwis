@@ -58,7 +58,7 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
         // minimal interface to satisfy TS without full types
         interface HLCore {
           highlightElement: (el: HTMLElement) => void;
-          registerLanguage: (name: string, lang: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+          registerLanguage: (name: string, lang: unknown) => void;
           getLanguage: (name: string) => unknown;
         }
         const core = coreMod as unknown as HLCore;
@@ -73,9 +73,8 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
         ];
         await Promise.all(langs.map(async ([name, loader]) => {
           if (!core.getLanguage(name)) {
-            const langMod = await loader();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            core.registerLanguage(name, (langMod as any).default || langMod);
+            const langMod = await loader() as { default?: unknown };
+            core.registerLanguage(name, langMod.default || langMod);
           }
         }));
         const el = document.getElementById('code-preview');
@@ -294,7 +293,7 @@ export default function PublicFilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600 mx-auto mb-3 sm:mb-4" />
           <p className="text-sm sm:text-base text-gray-600">Ładowanie pliku...</p>
@@ -305,7 +304,7 @@ export default function PublicFilePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-3 sm:px-4">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-3 sm:px-4">
         <Card className="max-w-md w-full">
           <CardContent className="p-5 sm:p-8 text-center">
             <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-3 sm:mb-4" />
@@ -322,7 +321,7 @@ export default function PublicFilePage() {
 
   if (!fileData || !downloadUrl) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-3 sm:px-4">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-3 sm:px-4">
         <Card className="max-w-md w-full">
           <CardContent className="p-5 sm:p-8 text-center">
             <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-3 sm:mb-4" />
@@ -335,7 +334,7 @@ export default function PublicFilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
       <div className="mx-auto w-full max-w-5xl px-3 sm:px-4 py-4 sm:py-6 md:py-8 flex flex-col gap-4 sm:gap-6">
         {/* Header */}
         <header className="flex flex-col gap-3 sm:gap-4">

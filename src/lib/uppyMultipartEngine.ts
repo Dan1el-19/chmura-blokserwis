@@ -325,11 +325,8 @@ export class UppyMultipartEngine {
   }
 
   private async listParts(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _file: UppyFile<Record<string, unknown>, Record<string, unknown>>,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _uploadId: string | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _key: string | undefined
   ) {
     // Implementation for listing parts - returning empty array for now

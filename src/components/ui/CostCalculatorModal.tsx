@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Calculator, Info, Upload, AlertCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { CostCalculationResult, Currency } from '@/types';
@@ -29,36 +29,27 @@ export default function CostCalculatorModal({
   const [currency, setCurrency] = useState<Currency>('PLN');
   const [systemStats, setSystemStats] = useState<{ totalStorage: number }>({ totalStorage: 0 });
   const [loading, setLoading] = useState(false);
-  const [calculation, setCalculation] = useState<CostCalculationResult | null>(null);
 
-  // Pobierz statystyki systemu przy otwarciu modala i zresetuj loading
+  // Pobierz statystyki systemu przy otwarciu modala
   useEffect(() => {
     if (isOpen && file) {
-      setLoading(false); // Reset loading state when modal opens
       fetchSystemStats().then(setSystemStats);
     }
   }, [isOpen, file]);
 
-  // Oblicz koszty przy zmianie parametrów
-  useEffect(() => {
+  // Oblicz koszty przy zmianie parametrów - używamy useMemo zamiast useState + useEffect
+  const calculation = useMemo<CostCalculationResult | null>(() => {
     if (file && systemStats.totalStorage >= 0) {
       const daysToCalculate = isIndefinite ? 30 : storageDays;
-      const result = calculateStorageCost({
+      return calculateStorageCost({
         fileSize: file.size,
         storageDays: daysToCalculate,
         currency,
         totalSystemUsage: systemStats.totalStorage
       });
-      setCalculation(result);
     }
+    return null;
   }, [file, storageDays, isIndefinite, currency, systemStats.totalStorage]);
-
-  // Reset loading state when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setLoading(false);
-    }
-  }, [isOpen]);
 
   if (!isOpen || !file) return null;
 

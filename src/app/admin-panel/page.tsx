@@ -46,9 +46,11 @@ export default function AdminPanel() {
       });
       if (response.ok) {
         const userData = await response.json();
-        if (userData.role !== 'admin') { router.push('/storage'); toast.error('Brak uprawnień administratora'); }
+        if (userData.role !== 'admin') { router.push('/storage'); toast.error('Brak uprawnień administratora'); return false; }
+        return true;
       }
-    } catch {}
+      return false;
+    } catch { return false; }
   }, [user, router, refreshIdToken]);
 
   const fetchUsers = useCallback(async () => {
@@ -90,8 +92,21 @@ export default function AdminPanel() {
     }
   }, [activeTab, fetchUsers, fetchLogs, fetchMainStorage]);
 
-  useEffect(() => { if (!loading && !user) { router.push('/login'); } else if (user) { checkAdminRole(); } }, [user, loading, router, checkAdminRole]);
-  useEffect(() => { if (user) { fetchData(); } }, [user, fetchData]);
+  useEffect(() => {
+    const initializeAdmin = async () => {
+      if (!loading && !user) { 
+        router.push('/login'); 
+        return;
+      }
+      if (user) {
+        const isAdmin = await checkAdminRole();
+        if (isAdmin) {
+          await fetchData();
+        }
+      }
+    };
+    initializeAdmin();
+  }, [user, loading, router, checkAdminRole, fetchData]);
 
   const handleCreateUser = async (form: { email: string; displayName?: string; role: UserRole; storageLimitGb: number; password?: string; }) => {
     try {
@@ -392,7 +407,7 @@ export default function AdminPanel() {
                     {logs.map((log) => (
                       <tr key={log.id} className="hover:bg-gray-50">
                         <td className="px-2 sm:px-6 py-2 sm:py-4">
-                          <div className="text-[10px] sm:text-sm text-gray-900 truncate max-w-[80px] sm:max-w-none">{log.userEmail}</div>
+                          <div className="text-[10px] sm:text-sm text-gray-900 truncate max-w-20 sm:max-w-none">{log.userEmail}</div>
                         </td>
                         <td className="px-2 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
                           <span className={`inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold rounded-full ${getActionColor(log.action)}`}>

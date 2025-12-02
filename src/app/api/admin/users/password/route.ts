@@ -27,12 +27,6 @@ export async function POST(request: NextRequest) {
       : Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 
     await getAuth().updateUser(uid, { password: newPassword });
-    // Audit log
-    try {
-      // Not storing the password in logs
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      decoded;
-    } catch {}
 
     return NextResponse.json({ success: true, generated: !password, password: !password ? newPassword : undefined });
   } catch (e) {

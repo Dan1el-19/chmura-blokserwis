@@ -19,7 +19,7 @@ steps:
     args: ['checkout', 'main']
 
   # KROK 0.5: Semantic Release
-  - name: 'node:20'
+  - name: 'node:25'
     id: Semantic-Release
     entrypoint: 'npx'
     args:

@@ -45,19 +45,19 @@ export default function StorageHeader({
   }, []);
 
   return (
-    <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50 w-full overflow-hidden">
+    <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50 w-full">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Desktop Navigation */}
         <div className="hidden md:flex flex-row justify-between items-center py-3 md:py-4">
           {/* Logo + Folder Toggle */}
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-3 group">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-8 h-8 bg-linear-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                 </svg>
               </div>
-              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+              <span className="text-xl sm:text-2xl font-bold bg-linear-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                 {title}
               </span>
             </div>
@@ -148,8 +148,8 @@ export default function StorageHeader({
         <div className="md:hidden py-2 px-1">
           <div className="flex items-center justify-between gap-2 min-w-0">
             {/* Logo - compact on mobile */}
-            <div className="flex items-center gap-2 min-w-0 flex-shrink">
-              <div className="w-7 h-7 flex-shrink-0 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
+            <div className="flex items-center gap-2 min-w-0 shrink">
+              <div className="w-7 h-7 shrink-0 rounded-lg bg-linear-to-br from-blue-600 to-blue-800 flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                 </svg>
@@ -157,7 +157,7 @@ export default function StorageHeader({
               <h1 className="text-sm font-bold text-gray-900 font-roboto tracking-tight truncate max-w-[120px] xs:max-w-[160px]">{title}</h1>
             </div>
             {/* Right side - role badge + menu */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap ${
                 userRole === 'admin'
                   ? 'bg-red-100 text-red-700'
@@ -195,7 +195,7 @@ export default function StorageHeader({
               >
                 {userEmail}
               </p>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {userRole === 'admin' && (
                   <Button variant="outline" size="sm" onClick={onAdminPanel} aria-label="Panel admina" className="p-1.5 no-min-touch">
                     <Settings className="h-4 w-4" />

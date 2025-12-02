@@ -197,7 +197,7 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
 
   return (
     <div
-      className={`fixed inset-0 z-[10000] bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-200 ${entered ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed inset-0 z-10000 bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-200 ${entered ? 'opacity-100' : 'opacity-0'}`}
       role="dialog"
       aria-modal="true"
       onClick={onClose}
@@ -424,7 +424,7 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
       {/* Lightbox dla obrazów */}
       {lightbox && isImage && previewUrl && (
         <div 
-      className="fixed inset-0 bg-black/90 flex items-center justify-center z-[10001] p-4"
+      className="fixed inset-0 bg-black/90 flex items-center justify-center z-10001 p-4"
           onClick={() => setLightbox(false)}
         >
           <div className="relative w-full h-full overflow-hidden" onWheel={(e) => {

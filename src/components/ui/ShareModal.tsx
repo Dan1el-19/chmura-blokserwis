@@ -78,7 +78,7 @@ export default function ShareModal({
                 variant="outline"
                 size="sm"
                 onClick={handleCopy}
-                className="flex-shrink-0 text-xs sm:text-sm"
+                className="shrink-0 text-xs sm:text-sm"
               >
                 {copied ? (
                   <>

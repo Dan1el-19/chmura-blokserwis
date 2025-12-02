@@ -85,6 +85,12 @@ export default function FileGrid({
   const menuRef = useRef<HTMLDivElement | null>(null);
   const clickAnchorRef = useRef<DOMRect | null>(null);
 
+  const isImageFile = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+    return extension ? imageExts.includes(extension) : false;
+  };
+
   // Ładuj thumbnail URL-e dla obrazów
   useEffect(() => {
     const loadThumbnailUrls = async () => {
@@ -133,12 +139,6 @@ export default function FileGrid({
     if (docExts.includes(extension)) return <FileText className="h-8 w-8" />;
     
     return <File className="h-8 w-8" />;
-  };
-
-  const isImageFile = (fileName: string) => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
-    return extension ? imageExts.includes(extension) : false;
   };
 
   const getThumbnailUrl = (file: FileItem) => {

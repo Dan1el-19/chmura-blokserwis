@@ -44,7 +44,7 @@ export function UploadProvider({ children, onUploadComplete }: { children: React
 
 
 	const value = useMemo<UploadContextValue>(() => {
-		if (!managerRef.current) {
+		if (managerRef.current === null) {
 			managerRef.current = new SimpleUploadManager({
 				getAuthHeader: async () => {
 					const user = auth.currentUser;
@@ -103,7 +103,7 @@ export function UploadProvider({ children, onUploadComplete }: { children: React
 		}
 
 		// Inicjalizuj MultipartUploadManager jeśli nie istnieje
-		if (!multipartManagerRef.current) {
+		if (multipartManagerRef.current === null) {
 			multipartManagerRef.current = new MultipartUploadManager();
 		}
 
