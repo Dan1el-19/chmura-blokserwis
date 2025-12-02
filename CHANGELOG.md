@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v1.0.2...v1.1.0) (2025-12-02)
+
+
+### Features
+
+* upgrade Next.js to v16 and implement full mobile responsiveness ([741f02c](https://github.com/Dan1el-19/chmura-blokserwis/commit/741f02c86a6493ae2fc5b7e55d692f51511a2bc4))
+
 ## [1.0.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v1.0.1...v1.0.2) (2025-12-01)
 
 
