@@ -1,20 +1,19 @@
-# Multi stage Dockerfile for Next.js 16 (React 19) app using PNPM
-FROM node:25-alpine AS deps
+# --- BASE ---
+FROM node:25-alpine AS base
 RUN apk add --no-cache libc6-compat
+RUN npm install -g pnpm
+
+FROM base AS deps
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
+
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile
 
-FROM node:25-alpine AS builder
+FROM base AS builder
 WORKDIR /app
-
-RUN corepack enable && corepack prepare pnpm@latest --activate
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-RUN mkdir -p public
 
 ARG NEXT_PUBLIC_FIREBASE_API_KEY
 ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
@@ -30,18 +29,28 @@ ENV NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY \
     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET \
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID \
     NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID \
-    R2_PUBLIC_HOSTNAME=$R2_PUBLIC_HOSTNAME
+    R2_PUBLIC_HOSTNAME=$R2_PUBLIC_HOSTNAME \
+    NEXT_TELEMETRY_DISABLED=1
 
 RUN pnpm run build
 
-FROM node:25-alpine AS runner
+FROM base AS runner
 WORKDIR /app
-ENV NODE_ENV=production
+
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
 
 EXPOSE 3000
-ENV PORT=3000
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
 
 CMD ["node", "server.js"]

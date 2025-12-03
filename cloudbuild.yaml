@@ -8,17 +8,17 @@ substitutions:
   _R2_PUBLIC_HOSTNAME: ""
 
 steps:
-  # KROK 0: Repair git shallow clone 
+  # KROK 1: Repair git shallow clone 
   - name: 'gcr.io/cloud-builders/git'
     id: Unshallow-Git
     args: ['fetch', '--unshallow']
 
-  # KROK 0.1: Checkout main explicitly
+  # KROK 2: Checkout main explicitly
   - name: 'gcr.io/cloud-builders/git'
     id: Checkout-Main
     args: ['checkout', 'main']
 
-  # KROK 0.5: Semantic Release
+  # KROK 3: Semantic Release
   - name: 'node:25'
     id: Semantic-Release
     entrypoint: 'npx'
@@ -34,7 +34,7 @@ steps:
     env:
       - 'CI=true'
 
-  # KROK 1: Pull cache
+  # KROK 4: Pull cache
   - name: 'gcr.io/cloud-builders/docker'
     id: Pull-Latest-For-Cache
     entrypoint: 'bash'
@@ -42,7 +42,7 @@ steps:
       - '-c'
       - 'docker pull europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest || exit 0'
 
-  # KROK 2: Build
+  # KROK 5: Build
   - name: 'gcr.io/cloud-builders/docker'
     id: Build
     args:
@@ -68,7 +68,7 @@ steps:
       - '.'
     secretEnv: ['GITHUB_TOKEN']
 
-  # KROK 3: Tag Latest
+  # KROK 6: Tag Latest
   - name: 'gcr.io/cloud-builders/docker'
     id: Tag-As-Latest
     args:
@@ -76,17 +76,17 @@ steps:
       - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
       - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest'
 
-  # KROK 4: Push SHA
+  # KROK 7: Push SHA
   - name: 'gcr.io/cloud-builders/docker'
     id: Push-SHA-Tag
     args: ['push', 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA']
 
-  # KROK 5: Push Latest
+  # KROK 8: Push Latest
   - name: 'gcr.io/cloud-builders/docker'
     id: Push-Latest-Tag
     args: ['push', 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest']
 
-  # KROK 6: Deploy Cloud Run
+  # KROK 9: Deploy Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: Deploy-To-Cloud-Run
     entrypoint: gcloud
@@ -110,7 +110,6 @@ images:
   - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:$SHORT_SHA'
   - 'europe-central2-docker.pkg.dev/$PROJECT_ID/chmura-blokserwis-nextjs/app:latest'
 
-# NOWA SEKCJA: Mapowanie Secret Managera na zmienne środowiskowe
 availableSecrets:
   secretManager:
   - versionName: projects/$PROJECT_ID/secrets/github_token/versions/latest
