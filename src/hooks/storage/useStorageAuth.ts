@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
-import { UserRole } from '@/types';
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/lib/firebase";
+import { UserRole } from "@/types";
 
 interface StorageAuthState {
   user: ReturnType<typeof useAuthState>[0];
@@ -16,7 +16,7 @@ interface StorageAuthState {
 
 export function useStorageAuth(): StorageAuthState {
   const [user, loading] = useAuthState(auth);
-  const [userRole, setUserRole] = useState<UserRole>('basic');
+  const [userRole, setUserRole] = useState<UserRole>("basic");
   const router = useRouter();
 
   const getAuthToken = useCallback(async () => {
@@ -36,7 +36,7 @@ export function useStorageAuth(): StorageAuthState {
   const fetchUserData = useCallback(async () => {
     try {
       await refreshIdToken();
-      const response = await fetch('/api/user/profile', {
+      const response = await fetch("/api/user/profile", {
         headers: { Authorization: `Bearer ${await getAuthToken()}` },
       });
       if (response.ok) {
@@ -51,7 +51,7 @@ export function useStorageAuth(): StorageAuthState {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [user, loading, router]);
 
@@ -65,9 +65,9 @@ export function useStorageAuth(): StorageAuthState {
   const logout = useCallback(async () => {
     try {
       await auth.signOut();
-      router.push('/');
+      router.push("/");
     } catch {
-      throw new Error('Błąd podczas wylogowywania');
+      throw new Error("Błąd podczas wylogowywania");
     }
   }, [router]);
 

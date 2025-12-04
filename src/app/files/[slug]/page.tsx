@@ -1,16 +1,30 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { Download, FileText, Calendar, AlertCircle } from 'lucide-react';
-import Image from 'next/image';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { formatDate, formatBytes } from '@/lib/utils';
-import FileTypeIcon from '@/components/file/FileTypeIcon';
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { Download, FileText, Calendar, AlertCircle } from "lucide-react";
+import Image from "next/image";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import { formatDate, formatBytes } from "@/lib/utils";
+import FileTypeIcon from "@/components/file/FileTypeIcon";
 
-interface FileData { key: string; fileName: string; originalName: string; createdAt: Date; expiresAt: Date; owner: string; size?: number|null; mime?: string|null; thumbnailUrl?: string|null; }
-interface FilePreviewProps { file: FileData; downloadUrl: string; slug: string; }
+interface FileData {
+  key: string;
+  fileName: string;
+  originalName: string;
+  createdAt: Date;
+  expiresAt: Date;
+  owner: string;
+  size?: number | null;
+  mime?: string | null;
+  thumbnailUrl?: string | null;
+}
+interface FilePreviewProps {
+  file: FileData;
+  downloadUrl: string;
+  slug: string;
+}
 
 function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -18,12 +32,26 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
   const [loading, setLoading] = useState(true);
   const [rawText, setRawText] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState(false);
-  const ext = file.fileName.split('.').pop()?.toLowerCase() || '';
-  const isImage = ['jpg','jpeg','png','gif','webp','svg','bmp'].includes(ext);
-  const isPdf = ext === 'pdf';
-  const isText = ['txt','md','json','xml','html','css','js','ts','tsx','jsx','sh'].includes(ext);
-  const isVideo = ['mp4','webm','mov','mkv','ogg'].includes(ext);
-  const isAudio = ['mp3','wav','flac','m4a','aac','opus'].includes(ext);
+  const ext = file.fileName.split(".").pop()?.toLowerCase() || "";
+  const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"].includes(
+    ext
+  );
+  const isPdf = ext === "pdf";
+  const isText = [
+    "txt",
+    "md",
+    "json",
+    "xml",
+    "html",
+    "css",
+    "js",
+    "ts",
+    "tsx",
+    "jsx",
+    "sh",
+  ].includes(ext);
+  const isVideo = ["mp4", "webm", "mov", "mkv", "ogg"].includes(ext);
+  const isAudio = ["mp3", "wav", "flac", "m4a", "aac", "opus"].includes(ext);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,28 +61,35 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
           setPreviewUrl(downloadUrl);
           if (!cancelled) setLoading(false);
         } else if (isText) {
-          const txt = await fetch(downloadUrl).then(r=>r.text());
+          const txt = await fetch(downloadUrl).then((r) => r.text());
           if (cancelled) return;
-          setRawText(txt.slice(0,200_000));
-          setPreviewUrl(`data:text/plain;charset=utf-8,${encodeURIComponent(txt)}`);
+          setRawText(txt.slice(0, 200_000));
+          setPreviewUrl(
+            `data:text/plain;charset=utf-8,${encodeURIComponent(txt)}`
+          );
           setLoading(false);
         } else {
           setLoading(false);
         }
       } catch {
-        if (!cancelled) { setPreviewError('Nie można załadować podglądu pliku'); setLoading(false); }
+        if (!cancelled) {
+          setPreviewError("Nie można załadować podglądu pliku");
+          setLoading(false);
+        }
       }
     })();
-    return () => { cancelled = true; };
-  }, [downloadUrl,isImage,isPdf,isVideo,isAudio,isText]);
+    return () => {
+      cancelled = true;
+    };
+  }, [downloadUrl, isImage, isPdf, isVideo, isAudio, isText]);
 
   useEffect(() => {
     if (!rawText || !isText) return;
-    if (typeof window === 'undefined') return; // SSR guard
+    if (typeof window === "undefined") return; // SSR guard
     let active = true;
     (async () => {
       try {
-        const coreMod = await import('highlight.js/lib/core');
+        const coreMod = await import("highlight.js/lib/core");
         // minimal interface to satisfy TS without full types
         interface HLCore {
           highlightElement: (el: HTMLElement) => void;
@@ -64,20 +99,22 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
         const core = coreMod as unknown as HLCore;
         // Selectively register a few common languages to reduce bundle size
         const langs: Array<[string, () => Promise<unknown>]> = [
-          ['javascript', () => import('highlight.js/lib/languages/javascript')],
-          ['typescript', () => import('highlight.js/lib/languages/typescript')],
-          ['json', () => import('highlight.js/lib/languages/json')],
-          ['xml', () => import('highlight.js/lib/languages/xml')],
-          ['bash', () => import('highlight.js/lib/languages/bash')],
-          ['css', () => import('highlight.js/lib/languages/css')]
+          ["javascript", () => import("highlight.js/lib/languages/javascript")],
+          ["typescript", () => import("highlight.js/lib/languages/typescript")],
+          ["json", () => import("highlight.js/lib/languages/json")],
+          ["xml", () => import("highlight.js/lib/languages/xml")],
+          ["bash", () => import("highlight.js/lib/languages/bash")],
+          ["css", () => import("highlight.js/lib/languages/css")],
         ];
-        await Promise.all(langs.map(async ([name, loader]) => {
-          if (!core.getLanguage(name)) {
-            const langMod = await loader() as { default?: unknown };
-            core.registerLanguage(name, langMod.default || langMod);
-          }
-        }));
-        const el = document.getElementById('code-preview');
+        await Promise.all(
+          langs.map(async ([name, loader]) => {
+            if (!core.getLanguage(name)) {
+              const langMod = (await loader()) as { default?: unknown };
+              core.registerLanguage(name, langMod.default || langMod);
+            }
+          })
+        );
+        const el = document.getElementById("code-preview");
         if (active && el) {
           core.highlightElement(el as HTMLElement);
         }
@@ -85,20 +122,24 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
         // silent fail
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [rawText, isText]);
 
   const handleDownload = async () => {
     try {
-      const response = await fetch(`/api/files/public-download?slug=${encodeURIComponent(slug)}`);
-      
+      const response = await fetch(
+        `/api/files/public-download?slug=${encodeURIComponent(slug)}`
+      );
+
       if (response.ok) {
         const { presignedUrl } = await response.json();
         // Natywne pobieranie przez przeglądarkę
         window.location.href = presignedUrl;
       } else {
         // Fallback: bezpośredni link
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = downloadUrl;
         a.download = file.originalName;
         document.body.appendChild(a);
@@ -107,7 +148,7 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
       }
     } catch {
       // Fallback: bezpośredni link
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = downloadUrl;
       a.download = file.originalName;
       document.body.appendChild(a);
@@ -129,7 +170,9 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
       {previewUrl && !previewError && (
         <Card>
           <CardHeader>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900">Podgląd</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+              Podgląd
+            </h3>
           </CardHeader>
           <CardContent>
             {isImage && (
@@ -179,7 +222,7 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
                 <pre>
                   <code
                     id="code-preview"
-                    className={`language-${ext === 'ts' || ext === 'tsx' ? 'typescript' : ext}`}
+                    className={`language-${ext === "ts" || ext === "tsx" ? "typescript" : ext}`}
                   >
                     {rawText}
                   </code>
@@ -249,11 +292,10 @@ function FilePreview({ file, downloadUrl, slug }: FilePreviewProps) {
   );
 }
 
-
 export default function PublicFilePage() {
   const params = useParams();
   const slug = params.slug as string;
-  
+
   const [fileData, setFileData] = useState<FileData | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -263,14 +305,14 @@ export default function PublicFilePage() {
     const fetchFileData = async () => {
       try {
         const response = await fetch(`/api/files/shared?slug=${slug}`);
-        
+
         if (!response.ok) {
           if (response.status === 404) {
-            setError('Plik nie został znaleziony');
+            setError("Plik nie został znaleziony");
           } else if (response.status === 410) {
-            setError('Link do pliku wygasł');
+            setError("Link do pliku wygasł");
           } else {
-            setError('Błąd podczas ładowania pliku');
+            setError("Błąd podczas ładowania pliku");
           }
           setIsLoading(false);
           return;
@@ -280,7 +322,7 @@ export default function PublicFilePage() {
         setFileData(data.fileData);
         setDownloadUrl(data.downloadUrl);
       } catch {
-        setError('Błąd podczas ładowania pliku');
+        setError("Błąd podczas ładowania pliku");
       } finally {
         setIsLoading(false);
       }
@@ -296,7 +338,9 @@ export default function PublicFilePage() {
       <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600 mx-auto mb-3 sm:mb-4" />
-          <p className="text-sm sm:text-base text-gray-600">Ładowanie pliku...</p>
+          <p className="text-sm sm:text-base text-gray-600">
+            Ładowanie pliku...
+          </p>
         </div>
       </div>
     );
@@ -308,9 +352,17 @@ export default function PublicFilePage() {
         <Card className="max-w-md w-full">
           <CardContent className="p-5 sm:p-8 text-center">
             <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-3 sm:mb-4" />
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1.5 sm:mb-2">Błąd</h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">{error}</p>
-            <Button variant="outline" onClick={() => window.history.back()} className="text-sm">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1.5 sm:mb-2">
+              Błąd
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+              {error}
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
+              className="text-sm"
+            >
               Wróć
             </Button>
           </CardContent>
@@ -325,8 +377,12 @@ export default function PublicFilePage() {
         <Card className="max-w-md w-full">
           <CardContent className="p-5 sm:p-8 text-center">
             <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-3 sm:mb-4" />
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1.5 sm:mb-2">Błąd</h2>
-            <p className="text-sm sm:text-base text-gray-600">Nie można załadować danych pliku</p>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1.5 sm:mb-2">
+              Błąd
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600">
+              Nie można załadować danych pliku
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -343,12 +399,23 @@ export default function PublicFilePage() {
               <FileTypeIcon fileName={fileData.fileName} size="md" />
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-all">{fileData.originalName}</h1>
-              <p className="text-gray-600 text-xs sm:text-sm md:text-base">Plik udostępniony z chmury Blokserwis</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-all">
+                {fileData.originalName}
+              </h1>
+              <p className="text-gray-600 text-xs sm:text-sm md:text-base">
+                Plik udostępniony z chmury Blokserwis
+              </p>
             </div>
           </div>
           <div className="flex gap-2 sm:gap-3">
-            <Button onClick={() => window.location.reload()} variant="outline" size="sm" className="text-xs sm:text-sm">Odśwież</Button>
+            <Button
+              onClick={() => window.location.reload()}
+              variant="outline"
+              size="sm"
+              className="text-xs sm:text-sm"
+            >
+              Odśwież
+            </Button>
           </div>
         </header>
 
@@ -357,36 +424,54 @@ export default function PublicFilePage() {
           <aside className="order-2 xl:order-1 xl:col-span-1 flex flex-col gap-4 sm:gap-6">
             <Card>
               <CardHeader className="p-3 sm:p-4">
-                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">Informacje</h3>
+                <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">
+                  Informacje
+                </h3>
               </CardHeader>
               <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4 text-xs sm:text-sm">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 shrink-0 mt-0.5" />
                   <div className="min-w-0">
-                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">Nazwa</p>
-                    <p className="font-medium text-gray-900 break-all text-xs sm:text-sm">{fileData.originalName}</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">
+                      Nazwa
+                    </p>
+                    <p className="font-medium text-gray-900 break-all text-xs sm:text-sm">
+                      {fileData.originalName}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2 sm:gap-3">
                   <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">Utworzono</p>
-                    <p className="font-medium text-gray-900 text-xs sm:text-sm">{formatDate(fileData.createdAt)}</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">
+                      Utworzono
+                    </p>
+                    <p className="font-medium text-gray-900 text-xs sm:text-sm">
+                      {formatDate(fileData.createdAt)}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2 sm:gap-3">
                   <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">Wygasa</p>
-                    <p className="font-medium text-gray-900 text-xs sm:text-sm">{formatDate(fileData.expiresAt)}</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">
+                      Wygasa
+                    </p>
+                    <p className="font-medium text-gray-900 text-xs sm:text-sm">
+                      {formatDate(fileData.expiresAt)}
+                    </p>
                   </div>
                 </div>
                 {fileData.size !== undefined && fileData.size !== null && (
                   <div className="flex items-start gap-2 sm:gap-3">
                     <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">Rozmiar</p>
-                      <p className="font-medium text-gray-900 text-xs sm:text-sm">{formatBytes(fileData.size)}</p>
+                      <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">
+                        Rozmiar
+                      </p>
+                      <p className="font-medium text-gray-900 text-xs sm:text-sm">
+                        {formatBytes(fileData.size)}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -394,14 +479,22 @@ export default function PublicFilePage() {
                   <div className="flex items-start gap-2 sm:gap-3">
                     <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">Typ MIME</p>
-                      <p className="font-medium text-gray-900 break-all text-xs sm:text-sm">{fileData.mime}</p>
+                      <p className="text-[10px] sm:text-xs uppercase tracking-wide text-gray-500">
+                        Typ MIME
+                      </p>
+                      <p className="font-medium text-gray-900 break-all text-xs sm:text-sm">
+                        {fileData.mime}
+                      </p>
                     </div>
                   </div>
                 )}
                 <div className="pt-2 sm:pt-3 border-t border-gray-200 flex flex-col gap-2">
                   <Button
-                    onClick={() => document.querySelector<HTMLButtonElement>('#download-direct')?.click()}
+                    onClick={() =>
+                      document
+                        .querySelector<HTMLButtonElement>("#download-direct")
+                        ?.click()
+                    }
                     size="sm"
                     className="w-full gap-2 text-xs sm:text-sm"
                   >
@@ -413,9 +506,13 @@ export default function PublicFilePage() {
           </aside>
 
           {/* Preview */}
-            <div className="order-1 xl:order-2 xl:col-span-2">
-              <FilePreview file={fileData} downloadUrl={downloadUrl} slug={slug} />
-            </div>
+          <div className="order-1 xl:order-2 xl:col-span-2">
+            <FilePreview
+              file={fileData}
+              downloadUrl={downloadUrl}
+              slug={slug}
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -1,16 +1,16 @@
-import React from 'react';
-import { 
-  Download, 
-  Trash2, 
-  Share2, 
-  File, 
+import React from "react";
+import {
+  Download,
+  Trash2,
+  Share2,
+  File,
   Folder,
-  MoreVertical
-} from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { formatBytes } from '@/lib/utils';
-import type { FileItem } from '@/types';
+  MoreVertical,
+} from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import { formatBytes } from "@/lib/utils";
+import type { FileItem } from "@/types";
 
 interface FileListProps {
   files: FileItem[];
@@ -25,14 +25,14 @@ export default function FileList({
   onDownload,
   onPreview,
   onShare,
-  onDelete
+  onDelete,
 }: FileListProps) {
   return (
     <Card>
       <CardHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-900">Pliki</h3>
       </CardHeader>
-      
+
       {files.length === 0 ? (
         <CardContent className="p-6 sm:p-8 text-center">
           <Folder className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
@@ -64,14 +64,20 @@ interface FileItemProps {
   onDelete: (file: FileItem) => void;
 }
 
-function FileItem({ file, onDownload, onPreview, onShare, onDelete }: FileItemProps) {
+function FileItem({
+  file,
+  onDownload,
+  onPreview,
+  onShare,
+  onDelete,
+}: FileItemProps) {
   const [showMobileMenu, setShowMobileMenu] = React.useState(false);
 
   return (
     <div className="px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50 transition-colors">
       {/* Desktop Layout */}
       <div className="hidden sm:flex items-center justify-between">
-        <div 
+        <div
           className="flex items-center gap-3 sm:gap-4 cursor-pointer hover:bg-gray-100 rounded-md p-2 -m-2 transition-colors"
           onClick={() => onPreview?.(file)}
         >
@@ -81,11 +87,12 @@ function FileItem({ file, onDownload, onPreview, onShare, onDelete }: FileItemPr
               {file.name}
             </p>
             <p className="text-xs sm:text-sm text-gray-500">
-              {formatBytes(file.size)} • {new Date(file.lastModified).toLocaleDateString('pl-PL')}
+              {formatBytes(file.size)} •{" "}
+              {new Date(file.lastModified).toLocaleDateString("pl-PL")}
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-1 sm:gap-2">
           <Button
             variant="ghost"
@@ -96,7 +103,7 @@ function FileItem({ file, onDownload, onPreview, onShare, onDelete }: FileItemPr
           >
             <Download className="h-4 w-4" />
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -106,7 +113,7 @@ function FileItem({ file, onDownload, onPreview, onShare, onDelete }: FileItemPr
           >
             <Share2 className="h-4 w-4" />
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -122,7 +129,7 @@ function FileItem({ file, onDownload, onPreview, onShare, onDelete }: FileItemPr
       {/* Mobile Layout */}
       <div className="sm:hidden">
         <div className="flex items-center justify-between">
-          <div 
+          <div
             className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer hover:bg-gray-100 rounded-md p-2 -m-2 transition-colors"
             onClick={() => onPreview?.(file)}
           >
@@ -132,11 +139,12 @@ function FileItem({ file, onDownload, onPreview, onShare, onDelete }: FileItemPr
                 {file.name}
               </p>
               <p className="text-xs text-gray-500">
-                {formatBytes(file.size)} • {new Date(file.lastModified).toLocaleDateString('pl-PL')}
+                {formatBytes(file.size)} •{" "}
+                {new Date(file.lastModified).toLocaleDateString("pl-PL")}
               </p>
             </div>
           </div>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -160,7 +168,7 @@ function FileItem({ file, onDownload, onPreview, onShare, onDelete }: FileItemPr
                 <Download className="h-4 w-4 mr-2" />
                 Pobierz
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="sm"
@@ -170,7 +178,7 @@ function FileItem({ file, onDownload, onPreview, onShare, onDelete }: FileItemPr
                 <Share2 className="h-4 w-4 mr-2" />
                 Udostępnij
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="sm"

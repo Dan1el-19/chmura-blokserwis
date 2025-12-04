@@ -1,20 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, Cloud } from 'lucide-react';
-import { use100vh } from '@/hooks/use100vh';
-import toast from 'react-hot-toast';
-import { Card, CardContent } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import PasswordResetModal from '@/components/ui/PasswordResetModal';
+import { useEffect, useRef, useState } from "react";
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+} from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
+import { Mail, Lock, Eye, EyeOff, Cloud } from "lucide-react";
+import { use100vh } from "@/hooks/use100vh";
+import toast from "react-hot-toast";
+import { Card, CardContent } from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import PasswordResetModal from "@/components/ui/PasswordResetModal";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   // Oddzielne stany ładowania dla email i Google, by nie blokować UI po anulowaniu popupu
   const [loadingEmail, setLoadingEmail] = useState(false);
@@ -26,17 +30,26 @@ export default function LoginPage() {
   use100vh();
 
   // Ref do śledzenia stanu trwającego flow Google oraz zarejestrowanych listenerów
-  const googleFlowRef = useRef<{ active: boolean; completed: boolean }>({ active: false, completed: false });
-  const listenersRef = useRef<{ onFocus?: () => void; onVisibility?: () => void } | null>(null);
+  const googleFlowRef = useRef<{ active: boolean; completed: boolean }>({
+    active: false,
+    completed: false,
+  });
+  const listenersRef = useRef<{
+    onFocus?: () => void;
+    onVisibility?: () => void;
+  } | null>(null);
 
   // Cleanup listenerów na odmontowanie komponentu (na wszelki wypadek)
   useEffect(() => {
     return () => {
       if (listenersRef.current?.onFocus) {
-        window.removeEventListener('focus', listenersRef.current.onFocus);
+        window.removeEventListener("focus", listenersRef.current.onFocus);
       }
       if (listenersRef.current?.onVisibility) {
-        document.removeEventListener('visibilitychange', listenersRef.current.onVisibility);
+        document.removeEventListener(
+          "visibilitychange",
+          listenersRef.current.onVisibility
+        );
       }
       listenersRef.current = null;
       googleFlowRef.current.active = false;
@@ -50,36 +63,37 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast.success('Zalogowano pomyślnie!');
-      router.push('/storage');
+      toast.success("Zalogowano pomyślnie!");
+      router.push("/storage");
     } catch (error: unknown) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
 
       // Przetłumacz błędy Firebase na polskie komunikaty
-      let errorMessage = 'Błąd logowania';
+      let errorMessage = "Błąd logowania";
       if (error instanceof Error) {
         const code = (error as { code?: string }).code;
         switch (code) {
-          case 'auth/user-not-found':
-            errorMessage = 'Użytkownik o podanym adresie email nie istnieje';
+          case "auth/user-not-found":
+            errorMessage = "Użytkownik o podanym adresie email nie istnieje";
             break;
-          case 'auth/wrong-password':
-            errorMessage = 'Nieprawidłowe hasło';
+          case "auth/wrong-password":
+            errorMessage = "Nieprawidłowe hasło";
             break;
-          case 'auth/invalid-email':
-            errorMessage = 'Nieprawidłowy adres email';
+          case "auth/invalid-email":
+            errorMessage = "Nieprawidłowy adres email";
             break;
-          case 'auth/user-disabled':
-            errorMessage = 'Konto zostało wyłączone';
+          case "auth/user-disabled":
+            errorMessage = "Konto zostało wyłączone";
             break;
-          case 'auth/too-many-requests':
-            errorMessage = 'Zbyt wiele prób logowania. Spróbuj ponownie później';
+          case "auth/too-many-requests":
+            errorMessage =
+              "Zbyt wiele prób logowania. Spróbuj ponownie później";
             break;
-          case 'auth/network-request-failed':
-            errorMessage = 'Błąd połączenia z serwerem';
+          case "auth/network-request-failed":
+            errorMessage = "Błąd połączenia z serwerem";
             break;
           default:
-            errorMessage = 'Błąd logowania. Sprawdź dane i spróbuj ponownie';
+            errorMessage = "Błąd logowania. Sprawdź dane i spróbuj ponownie";
         }
       }
 
@@ -93,7 +107,7 @@ export default function LoginPage() {
     setLoadingGoogle(true);
     setError(null);
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
+    provider.setCustomParameters({ prompt: "select_account" });
 
     // Zaznacz start flow Google
     googleFlowRef.current = { active: true, completed: false };
@@ -101,10 +115,13 @@ export default function LoginPage() {
     // Funkcja do czyszczenia listenerów
     const detach = () => {
       if (listenersRef.current?.onFocus) {
-        window.removeEventListener('focus', listenersRef.current.onFocus);
+        window.removeEventListener("focus", listenersRef.current.onFocus);
       }
       if (listenersRef.current?.onVisibility) {
-        document.removeEventListener('visibilitychange', listenersRef.current.onVisibility);
+        document.removeEventListener(
+          "visibilitychange",
+          listenersRef.current.onVisibility
+        );
       }
       listenersRef.current = null;
     };
@@ -117,19 +134,21 @@ export default function LoginPage() {
       if (!auth.currentUser) {
         setLoadingGoogle(false);
         setError(null);
-        try { toast('Anulowano logowanie przez Google'); } catch {}
+        try {
+          toast("Anulowano logowanie przez Google");
+        } catch {}
         googleFlowRef.current.active = false;
         detach();
       }
     };
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') onFocus();
+      if (document.visibilityState === "visible") onFocus();
     };
 
     // Zarejestruj listenery natychmiast po kliknięciu
     listenersRef.current = { onFocus, onVisibility };
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
 
     // Uruchom popup bez await – obsłuż obietnicę ręcznie, by nie blokować UI
     signInWithPopup(auth, provider)
@@ -137,14 +156,21 @@ export default function LoginPage() {
         googleFlowRef.current.completed = true;
         googleFlowRef.current.active = false;
         detach();
-        try { toast.success('Zalogowano pomyślnie!'); } catch {}
-        router.push('/storage');
+        try {
+          toast.success("Zalogowano pomyślnie!");
+        } catch {}
+        router.push("/storage");
       })
       .catch((error: unknown) => {
-        console.error('Google login error:', error);
-        const code: string | undefined = (error as { code?: string } | undefined)?.code;
+        console.error("Google login error:", error);
+        const code: string | undefined = (
+          error as { code?: string } | undefined
+        )?.code;
         // Jeśli już wyłączyliśmy loader poprzez onFocus, zignoruj “popup closed”
-        if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        if (
+          code === "auth/popup-closed-by-user" ||
+          code === "auth/cancelled-popup-request"
+        ) {
           detach();
           googleFlowRef.current.active = false;
           setLoadingGoogle(false);
@@ -152,22 +178,25 @@ export default function LoginPage() {
         }
 
         // Inne błędy – pokaż komunikat
-        let errorMessage = 'Błąd logowania przez Google';
+        let errorMessage = "Błąd logowania przez Google";
         switch (code) {
-          case 'auth/popup-blocked':
-            errorMessage = 'Okno logowania zostało zablokowane przez przeglądarkę';
+          case "auth/popup-blocked":
+            errorMessage =
+              "Okno logowania zostało zablokowane przez przeglądarkę";
             break;
-          case 'auth/account-exists-with-different-credential':
-            errorMessage = 'Konto z tym adresem email już istnieje z inną metodą logowania';
+          case "auth/account-exists-with-different-credential":
+            errorMessage =
+              "Konto z tym adresem email już istnieje z inną metodą logowania";
             break;
-          case 'auth/network-request-failed':
-            errorMessage = 'Błąd połączenia z serwerem';
+          case "auth/network-request-failed":
+            errorMessage = "Błąd połączenia z serwerem";
             break;
-          case 'auth/operation-not-supported-in-this-environment':
-            errorMessage = 'Ta metoda logowania nie jest wspierana w tej przeglądarce/środowisku';
+          case "auth/operation-not-supported-in-this-environment":
+            errorMessage =
+              "Ta metoda logowania nie jest wspierana w tej przeglądarce/środowisku";
             break;
           default:
-            errorMessage = 'Błąd logowania przez Google. Spróbuj ponownie';
+            errorMessage = "Błąd logowania przez Google. Spróbuj ponownie";
         }
         setError(errorMessage);
       })
@@ -188,7 +217,7 @@ export default function LoginPage() {
       </div>
 
       <div className="relative max-w-md w-full space-y-6 sm:space-y-8">
-  {/* Usunięto przycisk powrotu na stronę główną (root przekierowuje do /login) */}
+        {/* Usunięto przycisk powrotu na stronę główną (root przekierowuje do /login) */}
 
         {/* Header */}
         <div className="text-center space-y-3 sm:space-y-4">
@@ -212,76 +241,90 @@ export default function LoginPage() {
           <CardContent className="p-4 sm:p-6 md:p-8">
             <form className="space-y-6" onSubmit={handleEmailLogin}>
               <Input
-              label={<span className="ml-1">Adres email</span>}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="nazwa@email.com"
-              leftIcon={<Mail className="h-4 w-4" />}
-              required
-              autoComplete="email"
-              className="placeholder-gray-400 text-gray-800 -mb-2"
-              style={{ '::placeholder': { color: '#9ca3af' } } as React.CSSProperties & { '::placeholder'?: { color: string } }}
+                label={<span className="ml-1">Adres email</span>}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="nazwa@email.com"
+                leftIcon={<Mail className="h-4 w-4" />}
+                required
+                autoComplete="email"
+                className="placeholder-gray-400 text-gray-800 -mb-2"
+                style={
+                  {
+                    "::placeholder": { color: "#9ca3af" },
+                  } as React.CSSProperties & {
+                    "::placeholder"?: { color: string };
+                  }
+                }
               />
 
               {/* Password Input */}
               <div>
-              <Input
-                label={<span className="ml-1">Hasło</span>}
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                leftIcon={<Lock className="h-4 w-4" />}
-                rightIcon={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="hover:text-gray-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-                }
-                required
-                autoComplete="current-password"
-              />
-              <div className="mt-2 -mb-3 text-left">
-                <button
-                type="button"
-                onClick={() => setIsResetModalOpen(true)}
-                className="text-sm text-blue-600 hover:text-blue-700 transition-colors ml-1"
-                >
-                Zapomniałeś hasła?
-                </button>
-              </div>
+                <Input
+                  label={<span className="ml-1">Hasło</span>}
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  leftIcon={<Lock className="h-4 w-4" />}
+                  rightIcon={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  }
+                  required
+                  autoComplete="current-password"
+                />
+                <div className="mt-2 -mb-3 text-left">
+                  <button
+                    type="button"
+                    onClick={() => setIsResetModalOpen(true)}
+                    className="text-sm text-blue-600 hover:text-blue-700 transition-colors ml-1"
+                  >
+                    Zapomniałeś hasła?
+                  </button>
+                </div>
               </div>
 
               {/* Error Message */}
               {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
               )}
 
               {/* Login Button */}
               <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              loading={loadingEmail}
-              className="w-full"
-              disabled={loadingEmail || loadingGoogle}
+                type="submit"
+                variant="primary"
+                size="lg"
+                loading={loadingEmail}
+                className="w-full"
+                disabled={loadingEmail || loadingGoogle}
               >
-              {loadingEmail ? 'Logowanie...' : 'Zaloguj się'}
+                {loadingEmail ? "Logowanie..." : "Zaloguj się"}
               </Button>
             </form>
 
             {/* Divider */}
-            <div className="relative my-6"> {/* Zmniejszono odległość na osi Y */}
+            <div className="relative my-6">
+              {" "}
+              {/* Zmniejszono odległość na osi Y */}
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">lub</span>
+                <span className="px-4 bg-white text-gray-500 font-medium">
+                  lub
+                </span>
               </div>
             </div>
 
@@ -295,10 +338,22 @@ export default function LoginPage() {
               className="w-full"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
               </svg>
               Zaloguj się przez Google
             </Button>
@@ -307,7 +362,7 @@ export default function LoginPage() {
       </div>
 
       {/* Password Reset Modal */}
-      <PasswordResetModal 
+      <PasswordResetModal
         isOpen={isResetModalOpen}
         onClose={() => setIsResetModalOpen(false)}
       />

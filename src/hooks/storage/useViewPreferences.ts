@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-export type ViewMode = 'grid' | 'list';
-export type SortField = 'name' | 'size' | 'lastModified';
-export type SortDirection = 'asc' | 'desc';
+export type ViewMode = "grid" | "list";
+export type SortField = "name" | "size" | "lastModified";
+export type SortDirection = "asc" | "desc";
 
 interface ViewPreferences {
   viewMode: ViewMode;
@@ -14,19 +14,19 @@ interface ViewPreferences {
   setSorting: (field: SortField, dir: SortDirection) => void;
 }
 
-const STORAGE_KEY_VIEW = 'cb_view_mode';
-const STORAGE_KEY_SORT = 'cb_sort';
+const STORAGE_KEY_VIEW = "cb_view_mode";
+const STORAGE_KEY_SORT = "cb_sort";
 
 export function useViewPreferences(): ViewPreferences {
-  const [viewMode, setViewModeState] = useState<ViewMode>('grid');
-  const [sortField, setSortFieldState] = useState<SortField>('name');
-  const [sortDir, setSortDirState] = useState<SortDirection>('asc');
+  const [viewMode, setViewModeState] = useState<ViewMode>("grid");
+  const [sortField, setSortFieldState] = useState<SortField>("name");
+  const [sortDir, setSortDirState] = useState<SortDirection>("asc");
 
   // Load from localStorage on mount
   useEffect(() => {
     try {
       const savedView = localStorage.getItem(STORAGE_KEY_VIEW);
-      if (savedView === 'grid' || savedView === 'list') {
+      if (savedView === "grid" || savedView === "list") {
         setViewModeState(savedView);
       }
 

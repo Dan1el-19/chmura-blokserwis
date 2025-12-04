@@ -1,4 +1,4 @@
-export type UserRole = 'basic' | 'plus' | 'admin';
+export type UserRole = "basic" | "plus" | "admin";
 
 export interface User {
   uid: string;
@@ -25,7 +25,7 @@ export interface FileItem {
 }
 
 export interface FolderItem {
-  type: 'folder';
+  type: "folder";
   id?: string; // Firestore doc id
   shortId?: string; // 4-char unique id for routing
   slug?: string; // name-shortId convenience for routes
@@ -33,20 +33,20 @@ export interface FolderItem {
   path: string; // pełny prefix np. users/{uid}/photos/
   parentPath: string; // bez nazwy folderu na końcu
   owner: string; // uid lub 'main'
-  space: 'personal' | 'main';
+  space: "personal" | "main";
   createdAt?: Date;
   updatedAt?: Date;
   itemCount?: number;
   sizeSum?: number; // sumaryczny rozmiar (opcjonalnie cache)
 }
 
-export type FileSystemItem = (FileItem & { type?: 'file' }) | FolderItem;
+export type FileSystemItem = (FileItem & { type?: "file" }) | FolderItem;
 
 export interface ActivityLog {
   id: string;
   userId: string;
   userEmail: string;
-  action: 'upload' | 'download' | 'delete' | 'share' | 'login';
+  action: "upload" | "download" | "delete" | "share" | "login";
   fileName?: string;
   fileSize?: number;
   timestamp: Date;
@@ -61,7 +61,7 @@ export interface StorageStats {
 }
 
 // Kalkulator kosztów Cloudflare R2
-export type Currency = 'PLN' | 'USD';
+export type Currency = "PLN" | "USD";
 
 export interface CostCalculationParams {
   fileSize: number; // w bajtach
@@ -102,5 +102,3 @@ export interface SystemStats {
     uploadedAt: string;
   }>;
 }
-
-

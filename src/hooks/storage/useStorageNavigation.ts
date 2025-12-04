@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
-export type FolderSpace = 'personal' | 'main';
+export type FolderSpace = "personal" | "main";
 
 interface StorageNavigationState {
   currentFolder: FolderSpace;
@@ -24,7 +24,8 @@ export function useStorageNavigation(
   const router = useRouter();
   const pathname = usePathname();
 
-  const [currentFolder, setCurrentFolderState] = useState<FolderSpace>('personal');
+  const [currentFolder, setCurrentFolderState] =
+    useState<FolderSpace>("personal");
   const [path, setPathState] = useState<string[]>([]);
   const [slugSegments, setSlugSegmentsState] = useState<string[]>([]);
 
@@ -33,13 +34,13 @@ export function useStorageNavigation(
 
   const pushSlugPath = useCallback(
     (segments: string[], space: FolderSpace = currentFolder) => {
-      const base = '/storage';
-      const segs = space === 'main' ? ['main', ...segments] : segments;
+      const base = "/storage";
+      const segs = space === "main" ? ["main", ...segments] : segments;
       const full = segs.length
-        ? base + '/' + segs.join('/')
-        : space === 'main'
-        ? base + '/main'
-        : base;
+        ? base + "/" + segs.join("/")
+        : space === "main"
+          ? base + "/main"
+          : base;
       if (full !== pathname) router.push(full);
     },
     [currentFolder, pathname, router]
@@ -48,26 +49,26 @@ export function useStorageNavigation(
   // Parse slug segments from pathname
   useEffect(() => {
     if (!user) return;
-    const pn = pathname || '';
-    const parts = pn.split('/').filter(Boolean);
-    const storageIndex = parts.indexOf('storage');
+    const pn = pathname || "";
+    const parts = pn.split("/").filter(Boolean);
+    const storageIndex = parts.indexOf("storage");
     const remainder = storageIndex >= 0 ? parts.slice(storageIndex + 1) : [];
 
-    if (remainder[0] === 'main') {
-      if (currentFolder !== 'main') setCurrentFolderState('main');
+    if (remainder[0] === "main") {
+      if (currentFolder !== "main") setCurrentFolderState("main");
       const inner = remainder.slice(1);
       setSlugSegmentsState(inner);
       setPathState(
         inner.map((seg) =>
-          seg.replace(/-[a-z0-9]{4}$/i, '').replace(/%20/g, ' ')
+          seg.replace(/-[a-z0-9]{4}$/i, "").replace(/%20/g, " ")
         )
       );
     } else {
-      if (currentFolder !== 'personal') setCurrentFolderState('personal');
+      if (currentFolder !== "personal") setCurrentFolderState("personal");
       setSlugSegmentsState(remainder);
       setPathState(
         remainder.map((seg) =>
-          seg.replace(/-[a-z0-9]{4}$/i, '').replace(/%20/g, ' ')
+          seg.replace(/-[a-z0-9]{4}$/i, "").replace(/%20/g, " ")
         )
       );
     }
@@ -76,8 +77,8 @@ export function useStorageNavigation(
   // Guard: if state says main but URL is bare /storage, ensure URL reflects /storage/main
   useEffect(() => {
     if (!user) return;
-    if (currentFolder === 'main' && pathname === '/storage') {
-      router.replace('/storage/main');
+    if (currentFolder === "main" && pathname === "/storage") {
+      router.replace("/storage/main");
     }
   }, [currentFolder, pathname, router, user]);
 
@@ -116,7 +117,7 @@ export function useStorageNavigation(
 
   const handleFolderChange = useCallback(
     (folder: string) => {
-      const target: FolderSpace = folder === 'main' ? 'main' : 'personal';
+      const target: FolderSpace = folder === "main" ? "main" : "personal";
       setCurrentFolderState(target);
       pushSlugPath([], target);
     },
@@ -127,7 +128,8 @@ export function useStorageNavigation(
     (folderSlug: string, folderName: string): string[] => {
       // Prevent rapid double clicks causing duplicate slug segments
       if (navigatingSlugRef.current === folderSlug) return path;
-      const alreadyInside = slugSegments[slugSegments.length - 1] === folderSlug;
+      const alreadyInside =
+        slugSegments[slugSegments.length - 1] === folderSlug;
       if (alreadyInside) return path;
 
       navigatingSlugRef.current = folderSlug;

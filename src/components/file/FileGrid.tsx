@@ -1,36 +1,47 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { 
-  File, 
-  Image as ImageIcon, 
-  Video, 
-  Music, 
-  Archive, 
-  FileText, 
+import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
+import {
+  File,
+  Image as ImageIcon,
+  Video,
+  Music,
+  Archive,
+  FileText,
   HardDrive,
   MoreVertical,
   Download,
   Share2,
   Trash2,
-  BarChart3
-} from 'lucide-react';
-import { FileItem, FolderItem } from '@/types';
-import toast from 'react-hot-toast';
-import MobileBottomSheet from '@/components/ui/MobileBottomSheet';
+  BarChart3,
+} from "lucide-react";
+import { FileItem, FolderItem } from "@/types";
+import toast from "react-hot-toast";
+import MobileBottomSheet from "@/components/ui/MobileBottomSheet";
 
 const FolderIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8 text-amber-500"><path d="M4 4h5l2 3h9v11a2 2 0 0 1-2 2H4Z"/></svg>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-8 w-8 text-amber-500"
+  >
+    <path d="M4 4h5l2 3h9v11a2 2 0 0 1-2 2H4Z" />
+  </svg>
 );
-import { formatBytes } from '@/lib/utils';
+import { formatBytes } from "@/lib/utils";
 
-import { auth } from '@/lib/firebase';
+import { auth } from "@/lib/firebase";
 
 interface FileGridProps {
   files: FileItem[];
   folders?: FolderItem[];
   currentFolder: string;
-  viewMode: 'grid' | 'list';
+  viewMode: "grid" | "list";
   onDownload: (file: FileItem) => void;
   onPreview?: (file: FileItem) => void;
   onShare: (file: FileItem) => void;
@@ -55,16 +66,16 @@ interface FileGridProps {
   rootTargetPath?: string; // base path for drops to root
 }
 
-export default function FileGrid({ 
-  files, 
+export default function FileGrid({
+  files,
   folders = [],
-  currentFolder, 
+  currentFolder,
   viewMode,
-  onDownload, 
+  onDownload,
   onPreview,
-  onShare, 
-  onDelete, 
-  onManageLinks, 
+  onShare,
+  onDelete,
+  onManageLinks,
   onStats,
   onEnterFolder,
   onMoved,
@@ -74,13 +85,19 @@ export default function FileGrid({
   uploads = [],
   showRootEntry = false,
   onGoRoot,
-  rootTargetPath
+  rootTargetPath,
 }: FileGridProps) {
-
   const [showActions, setShowActions] = useState<string | null>(null); // file menu
-  const [showFolderActions, setShowFolderActions] = useState<string | null>(null); // folder menu
-  const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>({});
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [showFolderActions, setShowFolderActions] = useState<string | null>(
+    null
+  ); // folder menu
+  const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>(
+    {}
+  );
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const [activeFile, setActiveFile] = useState<FileItem | null>(null);
   const [activeFolder, setActiveFolder] = useState<FolderItem | null>(null);
   const [showMobileSheet, setShowMobileSheet] = useState(false);
@@ -88,8 +105,8 @@ export default function FileGrid({
   const clickAnchorRef = useRef<DOMRect | null>(null);
 
   const isImageFile = (fileName: string) => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+    const extension = fileName.split(".").pop()?.toLowerCase();
+    const imageExts = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"];
     return extension ? imageExts.includes(extension) : false;
   };
 
@@ -97,25 +114,28 @@ export default function FileGrid({
   useEffect(() => {
     const loadThumbnailUrls = async () => {
       const newThumbnailUrls: Record<string, string> = {};
-      
+
       for (const file of files) {
         if (isImageFile(file.name) && !file.publicUrl) {
           try {
-            const response = await fetch(`/api/files/presigned?key=${encodeURIComponent(file.key)}`, {
-              headers: {
-                'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`
+            const response = await fetch(
+              `/api/files/presigned?key=${encodeURIComponent(file.key)}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${await auth.currentUser?.getIdToken()}`,
+                },
               }
-            });
+            );
             if (response.ok) {
               const data = await response.json();
               newThumbnailUrls[file.key] = data.presignedUrl;
             }
           } catch (error) {
-            console.error('Error getting presigned URL for', file.key, error);
+            console.error("Error getting presigned URL for", file.key, error);
           }
         }
       }
-      
+
       setThumbnailUrls(newThumbnailUrls);
     };
 
@@ -125,50 +145,50 @@ export default function FileGrid({
   }, [files]);
 
   const getFileIcon = (fileName: string) => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
+    const extension = fileName.split(".").pop()?.toLowerCase();
     if (!extension) return <File className="h-8 w-8" />;
-    
-    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
-    const videoExts = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm'];
-    const audioExts = ['mp3', 'wav', 'flac', 'aac', 'ogg'];
-    const archiveExts = ['zip', 'rar', '7z', 'tar', 'gz'];
-    const docExts = ['pdf', 'doc', 'docx', 'txt', 'rtf'];
-    
-  if (imageExts.includes(extension)) return <ImageIcon className="h-8 w-8" />;
+
+    const imageExts = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"];
+    const videoExts = ["mp4", "avi", "mov", "wmv", "flv", "webm"];
+    const audioExts = ["mp3", "wav", "flac", "aac", "ogg"];
+    const archiveExts = ["zip", "rar", "7z", "tar", "gz"];
+    const docExts = ["pdf", "doc", "docx", "txt", "rtf"];
+
+    if (imageExts.includes(extension)) return <ImageIcon className="h-8 w-8" />;
     if (videoExts.includes(extension)) return <Video className="h-8 w-8" />;
     if (audioExts.includes(extension)) return <Music className="h-8 w-8" />;
     if (archiveExts.includes(extension)) return <Archive className="h-8 w-8" />;
     if (docExts.includes(extension)) return <FileText className="h-8 w-8" />;
-    
+
     return <File className="h-8 w-8" />;
   };
 
   const getThumbnailUrl = (file: FileItem) => {
     // Jeśli plik ma publicUrl, użyj go jako miniaturki
     if (file.publicUrl) return file.publicUrl;
-    
+
     // Jeśli to obraz, użyj presigned URL z cache
     if (isImageFile(file.name)) {
       return thumbnailUrls[file.key] || null;
     }
-    
+
     return null;
   };
 
   const formatDate = (date: Date) => {
     try {
       if (!date || isNaN(date.getTime())) {
-        return 'Nieznana data';
+        return "Nieznana data";
       }
-      return new Intl.DateTimeFormat('pl-PL', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      return new Intl.DateTimeFormat("pl-PL", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       }).format(date);
     } catch {
-      return 'Nieznana data';
+      return "Nieznana data";
     }
   };
 
@@ -179,11 +199,15 @@ export default function FileGrid({
   };
 
   // Check if we're on mobile (simple check, can be enhanced with proper media query hook)
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
-  const handleActionClick = (fileId: string, file: FileItem, event: React.MouseEvent) => {
+  const handleActionClick = (
+    fileId: string,
+    file: FileItem,
+    event: React.MouseEvent
+  ) => {
     event.stopPropagation();
-    
+
     // On mobile, use bottom sheet
     if (isMobile) {
       setActiveFile(file);
@@ -220,27 +244,38 @@ export default function FileGrid({
   const handleAction = (action: string, file: FileItem) => {
     closeMenu();
     switch (action) {
-      case 'download':
-        onDownload(file); break;
-      case 'share':
-        onShare(file); break;
-      case 'delete':
-        onDelete(file); break;
-      case 'manage':
-        onManageLinks(file); break;
-      case 'stats':
-        onStats(file); break;
-      case 'rename': {
+      case "download":
+        onDownload(file);
+        break;
+      case "share":
+        onShare(file);
+        break;
+      case "delete":
+        onDelete(file);
+        break;
+      case "manage":
+        onManageLinks(file);
+        break;
+      case "stats":
+        onStats(file);
+        break;
+      case "rename": {
         // Delegated to external modal via custom event
-        const custom = new CustomEvent('cb:rename-request', { detail: { file } });
+        const custom = new CustomEvent("cb:rename-request", {
+          detail: { file },
+        });
         window.dispatchEvent(custom);
-        break; }
+        break;
+      }
     }
   };
 
-  const handleFolderActionClick = (folder: FolderItem, event: React.MouseEvent) => {
+  const handleFolderActionClick = (
+    folder: FolderItem,
+    event: React.MouseEvent
+  ) => {
     event.stopPropagation();
-    
+
     // On mobile, use bottom sheet
     if (isMobile) {
       setActiveFolder(folder);
@@ -266,23 +301,27 @@ export default function FileGrid({
 
   const handleFolderAction = (action: string, folder: FolderItem) => {
     closeMenu();
-    switch(action){
-      case 'rename': {
-        const custom = new CustomEvent('cb:rename-folder-request', { detail: { folder } });
+    switch (action) {
+      case "rename": {
+        const custom = new CustomEvent("cb:rename-folder-request", {
+          detail: { folder },
+        });
         window.dispatchEvent(custom);
         break;
       }
-      case 'delete': {
-        const custom = new CustomEvent('cb:delete-folder-request', { detail: { folder } });
+      case "delete": {
+        const custom = new CustomEvent("cb:delete-folder-request", {
+          detail: { folder },
+        });
         window.dispatchEvent(custom);
         break;
       }
-      case 'download': {
-        toast('Pobieranie folderu jako ZIP wkrótce');
+      case "download": {
+        toast("Pobieranie folderu jako ZIP wkrótce");
         break;
       }
-      case 'share': {
-        toast('Udostępnianie folderów wkrótce');
+      case "share": {
+        toast("Udostępnianie folderów wkrótce");
         break;
       }
     }
@@ -293,20 +332,22 @@ export default function FileGrid({
     if (!showActions && !showFolderActions) return;
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.closest('[data-file-menu]')) return;
+      if (target.closest("[data-file-menu]")) return;
       closeMenu();
     };
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeMenu(); };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeMenu();
+    };
     const handleWindowChange = () => closeMenu();
-    window.addEventListener('mousedown', handleClick);
-    window.addEventListener('keydown', handleKey);
-    window.addEventListener('resize', handleWindowChange);
-    window.addEventListener('scroll', handleWindowChange, true);
+    window.addEventListener("mousedown", handleClick);
+    window.addEventListener("keydown", handleKey);
+    window.addEventListener("resize", handleWindowChange);
+    window.addEventListener("scroll", handleWindowChange, true);
     return () => {
-      window.removeEventListener('mousedown', handleClick);
-      window.removeEventListener('keydown', handleKey);
-      window.removeEventListener('resize', handleWindowChange);
-      window.removeEventListener('scroll', handleWindowChange, true);
+      window.removeEventListener("mousedown", handleClick);
+      window.removeEventListener("keydown", handleKey);
+      window.removeEventListener("resize", handleWindowChange);
+      window.removeEventListener("scroll", handleWindowChange, true);
     };
   }, [showActions, showFolderActions, closeMenu]);
 
@@ -318,20 +359,30 @@ export default function FileGrid({
       const anchor = clickAnchorRef.current;
       if (!el || !anchor) return;
       const rect = el.getBoundingClientRect();
-      let { top, left } = menuPosition || { top: anchor.bottom + 6, left: anchor.right - rect.width };
+      let { top, left } = menuPosition || {
+        top: anchor.bottom + 6,
+        left: anchor.right - rect.width,
+      };
       if (left < 8) left = 8;
-      if (left + rect.width > window.innerWidth - 8) left = window.innerWidth - rect.width - 8;
+      if (left + rect.width > window.innerWidth - 8)
+        left = window.innerWidth - rect.width - 8;
       if (top + rect.height > window.innerHeight - 8) {
         const aboveTop = anchor.top - rect.height - 6;
         if (aboveTop >= 8) top = aboveTop;
       }
-      if (!menuPosition || top !== menuPosition.top || left !== menuPosition.left) {
+      if (
+        !menuPosition ||
+        top !== menuPosition.top ||
+        left !== menuPosition.left
+      ) {
         setMenuPosition({ top, left });
       }
     });
   }, [showActions, showFolderActions, menuPosition]);
 
-  const filteredUploads = uploads.filter(upload => upload.folder === currentFolder);
+  const filteredUploads = uploads.filter(
+    (upload) => upload.folder === currentFolder
+  );
 
   return (
     <div className="space-y-4 sm:space-y-6 w-full overflow-hidden">
@@ -343,8 +394,13 @@ export default function FileGrid({
           </h3>
           <div className="space-y-2">
             {filteredUploads.map((upload) => (
-              <div key={upload.id} className="flex items-center justify-between gap-2 text-sm">
-                <span className="text-blue-800 truncate min-w-0 flex-1">{upload.fileName}</span>
+              <div
+                key={upload.id}
+                className="flex items-center justify-between gap-2 text-sm"
+              >
+                <span className="text-blue-800 truncate min-w-0 flex-1">
+                  {upload.fileName}
+                </span>
                 <span className="text-blue-600 shrink-0">
                   {Math.round((upload.uploadedBytes / upload.size) * 100)}%
                 </span>
@@ -362,11 +418,13 @@ export default function FileGrid({
             Brak plików w tym folderze
           </h3>
           <p className="text-sm text-gray-500">
-            {currentFolder === 'personal' ? 'Twój folder jest pusty' : 'Folder główny jest pusty'}
+            {currentFolder === "personal"
+              ? "Twój folder jest pusty"
+              : "Folder główny jest pusty"}
           </p>
         </div>
-      ) : viewMode === 'grid' ? (
-  <div className="grid gap-2.5 sm:gap-4 md:gap-5 file-grid-mobile sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 grid-cols-2">
+      ) : viewMode === "grid" ? (
+        <div className="grid gap-2.5 sm:gap-4 md:gap-5 file-grid-mobile sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 grid-cols-2">
           {showRootEntry && (
             <div
               className="group relative glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg p-3 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer file-tile-animate"
@@ -374,34 +432,79 @@ export default function FileGrid({
               tabIndex={0}
               aria-label="Powrót do root"
               onClick={() => onGoRoot?.()}
-              onKeyDown={(e)=>{ if(e.key==='Enter'){ e.preventDefault(); onGoRoot?.(); } }}
-              onDragOver={(e)=>{e.preventDefault(); e.currentTarget.classList.add('ring','ring-blue-400');}}
-              onDragLeave={(e)=>{e.currentTarget.classList.remove('ring','ring-blue-400');}}
-              onDrop={async (e)=>{
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onGoRoot?.();
+                }
+              }}
+              onDragOver={(e) => {
                 e.preventDefault();
-                e.currentTarget.classList.remove('ring','ring-blue-400');
-                const key = e.dataTransfer.getData('application/x-file-key');
+                e.currentTarget.classList.add("ring", "ring-blue-400");
+              }}
+              onDragLeave={(e) => {
+                e.currentTarget.classList.remove("ring", "ring-blue-400");
+              }}
+              onDrop={async (e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("ring", "ring-blue-400");
+                const key = e.dataTransfer.getData("application/x-file-key");
                 if (!key) return;
-                const selectedAttr = e.dataTransfer.getData('application/x-selected-keys');
+                const selectedAttr = e.dataTransfer.getData(
+                  "application/x-selected-keys"
+                );
                 let keys: string[] = [];
-                if (selectedAttr) { try { keys = JSON.parse(selectedAttr); } catch { keys = []; } }
-                if (!keys.length && multiSelect && selectedKeys.includes(key)) { keys = selectedKeys; }
+                if (selectedAttr) {
+                  try {
+                    keys = JSON.parse(selectedAttr);
+                  } catch {
+                    keys = [];
+                  }
+                }
+                if (!keys.length && multiSelect && selectedKeys.includes(key)) {
+                  keys = selectedKeys;
+                }
                 try {
-                  const bodyPayload = keys.length > 1 ? { keys, targetFolderPath: rootTargetPath } : { key, targetFolderPath: rootTargetPath };
-                  const res = await fetch('/api/files/move', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}` },
-                    body: JSON.stringify(bodyPayload)
+                  const bodyPayload =
+                    keys.length > 1
+                      ? { keys, targetFolderPath: rootTargetPath }
+                      : { key, targetFolderPath: rootTargetPath };
+                  const res = await fetch("/api/files/move", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${await auth.currentUser?.getIdToken()}`,
+                    },
+                    body: JSON.stringify(bodyPayload),
                   });
-                  if (res.ok) { toast.success(keys.length>1?`Przeniesiono ${keys.length} pliki`:'Przeniesiono'); onMoved?.(); } else { const { error } = await res.json().catch(()=>({error:'Błąd przenoszenia'})); toast.error(error||'Błąd przenoszenia'); }
-                } catch { toast.error('Błąd przenoszenia'); }
+                  if (res.ok) {
+                    toast.success(
+                      keys.length > 1
+                        ? `Przeniesiono ${keys.length} pliki`
+                        : "Przeniesiono"
+                    );
+                    onMoved?.();
+                  } else {
+                    const { error } = await res
+                      .json()
+                      .catch(() => ({ error: "Błąd przenoszenia" }));
+                    toast.error(error || "Błąd przenoszenia");
+                  }
+                } catch {
+                  toast.error("Błąd przenoszenia");
+                }
               }}
             >
               <div className="aspect-square mb-2 sm:mb-3 flex items-center justify-center bg-slate-50 rounded-lg overflow-hidden">
                 <HardDrive className="h-6 w-6 sm:h-8 sm:w-8 text-slate-500" />
               </div>
               <div className="mt-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-900 truncate" title="Storage">Storage</p>
+                <p
+                  className="text-xs sm:text-sm font-medium text-gray-900 truncate"
+                  title="Storage"
+                >
+                  Storage
+                </p>
                 <p className="text-[10px] sm:text-xs text-gray-500">Root</p>
               </div>
             </div>
@@ -414,20 +517,36 @@ export default function FileGrid({
               role="button"
               tabIndex={0}
               aria-label={`Folder: ${folder.name}`}
-  onClick={() => onEnterFolder?.(folder)}
-  onKeyDown={(e) => { if (e.key==='Enter') { e.preventDefault(); onEnterFolder?.(folder);} }}
-              onDragOver={(e)=>{e.preventDefault(); e.currentTarget.classList.add('ring','ring-blue-400');}}
-              onDragLeave={(e)=>{e.currentTarget.classList.remove('ring','ring-blue-400');}}
-              onDrop={async (e)=>{
+              onClick={() => onEnterFolder?.(folder)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onEnterFolder?.(folder);
+                }
+              }}
+              onDragOver={(e) => {
                 e.preventDefault();
-                e.currentTarget.classList.remove('ring','ring-blue-400');
-                const key = e.dataTransfer.getData('application/x-file-key');
+                e.currentTarget.classList.add("ring", "ring-blue-400");
+              }}
+              onDragLeave={(e) => {
+                e.currentTarget.classList.remove("ring", "ring-blue-400");
+              }}
+              onDrop={async (e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("ring", "ring-blue-400");
+                const key = e.dataTransfer.getData("application/x-file-key");
                 if (!key) return;
                 // If multi-select active and dragged key is among selection, move all selected
-                const selectedAttr = e.dataTransfer.getData('application/x-selected-keys');
+                const selectedAttr = e.dataTransfer.getData(
+                  "application/x-selected-keys"
+                );
                 let keys: string[] = [];
                 if (selectedAttr) {
-                  try { keys = JSON.parse(selectedAttr); } catch { keys = []; }
+                  try {
+                    keys = JSON.parse(selectedAttr);
+                  } catch {
+                    keys = [];
+                  }
                 }
                 if (!keys.length) {
                   // fallback: if key is part of selectedKeys (closure), group them
@@ -436,26 +555,54 @@ export default function FileGrid({
                   }
                 }
                 try {
-                  const bodyPayload = keys.length > 1 ? { keys, targetFolderPath: folder.path } : { key, targetFolderPath: folder.path };
-                  const res = await fetch('/api/files/move', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}` },
-                    body: JSON.stringify(bodyPayload)
+                  const bodyPayload =
+                    keys.length > 1
+                      ? { keys, targetFolderPath: folder.path }
+                      : { key, targetFolderPath: folder.path };
+                  const res = await fetch("/api/files/move", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${await auth.currentUser?.getIdToken()}`,
+                    },
+                    body: JSON.stringify(bodyPayload),
                   });
-                  if (res.ok) { toast.success(keys.length>1?`Przeniesiono ${keys.length} pliki`:'Przeniesiono'); onMoved?.(); } else { const { error } = await res.json().catch(()=>({error:'Błąd przenoszenia'})); toast.error(error||'Błąd przenoszenia'); }
-                } catch { toast.error('Błąd przenoszenia'); }
+                  if (res.ok) {
+                    toast.success(
+                      keys.length > 1
+                        ? `Przeniesiono ${keys.length} pliki`
+                        : "Przeniesiono"
+                    );
+                    onMoved?.();
+                  } else {
+                    const { error } = await res
+                      .json()
+                      .catch(() => ({ error: "Błąd przenoszenia" }));
+                    toast.error(error || "Błąd przenoszenia");
+                  }
+                } catch {
+                  toast.error("Błąd przenoszenia");
+                }
               }}
             >
-              <div data-square className="aspect-square mb-2 sm:mb-3 flex items-center justify-center bg-amber-50 rounded-lg overflow-hidden">
+              <div
+                data-square
+                className="aspect-square mb-2 sm:mb-3 flex items-center justify-center bg-amber-50 rounded-lg overflow-hidden"
+              >
                 <FolderIcon />
               </div>
               <div className="mt-1 flex items-start gap-1 sm:gap-2">
                 <div className="flex-1 min-w-0 overflow-hidden">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900 truncate" title={folder.name}>{folder.name}</p>
+                  <p
+                    className="text-xs sm:text-sm font-medium text-gray-900 truncate"
+                    title={folder.name}
+                  >
+                    {folder.name}
+                  </p>
                   <p className="text-[10px] sm:text-xs text-gray-500">Folder</p>
                 </div>
                 <button
-                  onClick={(e)=>handleFolderActionClick(folder,e)}
+                  onClick={(e) => handleFolderActionClick(folder, e)}
                   aria-label="Opcje folderu"
                   className="mt-0.5 inline-flex items-center justify-center rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 p-1 transition-colors"
                 >
@@ -465,42 +612,71 @@ export default function FileGrid({
             </div>
           ))}
           {files.map((file, idx) => {
-            const thumbnailUrl = thumbnailUrls[file.key] || getThumbnailUrl(file);
-            
+            const thumbnailUrl =
+              thumbnailUrls[file.key] || getThumbnailUrl(file);
+
             return (
               <div
                 key={file.key}
-                className={`group relative glass-card bg-white/80 backdrop-blur-sm border ${selectedKeys.includes(file.key) && multiSelect ? 'border-blue-500 ring-2 ring-blue-300' : 'border-gray-200/50'} rounded-lg p-2.5 sm:p-3 md:p-4 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer file-tile-animate`}
+                className={`group relative glass-card bg-white/80 backdrop-blur-sm border ${selectedKeys.includes(file.key) && multiSelect ? "border-blue-500 ring-2 ring-blue-300" : "border-gray-200/50"} rounded-lg p-2.5 sm:p-3 md:p-4 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer file-tile-animate`}
                 style={{ animationDelay: `${idx * 40}ms` }}
-                onClick={() => { if (multiSelect) { onToggleSelect?.(file.key); return; } handleFileClick(file); }}
+                onClick={() => {
+                  if (multiSelect) {
+                    onToggleSelect?.(file.key);
+                    return;
+                  }
+                  handleFileClick(file);
+                }}
                 role="button"
                 tabIndex={0}
                 aria-label={`Plik: ${file.name}`}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (multiSelect) { onToggleSelect?.(file.key); } else { handleFileClick(file); } }
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    if (multiSelect) {
+                      onToggleSelect?.(file.key);
+                    } else {
+                      handleFileClick(file);
+                    }
+                  }
                 }}
                 draggable
-                onDragStart={(e)=>{ 
-                  e.dataTransfer.setData('application/x-file-key', file.key); 
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("application/x-file-key", file.key);
                   if (multiSelect && selectedKeys.includes(file.key)) {
-                    try { e.dataTransfer.setData('application/x-selected-keys', JSON.stringify(selectedKeys)); } catch {}
+                    try {
+                      e.dataTransfer.setData(
+                        "application/x-selected-keys",
+                        JSON.stringify(selectedKeys)
+                      );
+                    } catch {}
                   }
-                  e.dataTransfer.effectAllowed='move'; 
+                  e.dataTransfer.effectAllowed = "move";
                 }}
               >
                 {/* Selection checkbox */}
                 {multiSelect && (
                   <button
                     type="button"
-                    aria-label={selectedKeys.includes(file.key)?'Odznacz plik':'Zaznacz plik'}
-                    onClick={(e)=>{ e.stopPropagation(); onToggleSelect?.(file.key); }}
-                    className={`absolute top-2 left-2 z-10 h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-semibold border transition-colors ${selectedKeys.includes(file.key) ? 'bg-blue-600 border-blue-600 text-white shadow' : 'bg-white/80 border-gray-300 text-gray-400 hover:text-gray-600'}`}
+                    aria-label={
+                      selectedKeys.includes(file.key)
+                        ? "Odznacz plik"
+                        : "Zaznacz plik"
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleSelect?.(file.key);
+                    }}
+                    className={`absolute top-2 left-2 z-10 h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-semibold border transition-colors ${selectedKeys.includes(file.key) ? "bg-blue-600 border-blue-600 text-white shadow" : "bg-white/80 border-gray-300 text-gray-400 hover:text-gray-600"}`}
                   >
-                    {selectedKeys.includes(file.key) ? '✓' : ''}
+                    {selectedKeys.includes(file.key) ? "✓" : ""}
                   </button>
                 )}
                 {/* Thumbnail/Icon */}
-                <div data-square className="aspect-square mb-2 sm:mb-3 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
+                <div
+                  data-square
+                  className="aspect-square mb-2 sm:mb-3 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden"
+                >
                   {thumbnailUrl && isImageFile(file.name) ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -509,16 +685,20 @@ export default function FileGrid({
                         className="w-full h-full object-cover"
                         loading="lazy"
                         src={thumbnailUrl}
-                        onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                        onError={(
+                          e: React.SyntheticEvent<HTMLImageElement>
+                        ) => {
                           // Fallback do ikony jeśli obraz się nie załaduje
                           const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.nextElementSibling?.classList.remove('hidden');
+                          target.style.display = "none";
+                          target.nextElementSibling?.classList.remove("hidden");
                         }}
                       />
                     </>
                   ) : null}
-                  <div className={`${thumbnailUrl && isImageFile(file.name) ? 'hidden' : ''} flex items-center justify-center`}>
+                  <div
+                    className={`${thumbnailUrl && isImageFile(file.name) ? "hidden" : ""} flex items-center justify-center`}
+                  >
                     {getFileIcon(file.name)}
                   </div>
                 </div>
@@ -527,10 +707,15 @@ export default function FileGrid({
                 <div className="mt-1">
                   <div className="flex items-start gap-1 sm:gap-2">
                     <div className="flex-1 min-w-0 overflow-hidden">
-                      <p className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-2 leading-tight min-h-[2em] sm:min-h-[2.4em]" title={file.name}>
+                      <p
+                        className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-2 leading-tight min-h-[2em] sm:min-h-[2.4em]"
+                        title={file.name}
+                      >
                         {file.name}
                       </p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">{formatBytes(file.size)}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">
+                        {formatBytes(file.size)}
+                      </p>
                     </div>
                     <button
                       onClick={(e) => handleActionClick(file.key, file, e)}
@@ -549,7 +734,7 @@ export default function FileGrid({
         </div>
       ) : (
         // List View
-  <div className="w-full space-y-1.5 sm:space-y-2 relative overflow-hidden">
+        <div className="w-full space-y-1.5 sm:space-y-2 relative overflow-hidden">
           {showRootEntry && (
             <div
               className="group relative flex items-center space-x-2 sm:space-x-4 p-2.5 sm:p-4 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
@@ -557,75 +742,169 @@ export default function FileGrid({
               tabIndex={0}
               aria-label="Powrót do root"
               onClick={() => onGoRoot?.()}
-              onKeyDown={(e)=>{ if(e.key==='Enter'){ e.preventDefault(); onGoRoot?.(); } }}
-              onDragOver={(e)=>{e.preventDefault(); e.currentTarget.classList.add('ring','ring-blue-400');}}
-              onDragLeave={(e)=>{e.currentTarget.classList.remove('ring','ring-blue-400');}}
-              onDrop={async (e)=>{
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onGoRoot?.();
+                }
+              }}
+              onDragOver={(e) => {
                 e.preventDefault();
-                e.currentTarget.classList.remove('ring','ring-blue-400');
-                const key = e.dataTransfer.getData('application/x-file-key');
+                e.currentTarget.classList.add("ring", "ring-blue-400");
+              }}
+              onDragLeave={(e) => {
+                e.currentTarget.classList.remove("ring", "ring-blue-400");
+              }}
+              onDrop={async (e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("ring", "ring-blue-400");
+                const key = e.dataTransfer.getData("application/x-file-key");
                 if (!key) return;
-                const selectedAttr = e.dataTransfer.getData('application/x-selected-keys');
+                const selectedAttr = e.dataTransfer.getData(
+                  "application/x-selected-keys"
+                );
                 let keys: string[] = [];
-                if (selectedAttr) { try { keys = JSON.parse(selectedAttr); } catch { keys = []; } }
-                if (!keys.length && multiSelect && selectedKeys.includes(key)) { keys = selectedKeys; }
+                if (selectedAttr) {
+                  try {
+                    keys = JSON.parse(selectedAttr);
+                  } catch {
+                    keys = [];
+                  }
+                }
+                if (!keys.length && multiSelect && selectedKeys.includes(key)) {
+                  keys = selectedKeys;
+                }
                 try {
-                  const bodyPayload = keys.length > 1 ? { keys, targetFolderPath: rootTargetPath } : { key, targetFolderPath: rootTargetPath };
-                  const res = await fetch('/api/files/move', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}` },
-                    body: JSON.stringify(bodyPayload)
+                  const bodyPayload =
+                    keys.length > 1
+                      ? { keys, targetFolderPath: rootTargetPath }
+                      : { key, targetFolderPath: rootTargetPath };
+                  const res = await fetch("/api/files/move", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${await auth.currentUser?.getIdToken()}`,
+                    },
+                    body: JSON.stringify(bodyPayload),
                   });
-                  if (res.ok) { toast.success(keys.length>1?`Przeniesiono ${keys.length} pliki`:'Przeniesiono'); onMoved?.(); } else { const { error } = await res.json().catch(()=>({error:'Błąd przenoszenia'})); toast.error(error||'Błąd przenoszenia'); }
-                } catch { toast.error('Błąd przenoszenia'); }
+                  if (res.ok) {
+                    toast.success(
+                      keys.length > 1
+                        ? `Przeniesiono ${keys.length} pliki`
+                        : "Przeniesiono"
+                    );
+                    onMoved?.();
+                  } else {
+                    const { error } = await res
+                      .json()
+                      .catch(() => ({ error: "Błąd przenoszenia" }));
+                    toast.error(error || "Błąd przenoszenia");
+                  }
+                } catch {
+                  toast.error("Błąd przenoszenia");
+                }
               }}
             >
-              <div className="flex-shrink-0"><HardDrive className="h-6 w-6 sm:h-8 sm:w-8 text-slate-500" /></div>
+              <div className="flex-shrink-0">
+                <HardDrive className="h-6 w-6 sm:h-8 sm:w-8 text-slate-500" />
+              </div>
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-xs sm:text-sm font-medium text-gray-900 truncate" title="Storage">Storage</p>
+                <p
+                  className="text-xs sm:text-sm font-medium text-gray-900 truncate"
+                  title="Storage"
+                >
+                  Storage
+                </p>
                 <p className="text-[10px] sm:text-xs text-gray-500">Root</p>
               </div>
             </div>
           )}
-          {folders.map(folder => (
+          {folders.map((folder) => (
             <div
               key={folder.path}
               className="group relative flex items-center space-x-2 sm:space-x-4 p-2.5 sm:p-4 glass-card bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-lg hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer overflow-hidden"
               role="button"
               tabIndex={0}
               aria-label={`Folder: ${folder.name}`}
-  onClick={() => onEnterFolder?.(folder)}
-  onKeyDown={(e) => { if (e.key==='Enter') { e.preventDefault(); onEnterFolder?.(folder);} }}
-              onDragOver={(e)=>{e.preventDefault(); e.currentTarget.classList.add('ring','ring-blue-400');}}
-              onDragLeave={(e)=>{e.currentTarget.classList.remove('ring','ring-blue-400');}}
-              onDrop={async (e)=>{
+              onClick={() => onEnterFolder?.(folder)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onEnterFolder?.(folder);
+                }
+              }}
+              onDragOver={(e) => {
                 e.preventDefault();
-                e.currentTarget.classList.remove('ring','ring-blue-400');
-                const key = e.dataTransfer.getData('application/x-file-key');
+                e.currentTarget.classList.add("ring", "ring-blue-400");
+              }}
+              onDragLeave={(e) => {
+                e.currentTarget.classList.remove("ring", "ring-blue-400");
+              }}
+              onDrop={async (e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("ring", "ring-blue-400");
+                const key = e.dataTransfer.getData("application/x-file-key");
                 if (!key) return;
-                const selectedAttr = e.dataTransfer.getData('application/x-selected-keys');
+                const selectedAttr = e.dataTransfer.getData(
+                  "application/x-selected-keys"
+                );
                 let keys: string[] = [];
-                if (selectedAttr) { try { keys = JSON.parse(selectedAttr); } catch { keys = []; } }
-                if (!keys.length && multiSelect && selectedKeys.includes(key)) { keys = selectedKeys; }
+                if (selectedAttr) {
+                  try {
+                    keys = JSON.parse(selectedAttr);
+                  } catch {
+                    keys = [];
+                  }
+                }
+                if (!keys.length && multiSelect && selectedKeys.includes(key)) {
+                  keys = selectedKeys;
+                }
                 try {
-                  const bodyPayload = keys.length > 1 ? { keys, targetFolderPath: folder.path } : { key, targetFolderPath: folder.path };
-                  const res = await fetch('/api/files/move', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}` },
-                    body: JSON.stringify(bodyPayload)
+                  const bodyPayload =
+                    keys.length > 1
+                      ? { keys, targetFolderPath: folder.path }
+                      : { key, targetFolderPath: folder.path };
+                  const res = await fetch("/api/files/move", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${await auth.currentUser?.getIdToken()}`,
+                    },
+                    body: JSON.stringify(bodyPayload),
                   });
-                  if (res.ok) { toast.success(keys.length>1?`Przeniesiono ${keys.length} pliki`:'Przeniesiono'); onMoved?.(); } else { const { error } = await res.json().catch(()=>({error:'Błąd przenoszenia'})); toast.error(error||'Błąd przenoszenia'); }
-                } catch { toast.error('Błąd przenoszenia'); }
+                  if (res.ok) {
+                    toast.success(
+                      keys.length > 1
+                        ? `Przeniesiono ${keys.length} pliki`
+                        : "Przeniesiono"
+                    );
+                    onMoved?.();
+                  } else {
+                    const { error } = await res
+                      .json()
+                      .catch(() => ({ error: "Błąd przenoszenia" }));
+                    toast.error(error || "Błąd przenoszenia");
+                  }
+                } catch {
+                  toast.error("Błąd przenoszenia");
+                }
               }}
             >
-              <div className="flex-shrink-0"><FolderIcon /></div>
+              <div className="flex-shrink-0">
+                <FolderIcon />
+              </div>
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-xs sm:text-sm font-medium text-gray-900 truncate" title={folder.name}>{folder.name}</p>
+                <p
+                  className="text-xs sm:text-sm font-medium text-gray-900 truncate"
+                  title={folder.name}
+                >
+                  {folder.name}
+                </p>
                 <p className="text-[10px] sm:text-xs text-gray-500">Folder</p>
               </div>
               <div className="flex-shrink-0">
                 <button
-                  onClick={(e)=>handleFolderActionClick(folder,e)}
+                  onClick={(e) => handleFolderActionClick(folder, e)}
                   className="no-min-touch inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:ring-gray-500 px-2 sm:px-3 py-1 sm:py-1.5 text-sm p-1"
                   aria-label="Opcje folderu"
                   aria-haspopup={true}
@@ -639,42 +918,68 @@ export default function FileGrid({
           {files.map((file) => (
             <div
               key={file.key}
-                            className={`group relative flex items-center space-x-2 sm:space-x-4 p-2.5 sm:p-4 glass-card bg-white/80 backdrop-blur-sm border ${selectedKeys.includes(file.key) && multiSelect ? 'border-blue-500 ring-1 ring-blue-300' : 'border-gray-200/50'} rounded-lg hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer overflow-hidden`}
-                              onClick={() => { if (multiSelect) { onToggleSelect?.(file.key); return; } handleFileClick(file); }}
+              className={`group relative flex items-center space-x-2 sm:space-x-4 p-2.5 sm:p-4 glass-card bg-white/80 backdrop-blur-sm border ${selectedKeys.includes(file.key) && multiSelect ? "border-blue-500 ring-1 ring-blue-300" : "border-gray-200/50"} rounded-lg hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer overflow-hidden`}
+              onClick={() => {
+                if (multiSelect) {
+                  onToggleSelect?.(file.key);
+                  return;
+                }
+                handleFileClick(file);
+              }}
               role="button"
               tabIndex={0}
               aria-label={`Plik: ${file.name}`}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (multiSelect) { onToggleSelect?.(file.key); } else { handleFileClick(file); } }
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  if (multiSelect) {
+                    onToggleSelect?.(file.key);
+                  } else {
+                    handleFileClick(file);
+                  }
+                }
               }}
-        draggable
-        onDragStart={(e)=>{ 
-          e.dataTransfer.setData('application/x-file-key', file.key); 
-          if (multiSelect && selectedKeys.includes(file.key)) {
-            try { e.dataTransfer.setData('application/x-selected-keys', JSON.stringify(selectedKeys)); } catch {}
-          }
-          e.dataTransfer.effectAllowed='move'; 
-        }}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData("application/x-file-key", file.key);
+                if (multiSelect && selectedKeys.includes(file.key)) {
+                  try {
+                    e.dataTransfer.setData(
+                      "application/x-selected-keys",
+                      JSON.stringify(selectedKeys)
+                    );
+                  } catch {}
+                }
+                e.dataTransfer.effectAllowed = "move";
+              }}
             >
               {/* Selection checkbox */}
               {multiSelect && (
                 <button
                   type="button"
-                  aria-label={selectedKeys.includes(file.key)?'Odznacz plik':'Zaznacz plik'}
-                  onClick={(e)=>{ e.stopPropagation(); onToggleSelect?.(file.key); }}
-                  className={`no-min-touch flex-shrink-0 h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-semibold border transition-colors ${selectedKeys.includes(file.key) ? 'bg-blue-600 border-blue-600 text-white shadow' : 'bg-white/80 border-gray-300 text-gray-400 hover:text-gray-600'}`}
+                  aria-label={
+                    selectedKeys.includes(file.key)
+                      ? "Odznacz plik"
+                      : "Zaznacz plik"
+                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleSelect?.(file.key);
+                  }}
+                  className={`no-min-touch flex-shrink-0 h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-semibold border transition-colors ${selectedKeys.includes(file.key) ? "bg-blue-600 border-blue-600 text-white shadow" : "bg-white/80 border-gray-300 text-gray-400 hover:text-gray-600"}`}
                 >
-                  {selectedKeys.includes(file.key) ? '✓' : ''}
+                  {selectedKeys.includes(file.key) ? "✓" : ""}
                 </button>
               )}
               {/* File Icon */}
-              <div className="flex-shrink-0">
-                {getFileIcon(file.name)}
-              </div>
+              <div className="flex-shrink-0">{getFileIcon(file.name)}</div>
 
               {/* File Info */}
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-2 leading-tight" title={file.name}>
+                <p
+                  className="text-xs sm:text-sm font-medium text-gray-900 line-clamp-2 leading-tight"
+                  title={file.name}
+                >
                   {file.name}
                 </p>
                 <p className="text-[10px] sm:text-xs text-gray-500 truncate">
@@ -699,57 +1004,161 @@ export default function FileGrid({
         </div>
       )}
       {/* Portal dla menu akcji */}
-      {(showActions || showFolderActions) && menuPosition && (activeFile || activeFolder) && createPortal(
-        <div
-          data-file-menu
-          ref={menuRef}
-          className="fixed z-[9999] w-48 bg-white border border-gray-200 rounded-lg shadow-lg animate-in fade-in data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 will-change-transform"
-          role="menu"
-          aria-label={showFolderActions ? 'Opcje folderu' : 'Opcje pliku'}
-          style={{ top: menuPosition.top, left: menuPosition.left }}
-        >
-          <div className="py-1">
-            {showFolderActions && activeFolder ? (
-              <>
-                <button onClick={(e)=>{e.stopPropagation(); handleFolderAction('download', activeFolder);}} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem"><Download className="h-4 w-4 mr-2"/>Pobierz</button>
-                <button onClick={(e)=>{e.stopPropagation(); handleFolderAction('share', activeFolder);}} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem"><Share2 className="h-4 w-4 mr-2"/>Udostępnij</button>
-                <button onClick={(e)=>{e.stopPropagation(); handleFolderAction('rename', activeFolder);}} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem"><FileText className="h-4 w-4 mr-2"/>Zmień nazwę</button>
-                <hr className="my-1" />
-                <button onClick={(e)=>{e.stopPropagation(); handleFolderAction('delete', activeFolder);}} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center" role="menuitem"><Trash2 className="h-4 w-4 mr-2"/>Usuń</button>
-              </>
-            ) : activeFile ? (
-              <>
-                <button onClick={(e) => { e.stopPropagation(); handleAction('download', activeFile); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem"><Download className="h-4 w-4 mr-2" />Pobierz</button>
-                <button onClick={(e) => { e.stopPropagation(); handleAction('share', activeFile); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem"><Share2 className="h-4 w-4 mr-2" />Udostępnij</button>
-                <button onClick={(e) => { e.stopPropagation(); handleAction('manage', activeFile); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem"><Share2 className="h-4 w-4 mr-2" />Zarządzaj linkami</button>
-                <button onClick={(e) => { e.stopPropagation(); handleAction('stats', activeFile); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem"><BarChart3 className="h-4 w-4 mr-2" />Statystyki</button>
-                <button onClick={(e) => { e.stopPropagation(); handleAction('rename', activeFile); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem"><FileText className="h-4 w-4 mr-2" />Zmień nazwę</button>
-                <hr className="my-1" />
-                <button onClick={(e) => { e.stopPropagation(); handleAction('delete', activeFile); }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center" role="menuitem"><Trash2 className="h-4 w-4 mr-2" />Usuń</button>
-              </>
-            ) : null}
-          </div>
-        </div>,
-        document.body
-      )}
+      {(showActions || showFolderActions) &&
+        menuPosition &&
+        (activeFile || activeFolder) &&
+        createPortal(
+          <div
+            data-file-menu
+            ref={menuRef}
+            className="fixed z-[9999] w-48 bg-white border border-gray-200 rounded-lg shadow-lg animate-in fade-in data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 will-change-transform"
+            role="menu"
+            aria-label={showFolderActions ? "Opcje folderu" : "Opcje pliku"}
+            style={{ top: menuPosition.top, left: menuPosition.left }}
+          >
+            <div className="py-1">
+              {showFolderActions && activeFolder ? (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFolderAction("download", activeFolder);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    role="menuitem"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Pobierz
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFolderAction("share", activeFolder);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    role="menuitem"
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Udostępnij
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFolderAction("rename", activeFolder);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    role="menuitem"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Zmień nazwę
+                  </button>
+                  <hr className="my-1" />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFolderAction("delete", activeFolder);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                    role="menuitem"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Usuń
+                  </button>
+                </>
+              ) : activeFile ? (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAction("download", activeFile);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    role="menuitem"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Pobierz
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAction("share", activeFile);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    role="menuitem"
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Udostępnij
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAction("manage", activeFile);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    role="menuitem"
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Zarządzaj linkami
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAction("stats", activeFile);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    role="menuitem"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Statystyki
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAction("rename", activeFile);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    role="menuitem"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Zmień nazwę
+                  </button>
+                  <hr className="my-1" />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAction("delete", activeFile);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                    role="menuitem"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Usuń
+                  </button>
+                </>
+              ) : null}
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Mobile Bottom Sheet for file/folder actions - rendered via portal to body */}
-      {showMobileSheet && createPortal(
-        <MobileBottomSheet
-          isOpen={showMobileSheet}
-          onClose={() => setShowMobileSheet(false)}
-          file={activeFile}
-          folder={activeFolder}
-          onAction={(action) => {
-            if (activeFile) {
-              handleAction(action, activeFile);
-            } else if (activeFolder) {
-              handleFolderAction(action, activeFolder);
-            }
-          }}
-        />,
-        document.body
-      )}
+      {showMobileSheet &&
+        createPortal(
+          <MobileBottomSheet
+            isOpen={showMobileSheet}
+            onClose={() => setShowMobileSheet(false)}
+            file={activeFile}
+            folder={activeFolder}
+            onAction={(action) => {
+              if (activeFile) {
+                handleAction(action, activeFile);
+              } else if (activeFolder) {
+                handleFolderAction(action, activeFolder);
+              }
+            }}
+          />,
+          document.body
+        )}
     </div>
   );
 }

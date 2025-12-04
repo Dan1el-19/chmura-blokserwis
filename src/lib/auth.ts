@@ -1,5 +1,5 @@
-import { getAuth } from 'firebase-admin/auth';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getAuth } from "firebase-admin/auth";
+import { initializeApp, getApps, cert } from "firebase-admin/app";
 
 function initializeAdminApp(): void {
   // Unikamy ponownej inicjalizacji aplikacji, co powodowałoby błąd
@@ -14,37 +14,47 @@ function initializeAdminApp(): void {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
   // Sprawdzamy, czy mamy komplet danych do ręcznego uwierzytelnienia
-  console.log('Firebase Admin initialization - checking environment variables:');
-  console.log('FIREBASE_PROJECT_ID:', projectId ? 'SET' : 'NOT SET');
-  console.log('FIREBASE_CLIENT_EMAIL:', clientEmail ? 'SET' : 'NOT SET');
-  console.log('FIREBASE_PRIVATE_KEY:', privateKey ? 'SET' : 'NOT SET');
-  
+  console.log(
+    "Firebase Admin initialization - checking environment variables:"
+  );
+  console.log("FIREBASE_PROJECT_ID:", projectId ? "SET" : "NOT SET");
+  console.log("FIREBASE_CLIENT_EMAIL:", clientEmail ? "SET" : "NOT SET");
+  console.log("FIREBASE_PRIVATE_KEY:", privateKey ? "SET" : "NOT SET");
+
   if (projectId && clientEmail && privateKey) {
-    console.log('Initializing Firebase Admin with explicit credentials.');
+    console.log("Initializing Firebase Admin with explicit credentials.");
     try {
       initializeApp({
         credential: cert({
           projectId,
           clientEmail,
           // Klucz prywatny w zmiennej środowiskowej wymaga zamiany znaków nowej linii
-          privateKey: privateKey.replace(/\\n/g, '\n'),
+          privateKey: privateKey.replace(/\\n/g, "\n"),
         }),
       });
-      console.log('Firebase Admin initialized successfully with credentials.');
+      console.log("Firebase Admin initialized successfully with credentials.");
     } catch (error) {
-      console.error('Error initializing Firebase Admin with credentials:', error);
+      console.error(
+        "Error initializing Firebase Admin with credentials:",
+        error
+      );
       // Fallback to default credentials
-      console.log('Falling back to default credentials.');
+      console.log("Falling back to default credentials.");
       initializeApp();
     }
   } else {
     // Jeśli brak zmiennych, zakładamy, że jesteśmy w środowisku Google Cloud
-    console.log('Initializing Firebase Admin with default credentials.');
+    console.log("Initializing Firebase Admin with default credentials.");
     try {
       initializeApp();
-      console.log('Firebase Admin initialized successfully with default credentials.');
+      console.log(
+        "Firebase Admin initialized successfully with default credentials."
+      );
     } catch (error) {
-      console.error('Error initializing Firebase Admin with default credentials:', error);
+      console.error(
+        "Error initializing Firebase Admin with default credentials:",
+        error
+      );
     }
   }
 }
@@ -55,36 +65,38 @@ initializeAdminApp();
 export type DecodedIdToken = {
   uid: string;
   email?: string;
-  role?: 'basic' | 'plus' | 'admin';
+  role?: "basic" | "plus" | "admin";
   [key: string]: unknown;
 };
 
 // --- Eksportowane funkcje ---
 
-export async function verifyToken(token: string): Promise<DecodedIdToken | null> {
+export async function verifyToken(
+  token: string
+): Promise<DecodedIdToken | null> {
   try {
     // Nie ma już potrzeby wywoływania ensureAdminInitialized() tutaj.
     // Aplikacja jest już zainicjalizowana.
     const decodedToken = await getAuth().verifyIdToken(token);
     return decodedToken as unknown as DecodedIdToken;
   } catch (error) {
-    console.error('Error verifying token:', error);
+    console.error("Error verifying token:", error);
     return null;
   }
 }
 
-export async function getUserRole(uid: string): Promise<'basic' | 'admin'> {
+export async function getUserRole(uid: string): Promise<"basic" | "admin"> {
   try {
     // Przykładowa logika - można tu odpytać Firestore lub Custom Claims
     const user = await getAuth().getUser(uid);
     // Sprawdzamy, czy użytkownik ma niestandardową rolę 'admin'
-    if (user.customClaims?.role === 'admin') {
-      return 'admin';
+    if (user.customClaims?.role === "admin") {
+      return "admin";
     }
-    return 'basic';
+    return "basic";
   } catch (error) {
     console.error(`Error getting user role for UID: ${uid}`, error);
     // Domyślnie zwracamy najniższe uprawnienia w razie błędu
-    return 'basic';
+    return "basic";
   }
 }

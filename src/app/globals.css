@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -30,7 +30,9 @@
    GLOBAL RESPONSIVE BASE STYLES
    ============================================ */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -47,7 +49,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-funnel-sans), 'Inter', Arial, Helvetica, sans-serif;
+  font-family: var(--font-funnel-sans), "Inter", Arial, Helvetica, sans-serif;
   /* Prevent horizontal overflow */
   overflow-x: hidden;
   width: 100%;
@@ -91,17 +93,47 @@ body {
 }
 
 /* Hide scrollbar for horizontal breadcrumb scroll on mobile */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 /* Floating Action Button (mobile) */
-.fab-shadow { box-shadow: 0 4px 14px -2px rgba(0,0,0,.25), 0 2px 4px rgba(0,0,0,.15); }
-.fab-blur { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.fab-shadow {
+  box-shadow:
+    0 4px 14px -2px rgba(0, 0, 0, 0.25),
+    0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.fab-blur {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
 
 /* Unified small control sizing (buttons + select) */
-.control-size {height:32px;min-height:32px;line-height:1;display:inline-flex;align-items:center;}
-.control-size select,& select.control-size {height:32px;}
-.control-icon-btn {height:32px;width:32px;min-height:32px;min-width:32px;display:inline-flex;align-items:center;justify-content:center;line-height:1;}
+.control-size {
+  height: 32px;
+  min-height: 32px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+.control-size select,
+& select.control-size {
+  height: 32px;
+}
+.control-icon-btn {
+  height: 32px;
+  width: 32px;
+  min-height: 32px;
+  min-width: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
 
 /* ============================================
    MOBILE RESPONSIVE UTILITIES
@@ -145,64 +177,96 @@ body {
 
 /* Auto-fill responsive file grid on mobile */
 @media (max-width: 639px) {
-  .file-grid-mobile { 
-    grid-template-columns: repeat(2, minmax(0, 1fr)); 
+  .file-grid-mobile {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
   }
-  .file-grid-mobile [data-square] { aspect-ratio: 1 / 1 !important; }
+  .file-grid-mobile [data-square] {
+    aspect-ratio: 1 / 1 !important;
+  }
 }
 
 @media (min-width: 640px) and (max-width: 767px) {
-  .file-grid-mobile { 
-    grid-template-columns: repeat(3, minmax(0, 1fr)); 
+  .file-grid-mobile {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 768px) {
   /* Do not alter desktop layout */
-  .line-clamp-2 { display: block; -webkit-line-clamp: unset; line-clamp: unset; -webkit-box-orient: unset; overflow: hidden; }
+  .line-clamp-2 {
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    -webkit-box-orient: unset;
+    overflow: hidden;
+  }
 }
 
 /* Dynamiczny fix dla 100vh na urządzeniach mobilnych (iOS Safari, Chrome) */
-:root { --app-vh: 1vh; }
-.min-h-app-screen { min-height: calc(var(--app-vh) * 100); }
+:root {
+  --app-vh: 1vh;
+}
+.min-h-app-screen {
+  min-height: calc(var(--app-vh) * 100);
+}
 /* Dokładna wysokość ekranu */
-.h-app-screen { height: calc(var(--app-vh) * 100); }
+.h-app-screen {
+  height: calc(var(--app-vh) * 100);
+}
 @supports (height: 100dvh) {
   /* Nowocześniejsze przeglądarki - wykorzystujemy dynamic viewport unit */
-  .min-h-app-screen { min-height: 100dvh; }
-  .h-app-screen { height: 100dvh; }
+  .min-h-app-screen {
+    min-height: 100dvh;
+  }
+  .h-app-screen {
+    height: 100dvh;
+  }
 }
 
 /* Animacja wejścia kafelków plików */
 @keyframes fileTileIn {
-  0% { opacity: 0; transform: translateY(14px) scale(.96); }
-  60% { opacity: 1; transform: translateY(-2px) scale(1.01); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .file-tile-animate {
-  animation: fileTileIn .5s cubic-bezier(.16,.84,.44,1) both;
+  animation: fileTileIn 0.5s cubic-bezier(0.16, 0.84, 0.44, 1) both;
   will-change: transform, opacity;
 }
 
 .file-tile-animate:hover {
   transform: translateY(-2px) scale(1.015);
-  transition: transform .25s ease;
+  transition: transform 0.25s ease;
 }
 
 /* Font utility classes */
 .font-roboto {
-  font-family: var(--font-roboto), 'Roboto', sans-serif !important;
+  font-family: var(--font-roboto), "Roboto", sans-serif !important;
 }
 
 .font-funnel-sans {
-  font-family: var(--font-funnel-sans), 'Inter', sans-serif !important;
+  font-family: var(--font-funnel-sans), "Inter", sans-serif !important;
 }
 
 /* Heading styles with Roboto font */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-roboto), 'Roboto', sans-serif !important;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-roboto), "Roboto", sans-serif !important;
   font-weight: 400;
 }
 
@@ -210,7 +274,7 @@ h1, h2, h3, h4, h5, h6 {
 .brand-name,
 .app-title,
 .important-text {
-  font-family: var(--font-roboto), 'Roboto', sans-serif !important;
+  font-family: var(--font-roboto), "Roboto", sans-serif !important;
 }
 
 /* Accessibility improvements */
@@ -228,7 +292,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Focus management */
 *:focus {
-  outline: 2px solid #3B82F6;
+  outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
 
@@ -237,7 +301,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 *:focus-visible {
-  outline: 2px solid #3B82F6;
+  outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
 
@@ -258,8 +322,11 @@ h1, h2, h3, h4, h5, h6 {
   * {
     border-color: currentColor !important;
   }
-  
-  button, input, select, textarea {
+
+  button,
+  input,
+  select,
+  textarea {
     border: 2px solid currentColor !important;
   }
 }
@@ -287,7 +354,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Touch target sizes for mobile */
 @media (max-width: 768px) {
-  button:not(.no-min-touch), 
+  button:not(.no-min-touch),
   [role="button"]:not(.no-min-touch),
   input[type="button"]:not(.no-min-touch),
   input[type="submit"]:not(.no-min-touch),
@@ -295,7 +362,7 @@ h1, h2, h3, h4, h5, h6 {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   /* Exception for inline elements */
   .inline-touch {
     min-height: auto;
@@ -310,16 +377,18 @@ h1, h2, h3, h4, h5, h6 {
     overflow-wrap: anywhere;
     word-break: break-word;
   }
-  
+
   /* Table wrapper for horizontal scroll */
   .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     max-width: 100%;
   }
-  
+
   /* Input/select max width constraint */
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     max-width: 100%;
   }
 }
@@ -337,12 +406,12 @@ h1, h2, h3, h4, h5, h6 {
   .no-print {
     display: none !important;
   }
-  
+
   body {
     background: white !important;
     color: black !important;
   }
-  
+
   a {
     color: black !important;
     text-decoration: underline !important;
@@ -384,7 +453,7 @@ input::placeholder {
 input:focus,
 textarea:focus,
 select:focus {
-  outline: 2px solid #3B82F6 !important;
+  outline: 2px solid #3b82f6 !important;
   outline-offset: 2px !important;
-  border-color: #3B82F6 !important;
+  border-color: #3b82f6 !important;
 }

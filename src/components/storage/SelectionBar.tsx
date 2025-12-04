@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
 interface SelectionBarProps {
   selectedCount: number;
   onClear: () => void;
 }
 
-export default function SelectionBar({ selectedCount, onClear }: SelectionBarProps) {
+export default function SelectionBar({
+  selectedCount,
+  onClear,
+}: SelectionBarProps) {
   if (selectedCount === 0) return null;
 
   return (

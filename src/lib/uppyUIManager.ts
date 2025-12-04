@@ -1,5 +1,5 @@
-import { UppyMultipartEngine } from './uppyMultipartEngine';
-import type { Uppy } from '@uppy/core';
+import { UppyMultipartEngine } from "./uppyMultipartEngine";
+import type { Uppy } from "@uppy/core";
 
 /**
  * Opcje konfiguracyjne dla UppyUIManager
@@ -30,7 +30,7 @@ export interface UppyUICallbacks {
 
 /**
  * UppyUIManager - Zarządza interfejsem użytkownika dla Uppy
- * 
+ *
  * LAZY INITIALIZATION PATTERN - zgodnie z planem:
  * 1. Manager tworzy się wcześnie, ale Uppy inicjalizuje się dopiero po potwierdzeniu w kalkulatorze
  * 2. Dashboard pokazuje się DOPIERO po potwierdzeniu uploadu
@@ -46,11 +46,11 @@ export class UppyUIManager {
     this.options = {
       inline: false, // Default to modal for multipart
       height: 500,
-      width: '100%',
+      width: "100%",
       showProgressDetails: true,
       proudlyDisplayPoweredByUppy: false,
       showRemoveButton: true,
-      ...this.options
+      ...this.options,
     };
   }
 
@@ -59,22 +59,22 @@ export class UppyUIManager {
    * Zgodnie z planem: Uppy inicjalizuje się dopiero po potwierdzeniu uploadu
    */
   async initializeUppy(
-    file: File, 
-    folder: 'personal' | 'main', 
+    file: File,
+    folder: "personal" | "main",
     subPath?: string
   ): Promise<void> {
     if (this.initialized) {
-      console.warn('UppyUIManager already initialized');
+      console.warn("UppyUIManager already initialized");
       return;
     }
 
     try {
       this.currentFile = file;
-      
+
       // Stwórz UppyMultipartEngine z opcjami UI
       this.uppyEngine = new UppyMultipartEngine({
         ...this.options,
-        target: this.options.target || this.createModalContainer()
+        target: this.options.target || this.createModalContainer(),
       });
 
       // Inicjalizuj Uppy z plikiem
@@ -87,9 +87,9 @@ export class UppyUIManager {
         },
         onStatusChange: (status) => {
           this.callbacks.onStatusChange?.(status);
-          
+
           // Auto-hide dashboard on completion/error
-          if (status === 'completed' || status === 'error') {
+          if (status === "completed" || status === "error") {
             setTimeout(() => this.hideDashboard(), 2000);
           }
         },
@@ -109,15 +109,14 @@ export class UppyUIManager {
         },
         onResumed: () => {
           this.callbacks.onResumed?.();
-        }
+        },
       });
 
       this.initialized = true;
       // console.log('🚀 UppyUIManager initialized successfully for multipart upload');
-      
     } catch (error) {
-      console.error('❌ Failed to initialize UppyUIManager:', error);
-      this.callbacks.onError?.('Failed to initialize upload interface');
+      console.error("❌ Failed to initialize UppyUIManager:", error);
+      this.callbacks.onError?.("Failed to initialize upload interface");
       throw error;
     }
   }
@@ -128,28 +127,30 @@ export class UppyUIManager {
    */
   showDashboard(): void {
     if (!this.initialized || !this.uppyEngine) {
-      throw new Error('UppyUIManager not initialized. Call initializeUppy() first.');
+      throw new Error(
+        "UppyUIManager not initialized. Call initializeUppy() first."
+      );
     }
 
     try {
       // Pokaż dashboard przez engine
       this.uppyEngine.showDashboard();
-      
+
       // Dodaj plik do Uppy (zgodnie z workflow)
       if (this.currentFile) {
         this.uppyEngine.addFileToUppy(this.currentFile);
       }
-      
+
       // Pokaż modal container
-      const modal = document.getElementById('uppy-modal-container');
+      const modal = document.getElementById("uppy-modal-container");
       if (modal) {
-        modal.style.display = 'flex';
+        modal.style.display = "flex";
       }
-      
+
       // console.log('📱 Uppy Dashboard shown - ready for multipart upload');
     } catch (error) {
-      console.error('❌ Failed to show Uppy Dashboard:', error);
-      this.callbacks.onError?.('Failed to show upload interface');
+      console.error("❌ Failed to show Uppy Dashboard:", error);
+      this.callbacks.onError?.("Failed to show upload interface");
     }
   }
 
@@ -160,16 +161,16 @@ export class UppyUIManager {
     if (this.uppyEngine) {
       try {
         this.uppyEngine.hideDashboard();
-        
+
         // Ukryj modal container
-        const modal = document.getElementById('uppy-modal-container');
+        const modal = document.getElementById("uppy-modal-container");
         if (modal) {
-          modal.style.display = 'none';
+          modal.style.display = "none";
         }
-        
-        console.log('📱 Uppy Dashboard hidden');
+
+        console.log("📱 Uppy Dashboard hidden");
       } catch (error) {
-        console.error('❌ Failed to hide Uppy Dashboard:', error);
+        console.error("❌ Failed to hide Uppy Dashboard:", error);
       }
     }
   }
@@ -179,7 +180,7 @@ export class UppyUIManager {
    */
   addFileToUppy(file: File): void {
     if (!this.initialized || !this.uppyEngine) {
-      throw new Error('UppyUIManager not initialized');
+      throw new Error("UppyUIManager not initialized");
     }
 
     this.currentFile = file;
@@ -191,7 +192,7 @@ export class UppyUIManager {
    */
   startUpload(): void {
     if (!this.initialized || !this.uppyEngine) {
-      throw new Error('UppyUIManager not initialized');
+      throw new Error("UppyUIManager not initialized");
     }
 
     // console.log('🚀 Starting multipart upload...');
@@ -255,11 +256,11 @@ export class UppyUIManager {
    */
   reset(): void {
     // console.log('🔄 Resetting UppyUIManager...');
-    
+
     if (this.uppyEngine) {
       this.uppyEngine.reset();
     }
-    
+
     this.hideDashboard();
     this.uppyEngine = null;
     this.currentFile = null;
@@ -272,11 +273,11 @@ export class UppyUIManager {
    */
   destroy(): void {
     // console.log('💥 Destroying UppyUIManager...');
-    
+
     if (this.uppyEngine) {
       this.uppyEngine.destroy();
     }
-    
+
     this.removeModalContainer();
     this.uppyEngine = null;
     this.currentFile = null;
@@ -288,9 +289,9 @@ export class UppyUIManager {
    * Tworzy kontener modal dla dashboard (gdy nie inline)
    */
   private createModalContainer(): HTMLElement {
-    const modal = document.createElement('div');
-    modal.id = 'uppy-modal-container';
-    modal.className = 'uppy-modal-overlay';
+    const modal = document.createElement("div");
+    modal.id = "uppy-modal-container";
+    modal.className = "uppy-modal-overlay";
     modal.style.cssText = `
       position: fixed;
       top: 0;
@@ -304,8 +305,8 @@ export class UppyUIManager {
       justify-content: center;
     `;
 
-    const container = document.createElement('div');
-    container.className = 'uppy-modal-content';
+    const container = document.createElement("div");
+    container.className = "uppy-modal-content";
     container.style.cssText = `
       width: 90%;
       max-width: 800px;
@@ -318,9 +319,9 @@ export class UppyUIManager {
     `;
 
     // Close button
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '×';
-    closeBtn.className = 'uppy-modal-close';
+    const closeBtn = document.createElement("button");
+    closeBtn.innerHTML = "×";
+    closeBtn.className = "uppy-modal-close";
     closeBtn.style.cssText = `
       position: absolute;
       top: 10px;
@@ -344,7 +345,7 @@ export class UppyUIManager {
    * Usuwa modal container
    */
   private removeModalContainer(): void {
-    const modal = document.getElementById('uppy-modal-container');
+    const modal = document.getElementById("uppy-modal-container");
     if (modal) {
       document.body.removeChild(modal);
     }

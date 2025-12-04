@@ -1,15 +1,21 @@
 // Typy dla systemu multipart upload
 
-export type MultipartUploadStatus = 'initializing' | 'uploading' | 'completed' | 'error' | 'aborted' | 'paused';
+export type MultipartUploadStatus =
+  | "initializing"
+  | "uploading"
+  | "completed"
+  | "error"
+  | "aborted"
+  | "paused";
 
 export interface MultipartUploadState {
   id: string;
   uploadId: string; // R2 upload ID
-  key: string;      // R2 object key
+  key: string; // R2 object key
   fileName: string;
   fileSize: number;
-  file?: File;      // Optional reference to original File object (for UI components)
-  folder: 'personal' | 'main';
+  file?: File; // Optional reference to original File object (for UI components)
+  folder: "personal" | "main";
   subPath?: string;
   status: MultipartUploadStatus;
   parts: Part[];
@@ -27,7 +33,7 @@ export interface Part {
   etag: string;
   size: number;
   uploadedAt: Date;
-  status: 'pending' | 'uploading' | 'completed' | 'error';
+  status: "pending" | "uploading" | "completed" | "error";
   errorMessage?: string;
 }
 
@@ -37,7 +43,7 @@ export interface MultipartUploadHandle {
   key: string;
   fileName: string;
   fileSize: number;
-  folder: 'personal' | 'main';
+  folder: "personal" | "main";
   subPath?: string;
   status: MultipartUploadStatus;
   progress: number;
@@ -46,13 +52,13 @@ export interface MultipartUploadHandle {
   etaSec: number | null;
   errorMessage?: string;
   parts: Part[];
-  
+
   // Actions
   pause: () => Promise<void>;
   resume: () => Promise<void>;
   cancel: () => Promise<void>;
   abort: () => Promise<void>;
-  
+
   // Events
   onProgress?: (progress: number, bytesUploaded: number, speed: number) => void;
   onStatusChange?: (status: MultipartUploadStatus) => void;
@@ -97,7 +103,7 @@ export interface MultipartUploadStats {
 export interface CreateMultipartUploadResponse {
   uploadId: string;
   key: string;
-  status: 'created';
+  status: "created";
   message: string;
 }
 
@@ -108,7 +114,7 @@ export interface SignPartResponse {
 }
 
 export interface CompleteMultipartUploadResponse {
-  status: 'completed';
+  status: "completed";
   key: string;
   etag: string;
   message: string;
@@ -146,7 +152,7 @@ export interface ResumeUploadData {
   key: string;
   fileName: string;
   fileSize: number;
-  folder: 'personal' | 'main';
+  folder: "personal" | "main";
   subPath?: string;
   parts: Part[];
   lastUpdated: Date;
@@ -158,7 +164,7 @@ export interface ChunkInfo {
   startByte: number;
   endByte: number;
   size: number;
-  status: 'pending' | 'uploading' | 'completed' | 'error';
+  status: "pending" | "uploading" | "completed" | "error";
   uploadedBytes?: number; // Dla real-time progress tracking
 }
 

@@ -1,9 +1,9 @@
-import React from 'react';
+import React from "react";
 
 // PWA Management Library - Temporarily disabled for SSR compatibility
 export interface PWAInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
 export interface PWAConfig {
@@ -12,8 +12,8 @@ export interface PWAConfig {
   description: string;
   themeColor: string;
   backgroundColor: string;
-  display: 'standalone' | 'fullscreen' | 'minimal-ui' | 'browser';
-  orientation: 'portrait' | 'landscape' | 'any';
+  display: "standalone" | "fullscreen" | "minimal-ui" | "browser";
+  orientation: "portrait" | "landscape" | "any";
   scope: string;
   startUrl: string;
 }
@@ -27,7 +27,7 @@ export function usePWA() {
 
   React.useEffect(() => {
     // Only run on client side
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
 
@@ -35,12 +35,12 @@ export function usePWA() {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -52,7 +52,8 @@ export function usePWA() {
     showInstallPrompt: async () => false,
     updateApp: async () => {},
     sendNotification: async () => {},
-    requestNotificationPermission: async () => 'denied' as NotificationPermission,
-    getNotificationPermission: async () => 'denied' as NotificationPermission
+    requestNotificationPermission: async () =>
+      "denied" as NotificationPermission,
+    getNotificationPermission: async () => "denied" as NotificationPermission,
   };
 }

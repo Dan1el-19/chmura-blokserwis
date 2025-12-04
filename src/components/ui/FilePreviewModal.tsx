@@ -1,12 +1,26 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { X, Download, Calendar, HardDrive, FileText, Image as ImageIcon, Video, Music, Archive, AlertTriangle, ZoomIn, ZoomOut, RefreshCcw } from 'lucide-react';
-import NextImage from 'next/image';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import { formatDate, formatBytes } from '@/lib/utils';
-import { FileItem } from '@/types';
-import { auth } from '@/lib/firebase';
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  Download,
+  Calendar,
+  HardDrive,
+  FileText,
+  Image as ImageIcon,
+  Video,
+  Music,
+  Archive,
+  AlertTriangle,
+  ZoomIn,
+  ZoomOut,
+  RefreshCcw,
+} from "lucide-react";
+import NextImage from "next/image";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import { formatDate, formatBytes } from "@/lib/utils";
+import { FileItem } from "@/types";
+import { auth } from "@/lib/firebase";
 
 interface FilePreviewModalProps {
   isOpen: boolean;
@@ -15,7 +29,12 @@ interface FilePreviewModalProps {
   onDownload: (file: FileItem) => void;
 }
 
-function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModalProps) {
+function FilePreviewModal({
+  isOpen,
+  onClose,
+  file,
+  onDownload,
+}: FilePreviewModalProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,12 +48,26 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
   const [textLoadingMore, setTextLoadingMore] = useState(false);
   const TEXT_CHUNK = 256_000; // 256KB na porcję
 
-  const ext = file?.name.split('.').pop()?.toLowerCase() || '';
-  const isImage = ['jpg','jpeg','png','gif','webp','svg','bmp'].includes(ext);
-  const isPdf = ext === 'pdf';
-  const isText = ['txt','md','json','xml','html','css','js','ts','tsx','jsx','sh'].includes(ext);
-  const isVideo = ['mp4','webm','mov','mkv','ogg'].includes(ext);
-  const isAudio = ['mp3','wav','flac','m4a','aac','opus'].includes(ext);
+  const ext = file?.name.split(".").pop()?.toLowerCase() || "";
+  const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"].includes(
+    ext
+  );
+  const isPdf = ext === "pdf";
+  const isText = [
+    "txt",
+    "md",
+    "json",
+    "xml",
+    "html",
+    "css",
+    "js",
+    "ts",
+    "tsx",
+    "jsx",
+    "sh",
+  ].includes(ext);
+  const isVideo = ["mp4", "webm", "mov", "mkv", "ogg"].includes(ext);
+  const isAudio = ["mp3", "wav", "flac", "m4a", "aac", "opus"].includes(ext);
 
   // Pobierz presigned URL dla podglądu
   useEffect(() => {
@@ -50,20 +83,23 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
       try {
         setLoading(true);
         setPreviewError(null);
-        
-        const token = await auth.currentUser?.getIdToken().catch(()=>null);
+
+        const token = await auth.currentUser?.getIdToken().catch(() => null);
         if (!token) {
-          setPreviewError('Brak autoryzacji');
+          setPreviewError("Brak autoryzacji");
           setLoading(false);
           return;
         }
 
-        const response = await fetch(`/api/files/presigned?key=${encodeURIComponent(file.key)}&op=get`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await fetch(
+          `/api/files/presigned?key=${encodeURIComponent(file.key)}&op=get`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         if (!response.ok) {
-          setPreviewError('Błąd generowania linku do podglądu');
+          setPreviewError("Błąd generowania linku do podglądu");
           setLoading(false);
           return;
         }
@@ -76,15 +112,16 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
         } else if (isText) {
           // Lazy loading dużych plików tekstowych przy użyciu nagłówka Range
           setPreviewUrl(presignedUrl);
-          setRawText('');
+          setRawText("");
           setTextOffset(0);
           setHasMoreText(true);
           // Załaduj pierwszą porcję
           try {
             const res = await fetch(presignedUrl, {
-              headers: { Range: `bytes=0-${TEXT_CHUNK - 1}` }
+              headers: { Range: `bytes=0-${TEXT_CHUNK - 1}` },
             });
-            if (!res.ok && res.status !== 206 && res.status !== 200) throw new Error('range');
+            if (!res.ok && res.status !== 206 && res.status !== 200)
+              throw new Error("range");
             const chunk = await res.text();
             if (cancelled) return;
             setRawText(chunk);
@@ -93,7 +130,7 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
             setLoading(false);
           } catch {
             if (!cancelled) {
-              setPreviewError('Nie można załadować podglądu pliku');
+              setPreviewError("Nie można załadować podglądu pliku");
               setLoading(false);
             }
           }
@@ -101,31 +138,34 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
           setLoading(false);
         }
       } catch {
-        if (!cancelled) { 
-          setPreviewError('Nie można załadować podglądu pliku'); 
-          setLoading(false); 
+        if (!cancelled) {
+          setPreviewError("Nie można załadować podglądu pliku");
+          setLoading(false);
         }
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, file, isImage, isPdf, isVideo, isAudio, isText]);
 
   // Zamknięcie klawiszem ESC + blokada scrolla tła gdy modal otwarty
   useEffect(() => {
     if (!isOpen) return;
-  setEntered(false);
-  // małe opóźnienie aby aktywować animację wejścia
-  const t = setTimeout(() => setEntered(true), 10);
+    setEntered(false);
+    // małe opóźnienie aby aktywować animację wejścia
+    const t = setTimeout(() => setEntered(true), 10);
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (lightbox) setLightbox(false); else onClose();
+      if (e.key === "Escape") {
+        if (lightbox) setLightbox(false);
+        else onClose();
       }
     };
-    document.addEventListener('keydown', onKey);
+    document.addEventListener("keydown", onKey);
     const prevOverflow = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.overflow = "hidden";
     return () => {
-      document.removeEventListener('keydown', onKey);
+      document.removeEventListener("keydown", onKey);
       document.documentElement.style.overflow = prevOverflow;
       clearTimeout(t);
       setEntered(false);
@@ -135,11 +175,11 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
   // Syntax highlighting dla plików tekstowych
   useEffect(() => {
     if (!rawText || !isText || !isOpen || !file) return;
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     let active = true;
     (async () => {
       try {
-        const coreMod = await import('highlight.js/lib/core');
+        const coreMod = await import("highlight.js/lib/core");
         interface HLCore {
           highlightElement: (el: HTMLElement) => void;
           registerLanguage: (name: string, lang: unknown) => void;
@@ -147,20 +187,25 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
         }
         const core = coreMod as unknown as HLCore;
         const langs: Array<[string, () => Promise<unknown>]> = [
-          ['javascript', () => import('highlight.js/lib/languages/javascript')],
-          ['typescript', () => import('highlight.js/lib/languages/typescript')],
-          ['json', () => import('highlight.js/lib/languages/json')],
-          ['xml', () => import('highlight.js/lib/languages/xml')],
-          ['bash', () => import('highlight.js/lib/languages/bash')],
-          ['css', () => import('highlight.js/lib/languages/css')]
+          ["javascript", () => import("highlight.js/lib/languages/javascript")],
+          ["typescript", () => import("highlight.js/lib/languages/typescript")],
+          ["json", () => import("highlight.js/lib/languages/json")],
+          ["xml", () => import("highlight.js/lib/languages/xml")],
+          ["bash", () => import("highlight.js/lib/languages/bash")],
+          ["css", () => import("highlight.js/lib/languages/css")],
         ];
-        await Promise.all(langs.map(async ([name, loader]) => {
-          if (!core.getLanguage(name)) {
-            const langMod = await loader();
-            core.registerLanguage(name, (langMod as { default?: unknown }).default || langMod);
-          }
-        }));
-        const el = document.getElementById('code-preview');
+        await Promise.all(
+          langs.map(async ([name, loader]) => {
+            if (!core.getLanguage(name)) {
+              const langMod = await loader();
+              core.registerLanguage(
+                name,
+                (langMod as { default?: unknown }).default || langMod
+              );
+            }
+          })
+        );
+        const el = document.getElementById("code-preview");
         if (active && el) {
           core.highlightElement(el as HTMLElement);
         }
@@ -168,65 +213,91 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
         // silent fail
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [rawText, isText, isOpen, file]);
 
   if (!isOpen || !file) return null;
 
   const getFileIcon = () => {
-  if (isImage) return <ImageIcon aria-hidden className="h-8 w-8 text-blue-500" />;
-  if (isVideo) return <Video aria-hidden className="h-8 w-8 text-purple-500" />;
-  if (isAudio) return <Music aria-hidden className="h-8 w-8 text-green-500" />;
-  if (isPdf) return <FileText aria-hidden className="h-8 w-8 text-red-500" />;
-  if (isText) return <FileText aria-hidden className="h-8 w-8 text-orange-500" />;
-  return <Archive aria-hidden className="h-8 w-8 text-gray-500" />;
+    if (isImage)
+      return <ImageIcon aria-hidden className="h-8 w-8 text-blue-500" />;
+    if (isVideo)
+      return <Video aria-hidden className="h-8 w-8 text-purple-500" />;
+    if (isAudio)
+      return <Music aria-hidden className="h-8 w-8 text-green-500" />;
+    if (isPdf) return <FileText aria-hidden className="h-8 w-8 text-red-500" />;
+    if (isText)
+      return <FileText aria-hidden className="h-8 w-8 text-orange-500" />;
+    return <Archive aria-hidden className="h-8 w-8 text-gray-500" />;
   };
 
   const getFileType = () => {
-    if (isImage) return 'Obraz';
-    if (isVideo) return 'Wideo';
-    if (isAudio) return 'Audio';
-    if (isPdf) return 'PDF';
-    if (isText) return 'Plik tekstowy';
-    return 'Plik';
+    if (isImage) return "Obraz";
+    if (isVideo) return "Wideo";
+    if (isAudio) return "Audio";
+    if (isPdf) return "PDF";
+    if (isText) return "Plik tekstowy";
+    return "Plik";
   };
 
   // Prefer createdAt if available (extended type), otherwise fallback to lastModified
   type MaybeCreatedFile = FileItem & { createdAt?: Date };
-  const createdAt: Date = (file as MaybeCreatedFile).createdAt ?? file.lastModified;
+  const createdAt: Date =
+    (file as MaybeCreatedFile).createdAt ?? file.lastModified;
 
   return (
     <div
-      className={`fixed inset-0 z-10000 bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-200 ${entered ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed inset-0 z-10000 bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-200 ${entered ? "opacity-100" : "opacity-0"}`}
       role="dialog"
       aria-modal="true"
       onClick={onClose}
     >
       <Card
-        className={`w-full sm:max-w-lg md:max-w-3xl lg:max-w-4xl max-h-[95vh] sm:max-h-[85vh] overflow-hidden rounded-t-2xl sm:rounded-xl transition-all duration-200 ease-out text-gray-900 ${entered ? 'translate-y-0 md:scale-100 opacity-100' : 'translate-y-4 md:translate-y-0 md:scale-[0.98] opacity-0'}`}
+        className={`w-full sm:max-w-lg md:max-w-3xl lg:max-w-4xl max-h-[95vh] sm:max-h-[85vh] overflow-hidden rounded-t-2xl sm:rounded-xl transition-all duration-200 ease-out text-gray-900 ${entered ? "translate-y-0 md:scale-100 opacity-100" : "translate-y-4 md:translate-y-0 md:scale-[0.98] opacity-0"}`}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
-  <CardHeader className="sticky top-0 z-10 bg-white border-b border-gray-200 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3 text-gray-900">
+        <CardHeader className="sticky top-0 z-10 bg-white border-b border-gray-200 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3 text-gray-900">
           <div className="flex flex-1 items-center gap-2 sm:gap-3 min-w-0 overflow-hidden">
             {getFileIcon()}
             <div className="min-w-0 flex-1 overflow-hidden">
-              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 truncate" title={file.name}>
+              <h3
+                className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 truncate"
+                title={file.name}
+              >
                 {file.name}
               </h3>
-              <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">{getFileType()}</p>
+              <p className="text-[10px] sm:text-xs md:text-sm text-gray-600">
+                {getFileType()}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <Button variant="outline" size="sm" onClick={() => onDownload(file)} aria-label="Pobierz" className="px-2 sm:px-3 py-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDownload(file)}
+              aria-label="Pobierz"
+              className="px-2 sm:px-3 py-1.5"
+            >
               <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-0 sm:mr-2" />
-              <span className="text-xs sm:text-sm hidden sm:inline">Pobierz</span>
+              <span className="text-xs sm:text-sm hidden sm:inline">
+                Pobierz
+              </span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={onClose} aria-label="Zamknij" className="no-min-touch p-1.5 sm:p-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              aria-label="Zamknij"
+              className="no-min-touch p-1.5 sm:p-2"
+            >
               <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
         </CardHeader>
-        
+
         <CardContent className="p-0 overflow-auto max-h-[calc(85vh-56px)] md:max-h-[calc(85vh-64px)]">
           {/* Informacje o pliku */}
           <div className="px-4 py-3 border-b border-gray-200 bg-white text-gray-900">
@@ -234,17 +305,26 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
             <div className="sm:hidden text-sm">
               <div className="py-2">
                 <div className="text-gray-600 text-center">Rozmiar</div>
-                <div className="font-medium text-gray-900 text-center">{formatBytes(file.size)}</div>
+                <div className="font-medium text-gray-900 text-center">
+                  {formatBytes(file.size)}
+                </div>
               </div>
               <div className="border-t border-gray-200 my-2" />
               <div className="py-2">
                 <div className="text-gray-600 text-center">Utworzono</div>
-                <div className="font-medium text-gray-900 text-center whitespace-nowrap truncate" title={formatDate(createdAt)}>{formatDate(createdAt)}</div>
+                <div
+                  className="font-medium text-gray-900 text-center whitespace-nowrap truncate"
+                  title={formatDate(createdAt)}
+                >
+                  {formatDate(createdAt)}
+                </div>
               </div>
               <div className="border-t border-gray-200 my-2" />
               <div className="py-2">
                 <div className="text-gray-600 text-center">Typ</div>
-                <div className="font-medium text-gray-900 text-center">{ext.toUpperCase() || 'N/A'}</div>
+                <div className="font-medium text-gray-900 text-center">
+                  {ext.toUpperCase() || "N/A"}
+                </div>
               </div>
             </div>
 
@@ -257,7 +337,10 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
                     <HardDrive aria-hidden className="h-4 w-4 text-gray-500" />
                     Rozmiar
                   </div>
-                  <div className="text-sm font-medium text-gray-900 text-center truncate max-w-[24ch]" title={formatBytes(file.size)}>
+                  <div
+                    className="text-sm font-medium text-gray-900 text-center truncate max-w-[24ch]"
+                    title={formatBytes(file.size)}
+                  >
                     {formatBytes(file.size)}
                   </div>
                 </div>
@@ -267,7 +350,10 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
                     <Calendar aria-hidden className="h-4 w-4 text-gray-500" />
                     Utworzono
                   </div>
-                  <div className="text-sm font-medium text-gray-900 text-center truncate max-w-[24ch]" title={formatDate(createdAt)}>
+                  <div
+                    className="text-sm font-medium text-gray-900 text-center truncate max-w-[24ch]"
+                    title={formatDate(createdAt)}
+                  >
                     {formatDate(createdAt)}
                   </div>
                 </div>
@@ -277,8 +363,11 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
                     <FileText aria-hidden className="h-4 w-4 text-gray-500" />
                     Typ
                   </div>
-                  <div className="text-sm font-medium text-gray-900 text-center truncate max-w-[24ch]" title={ext.toUpperCase() || 'N/A'}>
-                    {ext.toUpperCase() || 'N/A'}
+                  <div
+                    className="text-sm font-medium text-gray-900 text-center truncate max-w-[24ch]"
+                    title={ext.toUpperCase() || "N/A"}
+                  >
+                    {ext.toUpperCase() || "N/A"}
                   </div>
                 </div>
               </div>
@@ -297,8 +386,12 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
             {previewError && (
               <div className="text-center p-10">
                 <AlertTriangle className="h-10 w-10 mx-auto mb-3 text-red-500" />
-                <p className="text-red-600 dark:text-red-400 font-medium">{previewError || 'Nie udało się wczytać podglądu'}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">Spróbuj ponownie lub pobierz plik.</p>
+                <p className="text-red-600 dark:text-red-400 font-medium">
+                  {previewError || "Nie udało się wczytać podglądu"}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                  Spróbuj ponownie lub pobierz plik.
+                </p>
               </div>
             )}
 
@@ -318,7 +411,9 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
                         unoptimized
                       />
                     </div>
-                    <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 mt-2">Kliknij, aby powiększyć</p>
+                    <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 mt-2">
+                      Kliknij, aby powiększyć
+                    </p>
                   </div>
                 )}
 
@@ -359,24 +454,30 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
                 {isText && rawText !== null && (
                   <div className="rounded-lg border bg-gray-900 border-gray-800">
                     <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 border-b border-gray-800">
-                      <span className="text-xs text-gray-300">Podgląd tekstu</span>
+                      <span className="text-xs text-gray-300">
+                        Podgląd tekstu
+                      </span>
                       <button
                         className="text-xs px-2 py-1 rounded bg-gray-800 text-gray-200 hover:bg-gray-700"
-                        onClick={() => setCanWrapLines(v => !v)}
+                        onClick={() => setCanWrapLines((v) => !v)}
                         aria-label="Przełącz zawijanie linii"
                       >
-                        {canWrapLines ? 'Wyłącz zawijanie' : 'Włącz zawijanie'}
+                        {canWrapLines ? "Wyłącz zawijanie" : "Włącz zawijanie"}
                       </button>
                     </div>
                     <div className="overflow-auto max-h-[60vh] md:max-h-[65vh]">
-                      <pre className={`text-sm ${canWrapLines ? 'whitespace-pre-wrap' : 'whitespace-pre' } text-gray-100 p-4`}> 
+                      <pre
+                        className={`text-sm ${canWrapLines ? "whitespace-pre-wrap" : "whitespace-pre"} text-gray-100 p-4`}
+                      >
                         <code id="code-preview" className={`language-${ext}`}>
                           {rawText}
                         </code>
                       </pre>
                     </div>
                     <div className="flex items-center justify-between px-3 py-2 border-t border-gray-800">
-                      <span className="text-[11px] text-gray-400">Załadowano: {textOffset.toLocaleString()} B</span>
+                      <span className="text-[11px] text-gray-400">
+                        Załadowano: {textOffset.toLocaleString()} B
+                      </span>
                       {hasMoreText && (
                         <Button
                           variant="outline"
@@ -387,10 +488,17 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
                               setTextLoadingMore(true);
                               const start = textOffset;
                               const end = start + TEXT_CHUNK - 1;
-                              const res = await fetch(previewUrl, { headers: { Range: `bytes=${start}-${end}` } });
-                              if (!res.ok && res.status !== 206 && res.status !== 200) throw new Error('range');
+                              const res = await fetch(previewUrl, {
+                                headers: { Range: `bytes=${start}-${end}` },
+                              });
+                              if (
+                                !res.ok &&
+                                res.status !== 206 &&
+                                res.status !== 200
+                              )
+                                throw new Error("range");
                               const chunk = await res.text();
-                              setRawText((prev) => (prev ?? '') + chunk);
+                              setRawText((prev) => (prev ?? "") + chunk);
                               setTextOffset(start + chunk.length);
                               setHasMoreText(chunk.length >= TEXT_CHUNK);
                             } catch {
@@ -401,7 +509,7 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
                           }}
                           aria-label="Załaduj więcej"
                         >
-                          {textLoadingMore ? 'Ładowanie…' : 'Załaduj więcej'}
+                          {textLoadingMore ? "Ładowanie…" : "Załaduj więcej"}
                         </Button>
                       )}
                     </div>
@@ -411,8 +519,12 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
                 {!isImage && !isVideo && !isAudio && !isPdf && !isText && (
                   <div className="text-center p-10 text-gray-700 dark:text-gray-300">
                     <Archive className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                    <p className="font-medium">Podgląd nie jest dostępny dla tego typu pliku</p>
-                    <p className="text-sm mt-2">Pobierz plik, aby go otworzyć.</p>
+                    <p className="font-medium">
+                      Podgląd nie jest dostępny dla tego typu pliku
+                    </p>
+                    <p className="text-sm mt-2">
+                      Pobierz plik, aby go otworzyć.
+                    </p>
                   </div>
                 )}
               </>
@@ -423,15 +535,19 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
 
       {/* Lightbox dla obrazów */}
       {lightbox && isImage && previewUrl && (
-        <div 
-      className="fixed inset-0 bg-black/90 flex items-center justify-center z-10001 p-4"
+        <div
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-10001 p-4"
           onClick={() => setLightbox(false)}
         >
-          <div className="relative w-full h-full overflow-hidden" onWheel={(e) => {
-            if (e.ctrlKey) return; // pozwól przeglądarce na systemowy zoom
-            if (e.deltaY < 0) setZoom((z) => Math.min(5, +(z + 0.2).toFixed(2)));
-            else setZoom((z) => Math.max(1, +(z - 0.2).toFixed(2)));
-          }}>
+          <div
+            className="relative w-full h-full overflow-hidden"
+            onWheel={(e) => {
+              if (e.ctrlKey) return; // pozwól przeglądarce na systemowy zoom
+              if (e.deltaY < 0)
+                setZoom((z) => Math.min(5, +(z + 0.2).toFixed(2)));
+              else setZoom((z) => Math.max(1, +(z - 0.2).toFixed(2)));
+            }}
+          >
             <NextImage
               src={previewUrl}
               alt={file.name}
@@ -445,7 +561,10 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
               sizes="100vw"
               priority
               unoptimized
-              style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
+              style={{
+                transform: `scale(${zoom})`,
+                transformOrigin: "center center",
+              }}
             />
           </div>
           <Button
@@ -457,14 +576,37 @@ function FilePreviewModal({ isOpen, onClose, file, onDownload }: FilePreviewModa
             <X className="h-6 w-6" />
           </Button>
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/10 backdrop-blur px-2 py-1 rounded-full text-white">
-            <button className="p-2 hover:bg-white/20 rounded-full" aria-label="Pomniejsz" onClick={(e) => { e.stopPropagation(); setZoom((z)=>Math.max(1, +(z-0.25).toFixed(2))); }}>
+            <button
+              className="p-2 hover:bg-white/20 rounded-full"
+              aria-label="Pomniejsz"
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoom((z) => Math.max(1, +(z - 0.25).toFixed(2)));
+              }}
+            >
               <ZoomOut className="h-5 w-5" />
             </button>
-            <span className="text-xs px-1 min-w-10 text-center">{Math.round(zoom*100)}%</span>
-            <button className="p-2 hover:bg-white/20 rounded-full" aria-label="Powiększ" onClick={(e) => { e.stopPropagation(); setZoom((z)=>Math.min(5, +(z+0.25).toFixed(2))); }}>
+            <span className="text-xs px-1 min-w-10 text-center">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              className="p-2 hover:bg-white/20 rounded-full"
+              aria-label="Powiększ"
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoom((z) => Math.min(5, +(z + 0.25).toFixed(2)));
+              }}
+            >
               <ZoomIn className="h-5 w-5" />
             </button>
-            <button className="p-2 hover:bg-white/20 rounded-full" aria-label="Resetuj zoom" onClick={(e) => { e.stopPropagation(); setZoom(1); }}>
+            <button
+              className="p-2 hover:bg-white/20 rounded-full"
+              aria-label="Resetuj zoom"
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoom(1);
+              }}
+            >
               <RefreshCcw className="h-5 w-5" />
             </button>
           </div>

@@ -1,21 +1,13 @@
 "use client";
-import { useState } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { 
-  Cloud, 
-  User, 
-  LogOut, 
-  Menu, 
-  X, 
-  Settings,
-  Home
-} from 'lucide-react';
-import Button from '@/components/ui/Button';
-import toast from 'react-hot-toast';
+import { useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Cloud, User, LogOut, Menu, X, Settings, Home } from "lucide-react";
+import Button from "@/components/ui/Button";
+import toast from "react-hot-toast";
 
 export default function Header() {
   const [user] = useAuthState(auth);
@@ -25,11 +17,11 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      toast.success('Wylogowano pomyślnie!');
-      router.push('/');
+      toast.success("Wylogowano pomyślnie!");
+      router.push("/");
     } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Błąd podczas wylogowywania');
+      console.error("Logout error:", error);
+      toast.error("Błąd podczas wylogowywania");
     }
   };
 
@@ -46,35 +38,35 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16">
           {/* Logo */}
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="flex items-center space-x-1.5 sm:space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
             onClick={closeMobileMenu}
           >
             <Cloud className="h-6 w-6 sm:h-8 sm:w-8" aria-hidden="true" />
-            <span className="text-base sm:text-xl font-bold font-roboto">Chmura Blokserwis</span>
+            <span className="text-base sm:text-xl font-bold font-roboto">
+              Chmura Blokserwis
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-4">
             {user ? (
               <>
-                <Link 
-                  href="/storage" 
+                <Link
+                  href="/storage"
                   className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Moje pliki
                 </Link>
-                <Link 
-                  href="/admin-panel" 
+                <Link
+                  href="/admin-panel"
                   className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Panel admina
                 </Link>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-700">
-                    {user.email}
-                  </span>
+                  <span className="text-sm text-gray-700">{user.email}</span>
                   <Button
                     variant="outline"
                     size="sm"
@@ -99,14 +91,14 @@ export default function Header() {
 
           {/* Mobile menu button */}
           <div className="md:hidden">
-                          <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleMobileMenu}
-                aria-label={showMobileMenu ? "Zamknij menu" : "Otwórz menu"}
-                aria-expanded={showMobileMenu}
-                aria-haspopup={true}
-              >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleMobileMenu}
+              aria-label={showMobileMenu ? "Zamknij menu" : "Otwórz menu"}
+              aria-expanded={showMobileMenu}
+              aria-haspopup={true}
+            >
               {showMobileMenu ? (
                 <X className="h-6 w-6" aria-hidden="true" />
               ) : (
@@ -118,7 +110,7 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {showMobileMenu && (
-          <div 
+          <div
             className="md:hidden border-t border-gray-200 bg-white"
             role="navigation"
             aria-label="Menu mobilne"
@@ -152,7 +144,10 @@ export default function Header() {
                   </Link>
                   <div className="border-t border-gray-200 pt-4 pb-3">
                     <div className="flex items-center px-3">
-                      <User className="h-5 w-5 mr-3 text-gray-400" aria-hidden="true" />
+                      <User
+                        className="h-5 w-5 mr-3 text-gray-400"
+                        aria-hidden="true"
+                      />
                       <div className="text-base font-medium text-gray-800">
                         {user.email}
                       </div>

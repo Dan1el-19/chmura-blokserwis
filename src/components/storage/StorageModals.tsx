@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { FileItem, FolderItem } from '@/types';
+import { FileItem, FolderItem } from "@/types";
 
 // Modal imports
-import ShareModal from '@/components/ui/ShareModal';
-import ShareOptionsModal from '@/components/ui/ShareOptionsModal';
-import ManageLinksModal from '@/components/ui/ManageLinksModal';
-import StatsModal from '@/components/ui/StatsModal';
-import CostCalculatorModal from '@/components/ui/CostCalculatorModal';
-import RenameModal from '@/components/ui/RenameModal';
-import NewFolderModal from '@/components/ui/NewFolderModal';
-import RenameFolderModal from '@/components/ui/RenameFolderModal';
-import FilePreviewModal from '@/components/ui/FilePreviewModal';
-import OverwriteConfirmModal from './OverwriteConfirmModal';
+import ShareModal from "@/components/ui/ShareModal";
+import ShareOptionsModal from "@/components/ui/ShareOptionsModal";
+import ManageLinksModal from "@/components/ui/ManageLinksModal";
+import StatsModal from "@/components/ui/StatsModal";
+import CostCalculatorModal from "@/components/ui/CostCalculatorModal";
+import RenameModal from "@/components/ui/RenameModal";
+import NewFolderModal from "@/components/ui/NewFolderModal";
+import RenameFolderModal from "@/components/ui/RenameFolderModal";
+import FilePreviewModal from "@/components/ui/FilePreviewModal";
+import OverwriteConfirmModal from "./OverwriteConfirmModal";
 
-import { FolderSpace } from '@/hooks/storage';
+import { FolderSpace } from "@/hooks/storage";
 
 interface ShareData {
   url: string;
@@ -72,7 +72,11 @@ interface StorageModalsProps {
   renameFolderTarget: FolderItem | null;
   showRenameFolderModal: boolean;
   onCloseRenameFolderModal: () => void;
-  onFolderRenamed: (info?: { newName: string; newPath: string; slug?: string }) => void;
+  onFolderRenamed: (info?: {
+    newName: string;
+    newPath: string;
+    slug?: string;
+  }) => void;
 
   // Preview modal
   previewFile: FileItem | null;
@@ -149,8 +153,8 @@ export default function StorageModals({
       <ShareModal
         isOpen={!!shareData && showShareModal}
         onClose={onCloseShareModal}
-        shareUrl={shareData?.url || ''}
-        fileName={shareData?.fileName || ''}
+        shareUrl={shareData?.url || ""}
+        fileName={shareData?.fileName || ""}
         expiresAt={shareData?.expiresAt}
       />
 

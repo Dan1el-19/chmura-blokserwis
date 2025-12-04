@@ -1,10 +1,10 @@
 // Strona główna: warunkowe przekierowanie zależnie od stanu logowania Firebase
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 
 export default function RootRedirectDecider() {
   const router = useRouter();
@@ -14,9 +14,9 @@ export default function RootRedirectDecider() {
     // Subskrybujemy stan auth i natychmiast przekierowujemy
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.replace('/storage');
+        router.replace("/storage");
       } else {
-        router.replace('/login');
+        router.replace("/login");
       }
       setDecided(true);
     });
@@ -29,7 +29,7 @@ export default function RootRedirectDecider() {
       <div className="text-center">
         <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent mx-auto mb-4" />
         <p className="text-sm text-gray-600">
-          {decided ? 'Przekierowywanie...' : 'Sprawdzanie stanu logowania...'}
+          {decided ? "Przekierowywanie..." : "Sprawdzanie stanu logowania..."}
         </p>
       </div>
     </div>

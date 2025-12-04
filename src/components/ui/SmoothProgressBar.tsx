@@ -1,38 +1,42 @@
-import * as React from 'react';
-import LinearProgress, { LinearProgressProps } from '@mui/material/LinearProgress';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
+import * as React from "react";
+import LinearProgress, {
+  LinearProgressProps,
+} from "@mui/material/LinearProgress";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 
 interface SmoothProgressBarProps {
   progress: number;
   className?: string;
 }
 
-function LinearProgressWithLabel(props: LinearProgressProps & { value: number }) {
+function LinearProgressWithLabel(
+  props: LinearProgressProps & { value: number }
+) {
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      <Box sx={{ width: '100%', mr: 1 }}>
-        <LinearProgress 
-          variant="determinate" 
+    <Box sx={{ display: "flex", alignItems: "center" }}>
+      <Box sx={{ width: "100%", mr: 1 }}>
+        <LinearProgress
+          variant="determinate"
           {...props}
           sx={{
             height: 8,
             borderRadius: 4,
-            backgroundColor: '#e0e0e0',
-            '& .MuiLinearProgress-bar': {
+            backgroundColor: "#e0e0e0",
+            "& .MuiLinearProgress-bar": {
               borderRadius: 4,
-              backgroundColor: '#1976d2',
-            }
+              backgroundColor: "#1976d2",
+            },
           }}
         />
       </Box>
       <Box sx={{ minWidth: 35 }}>
         <Typography
           variant="body2"
-          sx={{ 
-            color: 'text.secondary',
-            fontSize: '0.875rem',
-            fontWeight: 500
+          sx={{
+            color: "text.secondary",
+            fontSize: "0.875rem",
+            fontWeight: 500,
           }}
         >
           {`${Math.round(props.value)}%`}
@@ -42,7 +46,10 @@ function LinearProgressWithLabel(props: LinearProgressProps & { value: number })
   );
 }
 
-export default function SmoothProgressBar({ progress, className }: SmoothProgressBarProps) {
+export default function SmoothProgressBar({
+  progress,
+  className,
+}: SmoothProgressBarProps) {
   const [displayProgress, setDisplayProgress] = React.useState(0);
   const lastProgressRef = React.useRef(progress);
 
@@ -72,8 +79,10 @@ export default function SmoothProgressBar({ progress, className }: SmoothProgres
   }, [progress]);
 
   return (
-    <Box sx={{ width: '100%' }} className={className}>
-      <LinearProgressWithLabel value={Math.min(100, Math.max(0, displayProgress))} />
+    <Box sx={{ width: "100%" }} className={className}>
+      <LinearProgressWithLabel
+        value={Math.min(100, Math.max(0, displayProgress))}
+      />
     </Box>
   );
 }

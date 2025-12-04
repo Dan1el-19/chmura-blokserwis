@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { FileItem, FolderItem } from '@/types';
-import { FolderSpace } from './useStorageNavigation';
-import { SortField, SortDirection } from './useViewPreferences';
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { FileItem, FolderItem } from "@/types";
+import { FolderSpace } from "./useStorageNavigation";
+import { SortField, SortDirection } from "./useViewPreferences";
 
 interface StorageDataState {
   files: FileItem[];
@@ -36,7 +36,7 @@ export function useStorageData({
   const [folders, setFolders] = useState<FolderItem[]>([]);
   const [filesLoading, setFilesLoading] = useState(false);
   const [hasFetchedForPath, setHasFetchedForPath] = useState(false);
-  const [rootBase, setRootBase] = useState<string>('');
+  const [rootBase, setRootBase] = useState<string>("");
 
   // Guard against stale responses overwriting newer folder listings
   const requestSeqRef = useRef(0);
@@ -45,7 +45,7 @@ export function useStorageData({
     setFilesLoading(true);
     try {
       const reqId = ++requestSeqRef.current;
-      const pathParam = encodeURIComponent(path.join('/'));
+      const pathParam = encodeURIComponent(path.join("/"));
       const response = await fetch(
         `/api/files/list2?folder=${currentFolder}&path=${pathParam}`,
         { headers: { Authorization: `Bearer ${await getAuthToken()}` } }
@@ -77,7 +77,7 @@ export function useStorageData({
       setFilesLoading(true);
       try {
         const reqId = ++requestSeqRef.current;
-        const pathParam = encodeURIComponent(parts.join('/'));
+        const pathParam = encodeURIComponent(parts.join("/"));
         const response = await fetch(
           `/api/files/list2?folder=${currentFolder}&path=${pathParam}`,
           { headers: { Authorization: `Bearer ${await getAuthToken()}` } }
@@ -115,24 +115,24 @@ export function useStorageData({
   const sortedFiles = useMemo(() => {
     const arr = [...files];
     arr.sort((a, b) => {
-      let av: number | string = '';
-      let bv: number | string = '';
+      let av: number | string = "";
+      let bv: number | string = "";
       switch (sortField) {
-        case 'name':
+        case "name":
           av = a.name.toLowerCase();
           bv = b.name.toLowerCase();
           break;
-        case 'size':
+        case "size":
           av = a.size;
           bv = b.size;
           break;
-        case 'lastModified':
+        case "lastModified":
           av = a.lastModified ? new Date(a.lastModified).getTime() : 0;
           bv = b.lastModified ? new Date(b.lastModified).getTime() : 0;
           break;
       }
       if (av === bv) return 0;
-      const dir = sortDir === 'asc' ? 1 : -1;
+      const dir = sortDir === "asc" ? 1 : -1;
       return av > bv ? dir : -1 * dir;
     });
     return arr;
@@ -169,19 +169,19 @@ export function useRetroMetadata(
     if (!folders.length) return;
     if (!folders.some((f) => !f.slug)) return; // all have slugs
 
-    const key = `${currentFolder}:${path.join('/')}`;
+    const key = `${currentFolder}:${path.join("/")}`;
     if (retroAttemptRef.current.has(key)) return;
     retroAttemptRef.current.add(key);
 
     (async () => {
       try {
-        await fetch('/api/folders/retro-meta', {
-          method: 'POST',
+        await fetch("/api/folders/retro-meta", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${await getAuthToken()}`,
           },
-          body: JSON.stringify({ folder: currentFolder, path: path.join('/') }),
+          body: JSON.stringify({ folder: currentFolder, path: path.join("/") }),
         });
         fetchFiles();
       } catch {

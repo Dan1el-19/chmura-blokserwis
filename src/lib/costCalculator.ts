@@ -1,4 +1,8 @@
-import { CostCalculationParams, CostCalculationResult, Currency } from '@/types';
+import {
+  CostCalculationParams,
+  CostCalculationResult,
+  Currency,
+} from "@/types";
 
 // Stałe Cloudflare R2
 const FREE_TIER_LIMIT = 10 * 1024 * 1024 * 1024; // 10GB w bajtach
@@ -8,21 +12,23 @@ const EXCHANGE_RATE = 3.65; // 1$ = 3.65 PLN
 /**
  * Oblicza koszt przechowywania pliku w Cloudflare R2
  */
-export function calculateStorageCost(params: CostCalculationParams): CostCalculationResult {
+export function calculateStorageCost(
+  params: CostCalculationParams
+): CostCalculationResult {
   const { fileSize, storageDays, totalSystemUsage } = params;
-  
+
   // Oblicz pozostałe darmowe miejsce w systemie
   const remainingFreeSpace = Math.max(0, FREE_TIER_LIMIT - totalSystemUsage);
-  
+
   // Oblicz ile z pliku będzie darmowe
   const freeSize = Math.min(fileSize, remainingFreeSpace);
-  
+
   // Oblicz płatny rozmiar pliku
   const paidSize = Math.max(0, fileSize - freeSize);
-  
+
   // Sprawdź czy plik jest całkowicie darmowy
   const isFree = paidSize === 0;
-  
+
   if (isFree) {
     return {
       isFree: true,
@@ -36,19 +42,19 @@ export function calculateStorageCost(params: CostCalculationParams): CostCalcula
         freeTierLimit: FREE_TIER_LIMIT,
         paidSizeGB: 0,
         costPerGBPerMonth: COST_PER_GB_PER_MONTH,
-        daysRatio: storageDays / 30
-      }
+        daysRatio: storageDays / 30,
+      },
     };
   }
-  
+
   // Oblicz koszt w USD
   const paidSizeGB = paidSize / (1024 * 1024 * 1024); // konwersja na GB
   const daysRatio = storageDays / 30; // proporcja do pełnego miesiąca
   const costUSD = paidSizeGB * COST_PER_GB_PER_MONTH * daysRatio;
-  
+
   // Oblicz koszt w PLN
   const costPLN = costUSD * EXCHANGE_RATE;
-  
+
   return {
     isFree: false,
     costUSD: Math.round(costUSD * 100) / 100, // zaokrąglenie do 2 miejsc po przecinku
@@ -61,8 +67,8 @@ export function calculateStorageCost(params: CostCalculationParams): CostCalcula
       freeTierLimit: FREE_TIER_LIMIT,
       paidSizeGB,
       costPerGBPerMonth: COST_PER_GB_PER_MONTH,
-      daysRatio
-    }
+      daysRatio,
+    },
   };
 }
 
@@ -70,20 +76,20 @@ export function calculateStorageCost(params: CostCalculationParams): CostCalcula
  * Formatuje rozmiar pliku w czytelnym formacie
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  
+  if (bytes === 0) return "0 B";
+
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 /**
  * Formatuje koszt w odpowiedniej walucie
  */
 export function formatCost(amount: number, currency: Currency): string {
-  if (currency === 'PLN') {
+  if (currency === "PLN") {
     return `${amount.toFixed(2)} PLN`;
   } else {
     return `$${amount.toFixed(2)}`;
@@ -95,15 +101,15 @@ export function formatCost(amount: number, currency: Currency): string {
  */
 export async function fetchSystemStats(): Promise<{ totalStorage: number }> {
   try {
-    const response = await fetch('/api/system/stats');
+    const response = await fetch("/api/system/stats");
     if (response.ok) {
       const data = await response.json();
       return { totalStorage: data.totalStorage || 0 };
     }
   } catch (error) {
-    console.error('Błąd podczas pobierania statystyk systemu:', error);
+    console.error("Błąd podczas pobierania statystyk systemu:", error);
   }
-  
+
   return { totalStorage: 0 };
 }
 
@@ -118,15 +124,18 @@ export function shouldShowCostCalculator(fileSize: number): boolean {
 /**
  * Generuje opis obliczeń dla tooltip
  */
-export function generateCalculationDescription(result: CostCalculationResult, currency: Currency): string {
+export function generateCalculationDescription(
+  result: CostCalculationResult,
+  currency: Currency
+): string {
   if (result.isFree) {
     return `Plik mieści się w darmowym limicie (${formatFileSize(result.freeSize)}).`;
   }
-  
+
   const { calculationDetails } = result;
-  const cost = currency === 'PLN' ? result.costPLN : result.costUSD;
-  const currencySymbol = currency === 'PLN' ? 'PLN' : '$';
-  
+  const cost = currency === "PLN" ? result.costPLN : result.costUSD;
+  const currencySymbol = currency === "PLN" ? "PLN" : "$";
+
   return `
     Rozmiar pliku: ${formatFileSize(result.paidSize + result.freeSize)}
     Darmowa część: ${formatFileSize(result.freeSize)}

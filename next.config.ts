@@ -3,30 +3,32 @@ import type { NextConfig } from "next";
 const r2Host = process.env.R2_PUBLIC_HOSTNAME;
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  output: "standalone",
   images: {
-    remotePatterns: r2Host ? [
-      {
-        protocol: 'https',
-        hostname: r2Host,
-      },
-    ] : [],
+    remotePatterns: r2Host
+      ? [
+          {
+            protocol: "https",
+            hostname: r2Host,
+          },
+        ]
+      : [],
   },
   experimental: {
-    optimizePackageImports: ['lucide-react'],
+    optimizePackageImports: ["lucide-react"],
   },
 
   async headers() {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       return [];
     }
     return [
       {
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
           {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin-allow-popups',
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin-allow-popups",
           },
         ],
       },

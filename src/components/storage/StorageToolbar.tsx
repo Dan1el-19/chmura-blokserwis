@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { SortField, SortDirection, ViewMode } from '@/hooks/storage';
+import { SortField, SortDirection, ViewMode } from "@/hooks/storage";
 
 interface StorageToolbarProps {
   filesCount: number;
@@ -47,7 +47,10 @@ export default function StorageToolbar({
             className="h-9 sm:h-8 rounded-md border border-gray-300 bg-white px-2 sm:px-2 text-xs sm:text-xs md:text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={`${sortField}:${sortDir}`}
             onChange={(e) => {
-              const [f, d] = e.target.value.split(':') as [SortField, SortDirection];
+              const [f, d] = e.target.value.split(":") as [
+                SortField,
+                SortDirection,
+              ];
               onSortChange(f, d);
             }}
           >
@@ -62,12 +65,12 @@ export default function StorageToolbar({
           {/* View Mode Buttons */}
           <div className="flex items-center gap-1 sm:gap-1">
             <button
-              onClick={() => onViewModeChange('grid')}
+              onClick={() => onViewModeChange("grid")}
               aria-label="Widok siatki"
               className={`no-min-touch h-9 w-9 sm:h-8 sm:w-8 rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 text-gray-600 inline-flex items-center justify-center ${
-                viewMode === 'grid'
-                  ? 'border-blue-600 text-blue-600 bg-blue-50'
-                  : 'border-gray-300 hover:bg-gray-50'
+                viewMode === "grid"
+                  ? "border-blue-600 text-blue-600 bg-blue-50"
+                  : "border-gray-300 hover:bg-gray-50"
               }`}
             >
               <svg
@@ -88,12 +91,12 @@ export default function StorageToolbar({
               </svg>
             </button>
             <button
-              onClick={() => onViewModeChange('list')}
+              onClick={() => onViewModeChange("list")}
               aria-label="Widok listy"
               className={`no-min-touch h-9 w-9 sm:h-8 sm:w-8 rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 text-gray-600 inline-flex items-center justify-center ${
-                viewMode === 'list'
-                  ? 'border-blue-600 text-blue-600 bg-blue-50'
-                  : 'border-gray-300 hover:bg-gray-50'
+                viewMode === "list"
+                  ? "border-blue-600 text-blue-600 bg-blue-50"
+                  : "border-gray-300 hover:bg-gray-50"
               }`}
             >
               <svg
@@ -115,11 +118,11 @@ export default function StorageToolbar({
             aria-label="Tryb zaznaczania"
             className={`h-9 px-3 hidden md:inline-flex items-center gap-2 rounded-md border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
               multiSelectMode
-                ? 'border-blue-600 text-blue-600 bg-blue-50'
-                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                ? "border-blue-600 text-blue-600 bg-blue-50"
+                : "border-gray-300 text-gray-600 hover:bg-gray-50"
             }`}
           >
-            {multiSelectMode ? 'Zaznaczanie' : 'Zaznacz'}
+            {multiSelectMode ? "Zaznaczanie" : "Zaznacz"}
             {multiSelectMode && selectedCount > 0 && (
               <span className="ml-1 text-xs bg-blue-600 text-white px-1 rounded">
                 {selectedCount}
@@ -134,8 +137,8 @@ export default function StorageToolbar({
             aria-label="Dodaj plik"
             className={`h-9 px-4 hidden md:inline-flex items-center gap-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-sm ${
               hasActiveUploads
-                ? 'bg-blue-400 text-white cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                ? "bg-blue-400 text-white cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 text-white"
             }`}
           >
             + Plik

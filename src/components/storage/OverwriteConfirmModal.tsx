@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface OverwriteConfirmModalProps {
   isOpen: boolean;
@@ -18,8 +18,8 @@ export default function OverwriteConfirmModal({
       <div className="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 space-y-4">
         <h4 className="text-lg font-semibold">Nadpisać istniejące pliki?</h4>
         <p className="text-sm text-gray-600">
-          Niektóre pliki istnieją w folderze docelowym. Kontynuacja spowoduje ich
-          nadpisanie.
+          Niektóre pliki istnieją w folderze docelowym. Kontynuacja spowoduje
+          ich nadpisanie.
         </p>
         <div className="flex justify-end gap-2 pt-2">
           <button

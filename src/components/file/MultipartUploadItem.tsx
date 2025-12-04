@@ -1,19 +1,19 @@
-import React from 'react';
-import { MultipartUploadState } from '@/types/multipart';
-import SmoothProgressBar from '@/components/ui/SmoothProgressBar';
-import Button from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Pause, 
-  Play, 
-  X, 
-  AlertTriangle, 
-  CheckCircle, 
+import React from "react";
+import { MultipartUploadState } from "@/types/multipart";
+import SmoothProgressBar from "@/components/ui/SmoothProgressBar";
+import Button from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Pause,
+  Play,
+  X,
+  AlertTriangle,
+  CheckCircle,
   Clock,
   Upload,
-  HardDrive
-} from 'lucide-react';
+  HardDrive,
+} from "lucide-react";
 
 interface MultipartUploadItemProps {
   upload: MultipartUploadState;
@@ -23,32 +23,32 @@ interface MultipartUploadItemProps {
   onRemove?: (id: string) => void;
 }
 
-export function MultipartUploadItem({ 
-  upload, 
-  onPause, 
-  onResume, 
-  onCancel, 
-  onRemove 
+export function MultipartUploadItem({
+  upload,
+  onPause,
+  onResume,
+  onCancel,
+  onRemove,
 }: MultipartUploadItemProps) {
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const getStatusIcon = () => {
     switch (upload.status) {
-      case 'completed':
+      case "completed":
         return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'error':
+      case "error":
         return <AlertTriangle className="w-4 h-4 text-red-500" />;
-      case 'paused':
+      case "paused":
         return <Pause className="w-4 h-4 text-yellow-500" />;
-      case 'uploading':
+      case "uploading":
         return <Upload className="w-4 h-4 text-blue-500" />;
-      case 'initializing':
+      case "initializing":
         return <Clock className="w-4 h-4 text-gray-500" />;
       default:
         return <HardDrive className="w-4 h-4 text-gray-500" />;
@@ -57,43 +57,45 @@ export function MultipartUploadItem({
 
   const getStatusColor = () => {
     switch (upload.status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'error':
-        return 'bg-red-100 text-red-800';
-      case 'paused':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'uploading':
-        return 'bg-blue-100 text-blue-800';
-      case 'initializing':
-        return 'bg-gray-100 text-gray-800';
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "error":
+        return "bg-red-100 text-red-800";
+      case "paused":
+        return "bg-yellow-100 text-yellow-800";
+      case "uploading":
+        return "bg-blue-100 text-blue-800";
+      case "initializing":
+        return "bg-gray-100 text-gray-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = () => {
     switch (upload.status) {
-      case 'completed':
-        return 'Ukończono';
-      case 'error':
-        return 'Błąd';
-      case 'paused':
-        return 'Wstrzymano';
-      case 'uploading':
-        return 'Wgrywanie';
-      case 'initializing':
-        return 'Inicjalizacja';
-      case 'aborted':
-        return 'Anulowano';
+      case "completed":
+        return "Ukończono";
+      case "error":
+        return "Błąd";
+      case "paused":
+        return "Wstrzymano";
+      case "uploading":
+        return "Wgrywanie";
+      case "initializing":
+        return "Inicjalizacja";
+      case "aborted":
+        return "Anulowano";
       default:
         return upload.status;
     }
   };
 
-  const canPause = upload.status === 'uploading';
-  const canResume = upload.status === 'paused';
-  const canCancel = ['uploading', 'paused', 'initializing'].includes(upload.status);
+  const canPause = upload.status === "uploading";
+  const canResume = upload.status === "paused";
+  const canCancel = ["uploading", "paused", "initializing"].includes(
+    upload.status
+  );
 
   return (
     <Card className="p-2.5 sm:p-4 space-y-2.5 sm:space-y-4">
@@ -110,12 +112,14 @@ export function MultipartUploadItem({
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
-          <Badge className={`${getStatusColor()} text-[10px] sm:text-xs px-1.5 sm:px-2`}>
+          <Badge
+            className={`${getStatusColor()} text-[10px] sm:text-xs px-1.5 sm:px-2`}
+          >
             {getStatusText()}
           </Badge>
-          
+
           {onRemove && (
             <Button
               variant="ghost"
@@ -133,8 +137,8 @@ export function MultipartUploadItem({
       <div className="space-y-2 sm:space-y-3">
         {/* Main Progress */}
         <div>
-          <SmoothProgressBar 
-            progress={upload.progress} 
+          <SmoothProgressBar
+            progress={upload.progress}
             className="h-1.5 sm:h-2"
           />
         </div>
@@ -143,7 +147,8 @@ export function MultipartUploadItem({
         <div className="text-[10px] sm:text-sm">
           <span className="text-gray-500">Wgranych:</span>
           <span className="ml-1 sm:ml-2 font-medium">
-            {formatFileSize(upload.bytesUploaded)} / {formatFileSize(upload.fileSize)}
+            {formatFileSize(upload.bytesUploaded)} /{" "}
+            {formatFileSize(upload.fileSize)}
           </span>
         </div>
       </div>
@@ -153,7 +158,9 @@ export function MultipartUploadItem({
         <div className="bg-red-50 border border-red-200 rounded-md p-2 sm:p-3">
           <div className="flex items-center space-x-2">
             <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 shrink-0" />
-            <span className="text-[10px] sm:text-sm text-red-700">{upload.errorMessage}</span>
+            <span className="text-[10px] sm:text-sm text-red-700">
+              {upload.errorMessage}
+            </span>
           </div>
         </div>
       )}
@@ -172,7 +179,7 @@ export function MultipartUploadItem({
               <span className="hidden sm:inline">Wstrzymaj</span>
             </Button>
           )}
-          
+
           {canResume && onResume && (
             <Button
               variant="outline"
@@ -184,7 +191,7 @@ export function MultipartUploadItem({
               <span className="hidden sm:inline">Wznów</span>
             </Button>
           )}
-          
+
           {canCancel && onCancel && (
             <Button
               variant="outline"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 /**
  * Ustawia zmienną CSS --app-vh równą 1% aktualnej wysokości okna.
@@ -11,14 +11,14 @@ export function use100vh() {
   useEffect(() => {
     const setVar = () => {
       const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--app-vh', `${vh}px`);
+      document.documentElement.style.setProperty("--app-vh", `${vh}px`);
     };
     setVar();
-    window.addEventListener('resize', setVar);
-    window.addEventListener('orientationchange', setVar);
+    window.addEventListener("resize", setVar);
+    window.addEventListener("orientationchange", setVar);
     return () => {
-      window.removeEventListener('resize', setVar);
-      window.removeEventListener('orientationchange', setVar);
+      window.removeEventListener("resize", setVar);
+      window.removeEventListener("orientationchange", setVar);
     };
   }, []);
 }

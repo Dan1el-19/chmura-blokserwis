@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { X, Copy, Check } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import React, { useState } from "react";
+import { X, Copy, Check } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ export default function ShareModal({
   onClose,
   shareUrl,
   fileName,
-  expiresAt
+  expiresAt,
 }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
 
@@ -26,11 +26,11 @@ export default function ShareModal({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      const textArea = document.createElement('textarea');
+      const textArea = document.createElement("textarea");
       textArea.value = shareUrl;
       document.body.appendChild(textArea);
       textArea.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
       document.body.removeChild(textArea);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -43,7 +43,9 @@ export default function ShareModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
       <Card className="w-full sm:max-w-md rounded-t-2xl sm:rounded-xl max-h-[90vh] overflow-y-auto">
         <CardHeader className="flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-sm z-10">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Link udostępniony</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+            Link udostępniony
+          </h3>
           <Button
             variant="ghost"
             size="sm"
@@ -53,20 +55,28 @@ export default function ShareModal({
             <X className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
         </CardHeader>
-        
+
         <CardContent className="space-y-3 sm:space-y-4 pb-safe">
           <div>
-            <p className="text-xs sm:text-sm text-gray-600 mb-2">Plik: <span className="font-medium text-gray-900 break-all">{fileName}</span></p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-2">
+              Plik:{" "}
+              <span className="font-medium text-gray-900 break-all">
+                {fileName}
+              </span>
+            </p>
             {expiresAt && (
               <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                Link ważny: <span className="font-medium text-gray-900">
+                Link ważny:{" "}
+                <span className="font-medium text-gray-900">
                   {(() => {
                     const expiryDate = new Date(expiresAt);
-                    const yearsFromNow = (expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 365);
+                    const yearsFromNow =
+                      (expiryDate.getTime() - Date.now()) /
+                      (1000 * 60 * 60 * 24 * 365);
                     if (yearsFromNow > 15) {
-                      return '♾️ Bezterminowo';
+                      return "♾️ Bezterminowo";
                     }
-                    return `do ${expiryDate.toLocaleString('pl-PL')}`;
+                    return `do ${expiryDate.toLocaleString("pl-PL")}`;
                   })()}
                 </span>
               </p>
@@ -74,7 +84,9 @@ export default function ShareModal({
           </div>
 
           <div className="bg-gray-50 p-2.5 sm:p-3 rounded-lg">
-            <p className="text-xs sm:text-sm text-gray-600 mb-2">Link do udostępnienia:</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-2">
+              Link do udostępnienia:
+            </p>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <input
                 type="text"

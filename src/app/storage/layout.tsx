@@ -1,5 +1,9 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export default function StorageLayout({ children }: { children: React.ReactNode }) {
+export default function StorageLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return children;
 }

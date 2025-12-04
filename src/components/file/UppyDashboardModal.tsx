@@ -1,14 +1,17 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import Button from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { X, Upload, AlertCircle, CheckCircle } from 'lucide-react';
-import { startUppyMultipartUpload, UppyMultipartHandle } from '@/lib/uppyMultipartEngine';
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import Button from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { X, Upload, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  startUppyMultipartUpload,
+  UppyMultipartHandle,
+} from "@/lib/uppyMultipartEngine";
 
 interface UppyDashboardModalProps {
   isOpen: boolean;
   onClose: () => void;
   file: File | null;
-  folder: 'personal' | 'main';
+  folder: "personal" | "main";
   subPath?: string;
   onUploadComplete?: () => void;
   onUploadError?: (error: string) => void;
@@ -21,90 +24,98 @@ export function UppyDashboardModal({
   folder,
   subPath,
   onUploadComplete,
-  onUploadError
+  onUploadError,
 }: UppyDashboardModalProps) {
-  const [uploadHandle, setUploadHandle] = useState<UppyMultipartHandle | null>(null);
+  const [uploadHandle, setUploadHandle] = useState<UppyMultipartHandle | null>(
+    null
+  );
   const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  	const initializeUppy = useCallback(async () => {
-		if (!file) return;
+  const initializeUppy = useCallback(async () => {
+    if (!file) return;
 
-		setIsInitializing(true);
-		setError(null);
+    setIsInitializing(true);
+    setError(null);
 
-		try {
-			const handle = await startUppyMultipartUpload(file, folder, subPath, {
-				onProgress: (progress, bytesUploaded, speed) => {
-					console.log('Upload progress:', progress, bytesUploaded, speed);
-				},
-				onStatusChange: (status) => {
-					console.log('Upload status changed:', status);
-				},
-				onError: (errorMessage) => {
-					setError(errorMessage);
-					onUploadError?.(errorMessage);
-				},
-				onComplete: () => {
-					onUploadComplete?.();
-					// Automatycznie zamknij modal po ukończeniu
-					setTimeout(() => {
-						onClose();
-					}, 2000);
-				}
-			});
+    try {
+      const handle = await startUppyMultipartUpload(file, folder, subPath, {
+        onProgress: (progress, bytesUploaded, speed) => {
+          console.log("Upload progress:", progress, bytesUploaded, speed);
+        },
+        onStatusChange: (status) => {
+          console.log("Upload status changed:", status);
+        },
+        onError: (errorMessage) => {
+          setError(errorMessage);
+          onUploadError?.(errorMessage);
+        },
+        onComplete: () => {
+          onUploadComplete?.();
+          // Automatycznie zamknij modal po ukończeniu
+          setTimeout(() => {
+            onClose();
+          }, 2000);
+        },
+      });
 
-			setUploadHandle(handle);
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : 'Nie udało się zainicjalizować Uppy';
-			setError(errorMessage);
-			onUploadError?.(errorMessage);
-		} finally {
-			setIsInitializing(false);
-		}
-	}, [file, folder, subPath, onUploadComplete, onUploadError, onClose]);
+      setUploadHandle(handle);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Nie udało się zainicjalizować Uppy";
+      setError(errorMessage);
+      onUploadError?.(errorMessage);
+    } finally {
+      setIsInitializing(false);
+    }
+  }, [file, folder, subPath, onUploadComplete, onUploadError, onClose]);
 
-	// Inicjalizacja Uppy po potwierdzeniu
-	useEffect(() => {
-		if (isOpen && file && !uploadHandle && !isInitializing) {
-			initializeUppy();
-		}
-	}, [isOpen, file, uploadHandle, isInitializing, initializeUppy]);
+  // Inicjalizacja Uppy po potwierdzeniu
+  useEffect(() => {
+    if (isOpen && file && !uploadHandle && !isInitializing) {
+      initializeUppy();
+    }
+  }, [isOpen, file, uploadHandle, isInitializing, initializeUppy]);
 
-	// Handle click outside modal
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-				onClose();
-			}
-		};
+  // Handle click outside modal
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
 
-		if (isOpen) {
-			document.addEventListener('mousedown', handleClickOutside);
-		}
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
 
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside);
-		};
-	}, [isOpen, onClose]);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose]);
 
-	// Handle escape key
-	useEffect(() => {
-		const handleEscape = (event: KeyboardEvent) => {
-			if (event.key === 'Escape') {
-				onClose();
-			}
-		};
+  // Handle escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
 
-		if (isOpen) {
-			document.addEventListener('keydown', handleEscape);
-		}
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+    }
 
-		return () => {
-			document.removeEventListener('keydown', handleEscape);
-		};
-		}, [isOpen, onClose]);
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen, onClose]);
 
   const handleClose = () => {
     if (uploadHandle) {
@@ -118,7 +129,7 @@ export function UppyDashboardModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div 
+      <div
         ref={modalRef}
         className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden"
       >
@@ -137,7 +148,7 @@ export function UppyDashboardModal({
               )}
             </div>
           </div>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -162,7 +173,9 @@ export function UppyDashboardModal({
               <div className="flex items-center space-x-2">
                 <AlertCircle className="w-5 h-5 text-red-500" />
                 <div>
-                  <h3 className="font-medium text-red-800">Błąd inicjalizacji</h3>
+                  <h3 className="font-medium text-red-800">
+                    Błąd inicjalizacji
+                  </h3>
                   <p className="text-sm text-red-600">{error}</p>
                 </div>
               </div>
@@ -183,29 +196,38 @@ export function UppyDashboardModal({
               <Card className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-3 h-3 rounded-full ${
-                      uploadHandle.status === 'uploading' ? 'bg-blue-500 animate-pulse' :
-                      uploadHandle.status === 'completed' ? 'bg-green-500' :
-                      uploadHandle.status === 'error' ? 'bg-red-500' :
-                      uploadHandle.status === 'paused' ? 'bg-yellow-500' :
-                      'bg-gray-500'
-                    }`} />
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        uploadHandle.status === "uploading"
+                          ? "bg-blue-500 animate-pulse"
+                          : uploadHandle.status === "completed"
+                            ? "bg-green-500"
+                            : uploadHandle.status === "error"
+                              ? "bg-red-500"
+                              : uploadHandle.status === "paused"
+                                ? "bg-yellow-500"
+                                : "bg-gray-500"
+                      }`}
+                    />
                     <span className="font-medium">
                       Status: {uploadHandle.status}
                     </span>
                   </div>
-                  
+
                   <div className="text-sm text-gray-500">
                     Postęp: {uploadHandle.progress.toFixed(1)}%
                   </div>
                 </div>
-                
+
                 {/* Resume capability info */}
-                {uploadHandle.status === 'paused' && (
+                {uploadHandle.status === "paused" && (
                   <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="w-4 h-4" />
-                      <span>Upload może być wznowiony - stan jest zapisany w przeglądarce</span>
+                      <span>
+                        Upload może być wznowiony - stan jest zapisany w
+                        przeglądarce
+                      </span>
                     </div>
                   </div>
                 )}
@@ -215,9 +237,11 @@ export function UppyDashboardModal({
               <div className="border border-gray-200 rounded-lg p-4">
                 <div className="text-center text-gray-500 mb-4">
                   <p>Uppy Dashboard będzie wyświetlony tutaj</p>
-                  <p className="text-sm">Dashboard jest inicjalizowany automatycznie</p>
+                  <p className="text-sm">
+                    Dashboard jest inicjalizowany automatycznie
+                  </p>
                 </div>
-                
+
                 {/* Placeholder dla Uppy Dashboard */}
                 <div className="bg-gray-50 rounded-lg p-8 text-center">
                   <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -232,7 +256,7 @@ export function UppyDashboardModal({
 
               {/* Action Buttons */}
               <div className="flex items-center justify-center space-x-3">
-                {uploadHandle.status === 'uploading' && (
+                {uploadHandle.status === "uploading" && (
                   <Button
                     variant="outline"
                     onClick={() => uploadHandle.pause()}
@@ -242,8 +266,8 @@ export function UppyDashboardModal({
                     <span>Wstrzymaj</span>
                   </Button>
                 )}
-                
-                {uploadHandle.status === 'paused' && (
+
+                {uploadHandle.status === "paused" && (
                   <Button
                     variant="outline"
                     onClick={() => uploadHandle.resume()}
@@ -253,7 +277,7 @@ export function UppyDashboardModal({
                     <span>Wznów</span>
                   </Button>
                 )}
-                
+
                 <Button
                   variant="outline"
                   onClick={() => uploadHandle.cancel()}

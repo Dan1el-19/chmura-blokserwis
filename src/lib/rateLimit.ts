@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import type { NextRequest } from "next/server";
 
 type Bucket = {
   timestamps: number[];
@@ -9,12 +9,12 @@ type Bucket = {
 const buckets = new Map<string, Bucket>();
 
 function getClientIp(req: NextRequest): string {
-  const xf = req.headers.get('x-forwarded-for');
-  if (xf) return xf.split(',')[0]?.trim() || 'unknown';
+  const xf = req.headers.get("x-forwarded-for");
+  if (xf) return xf.split(",")[0]?.trim() || "unknown";
   // NextRequest can expose ip via headers in some runtimes
-  const realIp = req.headers.get('x-real-ip');
+  const realIp = req.headers.get("x-real-ip");
   if (realIp) return realIp;
-  return 'unknown';
+  return "unknown";
 }
 
 export function checkRateLimit(
@@ -40,11 +40,12 @@ export function checkRateLimit(
   bucket.timestamps = bucket.timestamps.filter((t) => t > cutoff);
   if (bucket.timestamps.length >= limit) {
     const earliest = bucket.timestamps[0];
-    const retryAfter = Math.max(0, Math.ceil((earliest + windowMs - now) / 1000));
+    const retryAfter = Math.max(
+      0,
+      Math.ceil((earliest + windowMs - now) / 1000)
+    );
     return { ok: false, retryAfter };
   }
   bucket.timestamps.push(now);
   return { ok: true };
 }
-
-

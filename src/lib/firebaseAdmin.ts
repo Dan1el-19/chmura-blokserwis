@@ -1,4 +1,4 @@
-import admin from 'firebase-admin';
+import admin from "firebase-admin";
 
 let db: admin.firestore.Firestore | null = null;
 let auth: admin.auth.Auth | null = null;
@@ -9,18 +9,25 @@ let auth: admin.auth.Auth | null = null;
 // This allows older .env setups with the three vars to work as well.
 const initFromServiceAccount = () => {
   try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT as string);
+    const serviceAccount = JSON.parse(
+      process.env.FIREBASE_SERVICE_ACCOUNT as string
+    );
     if (!admin.apps.length) {
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+        credential: admin.credential.cert(
+          serviceAccount as admin.ServiceAccount
+        ),
       });
-      console.log('Initialized Firebase Admin from FIREBASE_SERVICE_ACCOUNT');
+      console.log("Initialized Firebase Admin from FIREBASE_SERVICE_ACCOUNT");
     }
     db = admin.firestore();
     auth = admin.auth();
     return true;
   } catch (err) {
-    console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT or initialize admin:', err);
+    console.error(
+      "Failed to parse FIREBASE_SERVICE_ACCOUNT or initialize admin:",
+      err
+    );
     return false;
   }
 };
@@ -31,7 +38,7 @@ const initFromIndividualVars = () => {
   let privateKey = process.env.FIREBASE_PRIVATE_KEY;
   if (!pid || !clientEmail || !privateKey) return false;
   // If private key stored with escaped newlines ("\n"), convert to actual newlines
-  privateKey = privateKey.replace(/\\n/g, '\n');
+  privateKey = privateKey.replace(/\\n/g, "\n");
   try {
     const cert = {
       projectId: pid,
@@ -42,13 +49,15 @@ const initFromIndividualVars = () => {
       admin.initializeApp({
         credential: admin.credential.cert(cert),
       });
-      console.log('Initialized Firebase Admin from individual env vars (FIREBASE_PROJECT_ID/CLIENT_EMAIL/PRIVATE_KEY)');
+      console.log(
+        "Initialized Firebase Admin from individual env vars (FIREBASE_PROJECT_ID/CLIENT_EMAIL/PRIVATE_KEY)"
+      );
     }
     db = admin.firestore();
     auth = admin.auth();
     return true;
   } catch (err) {
-    console.error('Failed to initialize admin from individual env vars:', err);
+    console.error("Failed to initialize admin from individual env vars:", err);
     return false;
   }
 };
@@ -62,7 +71,9 @@ if (!initialized) {
 }
 
 if (!initialized) {
-  console.warn('Firebase Admin SDK not initialized. Set FIREBASE_SERVICE_ACCOUNT or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY in .env.local to enable admin features.');
+  console.warn(
+    "Firebase Admin SDK not initialized. Set FIREBASE_SERVICE_ACCOUNT or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY in .env.local to enable admin features."
+  );
 }
 
 export { db, auth };

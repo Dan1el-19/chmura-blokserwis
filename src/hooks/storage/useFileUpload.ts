@@ -1,9 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import toast from 'react-hot-toast';
-import { startUppyUploadWithProgress, UppyUploadHandle } from '@/lib/uppyEngine';
-import { useUpload } from '@/context/UploadContext';
-import { unifyAllUploads, hasActiveUploads } from '@/lib/uploadUnifier';
-import { FolderSpace } from './useStorageNavigation';
+import { useState, useEffect, useCallback, useRef } from "react";
+import toast from "react-hot-toast";
+import {
+  startUppyUploadWithProgress,
+  UppyUploadHandle,
+} from "@/lib/uppyEngine";
+import { useUpload } from "@/context/UploadContext";
+import { unifyAllUploads, hasActiveUploads } from "@/lib/uploadUnifier";
+import { FolderSpace } from "./useStorageNavigation";
 
 // Constants
 export const MULTIPART_THRESHOLD = 50 * 1024 * 1024; // 50MB
@@ -11,7 +14,7 @@ export const LARGE_FILE_THRESHOLD = 50 * 1024 * 1024; // 50MB
 
 interface UppyJobState {
   progress: number;
-  status: 'uploading' | 'success' | 'error' | 'paused' | 'restored';
+  status: "uploading" | "success" | "error" | "paused" | "restored";
   speedBps?: number;
   handle: UppyUploadHandle | null;
   fileName?: string;
@@ -21,8 +24,8 @@ interface UppyJobState {
 
 interface FileUploadState {
   // Upload context
-  uploads: ReturnType<typeof useUpload>['uploads'];
-  multipartUploads: ReturnType<typeof useUpload>['multipartUploads'];
+  uploads: ReturnType<typeof useUpload>["uploads"];
+  multipartUploads: ReturnType<typeof useUpload>["multipartUploads"];
   allUnifiedUploads: ReturnType<typeof unifyAllUploads>;
   hasActiveUploadsState: boolean;
 
@@ -61,16 +64,29 @@ export function useFileUpload({
 }: UseFileUploadOptions): FileUploadState {
   const useUppy = true;
 
-  const { enqueue, enqueueMultipart, uploads, multipartUploads, pause, resume, cancel, remove } =
-    useUpload();
+  const {
+    enqueue,
+    enqueueMultipart,
+    uploads,
+    multipartUploads,
+    pause,
+    resume,
+    cancel,
+    remove,
+  } = useUpload();
 
   const [uppyJob, setUppyJob] = useState<UppyJobState | null>(null);
-  const [selectedFileForUpload, setSelectedFileForUpload] = useState<File | null>(null);
+  const [selectedFileForUpload, setSelectedFileForUpload] =
+    useState<File | null>(null);
   const [showCostCalculatorModal, setShowCostCalculatorModal] = useState(false);
 
   // Computed values
   const allUnifiedUploads = unifyAllUploads(uploads, uppyJob, multipartUploads);
-  const hasActiveUploadsState = hasActiveUploads(uploads, uppyJob, multipartUploads);
+  const hasActiveUploadsState = hasActiveUploads(
+    uploads,
+    uppyJob,
+    multipartUploads
+  );
 
   // Store current handle for cleanup on unmount only
   const currentHandleRef = useRef<UppyUploadHandle | null>(null);
@@ -96,20 +112,20 @@ export function useFileUpload({
 
   // Warn before unload if active uploads
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const before = (e: BeforeUnloadEvent) => {
       if (hasActiveUploadsState) {
         e.preventDefault();
-        e.returnValue = '';
+        e.returnValue = "";
       }
     };
-    window.addEventListener('beforeunload', before);
-    return () => window.removeEventListener('beforeunload', before);
+    window.addEventListener("beforeunload", before);
+    return () => window.removeEventListener("beforeunload", before);
   }, [hasActiveUploadsState]);
 
   // After uploads complete, refresh data
   useEffect(() => {
-    const completed = uploads.filter((u) => u.status === 'completed');
+    const completed = uploads.filter((u) => u.status === "completed");
     if (completed.length) {
       const t = setTimeout(() => {
         fetchFiles();
@@ -121,7 +137,9 @@ export function useFileUpload({
 
   // After multipart uploads complete, refresh data
   useEffect(() => {
-    const completedMultipart = multipartUploads.filter((u) => u.status === 'completed');
+    const completedMultipart = multipartUploads.filter(
+      (u) => u.status === "completed"
+    );
     if (completedMultipart.length) {
       const t = setTimeout(() => {
         fetchFiles();
@@ -136,25 +154,29 @@ export function useFileUpload({
       // Check if uploads are already active
       if (
         hasActiveUploadsState ||
-        (uppyJob && (uppyJob.status === 'uploading' || uppyJob.status === 'paused'))
+        (uppyJob &&
+          (uppyJob.status === "uploading" || uppyJob.status === "paused"))
       ) {
-        toast.error('Upload już trwa! Poczekaj aż zakończy się obecny upload.', {
-          icon: '⚠️',
-          duration: 4000,
-        });
+        toast.error(
+          "Upload już trwa! Poczekaj aż zakończy się obecny upload.",
+          {
+            icon: "⚠️",
+            duration: 4000,
+          }
+        );
         return;
       }
 
       // Check if user selected more than 1 file
       if (sel.length > 1) {
-        toast('MultiUpload - Wkrótce', {
-          icon: '⏳',
+        toast("MultiUpload - Wkrótce", {
+          icon: "⏳",
           duration: 3000,
         });
         return;
       }
 
-      const subPath = path.join('/');
+      const subPath = path.join("/");
       const firstFile = sel[0];
       if (!firstFile) return;
 
@@ -180,7 +202,7 @@ export function useFileUpload({
       const files = Array.from(filesSel);
       await handleFilesSelected(files);
 
-      e.target.value = '';
+      e.target.value = "";
     },
     [handleFilesSelected]
   );
@@ -189,9 +211,9 @@ export function useFileUpload({
     if (!selectedFileForUpload) return;
 
     // Additional check if upload already started
-    if (hasActiveUploadsState || (uppyJob && uppyJob.status === 'uploading')) {
-      toast.error('Upload już trwa! MultiUpload - Wkrótce', {
-        icon: '⚠️',
+    if (hasActiveUploadsState || (uppyJob && uppyJob.status === "uploading")) {
+      toast.error("Upload już trwa! MultiUpload - Wkrótce", {
+        icon: "⚠️",
         duration: 4000,
       });
       setShowCostCalculatorModal(false);
@@ -200,7 +222,7 @@ export function useFileUpload({
     }
 
     const f = selectedFileForUpload;
-    const subPath = path.join('/');
+    const subPath = path.join("/");
 
     const isMultipart = f.size >= MULTIPART_THRESHOLD;
     const isLarge = useUppy && f.size >= LARGE_FILE_THRESHOLD;
@@ -209,10 +231,12 @@ export function useFileUpload({
       // Multipart upload
       try {
         await enqueueMultipart(f, currentFolder, subPath || undefined);
-        toast.success('Rozpoczęto multipart upload');
+        toast.success("Rozpoczęto multipart upload");
       } catch (e) {
         toast.error(
-          e instanceof Error ? e.message : 'Nie udało się rozpocząć multipart uploadu'
+          e instanceof Error
+            ? e.message
+            : "Nie udało się rozpocząć multipart uploadu"
         );
       }
       setShowCostCalculatorModal(false);
@@ -227,9 +251,9 @@ export function useFileUpload({
             onStarted: () =>
               setUppyJob((p) =>
                 p
-                  ? { ...p, status: 'uploading' }
+                  ? { ...p, status: "uploading" }
                   : {
-                      status: 'uploading',
+                      status: "uploading",
                       progress: 0,
                       handle: null,
                       fileName: f.name,
@@ -243,7 +267,7 @@ export function useFileUpload({
               speedBps?: number
             ) =>
               setUppyJob((p) => ({
-                ...(p || { status: 'uploading', progress: 0, handle: null }),
+                ...(p || { status: "uploading", progress: 0, handle: null }),
                 progress: percent,
                 speedBps,
                 bytesUploaded,
@@ -252,8 +276,8 @@ export function useFileUpload({
             onSuccess: () => {
               setUppyJob((p) =>
                 p
-                  ? { ...p, status: 'success', progress: 100 }
-                  : { status: 'success', progress: 100, handle: null }
+                  ? { ...p, status: "success", progress: 100 }
+                  : { status: "success", progress: 100, handle: null }
               );
               setTimeout(() => {
                 setUppyJob(null);
@@ -265,33 +289,41 @@ export function useFileUpload({
               toast.error(msg);
               setUppyJob((p) =>
                 p
-                  ? { ...p, status: 'error' }
-                  : { status: 'error', progress: 0, handle: null }
+                  ? { ...p, status: "error" }
+                  : { status: "error", progress: 0, handle: null }
               );
             },
             onCancel: () => {
               setUppyJob((p) =>
                 p
-                  ? { ...p, status: 'error' }
-                  : { status: 'error', progress: 0, handle: null }
+                  ? { ...p, status: "error" }
+                  : { status: "error", progress: 0, handle: null }
               );
-              toast('Anulowano upload');
+              toast("Anulowano upload");
             },
-            onPaused: () => setUppyJob((p) => (p ? { ...p, status: 'paused' } : p)),
-            onResumed: () => setUppyJob((p) => (p ? { ...p, status: 'uploading' } : p)),
+            onPaused: () =>
+              setUppyJob((p) => (p ? { ...p, status: "paused" } : p)),
+            onResumed: () =>
+              setUppyJob((p) => (p ? { ...p, status: "uploading" } : p)),
             onRestored: (percent: number) =>
-              setUppyJob({ progress: percent, status: 'restored', handle: null }),
+              setUppyJob({
+                progress: percent,
+                status: "restored",
+                handle: null,
+              }),
           }
         );
         setUppyJob({
           progress: 0,
-          status: 'uploading',
+          status: "uploading",
           handle,
           fileName: f.name,
           fileSize: f.size,
         });
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Nie udało się rozpocząć uploadu');
+        toast.error(
+          e instanceof Error ? e.message : "Nie udało się rozpocząć uploadu"
+        );
       }
       setShowCostCalculatorModal(false);
       setSelectedFileForUpload(null);

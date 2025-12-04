@@ -11,6 +11,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "set-admin": "node scripts/set-admin.mjs",
     "deploy": "firebase deploy",
     "deploy:hosting": "firebase deploy --only hosting",
@@ -73,7 +75,9 @@
     "autoprefixer": "^10.4.22",
     "eslint": "^9.39.1",
     "eslint-config-next": "16.0.0",
+    "eslint-config-prettier": "^10.1.8",
     "postcss": "^8.5.6",
+    "prettier": "^3.7.4",
     "semantic-release": "^24.2.9",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3"

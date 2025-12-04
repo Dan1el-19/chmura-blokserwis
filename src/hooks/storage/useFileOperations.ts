@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react';
-import toast from 'react-hot-toast';
-import { FileItem, FolderItem } from '@/types';
+import { useCallback, useState } from "react";
+import toast from "react-hot-toast";
+import { FileItem, FolderItem } from "@/types";
 
 interface ShareData {
   url: string;
@@ -104,9 +104,12 @@ export function useFileOperations({
 }: UseFileOperationsOptions): FileOperationsState {
   // Share state
   const [shareData, setShareData] = useState<ShareData | null>(null);
-  const [selectedFileForShare, setSelectedFileForShare] = useState<FileItem | null>(null);
-  const [selectedFileForManage, setSelectedFileForManage] = useState<FileItem | null>(null);
-  const [selectedFileForStats, setSelectedFileForStats] = useState<FileItem | null>(null);
+  const [selectedFileForShare, setSelectedFileForShare] =
+    useState<FileItem | null>(null);
+  const [selectedFileForManage, setSelectedFileForManage] =
+    useState<FileItem | null>(null);
+  const [selectedFileForStats, setSelectedFileForStats] =
+    useState<FileItem | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showShareOptionsModal, setShowShareOptionsModal] = useState(false);
   const [showManageLinksModal, setShowManageLinksModal] = useState(false);
@@ -119,20 +122,26 @@ export function useFileOperations({
   // Rename state
   const [renameTarget, setRenameTarget] = useState<FileItem | null>(null);
   const [showRenameModal, setShowRenameModal] = useState(false);
-  const [renameFolderTarget, setRenameFolderTarget] = useState<FolderItem | null>(null);
+  const [renameFolderTarget, setRenameFolderTarget] =
+    useState<FolderItem | null>(null);
   const [showRenameFolderModal, setShowRenameFolderModal] = useState(false);
 
   // New folder state
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
 
   // Move/Overwrite state
-  const [moveTargetFolder, setMoveTargetFolder] = useState<FolderItem | null>(null);
+  const [moveTargetFolder, setMoveTargetFolder] = useState<FolderItem | null>(
+    null
+  );
   const [pendingMoveKeys, setPendingMoveKeys] = useState<string[]>([]);
   const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false);
 
   // Storage usage refresh tick
   const [storageRefreshTick, setStorageRefreshTick] = useState(0);
-  const bumpStorageUsage = useCallback(() => setStorageRefreshTick((t) => t + 1), []);
+  const bumpStorageUsage = useCallback(
+    () => setStorageRefreshTick((t) => t + 1),
+    []
+  );
 
   // Download
   const handleFileDownload = useCallback(
@@ -148,15 +157,15 @@ export function useFileOperations({
         );
 
         if (!response.ok) {
-          toast.error('Błąd generowania linku do pobierania');
+          toast.error("Błąd generowania linku do pobierania");
           return;
         }
 
         const { presignedUrl } = await response.json();
         window.location.href = presignedUrl;
-        toast.success('Pobieranie rozpoczęte');
+        toast.success("Pobieranie rozpoczęte");
       } catch {
-        toast.error('Błąd pobierania');
+        toast.error("Błąd pobierania");
       }
     },
     [getAuthToken]
@@ -175,21 +184,24 @@ export function useFileOperations({
       try {
         const response = await fetch(
           `/api/files/delete?key=${encodeURIComponent(file.key)}`,
-          { method: 'DELETE', headers: { Authorization: `Bearer ${await getAuthToken()}` } }
+          {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${await getAuthToken()}` },
+          }
         );
         if (response.ok) {
-          toast.success('Plik został usunięty');
+          toast.success("Plik został usunięty");
           fetchUserData();
           fetchFiles();
           bumpStorageUsage();
         } else {
           const errorData = await response.json();
           toast.error(
-            `Błąd podczas usuwania pliku: ${errorData.error || 'Nieznany błąd'}`
+            `Błąd podczas usuwania pliku: ${errorData.error || "Nieznany błąd"}`
           );
         }
       } catch {
-        toast.error('Błąd podczas usuwania pliku');
+        toast.error("Błąd podczas usuwania pliku");
       }
     },
     [getAuthToken, fetchFiles, fetchUserData, bumpStorageUsage]
@@ -205,10 +217,10 @@ export function useFileOperations({
     async (options: ShareOptions) => {
       if (!selectedFileForShare) return;
       try {
-        const response = await fetch('/api/files/share', {
-          method: 'POST',
+        const response = await fetch("/api/files/share", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${await getAuthToken()}`,
           },
           body: JSON.stringify({
@@ -226,13 +238,15 @@ export function useFileOperations({
         } else {
           const errorData = await response.json().catch(() => ({}));
           if (response.status === 409) {
-            toast.error(errorData.error || 'Ten niestandardowy link jest już zajęty');
+            toast.error(
+              errorData.error || "Ten niestandardowy link jest już zajęty"
+            );
           } else {
-            toast.error('Błąd podczas tworzenia linku');
+            toast.error("Błąd podczas tworzenia linku");
           }
         }
       } catch {
-        toast.error('Błąd podczas tworzenia linku');
+        toast.error("Błąd podczas tworzenia linku");
       } finally {
         setShowShareOptionsModal(false);
         setSelectedFileForShare(null);
@@ -242,11 +256,16 @@ export function useFileOperations({
   );
 
   const handleShareConfirmLegacy = useCallback(
-    async (expiresIn?: number, expiresAt?: Date, name?: string, customSlug?: string) => {
+    async (
+      expiresIn?: number,
+      expiresAt?: Date,
+      name?: string,
+      customSlug?: string
+    ) => {
       const options: ShareOptions = {};
       if (expiresAt instanceof Date) {
         options.until = expiresAt.toISOString();
-      } else if (typeof expiresIn === 'number' && expiresIn > 0) {
+      } else if (typeof expiresIn === "number" && expiresIn > 0) {
         options.minutes = Math.ceil(expiresIn / 60);
       }
       if (name) options.name = name;
@@ -331,10 +350,10 @@ export function useFileOperations({
       return;
     }
     try {
-      const res = await fetch('/api/files/move', {
-        method: 'POST',
+      const res = await fetch("/api/files/move", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${await getAuthToken()}`,
         },
         body: JSON.stringify({
@@ -344,22 +363,31 @@ export function useFileOperations({
         }),
       });
       if (res.ok) {
-        toast.success('Nadpisano i przeniesiono');
+        toast.success("Nadpisano i przeniesiono");
         clearSelection();
         fetchFiles();
         bumpStorageUsage();
       } else {
-        const { error } = await res.json().catch(() => ({ error: 'Błąd przenoszenia' }));
-        toast.error(error || 'Błąd przenoszenia');
+        const { error } = await res
+          .json()
+          .catch(() => ({ error: "Błąd przenoszenia" }));
+        toast.error(error || "Błąd przenoszenia");
       }
     } catch {
-      toast.error('Błąd przenoszenia');
+      toast.error("Błąd przenoszenia");
     } finally {
       setShowOverwriteConfirm(false);
       setPendingMoveKeys([]);
       setMoveTargetFolder(null);
     }
-  }, [moveTargetFolder, pendingMoveKeys, getAuthToken, clearSelection, fetchFiles, bumpStorageUsage]);
+  }, [
+    moveTargetFolder,
+    pendingMoveKeys,
+    getAuthToken,
+    clearSelection,
+    fetchFiles,
+    bumpStorageUsage,
+  ]);
 
   const cancelOverwrite = useCallback(() => {
     setShowOverwriteConfirm(false);
