@@ -29,7 +29,8 @@ export const shareSchema = z.object({
   key: z.string().min(1),
   expiresIn: z.number().int().positive().max(30 * 24 * 3600).optional(), // max 30 dni
   expiresAt: z.union([z.string(), z.date()]).optional(),
-  name: z.string().max(120).optional()
+  name: z.string().max(120).optional(),
+  customSlug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/, 'Tylko małe litery, cyfry i myślniki').optional()
 });
 
 export const downloadSchema = z.object({

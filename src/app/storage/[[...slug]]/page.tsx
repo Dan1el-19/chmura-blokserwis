@@ -733,6 +733,8 @@ function StoragePageInner() {
 		days?: number;
 		months?: number;
 		until?: string;
+		name?: string;
+		customSlug?: string;
 	}) => {
 		if (!selectedFileForShare) return;
 		try {
@@ -742,14 +744,25 @@ function StoragePageInner() {
 					'Content-Type': 'application/json',
 					Authorization: `Bearer ${await getAuthToken()}`,
 				},
-				body: JSON.stringify({ key: selectedFileForShare.key, options }),
+				body: JSON.stringify({ 
+					key: selectedFileForShare.key,
+					expiresIn: options.minutes ? options.minutes * 60 : undefined,
+					expiresAt: options.until,
+					name: options.name,
+					customSlug: options.customSlug
+				}),
 			});
 			if (response.ok) {
 				const { url, expiresAt } = await response.json();
 				setShareData({ url, fileName: selectedFileForShare.name, expiresAt });
 				setShowShareModal(true);
 			} else {
-				toast.error('Błąd podczas tworzenia linku');
+				const errorData = await response.json().catch(() => ({}));
+				if (response.status === 409) {
+					toast.error(errorData.error || 'Ten niestandardowy link jest już zajęty');
+				} else {
+					toast.error('Błąd podczas tworzenia linku');
+				}
 			}
 		} catch {
 			toast.error('Błąd podczas tworzenia linku');
@@ -759,10 +772,12 @@ function StoragePageInner() {
 		}
 	};
 
-	interface LegacyShareOptions { minutes?: number; until?: string }
+	interface LegacyShareOptions { minutes?: number; until?: string; name?: string; customSlug?: string }
 	const handleShareConfirmLegacy = async (
 		expiresIn?: number,
-		expiresAt?: Date
+		expiresAt?: Date,
+		name?: string,
+		customSlug?: string
 	) => {
 		const options: LegacyShareOptions = {};
 		if (expiresAt instanceof Date) {
@@ -770,6 +785,8 @@ function StoragePageInner() {
 		} else if (typeof expiresIn === 'number' && expiresIn > 0) {
 			options.minutes = Math.ceil(expiresIn / 60);
 		}
+		if (name) options.name = name;
+		if (customSlug) options.customSlug = customSlug;
 		await handleShareConfirm(options);
 	};
 
@@ -1094,8 +1111,8 @@ function StoragePageInner() {
 						setShowShareOptionsModal(false);
 						setSelectedFileForShare(null);
 					}}
-					onConfirm={(expiresIn?: number, expiresAt?: Date) =>
-						handleShareConfirmLegacy(expiresIn, expiresAt)
+					onConfirm={(expiresIn?: number, expiresAt?: Date, name?: string, customSlug?: string) =>
+						handleShareConfirmLegacy(expiresIn, expiresAt, name, customSlug)
 					}
 					fileName={selectedFileForShare.name}
 				/>
