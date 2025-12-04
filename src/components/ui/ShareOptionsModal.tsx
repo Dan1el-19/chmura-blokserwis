@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Clock, Calendar } from 'lucide-react';
+import { X, Clock, Calendar, Infinity } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { auth } from '@/lib/firebase';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { pl } from 'date-fns/locale';
 
 interface ShareOptionsModalProps {
   isOpen: boolean;
@@ -12,6 +16,18 @@ interface ShareOptionsModalProps {
 }
 
 type TimeUnit = 'minutes' | 'hours' | 'days' | 'months';
+type ExpiryMode = 'preset' | 'custom-date' | 'unlimited';
+
+
+const UNLIMITED_SECONDS = 20 * 365 * 24 * 60 * 60; 
+const UNLIMITED_THRESHOLD_YEARS = 15;
+
+const TIME_PRESETS = [
+  { label: '1 godz', value: 1, unit: 'hours' as TimeUnit },
+  { label: '24 godz', value: 24, unit: 'hours' as TimeUnit },
+  { label: '7 dni', value: 7, unit: 'days' as TimeUnit },
+  { label: '30 dni', value: 30, unit: 'days' as TimeUnit },
+];
 
 export default function ShareOptionsModal({
   isOpen,
@@ -19,20 +35,34 @@ export default function ShareOptionsModal({
   onConfirm,
   fileName
 }: ShareOptionsModalProps) {
-  const [timeValue, setTimeValue] = useState(1);
+  const [expiryMode, setExpiryMode] = useState<ExpiryMode>('preset');
+  const [selectedPreset, setSelectedPreset] = useState(2); 
+  const [timeValue, setTimeValue] = useState(7);
   const [timeUnit, setTimeUnit] = useState<TimeUnit>('days');
-  const [useCustomDate, setUseCustomDate] = useState(false);
-  const [customDate, setCustomDate] = useState('');
-  const [customTime, setCustomTime] = useState('');
+  const [customDate, setCustomDate] = useState<Date | null>(null);
   const [linkName, setLinkName] = useState('');
   const [customSlug, setCustomSlug] = useState('');
   const [slugError, setSlugError] = useState('');
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
   const [slugChecking, setSlugChecking] = useState(false);
   const slugCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [dateError, setDateError] = useState('');
+  const generateSlugPreview = useCallback((name: string): string => {
+    const nameWithoutExt = name.replace(/\.[^/.]+$/, '');
+    const cleanName = nameWithoutExt
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+    const base = cleanName.slice(0, 12).replace(/-$/, '');
+    return `${base ? base + '-' : ''}xxxxxxx`;
+  }, []);
+
+  const slugPlaceholder = generateSlugPreview(fileName);
 
   const validateSlug = (slug: string): boolean => {
-    if (!slug) return true; // pusty jest OK (użyje automatycznego)
+    if (!slug) return true;
     if (slug.length > 50) {
       setSlugError('Maksymalnie 50 znaków');
       setSlugAvailable(null);
@@ -43,25 +73,19 @@ export default function ShareOptionsModal({
       setSlugAvailable(null);
       return false;
     }
-    // Nie czyść błędu tutaj - błąd zajętości ustawia checkSlugAvailability
     return true;
   };
 
-  // Sprawdzanie dostępności slug-a w Firestore (debounced)
   const checkSlugAvailability = useCallback(async (slug: string) => {
-    console.log('[SlugCheck] Starting check for:', slug);
-    
     if (!slug.trim()) {
-      console.log('[SlugCheck] Empty slug, skipping');
       setSlugAvailable(null);
       setSlugChecking(false);
       setSlugError('');
       return;
     }
 
-    // Nie sprawdzaj jeśli format nieprawidłowy
+    
     if (slug.length > 50 || !/^[a-z0-9-]+$/.test(slug)) {
-      console.log('[SlugCheck] Invalid format, skipping');
       setSlugAvailable(null);
       setSlugChecking(false);
       return;
@@ -69,55 +93,42 @@ export default function ShareOptionsModal({
 
     try {
       const token = await auth.currentUser?.getIdToken();
-      console.log('[SlugCheck] Token exists:', !!token);
       if (!token) {
-        console.log('[SlugCheck] No token, user not logged in');
         setSlugAvailable(null);
         setSlugChecking(false);
         return;
       }
 
-      console.log('[SlugCheck] Fetching...');
       const res = await fetch(`/api/files/share/check?slug=${encodeURIComponent(slug)}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      console.log('[SlugCheck] Response status:', res.status);
-      
       if (res.ok) {
         const data = await res.json();
-        console.log('[SlugCheck] Response data:', data);
         setSlugAvailable(data.available);
         if (data.available) {
-          setSlugError(''); // Czyść błąd tylko gdy dostępny
+          setSlugError('');
         } else {
           setSlugError('Ten link jest już zajęty');
         }
       } else {
-        console.log('[SlugCheck] Response not OK');
         setSlugAvailable(null);
         setSlugError('');
       }
-    } catch (err) {
-      console.error('[SlugCheck] Error:', err);
+    } catch {
       setSlugAvailable(null);
       setSlugError('');
     } finally {
-      console.log('[SlugCheck] Finally, setting slugChecking to false');
       setSlugChecking(false);
     }
   }, []);
 
-  // Debounced sprawdzanie przy zmianie customSlug
   useEffect(() => {
-    // Wyczyść poprzedni timeout
     if (slugCheckTimeoutRef.current) {
       clearTimeout(slugCheckTimeoutRef.current);
     }
 
     const trimmedSlug = customSlug.trim();
-    
-    // Jeśli pusty, resetuj wszystko
     if (!trimmedSlug) {
       setSlugAvailable(null);
       setSlugChecking(false);
@@ -125,19 +136,15 @@ export default function ShareOptionsModal({
       return;
     }
 
-    // Sprawdź format - jeśli zły, nie sprawdzaj API
     if (trimmedSlug.length > 50 || !/^[a-z0-9-]+$/.test(trimmedSlug)) {
       setSlugAvailable(null);
       setSlugChecking(false);
       return;
     }
-
-    // Resetuj stan przed sprawdzeniem
     setSlugAvailable(null);
     setSlugError('');
     setSlugChecking(true);
     
-    // Ustaw nowy timeout (debounce 400ms)
     slugCheckTimeoutRef.current = setTimeout(() => {
       checkSlugAvailability(trimmedSlug);
     }, 400);
@@ -150,14 +157,12 @@ export default function ShareOptionsModal({
   }, [customSlug, checkSlugAvailability]);
 
   const handleConfirm = () => {
-    // Użyj customSlug jako nazwy linku jeśli nazwa nie podana
     const finalLinkName = linkName.trim() || customSlug.trim() || 'Bez nazwy';
 
     if (!validateSlug(customSlug)) {
       return;
     }
 
-    // Zablokuj jeśli slug jest zajęty lub jeszcze sprawdzany
     if (customSlug.trim() && (slugAvailable === false || slugChecking)) {
       if (slugAvailable === false) {
         setSlugError('Ten link jest już zajęty');
@@ -167,43 +172,50 @@ export default function ShareOptionsModal({
 
     const slugToUse = customSlug.trim() || undefined;
 
-    if (useCustomDate) {
-      if (!customDate || !customTime) {
-        alert('Proszę wybrać datę i godzinę');
+    if (expiryMode === 'custom-date') {
+      if (!customDate) {
+        setDateError('Proszę wybrać datę');
         return;
       }
-      const dateTime = new Date(`${customDate}T${customTime}`);
+      // Ustaw godzinę na 23:59
+      const dateTime = new Date(customDate);
+      dateTime.setHours(23, 59, 0, 0);
       if (dateTime <= new Date()) {
-        alert('Data musi być w przyszłości');
+        setDateError('Data musi być w przyszłości');
         return;
       }
+      setDateError('');
       onConfirm(undefined, dateTime, linkName.trim(), slugToUse);
-    } else {
-      // Konwertuj na sekundy
+    } else if (expiryMode === 'unlimited') {
+      
+      onConfirm(UNLIMITED_SECONDS, undefined, linkName.trim(), slugToUse);
+    } else if (expiryMode === 'preset') {
+      const preset = TIME_PRESETS[selectedPreset];
       const multipliers = {
         minutes: 60,
         hours: 60 * 60,
         days: 24 * 60 * 60,
-        months: 30 * 24 * 60 * 60 // przybliżenie
+        months: 30 * 24 * 60 * 60
       };
-      const expiresIn = timeValue * multipliers[timeUnit];
+      const expiresIn = preset.value * multipliers[preset.unit];
       onConfirm(expiresIn, undefined, linkName.trim(), slugToUse);
     }
-    // Nie zamykaj modalu tutaj - rodzic zamknie po obsłużeniu odpowiedzi API
+    
   };
 
   const handleClose = () => {
-    // Reset form
-    setTimeValue(1);
+    
+    setExpiryMode('preset');
+    setSelectedPreset(2);
+    setTimeValue(7);
     setTimeUnit('days');
-    setUseCustomDate(false);
-    setCustomDate('');
-    setCustomTime('');
+    setCustomDate(null);
     setLinkName('');
     setCustomSlug('');
     setSlugError('');
     setSlugAvailable(null);
     setSlugChecking(false);
+    setDateError('');
     if (slugCheckTimeoutRef.current) {
       clearTimeout(slugCheckTimeoutRef.current);
     }
@@ -213,7 +225,7 @@ export default function ShareOptionsModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
       <Card className="w-full sm:max-w-md rounded-t-2xl sm:rounded-xl max-h-[90vh] overflow-y-auto">
         <CardHeader className="flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-sm z-10">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900">Opcje udostępnienia</h3>
@@ -234,24 +246,19 @@ export default function ShareOptionsModal({
 
           {/* Nazwa linku */}
           <div>
-            <label className="block text-xs sm:text-sm text-gray-600 mb-1">Nazwa linku:</label>
+            <label className="block text-xs sm:text-sm text-gray-900 font-medium mb-1">Nazwa linku:</label>
             <input
               type="text"
               value={linkName}
               onChange={(e) => setLinkName(e.target.value)}
-              placeholder="np. Link dla klienta, Link tymczasowy..."
-              className="w-full px-2.5 sm:px-3 py-2 border border-gray-200 rounded text-xs sm:text-sm text-gray-900 autofill:bg-white autofill:text-black"
-              style={{
-                WebkitTextFillColor: 'black',
-                WebkitBoxShadow: '0 0 0 30px white inset',
-                boxShadow: '0 0 0 30px white inset'
-              }}
+              placeholder="(Opcjonalne)"
+              className="w-full px-2.5 sm:px-3 py-2 border border-gray-200 rounded text-xs sm:text-sm text-gray-900 placeholder:text-gray-400"
             />
           </div>
 
           {/* Niestandardowy link */}
           <div>
-            <label className="block text-xs sm:text-sm text-gray-600 mb-1">Niestandardowy link (opcjonalnie):</label>
+            <label className="block text-xs sm:text-sm text-gray-900 font-medium mb-1">Niestandardowy link (opcjonalnie):</label>
             <div className="flex items-center gap-1">
               <span className="text-xs sm:text-sm text-gray-500 shrink-0">/files/</span>
               <input
@@ -262,13 +269,8 @@ export default function ShareOptionsModal({
                   setCustomSlug(val);
                   validateSlug(val);
                 }}
-                placeholder="np. p1, faktura-2024..."
-                className="flex-1 px-2.5 sm:px-3 py-2 border border-gray-200 rounded text-xs sm:text-sm text-gray-900 autofill:bg-white autofill:text-black"
-                style={{
-                  WebkitTextFillColor: 'black',
-                  WebkitBoxShadow: '0 0 0 30px white inset',
-                  boxShadow: '0 0 0 30px white inset'
-                }}
+                placeholder={slugPlaceholder}
+                className="flex-1 px-2.5 sm:px-3 py-2 border border-gray-200 rounded text-xs sm:text-sm text-gray-900 placeholder:text-gray-400"
               />
             </div>
             {slugError && <p className="text-xs text-red-500 mt-1">{slugError}</p>}
@@ -283,98 +285,86 @@ export default function ShareOptionsModal({
             )}
           </div>
 
-          {/* Opcja 1: Czas względny */}
-          <div className="space-y-2 sm:space-y-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="radio"
-                id="relative-time"
-                checked={!useCustomDate}
-                onChange={() => setUseCustomDate(false)}
-                className="text-gray-900"
-              />
-              <label htmlFor="relative-time" className="flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-900">
-                <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                Link ważny przez
-              </label>
-            </div>
+          {/* Ważność linku */}
+          <div className="space-y-3">
+            <label className="block text-xs sm:text-sm text-gray-900 font-medium">Ważność linku:</label>
             
-            {!useCustomDate && (
-              <div className="ml-6 flex items-center gap-2">
-                                 <input
-                   type="number"
-                   min="1"
-                   value={timeValue}
-                   onChange={(e) => setTimeValue(parseInt(e.target.value) || 1)}
-                   className="w-16 sm:w-20 px-2 sm:px-3 py-2 border border-gray-200 rounded text-xs sm:text-sm text-gray-900 autofill:bg-white autofill:text-black"
-                   style={{
-                     WebkitTextFillColor: 'black',
-                     WebkitBoxShadow: '0 0 0 30px white inset',
-                     boxShadow: '0 0 0 30px white inset'
-                   }}
-                 />
-                                 <select
-                   value={timeUnit}
-                   onChange={(e) => setTimeUnit(e.target.value as TimeUnit)}
-                   className="px-2 sm:px-3 py-2 border border-gray-200 rounded text-xs sm:text-sm text-gray-900"
-                 >
-                  <option value="minutes">minut</option>
-                  <option value="hours">godzin</option>
-                  <option value="days">dni</option>
-                  <option value="months">miesięcy</option>
-                </select>
-              </div>
-            )}
-          </div>
+            {/* Szybkie presety */}
+            <div className="flex flex-wrap gap-2">
+              {TIME_PRESETS.map((preset, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => {
+                    setExpiryMode('preset');
+                    setSelectedPreset(index);
+                  }}
+                  className={`px-3 py-1.5 text-xs sm:text-sm rounded-full border transition-colors ${
+                    expiryMode === 'preset' && selectedPreset === index
+                      ? 'bg-gray-900 text-white border-gray-900'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setExpiryMode('unlimited')}
+                className={`px-3 py-1.5 text-xs sm:text-sm rounded-full border transition-colors flex items-center gap-1 ${
+                  expiryMode === 'unlimited'
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <Infinity className="h-3 w-3" />
+                Bezterminowo
+              </button>
+            </div>
 
-          {/* Opcja 2: Konkretna data */}
-          <div className="space-y-2 sm:space-y-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="radio"
-                id="custom-date"
-                checked={useCustomDate}
-                onChange={() => setUseCustomDate(true)}
-                className="text-gray-900"
-              />
-              <label htmlFor="custom-date" className="flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-900">
-                <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                Link ważny do konkretnej daty
-              </label>
+            {/* Link do konkretnej daty */}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setExpiryMode('custom-date');
+                  setDateError('');
+                }}
+                className={`text-xs sm:text-sm flex items-center gap-1.5 ${
+                  expiryMode === 'custom-date' ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Calendar className="h-3.5 w-3.5" />
+                Wybierz konkretną datę
+              </button>
             </div>
-            
-            {useCustomDate && (
-              <div className="ml-6 space-y-2 sm:space-y-3">
-                <div>
-                  <label className="block text-xs sm:text-sm text-gray-600 mb-1">Data:</label>
-                                     <input
-                     type="date"
-                     value={customDate}
-                     onChange={(e) => setCustomDate(e.target.value)}
-                     min={new Date().toISOString().split('T')[0]}
-                     className="w-full px-2.5 sm:px-3 py-2 border border-gray-200 rounded text-xs sm:text-sm text-gray-900 autofill:bg-white autofill:text-black"
-                     style={{
-                       WebkitTextFillColor: 'black',
-                       WebkitBoxShadow: '0 0 0 30px white inset',
-                       boxShadow: '0 0 0 30px white inset'
-                     }}
-                   />
+
+            {/* Konkretna data */}
+            {expiryMode === 'custom-date' && (
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={pl}>
+                <div className="p-3 bg-gray-50 rounded-lg space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <DatePicker
+                      value={customDate}
+                      onChange={(newValue) => { setCustomDate(newValue); setDateError(''); }}
+                      minDate={new Date()}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          sx: {
+                            '& .MuiInputBase-root': {
+                              backgroundColor: 'white',
+                              fontSize: '0.875rem',
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">Link wygaśnie o 23:59 wybranego dnia</p>
+                  {dateError && <p className="text-xs text-red-500">{dateError}</p>}
                 </div>
-                <div>
-                  <label className="block text-xs sm:text-sm text-gray-600 mb-1">Godzina:</label>
-                                     <input
-                     type="time"
-                     value={customTime}
-                     onChange={(e) => setCustomTime(e.target.value)}
-                     className="w-full px-2.5 sm:px-3 py-2 border border-gray-200 rounded text-xs sm:text-sm text-gray-900 autofill:bg-white autofill:text-black"
-                     style={{
-                       WebkitTextFillColor: 'black',
-                       WebkitBoxShadow: '0 0 0 30px white inset',
-                       boxShadow: '0 0 0 30px white inset'
-                     }}
-                   />
-                </div>
-              </div>
+              </LocalizationProvider>
             )}
           </div>
 
@@ -382,16 +372,35 @@ export default function ShareOptionsModal({
           <div className="bg-gray-50 p-2.5 sm:p-3 rounded-lg">
             <p className="text-xs sm:text-sm text-gray-600 mb-1">Link będzie ważny:</p>
             <p className="text-xs sm:text-sm font-medium text-gray-900">
-              {useCustomDate ? (
-                customDate && customTime ? (
-                  `do ${new Date(`${customDate}T${customTime}`).toLocaleString('pl-PL')}`
+              {expiryMode === 'unlimited' ? (
+                '♾️ Bezterminowo'
+              ) : expiryMode === 'custom-date' ? (
+                customDate ? (
+                  (() => {
+                    const dateTime = new Date(customDate);
+                    dateTime.setHours(23, 59, 0, 0);
+                    const daysUntil = Math.ceil((dateTime.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                    return (
+                      <>
+                        do {dateTime.toLocaleString('pl-PL')}
+                        <span className="text-gray-500 font-normal ml-1">
+                          (za {daysUntil} {daysUntil === 1 ? 'dzień' : 'dni'})
+                        </span>
+                      </>
+                    );
+                  })()
                 ) : (
-                  'wybierz datę i godzinę'
+                  'wybierz datę'
                 )
               ) : (
-                `przez ${timeValue} ${timeUnit === 'minutes' ? 'minut' : 
-                  timeUnit === 'hours' ? 'godzin' : 
-                  timeUnit === 'days' ? 'dni' : 'miesięcy'}`
+                <>
+                  przez {TIME_PRESETS[selectedPreset].value} {
+                    TIME_PRESETS[selectedPreset].unit === 'hours' ? 'godzin' : 'dni'
+                  }
+                  <span className="text-gray-500 font-normal ml-1">
+                    (do {new Date(Date.now() + TIME_PRESETS[selectedPreset].value * (TIME_PRESETS[selectedPreset].unit === 'hours' ? 3600000 : 86400000)).toLocaleString('pl-PL')})
+                  </span>
+                </>
               )}
             </p>
           </div>

@@ -26,7 +26,6 @@ export default function ShareModal({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback dla przeglądarek bez Clipboard API
       const textArea = document.createElement('textarea');
       textArea.value = shareUrl;
       document.body.appendChild(textArea);
@@ -60,7 +59,16 @@ export default function ShareModal({
             <p className="text-xs sm:text-sm text-gray-600 mb-2">Plik: <span className="font-medium text-gray-900 break-all">{fileName}</span></p>
             {expiresAt && (
               <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                Link ważny do: <span className="font-medium text-gray-900">{new Date(expiresAt).toLocaleString('pl-PL')}</span>
+                Link ważny: <span className="font-medium text-gray-900">
+                  {(() => {
+                    const expiryDate = new Date(expiresAt);
+                    const yearsFromNow = (expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 365);
+                    if (yearsFromNow > 15) {
+                      return '♾️ Bezterminowo';
+                    }
+                    return `do ${expiryDate.toLocaleString('pl-PL')}`;
+                  })()}
+                </span>
               </p>
             )}
           </div>
