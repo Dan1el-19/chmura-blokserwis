@@ -65,10 +65,9 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#3B82F6" />
         <meta name="msapplication-tap-highlight" content="no" />
         
-  <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/favicon-new.svg" />
+  <link rel="icon" type="image/svg+xml" href="/favicon-new.svg" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="shortcut icon" href="/favicon.ico" />
       </head>
       <body
         className="antialiased"
