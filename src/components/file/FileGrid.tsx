@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { FileItem, FolderItem } from '@/types';
 import toast from 'react-hot-toast';
+import MobileBottomSheet from '@/components/ui/MobileBottomSheet';
 
 const FolderIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8 text-amber-500"><path d="M4 4h5l2 3h9v11a2 2 0 0 1-2 2H4Z"/></svg>
@@ -82,6 +83,7 @@ export default function FileGrid({
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [activeFile, setActiveFile] = useState<FileItem | null>(null);
   const [activeFolder, setActiveFolder] = useState<FolderItem | null>(null);
+  const [showMobileSheet, setShowMobileSheet] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const clickAnchorRef = useRef<DOMRect | null>(null);
 
@@ -176,8 +178,21 @@ export default function FileGrid({
     }
   };
 
+  // Check if we're on mobile (simple check, can be enhanced with proper media query hook)
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   const handleActionClick = (fileId: string, file: FileItem, event: React.MouseEvent) => {
     event.stopPropagation();
+    
+    // On mobile, use bottom sheet
+    if (isMobile) {
+      setActiveFile(file);
+      setActiveFolder(null);
+      setShowMobileSheet(true);
+      return;
+    }
+
+    // Desktop: use dropdown menu
     if (showActions === fileId) {
       setShowActions(null);
       setMenuPosition(null);
@@ -195,10 +210,11 @@ export default function FileGrid({
 
   const closeMenu = useCallback(() => {
     setShowActions(null);
-  setShowFolderActions(null);
+    setShowFolderActions(null);
     setMenuPosition(null);
     setActiveFile(null);
-  setActiveFolder(null);
+    setActiveFolder(null);
+    setShowMobileSheet(false);
   }, []);
 
   const handleAction = (action: string, file: FileItem) => {
@@ -224,6 +240,16 @@ export default function FileGrid({
 
   const handleFolderActionClick = (folder: FolderItem, event: React.MouseEvent) => {
     event.stopPropagation();
+    
+    // On mobile, use bottom sheet
+    if (isMobile) {
+      setActiveFolder(folder);
+      setActiveFile(null);
+      setShowMobileSheet(true);
+      return;
+    }
+
+    // Desktop: use dropdown menu
     const id = folder.path;
     if (showFolderActions === id) {
       setShowFolderActions(null);
@@ -704,6 +730,24 @@ export default function FileGrid({
             ) : null}
           </div>
         </div>,
+        document.body
+      )}
+
+      {/* Mobile Bottom Sheet for file/folder actions - rendered via portal to body */}
+      {showMobileSheet && createPortal(
+        <MobileBottomSheet
+          isOpen={showMobileSheet}
+          onClose={() => setShowMobileSheet(false)}
+          file={activeFile}
+          folder={activeFolder}
+          onAction={(action) => {
+            if (activeFile) {
+              handleAction(action, activeFile);
+            } else if (activeFolder) {
+              handleFolderAction(action, activeFolder);
+            }
+          }}
+        />,
         document.body
       )}
     </div>

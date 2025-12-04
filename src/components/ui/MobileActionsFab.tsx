@@ -5,14 +5,24 @@ interface MobileActionsFabProps {
   isUploading: boolean;
   onUploadClick: () => void;
   onNewFolder: () => void;
+  multiSelectMode?: boolean;
+  onToggleMultiSelect?: () => void;
+  selectedCount?: number;
+  hidden?: boolean;
 }
 
-// (outside click handled inline)
-
-export default function MobileActionsFab({ isUploading, onUploadClick, onNewFolder }: MobileActionsFabProps) {
+export default function MobileActionsFab({ 
+  isUploading, 
+  onUploadClick, 
+  onNewFolder,
+  multiSelectMode = false,
+  onToggleMultiSelect,
+  selectedCount = 0,
+  hidden = false
+}: MobileActionsFabProps) {
   const [open, setOpen] = useState(false);
-  // removed extra menus
   const panelRef = useRef<HTMLDivElement | null>(null);
+  
   // Outside click close
   useEffect(()=>{
     const handler = (e: MouseEvent) => {
@@ -33,7 +43,13 @@ export default function MobileActionsFab({ isUploading, onUploadClick, onNewFold
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
-  // removed sort/view logic
+  // Close menu when hidden
+  useEffect(() => {
+    if (hidden && open) setOpen(false);
+  }, [hidden, open]);
+
+  // Don't render if hidden
+  if (hidden) return null;
 
   return (
   <div className="md:hidden fixed bottom-4 right-4 z-[10000] flex flex-col items-end pb-safe" ref={panelRef} style={{ bottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
@@ -56,17 +72,46 @@ export default function MobileActionsFab({ isUploading, onUploadClick, onNewFold
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h5l2 3h9v11a2 2 0 0 1-2 2H4Z"/></svg>
               Folder
             </button>
+            {onToggleMultiSelect && (
+              <button
+                onClick={()=>{ onToggleMultiSelect(); setOpen(false); }}
+                className={`w-full h-10 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors ${multiSelectMode ? 'bg-blue-100 border border-blue-500 text-blue-700' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+                {multiSelectMode ? 'Wyjdź z zaznaczania' : 'Zaznacz pliki'}
+              </button>
+            )}
           </>
         )}
       </div>
+      
+      {/* Main FAB button - shows selection count when in multi-select mode */}
       <button
         onClick={() => setOpen(o=>!o)}
         aria-label={open ? 'Zamknij menu akcji' : 'Otwórz menu akcji'}
-        className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-white fab-shadow fab-blur rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${open ? 'bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+        className={`relative w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-white fab-shadow fab-blur rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${multiSelectMode ? 'bg-blue-700' : open ? 'bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'}`}
       >
-        <span className={`block transition-transform duration-200 ${open ? 'rotate-22.5' : 'rotate-0'}`}>
+        {/* Selection count badge */}
+        {multiSelectMode && selectedCount > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+            {selectedCount > 99 ? '99+' : selectedCount}
+          </span>
+        )}
+        <span className={`block transition-transform duration-200 ${open ? 'rotate-45' : 'rotate-0'}`}>
           {open ? (
             <svg viewBox="0 0 24 24" className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12"/><path d="M6 18L18 6"/></svg>
+          ) : multiSelectMode ? (
+            <svg viewBox="0 0 24 24" className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <path d="M17 14v6m-3-3h6"/>
+            </svg>
           ) : (
             <svg viewBox="0 0 24 24" className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
           )}
