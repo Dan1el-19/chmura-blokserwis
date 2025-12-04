@@ -1,3 +1,12 @@
+# [1.2.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v1.1.0...v1.2.0) (2025-12-04)
+
+
+### Features
+
+* add @mui/x-date-pickers dependency and enhance ShareModal ([eeaec1f](https://github.com/Dan1el-19/chmura-blokserwis/commit/eeaec1f30d83b77dabfd8487d49b31d79c269cfc))
+* custom slug in share modal ([0ca85fe](https://github.com/Dan1el-19/chmura-blokserwis/commit/0ca85fe996d6e7a89e9119bc3262a9860a353d53))
+* **storage:** implement storage hooks for file operations, selection, upload, navigation, authentication, and view preferences ([713437f](https://github.com/Dan1el-19/chmura-blokserwis/commit/713437f0e510f12b90d3fe06d71c5163ff165047))
+
 # [1.1.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v1.0.2...v1.1.0) (2025-12-02)
 
 ### Features
