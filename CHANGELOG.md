@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/Dan1el-19/effinity-cloud/compare/v1.6.0...v1.6.1) (2025-12-31)
+
+
+### Bug Fixes
+
+* Add runtime env vars and secrets to Cloud Run deploy ([bc3a47b](https://github.com/Dan1el-19/effinity-cloud/commit/bc3a47b435f79b1ec66f12dd1896b154ee81ebae))
+
 # [1.6.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.5.0...v1.6.0) (2025-12-31)
 
 
