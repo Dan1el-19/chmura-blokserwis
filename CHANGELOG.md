@@ -1,3 +1,12 @@
+# [1.6.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.5.0...v1.6.0) (2025-12-31)
+
+
+### Features
+
+* Add Dockerfile, docker-compose, and Cloud Build configuration for containerization and CI/CD deployment to Cloud Run. ([85ee67f](https://github.com/Dan1el-19/effinity-cloud/commit/85ee67ff8fdb209195d67ef034aa699acf865fe7))
+* Dynamically set page titles based on the current route and update the favicon to a custom cloud icon. ([6e7c4dd](https://github.com/Dan1el-19/effinity-cloud/commit/6e7c4dd91520638c2ccea0959b4cdb45e6f0e3da))
+* Refactor file management components, introduce new UI elements, and update login/logout flow with i18n improvements. ([1d156bf](https://github.com/Dan1el-19/effinity-cloud/commit/1d156bfb0d6895d522c90cbb699019712b250a20))
+
 # [1.5.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.4.0...v1.5.0) (2025-12-31)
 
 
