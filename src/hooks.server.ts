@@ -47,13 +47,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 		try {
 			if (sessionCookie) {
-				console.log('[HOOKS] Session cookie present:', sessionCookie.substring(0, 10) + '...');
+				console.log(
+					'[HOOKS]',
+					event.url.pathname,
+					'Session cookie present:',
+					sessionCookie.substring(0, 10) + '...'
+				);
+			} else {
+				console.log('[HOOKS]', event.url.pathname, 'No session cookie');
 			}
 			event.locals.user = await account.get();
-			console.log('[HOOKS] User authenticated:', event.locals.user.$id);
+			console.log('[HOOKS]', event.url.pathname, 'User authenticated:', event.locals.user.$id);
 		} catch (err) {
 			if (sessionCookie) {
-				console.error('[HOOKS] Failed to get user from session:', err);
+				console.error('[HOOKS]', event.url.pathname, 'Failed to get user from session:', err);
 			}
 			event.locals.user = undefined;
 		}
