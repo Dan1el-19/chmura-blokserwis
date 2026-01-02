@@ -1,3 +1,10 @@
+## [1.7.2](https://github.com/Dan1el-19/effinity-cloud/compare/v1.7.1...v1.7.2) (2026-01-02)
+
+
+### Bug Fixes
+
+* update globals dependency to v17 ([ceaf820](https://github.com/Dan1el-19/effinity-cloud/commit/ceaf820cb6ec4d818c7657a8badc74c2b5256ff2))
+
 ## [1.7.1](https://github.com/Dan1el-19/effinity-cloud/compare/v1.7.0...v1.7.1) (2026-01-02)
 
 
