@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.6.1...v1.7.0) (2026-01-02)
+
+
+### Features
+
+* Configure Firebase Hosting for static assets and Cloud Run rewrites, including a default 404 page. ([3d98afe](https://github.com/Dan1el-19/effinity-cloud/commit/3d98afef90ec29454af2d75578b68e02581466e1))
+
 ## [1.6.1](https://github.com/Dan1el-19/effinity-cloud/compare/v1.6.0...v1.6.1) (2025-12-31)
 
 ### Bug Fixes
