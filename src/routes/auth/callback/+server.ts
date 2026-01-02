@@ -20,7 +20,7 @@ export const GET: RequestHandler = async (event) => {
 	event.cookies.set(SESSION_COOKIE, session.secret, {
 		path: '/',
 		httpOnly: true,
-		secure: event.url.protocol === 'https:',
+		secure: true,
 		sameSite: 'lax',
 		expires: new Date(session.expire)
 	});

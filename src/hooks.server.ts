@@ -16,7 +16,12 @@ const RATE_LIMIT_ENABLED = !!env.UPSTASH_REDIS_REST_URL;
 export const handle: Handle = async ({ event, resolve }) => {
 	try {
 		if (RATE_LIMIT_ENABLED && event.url.pathname.startsWith('/api/')) {
-			const identifier = event.getClientAddress();
+			let identifier: string;
+			try {
+				identifier = event.getClientAddress();
+			} catch {
+				identifier = 'unknown';
+			}
 
 			const isStrictEndpoint =
 				event.url.pathname.includes('/api/uppy/') ||
@@ -38,10 +43,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 
 		const { account } = createSessionClient(event);
+		const sessionCookie = event.cookies.get(SESSION_COOKIE);
 
 		try {
+			if (sessionCookie) {
+				console.log('[HOOKS] Session cookie present:', sessionCookie.substring(0, 10) + '...');
+			}
 			event.locals.user = await account.get();
+			console.log('[HOOKS] User authenticated:', event.locals.user.$id);
 		} catch (err) {
+			if (sessionCookie) {
+				console.error('[HOOKS] Failed to get user from session:', err);
+			}
 			event.locals.user = undefined;
 		}
 
