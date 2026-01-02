@@ -4,6 +4,15 @@
 ### Bug Fixes
 
 * cloudbuild.yaml repair ([7467129](https://github.com/Dan1el-19/effinity-cloud/commit/7467129f5c4643753054bb4c40081bd44c0846fe))
+* Enhance server hooks logging with request path and no-session cookie status. ([4d2b939](https://github.com/Dan1el-19/effinity-cloud/commit/4d2b939020dba8d41af509470d0305efc5c68b0d))
+* OAuth redirect loop - use env.ORIGIN and proper headers ([797503d](https://github.com/Dan1el-19/effinity-cloud/commit/797503d1a751314382e5c3937664c0584539199c))
+
+## [1.7.3](https://github.com/Dan1el-19/effinity-cloud/compare/v1.7.2...v1.7.3) (2026-01-02)
+
+
+### Bug Fixes
+
+* cloudbuild.yaml repair ([7467129](https://github.com/Dan1el-19/effinity-cloud/commit/7467129f5c4643753054bb4c40081bd44c0846fe))
 * OAuth redirect loop - use env.ORIGIN and proper headers ([797503d](https://github.com/Dan1el-19/effinity-cloud/commit/797503d1a751314382e5c3937664c0584539199c))
 
 ## [1.7.2](https://github.com/Dan1el-19/effinity-cloud/compare/v1.7.1...v1.7.2) (2026-01-02)
