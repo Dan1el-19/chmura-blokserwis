@@ -3,7 +3,7 @@ import { APPWRITE_API_KEY } from '$env/static/private';
 import { Client, Account, TablesDB, Users } from 'node-appwrite';
 import { type RequestEvent } from '@sveltejs/kit';
 
-export const SESSION_COOKIE = 'a_session';
+export const SESSION_COOKIE = '__session';
 
 export function createAdminClient() {
 	const client = new Client()

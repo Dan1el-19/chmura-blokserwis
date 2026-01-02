@@ -101,7 +101,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 		}
 
-		return resolve(event);
+		const response = await resolve(event);
+		response.headers.set('Cache-Control', 'private');
+		return response;
 	} catch (e: any) {
 		if (e?.status === 303) throw e;
 		console.error('Hooks Error:', e);
