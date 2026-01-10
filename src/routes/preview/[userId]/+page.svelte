@@ -3,13 +3,13 @@
 	import {
 		Folder,
 		FileText,
-		Download,
-		Trash2,
+		DownloadSimple,
+		Trash,
 		ArrowLeft,
-		FolderDown,
-		Home,
+		Folder as FolderDownload,
+		House,
 		Cloud
-	} from 'lucide-svelte';
+	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 	import { toast } from 'svelte-sonner';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -103,7 +103,7 @@
 					href="/preview/{data.targetUser.$id}"
 					class="flex items-center gap-1 hover:text-primary hover:underline"
 				>
-					<Home class="h-4 w-4" />
+					<House class="h-4 w-4" />
 					<span class="sr-only">Root</span>
 				</a>
 			{:else}
@@ -171,7 +171,7 @@
 									onclick={() => downloadFolder(folder.$id, folder.name)}
 									title="Download ZIP"
 								>
-									<FolderDown class="h-4 w-4" />
+									<DownloadSimple class="h-4 w-4" />
 								</Button>
 								<Button
 									variant="ghost"
@@ -180,7 +180,7 @@
 									onclick={() => deleteFolder(folder.$id, folder.name)}
 									title="Delete"
 								>
-									<Trash2 class="h-4 w-4" />
+									<Trash class="h-4 w-4" />
 								</Button>
 							</div>
 						</div>
@@ -214,7 +214,7 @@
 									onclick={() => downloadFile(file.$id, file.name)}
 									title="Download"
 								>
-									<Download class="h-4 w-4" />
+									<DownloadSimple class="h-4 w-4" />
 								</Button>
 								<Button
 									variant="ghost"
@@ -223,7 +223,7 @@
 									onclick={() => deleteFile(file.$id, file.name)}
 									title="Delete"
 								>
-									<Trash2 class="h-4 w-4" />
+									<Trash class="h-4 w-4" />
 								</Button>
 							</div>
 						</div>

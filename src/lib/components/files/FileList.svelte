@@ -2,11 +2,11 @@
 	import {
 		Folder,
 		File as FileIcon,
-		EllipsisVertical,
-		Download,
+		DotsThreeVertical,
+		DownloadSimple,
 		Pencil,
-		Trash2
-	} from 'lucide-svelte';
+		Trash
+	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 
 	type FileType = { $id: string; name: string; size: number; $createdAt: string };
@@ -29,7 +29,7 @@
 	}
 </script>
 
-<div class="space-y-2 pb-20 lg:hidden">
+<div class="space-y-2 lg:hidden">
 	<!-- Mobile list with bottom spacing -->
 	{#if folders.length === 0 && files.length === 0}
 		<div class="py-12 text-center text-text-muted">Folder is empty</div>
@@ -39,7 +39,9 @@
 		<div class="relative rounded-md border border-border-line bg-bg-panel p-3 shadow-none">
 			<div class="flex items-center gap-3">
 				<button onclick={() => onNavigate(folder.$id)} class="shrink-0">
-					<Folder class="h-8 w-8 fill-amber-500/10 text-amber-500" />
+					<Folder
+						class="h-8 w-8 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400"
+					/>
 				</button>
 				<button onclick={() => onNavigate(folder.$id)} class="min-w-0 flex-1 text-left">
 					<p class="truncate text-sm font-medium text-text-main">{folder.name}</p>
@@ -49,7 +51,7 @@
 					onclick={() => toggleMenu(folder.$id)}
 					class="rounded-full p-2 text-text-muted hover:bg-gray-100"
 				>
-					<EllipsisVertical class="h-5 w-5" />
+					<DotsThreeVertical class="h-5 w-5" />
 				</button>
 			</div>
 
@@ -73,7 +75,7 @@
 						}}
 						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-gray-50"
 					>
-						<Download class="h-5 w-5 text-primary" />
+						<DownloadSimple class="h-5 w-5 text-primary" />
 						<span class="text-[10px] text-text-muted">Download</span>
 					</button>
 					<button
@@ -83,7 +85,7 @@
 						}}
 						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-red-50"
 					>
-						<Trash2 class="h-5 w-5 text-red-600" />
+						<Trash class="h-5 w-5 text-red-600" />
 						<span class="text-[10px] text-text-muted">Delete</span>
 					</button>
 				</div>
@@ -95,7 +97,7 @@
 		<div class="relative rounded-md border border-border-line bg-bg-panel p-3 shadow-none">
 			<div class="flex items-center gap-3">
 				<div class="shrink-0">
-					<FileIcon class="h-8 w-8 text-primary opacity-80" />
+					<FileIcon class="h-8 w-8 text-blue-500 dark:text-blue-400" />
 				</div>
 				<div class="min-w-0 flex-1 text-left">
 					<p class="truncate text-sm font-medium text-text-main">{file.name}</p>
@@ -105,7 +107,7 @@
 					onclick={() => toggleMenu(file.$id)}
 					class="rounded-full p-2 text-text-muted hover:bg-gray-100"
 				>
-					<EllipsisVertical class="h-5 w-5" />
+					<DotsThreeVertical class="h-5 w-5" />
 				</button>
 			</div>
 
@@ -128,7 +130,7 @@
 						}}
 						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-gray-50"
 					>
-						<Download class="h-5 w-5 text-primary" />
+						<DownloadSimple class="h-5 w-5 text-primary" />
 						<span class="text-[10px] text-text-muted">Download</span>
 					</button>
 					<button
@@ -138,7 +140,7 @@
 						}}
 						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-red-50"
 					>
-						<Trash2 class="h-5 w-5 text-red-600" />
+						<Trash class="h-5 w-5 text-red-600" />
 						<span class="text-[10px] text-text-muted">Delete</span>
 					</button>
 				</div>

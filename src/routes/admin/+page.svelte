@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Users, Database, Crown, Sparkles, User } from 'lucide-svelte';
+	import { Users, Database, Crown, Sparkle, User } from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 	import Card from '$lib/components/ui/Card.svelte';
 
@@ -46,7 +46,7 @@
 		<Card class="border-border-line bg-bg-panel p-0 hover:bg-gray-50 dark:hover:bg-zinc-800/50">
 			<div class="flex items-center gap-4">
 				<div class="rounded-full bg-purple-100/50 p-2.5 dark:bg-purple-900/20">
-					<Sparkles class="h-5 w-5 text-purple-600 dark:text-purple-400" />
+					<Sparkle class="h-5 w-5 text-purple-600 dark:text-purple-400" />
 				</div>
 				<div class="flex flex-col">
 					<span class="text-xs font-medium tracking-wider text-text-muted uppercase">Plus</span>

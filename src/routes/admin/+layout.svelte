@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { LayoutDashboard, Users } from 'lucide-svelte';
+	import { SquaresFour, Users } from 'phosphor-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	let { children } = $props();
 
 	const tabs = [
-		{ href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+		{ href: '/admin', label: 'Dashboard', icon: SquaresFour, exact: true },
 		{ href: '/admin/users', label: 'Users', icon: Users, exact: false }
 	];
 

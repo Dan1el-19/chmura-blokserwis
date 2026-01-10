@@ -3,13 +3,13 @@
 	import {
 		ArrowLeft,
 		Crown,
-		Sparkles,
+		Sparkle,
 		User as UserIcon,
 		Key,
-		RefreshCw,
+		ArrowsClockwise,
 		FolderOpen,
-		Save
-	} from 'lucide-svelte';
+		FloppyDisk
+	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -141,7 +141,7 @@
 				{#each ['basic', 'plus', 'admin'] as role (role)}
 					{@const icons: Record<string, typeof UserIcon> = {
 						basic: UserIcon,
-						plus: Sparkles,
+						plus: Sparkle,
 						admin: Crown
 					}}
 					{@const Icon = icons[role]}
@@ -176,7 +176,7 @@
 					disabled={saving || selectedRole === data.targetUser.role}
 					class="w-full"
 				>
-					<Save class="mr-2 h-4 w-4" />
+					<FloppyDisk class="mr-2 h-4 w-4" />
 					Save Role
 				</Button>
 			{/snippet}
@@ -222,7 +222,7 @@
 
 			{#snippet footer()}
 				<Button onclick={saveStorageLimit} disabled={saving} class="w-full">
-					<Save class="mr-2 h-4 w-4" />
+					<FloppyDisk class="mr-2 h-4 w-4" />
 					Save Limit
 				</Button>
 			{/snippet}
@@ -241,7 +241,7 @@
 					/>
 				</div>
 				<Button variant="secondary" size="icon" onclick={generatePassword} title="Generate">
-					<RefreshCw class="h-4 w-4" />
+					<ArrowsClockwise class="h-4 w-4" />
 				</Button>
 			</div>
 

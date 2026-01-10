@@ -17,10 +17,11 @@ export const GET: RequestHandler = async (event) => {
 	const session = await account.createSession({ userId, secret });
 	console.log('[AUTH_CALLBACK] Session created successfully', { expire: session.expire });
 
+	const isSecure = event.url.protocol === 'https:';
 	event.cookies.set(SESSION_COOKIE, session.secret, {
 		path: '/',
 		httpOnly: true,
-		secure: true,
+		secure: isSecure,
 		sameSite: 'lax',
 		expires: new Date(session.expire)
 	});

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import {
-		ChevronLeft,
-		ChevronRight,
-		ExternalLink,
+		CaretLeft,
+		CaretRight,
+		ArrowSquareOut,
 		Crown,
-		Sparkles,
+		Sparkle,
 		User as UserIcon
-	} from 'lucide-svelte';
+	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -21,7 +21,7 @@
 		},
 		plus: {
 			label: 'Plus',
-			icon: Sparkles,
+			icon: Sparkle,
 			class: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
 		},
 		admin: {
@@ -93,7 +93,7 @@
 								class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
 							>
 								Details
-								<ExternalLink class="h-3.5 w-3.5" />
+								<ArrowSquareOut class="h-3.5 w-3.5" />
 							</a>
 						</td>
 					</tr>
@@ -134,7 +134,7 @@
 				<div class="mt-3 flex justify-end">
 					<a href="/admin/users/{user.$id}">
 						<Button size="sm" variant="ghost" class="h-7 gap-1 text-xs">
-							Details <ExternalLink class="h-3 w-3" />
+							Details <ArrowSquareOut class="h-3 w-3" />
 						</Button>
 					</a>
 				</div>
@@ -151,7 +151,7 @@
 				class:opacity-50={data.page <= 1}
 			>
 				<Button variant="secondary" size="icon" disabled={data.page <= 1}>
-					<ChevronLeft class="h-4 w-4" />
+					<CaretLeft class="h-4 w-4" />
 				</Button>
 			</a>
 			<span class="px-2 font-mono text-sm text-text-muted">
@@ -163,7 +163,7 @@
 				class:opacity-50={data.page >= data.totalPages}
 			>
 				<Button variant="secondary" size="icon" disabled={data.page >= data.totalPages}>
-					<ChevronRight class="h-4 w-4" />
+					<CaretRight class="h-4 w-4" />
 				</Button>
 			</a>
 		</div>

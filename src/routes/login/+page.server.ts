@@ -8,6 +8,10 @@ const getOrigin = (event: RequestEvent): string => {
 	return env.ORIGIN || event.url.origin;
 };
 
+const isSecureContext = (event: RequestEvent): boolean => {
+	return event.url.protocol === 'https:';
+};
+
 export const actions: Actions = {
 	login: async (event) => {
 		const data = await event.request.formData();
@@ -28,7 +32,7 @@ export const actions: Actions = {
 			event.cookies.set(SESSION_COOKIE, session.secret, {
 				path: '/',
 				httpOnly: true,
-				secure: true,
+				secure: isSecureContext(event),
 				sameSite: 'lax',
 				expires: new Date(session.expire)
 			});

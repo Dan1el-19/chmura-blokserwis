@@ -3,7 +3,9 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { Toaster } from 'svelte-sonner';
 	import { page } from '$app/state';
-	import { Folder, Settings, Shield, LogOut, Menu, X } from 'lucide-svelte';
+	import { Folder, GearSix, Shield, SignOut, List, X } from 'phosphor-svelte';
+	import { fly, scale } from 'svelte/transition';
+	import { backOut, quintOut } from 'svelte/easing';
 
 	let { children, data } = $props();
 	let isDrawerOpen = $state(false);
@@ -11,10 +13,23 @@
 	function toggleDrawer() {
 		isDrawerOpen = !isDrawerOpen;
 	}
+
 	const allNavItems = [
-		{ href: '/', label: 'Files', icon: Folder, roles: ['basic', 'plus', 'admin'] },
-		{ href: '/main', label: 'Main Storage', icon: Shield, roles: ['plus', 'admin'] },
-		{ href: '/admin', label: 'Admin', icon: Settings, roles: ['admin'] }
+		{
+			href: '/',
+			label: 'Files',
+			icon: Folder,
+			color: 'bg-blue-500',
+			roles: ['basic', 'plus', 'admin']
+		},
+		{
+			href: '/main',
+			label: 'Main Storage',
+			icon: Shield,
+			color: 'bg-emerald-500',
+			roles: ['plus', 'admin']
+		},
+		{ href: '/admin', label: 'Admin', icon: GearSix, color: 'bg-violet-500', roles: ['admin'] }
 	];
 
 	let navItems = $derived(
@@ -27,6 +42,7 @@
 		currentPath;
 		isDrawerOpen = false;
 	});
+
 	let pageTitle = $derived.by(() => {
 		const path = currentPath;
 		const navItem = allNavItems.find((item) => item.href === path);
@@ -58,13 +74,17 @@
 {:else}
 	<div class="flex min-h-dvh flex-col lg:flex-row">
 		<aside
-			class="hidden w-[240px] shrink-0 flex-col border-r border-border-line bg-bg-panel lg:flex"
+			class="sticky top-0 hidden h-dvh w-[280px] shrink-0 flex-col border-r border-border-line bg-bg-panel lg:flex"
 		>
-			<div class="flex h-14 items-center border-b border-border-line px-6">
-				<span class="font-mono text-sm font-bold tracking-tight text-primary">IO.EFFINITY</span>
+			<div class="relative flex h-16 items-center border-b border-border-line px-6">
+				<img src={favicon} alt="" class="h-6 w-6" />
+				<span
+					class="absolute left-1/2 -translate-x-1/2 font-mono text-base font-bold tracking-tight text-text-main"
+					>Effinity Cloud</span
+				>
 			</div>
 
-			<nav class="flex-1 space-y-1 p-4">
+			<nav class="flex-1 space-y-1.5 p-5">
 				{#each navItems as item}
 					<a
 						href={item.href}
@@ -73,7 +93,7 @@
 							? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
 							: 'text-text-muted hover:bg-gray-50 hover:text-text-main dark:hover:bg-zinc-800'}"
 					>
-						<item.icon class="h-4 w-4" />
+						<item.icon class="h-5 w-5" />
 						{item.label}
 					</a>
 				{/each}
@@ -85,7 +105,7 @@
 						type="submit"
 						class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-text-muted transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/10 dark:hover:text-red-400"
 					>
-						<LogOut class="h-4 w-4" />
+						<SignOut class="h-5 w-5" />
 						Log out
 					</button>
 				</form>
@@ -96,76 +116,89 @@
 			<header
 				class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border-line bg-bg-panel px-4 lg:hidden"
 			>
-				<span class="font-mono text-sm font-bold text-primary">IO.EFFINITY</span>
+				<img src={favicon} alt="" class="h-6 w-6" />
+				<span class="absolute left-1/2 -translate-x-1/2 font-mono text-sm font-bold text-text-main"
+					>Effinity Cloud</span
+				>
 				<button
 					onclick={toggleDrawer}
-					class="rounded-md p-2 text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"
+					class="relative flex h-10 w-10 items-center justify-center rounded-full text-text-muted transition-all duration-300
+						   {isDrawerOpen}"
 					aria-label="Toggle menu"
 				>
-					{#if isDrawerOpen}
-						<X class="h-5 w-5" />
-					{:else}
-						<Menu class="h-5 w-5" />
-					{/if}
+					<div class="transition-transform duration-300 {isDrawerOpen ? 'rotate-90' : 'rotate-0'}">
+						{#if isDrawerOpen}
+							<X class="h-6 w-6" weight="bold" />
+						{:else}
+							<List class="h-6 w-6" />
+						{/if}
+					</div>
 				</button>
 			</header>
 
 			{#if isDrawerOpen}
-				<div
-					class="fixed inset-0 z-20 mt-14 bg-bg-app/95 backdrop-blur-sm lg:hidden"
+				<!-- Backdrop -->
+				<button
+					class="fixed inset-0 z-20 mt-14 bg-black/30 backdrop-blur-md lg:hidden"
 					onclick={() => (isDrawerOpen = false)}
-					role="button"
-					tabindex="0"
-					onkeydown={(e) => e.key === 'Escape' && (isDrawerOpen = false)}
+					aria-label="Close menu"
+					transition:scale={{ duration: 200, start: 0.98, opacity: 0 }}
+				></button>
+
+				<!-- Mobile Nav Menu -->
+				<nav
+					class="fixed top-14 right-0 left-0 z-30 flex flex-col gap-2 p-4 lg:hidden"
+					in:fly={{ y: -20, duration: 300, easing: quintOut }}
+					out:fly={{ y: -10, duration: 150 }}
 				>
-					<!-- Stop propagation here to prevent closing when clicking inside -->
-					<nav class="space-y-2 p-4" onclick={(e) => e.stopPropagation()} role="presentation">
-						{#each navItems as item}
-							<a
-								href={item.href}
-								class="flex items-center gap-4 rounded-lg px-4 py-3 text-base font-medium
-                                   {currentPath === item.href
-									? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
-									: 'text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800'}"
+					{#each navItems as item, i}
+						{@const isActive = currentPath === item.href}
+						{@const activeBg =
+							item.color === 'bg-blue-500'
+								? 'bg-blue-50 dark:bg-blue-900/20'
+								: item.color === 'bg-emerald-500'
+									? 'bg-emerald-50 dark:bg-emerald-900/20'
+									: item.color === 'bg-violet-500'
+										? 'bg-violet-50 dark:bg-violet-900/20'
+										: 'bg-bg-panel'}
+						<a
+							href={item.href}
+							class="flex items-center gap-4 rounded-full py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]
+								   {isActive ? activeBg : 'bg-bg-panel'}"
+							in:fly={{ y: -15, duration: 250, delay: 50 + i * 50, easing: backOut }}
+							out:scale={{ duration: 100, start: 0.95 }}
+						>
+							<div
+								class="flex h-10 w-10 items-center justify-center rounded-full {item.color} text-white"
 							>
-								<item.icon class="h-5 w-5" />
-								{item.label}
-							</a>
-						{/each}
-						<div class="my-4 border-t border-border-line"></div>
-						<form action="/logout" method="POST">
-							<button
-								type="submit"
-								class="flex w-full items-center gap-4 rounded-lg px-4 py-3 text-base font-medium text-text-muted hover:text-red-600"
+								<item.icon class="h-5 w-5" weight="bold" />
+							</div>
+							<span class="text-base font-medium text-text-main">{item.label}</span>
+						</a>
+					{/each}
+
+					<!-- Logout -->
+					<form action="/logout" method="POST" class="mt-2">
+						<button
+							type="submit"
+							class="flex w-full items-center gap-4 rounded-full bg-bg-panel py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]"
+							in:fly={{ y: -15, duration: 250, delay: 50 + navItems.length * 50, easing: backOut }}
+							out:scale={{ duration: 100, start: 0.95 }}
+						>
+							<div
+								class="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white"
 							>
-								<LogOut class="h-5 w-5" />
-								Log out
-							</button>
-						</form>
-					</nav>
-				</div>
+								<SignOut class="h-5 w-5" weight="bold" />
+							</div>
+							<span class="text-base font-medium text-text-main">Log out</span>
+						</button>
+					</form>
+				</nav>
 			{/if}
 
-			<main class="flex-1 overflow-y-auto p-4 lg:p-8">
+			<main class="flex-1 overflow-y-auto overscroll-none p-4 lg:p-10">
 				{@render children()}
 			</main>
-
-			<nav
-				class="sticky bottom-0 z-30 flex h-16 w-full items-center justify-around border-t border-border-line bg-bg-panel px-2 lg:hidden"
-			>
-				{#each navItems as item}
-					<a
-						href={item.href}
-						class="flex flex-col items-center justify-center gap-1 rounded-md p-2
-                           {currentPath === item.href
-							? 'text-primary'
-							: 'text-text-muted hover:text-text-main'}"
-					>
-						<item.icon class="h-5 w-5" />
-						<span class="text-[10px] font-medium">{item.label}</span>
-					</a>
-				{/each}
-			</nav>
 		</div>
 	</div>
 {/if}

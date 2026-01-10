@@ -3,7 +3,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { Github } from 'lucide-svelte';
+	import { GithubLogo } from 'phosphor-svelte';
 
 	let { form } = $props();
 	let loading = $state(false);
@@ -22,7 +22,7 @@
 			<div class="grid gap-3">
 				<form action="?/oauth" method="POST">
 					<Button variant="secondary" class="w-full gap-2" type="submit">
-						<Github class="h-4 w-4" />
+						<GithubLogo class="h-4 w-4" />
 						GitHub
 					</Button>
 				</form>

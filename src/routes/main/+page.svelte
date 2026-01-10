@@ -5,8 +5,6 @@
 	import FileBrowser from '$lib/components/files/FileBrowser.svelte';
 	import CreateFolderDialog from '$lib/components/files/CreateFolderDialog.svelte';
 	import StorageWidget from '$lib/components/files/StorageWidget.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import { FolderPlus } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
@@ -50,23 +48,16 @@
 
 <div class="space-y-6">
 	<div class="flex flex-col gap-4 border-b border-border-line pb-4">
-		<div class="flex items-center justify-between">
-			<div class="flex items-center gap-2">
-				<h1 class="text-xl font-bold tracking-tight text-text-main">Shared Storage</h1>
-				{#if data.currentFolderId}
-					<span class="text-text-muted">/</span>
-					<a href="/main" class="text-sm text-primary hover:underline">Root</a>
-				{/if}
-			</div>
-
-			<Button size="sm" variant="secondary" onclick={() => (showCreateFolder = true)}>
-				<FolderPlus class="mr-2 h-4 w-4" />
-				New Folder
-			</Button>
+		<div class="flex items-center gap-2">
+			<h1 class="text-xl font-bold tracking-tight text-text-main lg:text-2xl">Shared Storage</h1>
+			{#if data.currentFolderId}
+				<span class="text-text-muted">/</span>
+				<a href="/main" class="text-sm text-primary hover:underline">Root</a>
+			{/if}
 		</div>
 
 		<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-			<p class="font-mono text-xs text-text-muted">
+			<p class="font-mono text-xs text-text-muted lg:text-sm">
 				{data.files.length} Files, {data.folders.length} Folders
 			</p>
 
@@ -74,7 +65,7 @@
 		</div>
 	</div>
 
-	<UppyZone {uppyState} />
+	<UppyZone {uppyState} onNewFolder={() => (showCreateFolder = true)} />
 
 	<FileBrowser files={data.files} folders={data.folders} />
 </div>
