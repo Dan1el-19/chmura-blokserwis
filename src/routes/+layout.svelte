@@ -69,7 +69,7 @@
 		{@render children()}
 	</main>
 {:else}
-	<div class="flex min-h-dvh flex-col lg:flex-row">
+	<div class="flex h-dvh w-full flex-col overflow-hidden lg:flex-row">
 		<DesktopSidebar {navItems} {currentPath} />
 
 		<div class="flex min-w-0 flex-1 flex-col">
