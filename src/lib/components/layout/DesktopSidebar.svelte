@@ -28,7 +28,7 @@
 		>
 	</div>
 
-	<nav class="flex-1 space-y-1.5 p-5">
+	<nav class="flex-1 space-y-1.5 overflow-y-auto p-5">
 		{#each navItems as item}
 			<a
 				href={item.href}
