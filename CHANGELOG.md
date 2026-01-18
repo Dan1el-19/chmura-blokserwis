@@ -1,3 +1,20 @@
+# [1.8.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.7.2...v1.8.0) (2026-01-18)
+
+
+### Bug Fixes
+
+* cloudbuild.yaml repair ([7467129](https://github.com/Dan1el-19/effinity-cloud/commit/7467129f5c4643753054bb4c40081bd44c0846fe))
+* Correct session cookie name and add private Cache-Control header to responses. ([81a5512](https://github.com/Dan1el-19/effinity-cloud/commit/81a551288ba255d2590fd39726f71548f54238a7))
+* Enhance server hooks logging with request path and no-session cookie status. ([4d2b939](https://github.com/Dan1el-19/effinity-cloud/commit/4d2b939020dba8d41af509470d0305efc5c68b0d))
+* OAuth redirect loop - use env.ORIGIN and proper headers ([797503d](https://github.com/Dan1el-19/effinity-cloud/commit/797503d1a751314382e5c3937664c0584539199c))
+* Resolve layout overflow in main content and sidebar, and update various dependencies. ([7808956](https://github.com/Dan1el-19/effinity-cloud/commit/780895695fa26075791c03a794e89201b0835859))
+
+
+### Features
+
+* enhance ESLint configuration and logging ([bdc7e73](https://github.com/Dan1el-19/effinity-cloud/commit/bdc7e738ae25ed0c5b8f664ab48bc4583edbfced))
+* Implement file sharing with public links, expiration, and custom slugs. ([7180be8](https://github.com/Dan1el-19/effinity-cloud/commit/7180be8ff1a7b42b73b246fe08aa7321ab5c1609))
+
 ## [1.7.3](https://github.com/Dan1el-19/effinity-cloud/compare/v1.7.2...v1.7.3) (2026-01-10)
 
 ### Bug Fixes
