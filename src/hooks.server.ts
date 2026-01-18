@@ -67,7 +67,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 
 		const isPublicRoute = PUBLIC_ROUTES.some((route) => {
-			return event.url.pathname === route;
+			return event.url.pathname === route || event.url.pathname.startsWith('/file/');
 		});
 
 		if (!event.locals.user && !isPublicRoute) {

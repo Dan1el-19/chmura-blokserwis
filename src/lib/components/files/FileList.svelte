@@ -5,20 +5,22 @@
 		DotsThreeVertical,
 		DownloadSimple,
 		Pencil,
-		Trash
+		Trash,
+		Share
 	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 
 	type FileType = { $id: string; name: string; size: number; $createdAt: string };
 	type FolderType = { $id: string; name: string; $createdAt: string; size?: number };
 
-	let { files, folders, onDownload, onRename, onDelete, onNavigate } = $props<{
+	let { files, folders, onDownload, onRename, onDelete, onNavigate, onShare } = $props<{
 		files: FileType[];
 		folders: FolderType[];
 		onDownload: (id: string, name: string, isFolder: boolean) => void;
 		onRename: (id: string, name: string, isFolder: boolean) => void;
 		onDelete: (id: string, name: string, isFolder: boolean) => void;
 		onNavigate: (id: string) => void;
+		onShare: (id: string) => void;
 	}>();
 
 	let activeMenuId = $state<string | null>(null);
@@ -49,7 +51,7 @@
 				</button>
 				<button
 					onclick={() => toggleMenu(folder.$id)}
-					class="rounded-full p-2 text-text-muted hover:bg-gray-100"
+					class="rounded-full p-2 text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"
 				>
 					<DotsThreeVertical class="h-5 w-5" />
 				</button>
@@ -105,14 +107,24 @@
 				</div>
 				<button
 					onclick={() => toggleMenu(file.$id)}
-					class="rounded-full p-2 text-text-muted hover:bg-gray-100"
+					class="rounded-full p-2 text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"
 				>
 					<DotsThreeVertical class="h-5 w-5" />
 				</button>
 			</div>
 
 			{#if activeMenuId === file.$id}
-				<div class="mt-3 grid grid-cols-3 gap-2 border-t border-border-line pt-3">
+				<div class="mt-3 grid grid-cols-4 gap-2 border-t border-border-line pt-3">
+					<button
+						onclick={() => {
+							onShare(file.$id);
+							activeMenuId = null;
+						}}
+						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-gray-50"
+					>
+						<Share class="h-5 w-5 text-blue-500" />
+						<span class="text-[10px] text-text-muted">Share</span>
+					</button>
 					<button
 						onclick={() => {
 							onRename(file.$id, file.name, false);

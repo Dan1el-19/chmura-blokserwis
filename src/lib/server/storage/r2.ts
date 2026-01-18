@@ -28,7 +28,8 @@ export async function getDownloadUrl(key: string, filename: string): Promise<str
 		new GetObjectCommand({
 			Bucket: ENV.R2_BUCKET_NAME,
 			Key: key,
-			ResponseContentDisposition: contentDisposition(filename, { type: 'attachment' })
+			ResponseContentDisposition: contentDisposition(filename, { type: 'attachment' }),
+			ResponseContentType: 'application/octet-stream'
 		}),
 		{ expiresIn: DOWNLOAD_EXPIRES_IN }
 	);

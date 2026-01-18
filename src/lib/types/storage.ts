@@ -46,3 +46,13 @@ export interface FileDownloadResult {
 	file: FileDocument;
 	url: string;
 }
+
+export interface FileShare extends AppwriteDocument {
+	fileId: string;
+	token: string;
+	label: string | null;
+	expiresAt: string | null;
+	autoDelete: boolean;
+	clicks: number;
+	createdBy: string;
+}

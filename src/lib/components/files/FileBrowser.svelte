@@ -4,10 +4,12 @@
 	import FileList from './FileList.svelte';
 	import FileTable from './FileTable.svelte';
 	import RenameDialog from './RenameDialog.svelte';
+	import ShareDialog from './ShareDialog.svelte';
 
 	let { files, folders } = $props();
 
 	let renamingItem = $state<{ id: string; name: string; isFolder: boolean } | null>(null);
+	let sharingItem = $state<{ id: string } | null>(null);
 
 	async function onNavigate(id: string) {
 		window.location.href = `?folder=${id}`;
@@ -50,12 +52,16 @@
 	function onRename(id: string, name: string, isFolder: boolean) {
 		renamingItem = { id, name, isFolder };
 	}
+
+	function onShare(id: string) {
+		sharingItem = { id };
+	}
 </script>
 
 <div class="mt-4">
-	<FileTable {files} {folders} {onDownload} {onDelete} {onRename} {onNavigate} />
+	<FileTable {files} {folders} {onDownload} {onDelete} {onRename} {onNavigate} {onShare} />
 
-	<FileList {files} {folders} {onDownload} {onDelete} {onRename} {onNavigate} />
+	<FileList {files} {folders} {onDownload} {onDelete} {onRename} {onNavigate} {onShare} />
 </div>
 
 {#if renamingItem}
@@ -69,4 +75,8 @@
 			invalidateAll();
 		}}
 	/>
+{/if}
+
+{#if sharingItem}
+	<ShareDialog fileId={sharingItem.id} onClose={() => (sharingItem = null)} />
 {/if}
