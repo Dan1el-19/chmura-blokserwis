@@ -5,6 +5,7 @@ import { getCached, setCache, deleteCache, invalidateByPrefix } from '../cache';
 import { CacheKeys } from '../cache/keys';
 import { DATABASE } from '$lib/constants';
 import type { FolderDocument, ListResult, FolderWithSize } from '$lib/types/storage';
+import { logger } from '$lib/server/logger';
 
 const DATABASE_ID = DATABASE.ID;
 const FOLDERS_TABLE = DATABASE.TABLES.FOLDERS;
@@ -268,7 +269,7 @@ export async function deleteFolder(folderId: string, userId: string): Promise<Fo
 		try {
 			await deleteR2Object(r2Key);
 		} catch (error) {
-			console.error(`Failed to delete R2 object ${r2Key}:`, error);
+			logger.error(`Failed to delete R2 object ${r2Key}:`, error);
 		}
 		deleteCache(CacheKeys.fileMetadata(file.$id));
 	}

@@ -5,6 +5,7 @@ import {
 	PUBLIC_APPWRITE_PROJECT_ID,
 	PUBLIC_APPWRITE_PROJECT_NAME
 } from '$env/static/public';
+import { logger } from '$lib/server/logger';
 
 const envSchema = z.object({
 	PUBLIC_APPWRITE_ENDPOINT: z.url({ message: 'Invalid Appwrite endpoint URL' }),
@@ -32,9 +33,9 @@ const envData = {
 const parsed = envSchema.safeParse(envData);
 
 if (!parsed.success) {
-	console.error('❌ Invalid environment variables:');
+	logger.error('❌ Invalid environment variables:');
 	parsed.error.issues.forEach((issue) => {
-		console.error(`  - ${issue.path.join('.')}: ${issue.message}`);
+		logger.error(`  - ${issue.path.join('.')}: ${issue.message}`);
 	});
 	throw new Error('Environment validation failed. Check your .env file.');
 }

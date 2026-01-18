@@ -8,6 +8,7 @@ import {
 	strictRatelimit
 } from '$lib/server/rate-limit';
 import { env } from '$env/dynamic/private';
+import { logger } from '$lib/server/logger';
 
 const PUBLIC_ROUTES = ['/login', '/register', '/auth/callback'];
 
@@ -47,20 +48,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 		try {
 			if (sessionCookie) {
-				console.log(
+				logger.debug(
 					'[HOOKS]',
 					event.url.pathname,
 					'Session cookie present:',
 					sessionCookie.substring(0, 10) + '...'
 				);
 			} else {
-				console.log('[HOOKS]', event.url.pathname, 'No session cookie');
+				logger.debug('[HOOKS]', event.url.pathname, 'No session cookie');
 			}
 			event.locals.user = await account.get();
-			console.log('[HOOKS]', event.url.pathname, 'User authenticated:', event.locals.user.$id);
+			logger.info('[HOOKS]', event.url.pathname, 'User authenticated:', event.locals.user.$id);
 		} catch (err) {
 			if (sessionCookie) {
-				console.error('[HOOKS]', event.url.pathname, 'Failed to get user from session:', err);
+				logger.error('[HOOKS]', event.url.pathname, 'Failed to get user from session:', err);
 			}
 			event.locals.user = undefined;
 		}
@@ -106,7 +107,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return response;
 	} catch (e: any) {
 		if (e?.status === 303) throw e;
-		console.error('Hooks Error:', e);
+		logger.error('Hooks Error:', e);
 		return new Response(`Internal Error: ${e.message} \nStack: ${e.stack}`, { status: 500 });
 	}
 };

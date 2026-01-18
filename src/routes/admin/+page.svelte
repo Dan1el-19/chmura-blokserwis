@@ -4,13 +4,10 @@
 	import Card from '$lib/components/ui/Card.svelte';
 
 	let { data } = $props();
-
-	// Determine colors/icons dynamically or just hardcode for reliability
 </script>
 
 <div class="space-y-6">
 	<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-		<!-- Total Users -->
 		<Card
 			class="border-border-line bg-bg-panel p-0 transition-all hover:bg-gray-50 dark:hover:bg-zinc-800/50"
 		>
@@ -27,7 +24,6 @@
 			</div>
 		</Card>
 
-		<!-- Basic -->
 		<Card class="border-border-line bg-bg-panel p-0 hover:bg-gray-50 dark:hover:bg-zinc-800/50">
 			<div class="flex items-center gap-4">
 				<div class="rounded-full bg-gray-100 p-2.5 dark:bg-zinc-800">
@@ -42,7 +38,6 @@
 			</div>
 		</Card>
 
-		<!-- Plus -->
 		<Card class="border-border-line bg-bg-panel p-0 hover:bg-gray-50 dark:hover:bg-zinc-800/50">
 			<div class="flex items-center gap-4">
 				<div class="rounded-full bg-purple-100/50 p-2.5 dark:bg-purple-900/20">
@@ -57,7 +52,6 @@
 			</div>
 		</Card>
 
-		<!-- Admin -->
 		<Card class="border-border-line bg-bg-panel p-0 hover:bg-gray-50 dark:hover:bg-zinc-800/50">
 			<div class="flex items-center gap-4">
 				<div class="rounded-full bg-amber-100/50 p-2.5 dark:bg-amber-900/20">
@@ -73,7 +67,6 @@
 		</Card>
 	</div>
 
-	<!-- Storage -->
 	<Card title="System Storage">
 		<div class="flex items-center gap-4">
 			<div class="rounded-full bg-green-100/50 p-3 dark:bg-green-900/20">

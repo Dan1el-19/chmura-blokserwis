@@ -103,7 +103,8 @@ export const PATCH: RequestHandler = async ({ params, locals, request, url }) =>
 		const { effectiveUserId } = await checkAccess(fileId, user, 'write', targetUserId);
 
 		if (name !== undefined) {
-			const file = await renameFile(fileId, name, effectiveUserId);
+			const autoRename = body.autoRename === true;
+			const file = await renameFile(fileId, name, effectiveUserId, autoRename);
 			return json(file);
 		}
 
@@ -114,6 +115,10 @@ export const PATCH: RequestHandler = async ({ params, locals, request, url }) =>
 
 		return json({ error: 'No valid operation specified' }, { status: 400 });
 	} catch (error: any) {
+		if (error.message.startsWith('Conflict:')) {
+			const suggestion = error.message.replace('Conflict: ', '');
+			return json({ error: 'Conflict', suggestion }, { status: 409 });
+		}
 		if (error.message.includes('Access denied') || error.message.includes('Forbidden')) {
 			return json({ error: 'Forbidden' }, { status: 403 });
 		}
