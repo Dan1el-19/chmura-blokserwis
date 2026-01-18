@@ -2,7 +2,8 @@ export const DATABASE = {
 	ID: 'main',
 	TABLES: {
 		FILES: 'files',
-		FOLDERS: 'folders'
+		FOLDERS: 'folders',
+		FILE_SHARES: 'file_shares'
 	}
 } as const;
 

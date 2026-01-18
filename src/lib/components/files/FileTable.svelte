@@ -1,17 +1,18 @@
 <script lang="ts">
-	import { Folder, File as FileIcon, DownloadSimple, Pencil, Trash } from 'phosphor-svelte';
+	import { Folder, File as FileIcon, DownloadSimple, Pencil, Trash, Share } from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 
 	type FileType = { $id: string; name: string; size: number; $createdAt: string };
 	type FolderType = { $id: string; name: string; $createdAt: string; size?: number };
 
-	let { files, folders, onDownload, onRename, onDelete, onNavigate } = $props<{
+	let { files, folders, onDownload, onRename, onDelete, onNavigate, onShare } = $props<{
 		files: FileType[];
 		folders: FolderType[];
 		onDownload: (id: string, name: string, isFolder: boolean) => void;
 		onRename: (id: string, name: string, isFolder: boolean) => void;
 		onDelete: (id: string, name: string, isFolder: boolean) => void;
 		onNavigate: (id: string) => void;
+		onShare: (id: string) => void;
 	}>();
 
 	const formatDate = (date: string) =>
@@ -113,6 +114,13 @@
 					>
 					<td class="px-4 py-3 text-right lg:px-6 lg:py-4">
 						<div class="flex justify-end gap-1 lg:gap-2">
+							<button
+								onclick={() => onShare(file.$id)}
+								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-blue-500 lg:p-2 dark:hover:bg-zinc-700"
+								title="Share"
+							>
+								<Share class="h-4 w-4 lg:h-5 lg:w-5" />
+							</button>
 							<button
 								onclick={() => onDownload(file.$id, file.name, false)}
 								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-primary lg:p-2 dark:hover:bg-zinc-700"

@@ -3,9 +3,62 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style>
+			:root {
+				--loader-bg: #f9fafb;
+				--loader-color: #2d57b3;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--loader-bg: #111111;
+					--loader-color: #3b82f6;
+				}
+			}
+			#app-loader {
+				position: fixed;
+				inset: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background: var(--loader-bg);
+				z-index: 9999;
+				transition: opacity 0.2s ease-out;
+			}
+			#app-loader.fade-out {
+				opacity: 0;
+				pointer-events: none;
+			}
+			.loader-spinner {
+				width: 40px;
+				height: 40px;
+				border: 3px solid transparent;
+				border-top-color: var(--loader-color);
+				border-radius: 50%;
+				animation: spin 0.8s linear infinite;
+			}
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+		</style>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
+		<div id="app-loader" aria-label="Loading application">
+			<div class="loader-spinner"></div>
+		</div>
 		<div style="display: contents">%sveltekit.body%</div>
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				var loader = document.getElementById('app-loader');
+				if (loader) {
+					loader.classList.add('fade-out');
+					setTimeout(function () {
+						loader.remove();
+					}, 200);
+				}
+			});
+		</script>
 	</body>
 </html>

@@ -63,8 +63,8 @@
 
 <Toaster position="top-right" richColors theme="system" />
 
-{#if currentPath.startsWith('/login')}
-	<!-- Login Layout (Minimal) -->
+{#if currentPath.startsWith('/login') || currentPath.startsWith('/file/')}
+	<!-- Minimal Layout (Login, Public Share) -->
 	<main class="min-h-dvh bg-bg-app">
 		{@render children()}
 	</main>
