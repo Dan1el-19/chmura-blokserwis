@@ -45,7 +45,7 @@ export type UploadResult = {
 
 export class UppyState {
 	uppy: Uppy;
-	files = $state<any[]>([]); // Current files in uppy
+	files = $state<any[]>([]);
 	totalProgress = $state(0);
 	isUploading = $state(false);
 
@@ -65,7 +65,6 @@ export class UppyState {
 			autoProceed: true
 		});
 
-		// Only register plugins and listeners in the browser
 		if (typeof window !== 'undefined') {
 			this.uppy.use(GoldenRetriever, { expires: 24 * 60 * 60 * 1000 }).use(AwsS3, {
 				shouldUseMultipart: (file) => (file.size ?? 0) > MULTIPART_THRESHOLD,
@@ -124,7 +123,6 @@ export class UppyState {
 				}
 			});
 
-			// Event Listeners
 			this.uppy.on('file-added', () => this.updateState());
 			this.uppy.on('file-removed', () => this.updateState());
 			this.uppy.on('upload-progress', () => this.updateState());
@@ -142,14 +140,11 @@ export class UppyState {
 					}));
 					options.onComplete?.(mapped);
 
-					// Auto-remove completed files after 3 seconds
 					setTimeout(() => {
 						result.successful?.forEach((file) => {
 							try {
 								this.uppy.removeFile(file.id);
-							} catch (e) {
-								// Ignore if already removed
-							}
+							} catch {}
 						});
 					}, 3000);
 				}
@@ -158,7 +153,6 @@ export class UppyState {
 				options.onError?.(err);
 			});
 
-			// Track upload state
 			this.uppy.on('upload', () => {
 				this.isUploading = true;
 			});
@@ -174,7 +168,6 @@ export class UppyState {
 		this.uppy.destroy();
 	}
 
-	// Actions
 	retryAll() {
 		this.uppy.retryAll();
 	}

@@ -27,7 +27,7 @@
 			return;
 		}
 		await onSave(newPassword);
-		newPassword = ''; // clear on success
+		newPassword = '';
 	}
 </script>
 

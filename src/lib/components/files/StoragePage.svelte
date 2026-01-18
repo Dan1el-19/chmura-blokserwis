@@ -7,7 +7,6 @@
 	import StorageWidget from '$lib/components/files/StorageWidget.svelte';
 	import { toast } from 'svelte-sonner';
 
-	// Define a generic type for data to avoid too strict typing conflicts if models differ slightly
 	interface StorageData {
 		currentFolderId: string | null;
 		files: any[];

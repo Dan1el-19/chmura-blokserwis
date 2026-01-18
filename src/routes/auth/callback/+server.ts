@@ -1,5 +1,6 @@
 import { redirect, type RequestHandler } from '@sveltejs/kit';
 import { createAdminClient, SESSION_COOKIE } from '$lib/server/appwrite';
+import { logger } from '$lib/server/logger';
 
 export const GET: RequestHandler = async (event) => {
 	const userId = event.url.searchParams.get('userId');
@@ -10,12 +11,12 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	const { account } = createAdminClient();
-	console.log('[AUTH_CALLBACK] Attempting to create session...', {
+	logger.info('[AUTH_CALLBACK] Attempting to create session...', {
 		userId,
 		secretLength: secret.length
 	});
 	const session = await account.createSession({ userId, secret });
-	console.log('[AUTH_CALLBACK] Session created successfully', { expire: session.expire });
+	logger.info('[AUTH_CALLBACK] Session created successfully', { expire: session.expire });
 
 	const isSecure = event.url.protocol === 'https:';
 	event.cookies.set(SESSION_COOKIE, session.secret, {

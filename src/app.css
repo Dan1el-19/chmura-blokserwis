@@ -2,7 +2,6 @@
 @import 'tailwindcss';
 
 @theme {
-	/* Colors - Industrial Palette */
 	--color-bg-app: var(--bg-app);
 	--color-bg-panel: var(--bg-panel);
 	--color-primary: var(--color-primary);
@@ -10,37 +9,32 @@
 	--color-text-main: var(--text-main);
 	--color-text-muted: var(--text-muted);
 
-	/* Fonts */
 	--font-sans: 'Inter', sans-serif;
 	--font-mono: 'JetBrains Mono', monospace;
 
-	/* Spacing & Radius */
-	--radius-md: 4px; /* Precision */
+	--radius-md: 4px;
 }
 
 :root {
-	/* Light Mode (Base) */
-	--bg-app: #f9fafb; /* gray-50 equivalent but solid */
+	--bg-app: #f9fafb;
 	--bg-panel: #ffffff;
-	--color-primary: #2d57b3; /* Technical Blue */
-	--border-line: #e5e7eb; /* gray-200 */
-	--text-main: #111827; /* gray-900 */
-	--text-muted: #6b7280; /* gray-500 */
+	--color-primary: #2d57b3;
+	--border-line: #e5e7eb;
+	--text-main: #111827;
+	--text-muted: #6b7280;
 }
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		/* Dark Mode strategies: Warm Graphite / Cool Charcoal */
-		--bg-app: #111111; /* Almost black */
-		--bg-panel: #18181b; /* Zinc-900 */
-		--color-primary: #3b82f6; /* Brighter blue for contrast */
-		--border-line: #27272a; /* Zinc-800 */
-		--text-main: #f3f4f6; /* gray-100 */
-		--text-muted: #9ca3af; /* gray-400 */
+		--bg-app: #111111;
+		--bg-panel: #18181b;
+		--color-primary: #3b82f6;
+		--border-line: #27272a;
+		--text-main: #f3f4f6;
+		--text-muted: #9ca3af;
 	}
 }
 
-/* Global Reset & Base Styles */
 body {
 	background-color: var(--bg-app);
 	color: var(--text-main);
@@ -49,21 +43,19 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 }
 
-/* Utility Classes for "Invisible Precision" */
 .border-subtle {
 	border: 1px solid var(--border-line);
 }
 
 .text-tech {
 	font-family: var(--font-mono);
-	font-size: 0.8125rem; /* 13px */
+	font-size: 0.8125rem;
 }
 
-/* Mobile Touch Targets */
 @media (max-width: 640px) {
 	button,
 	a,
 	input {
-		min-height: 44px; /* Touch target size */
+		min-height: 44px;
 	}
 }

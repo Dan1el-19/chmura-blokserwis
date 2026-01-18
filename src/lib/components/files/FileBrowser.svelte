@@ -3,10 +3,11 @@
 	import { toast } from 'svelte-sonner';
 	import FileList from './FileList.svelte';
 	import FileTable from './FileTable.svelte';
+	import RenameDialog from './RenameDialog.svelte';
 
 	let { files, folders } = $props();
 
-	// Logic Handlers
+	let renamingItem = $state<{ id: string; name: string; isFolder: boolean } | null>(null);
 
 	async function onNavigate(id: string) {
 		window.location.href = `?folder=${id}`;
@@ -46,32 +47,26 @@
 		}
 	}
 
-	async function onRename(id: string, name: string, isFolder: boolean) {
-		const newName = prompt('New name:', name);
-		if (!newName || newName === name) return;
-		try {
-			const endpoint = isFolder ? `/api/folders/${id}` : `/api/files/${id}`;
-			const res = await fetch(endpoint, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name: newName })
-			});
-			if (res.ok) {
-				toast.success(`Renamed to "${newName}"`);
-				invalidateAll();
-			} else {
-				toast.error('Failed to rename');
-			}
-		} catch (e: any) {
-			toast.error(e.message);
-		}
+	function onRename(id: string, name: string, isFolder: boolean) {
+		renamingItem = { id, name, isFolder };
 	}
 </script>
 
 <div class="mt-4">
-	<!-- Desktop View -->
 	<FileTable {files} {folders} {onDownload} {onDelete} {onRename} {onNavigate} />
 
-	<!-- Mobile View -->
 	<FileList {files} {folders} {onDownload} {onDelete} {onRename} {onNavigate} />
 </div>
+
+{#if renamingItem}
+	<RenameDialog
+		fileId={renamingItem.id}
+		currentName={renamingItem.name}
+		isFolder={renamingItem.isFolder}
+		onCancel={() => (renamingItem = null)}
+		onSuccess={() => {
+			renamingItem = null;
+			invalidateAll();
+		}}
+	/>
+{/if}

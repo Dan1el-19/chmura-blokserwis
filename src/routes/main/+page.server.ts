@@ -3,6 +3,7 @@ import { listFiles, createFile } from '$lib/server/storage/files';
 import { listFolders, createFolder } from '$lib/server/storage/folders';
 import { getUserRole, MAIN_STORAGE_OWNER_ID } from '$lib/server/roles';
 import type { Actions, PageServerLoad } from './$types';
+import { logger } from '$lib/server/logger';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user) {
@@ -29,7 +30,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			role
 		};
 	} catch (error: any) {
-		console.error('Error fetching main storage items:', error);
+		logger.error('Error fetching main storage items:', error);
 		return {
 			files: [],
 			folders: [],
@@ -57,7 +58,7 @@ export const actions: Actions = {
 			await createFolder(MAIN_STORAGE_OWNER_ID, name, parentId);
 			return { success: true };
 		} catch (error: any) {
-			console.error('Error creating folder:', error);
+			logger.error('Error creating folder:', error);
 			return fail(500, { error: error.message });
 		}
 	},
@@ -93,7 +94,7 @@ export const actions: Actions = {
 			});
 			return { success: true };
 		} catch (error: any) {
-			console.error('Error creating file metadata:', error);
+			logger.error('Error creating file metadata:', error);
 			return fail(500, { error: error.message });
 		}
 	}

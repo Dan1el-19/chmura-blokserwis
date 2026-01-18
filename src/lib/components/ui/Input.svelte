@@ -7,8 +7,6 @@
 	};
 
 	let { label, value = $bindable(), error, class: className = '', ...rest }: Props = $props();
-
-	// Simple ID generation for A11y if not provided in rest
 	const id = rest.id || `input-${Math.random().toString(36).substring(2, 9)}`;
 </script>
 

@@ -3,6 +3,7 @@ import type { Actions, RequestEvent } from '@sveltejs/kit';
 import { createAdminClient, SESSION_COOKIE } from '$lib/server/appwrite';
 import { OAuthProvider } from 'node-appwrite';
 import { env } from '$env/dynamic/private';
+import { logger } from '$lib/server/logger';
 
 const getOrigin = (event: RequestEvent): string => {
 	return env.ORIGIN || event.url.origin;
@@ -25,9 +26,9 @@ export const actions: Actions = {
 		const { account } = createAdminClient();
 
 		try {
-			console.log('[LOGIN] Attempting email/password session...', { email });
+			logger.info('[LOGIN] Attempting email/password session...', { email });
 			const session = await account.createEmailPasswordSession({ email, password });
-			console.log('[LOGIN] Session created successfully');
+			logger.info('[LOGIN] Session created successfully');
 
 			event.cookies.set(SESSION_COOKIE, session.secret, {
 				path: '/',
@@ -46,7 +47,7 @@ export const actions: Actions = {
 	oauth: async (event) => {
 		const { account } = createAdminClient();
 		const origin = getOrigin(event);
-		console.log('[OAUTH] Using origin:', origin);
+		logger.info('[OAUTH] Using origin:', origin);
 		const redirectUrl = await account.createOAuth2Token({
 			provider: OAuthProvider.Github,
 			success: `${origin}/auth/callback`,
@@ -59,7 +60,7 @@ export const actions: Actions = {
 	google: async (event) => {
 		const { account } = createAdminClient();
 		const origin = getOrigin(event);
-		console.log('[OAUTH] Using origin:', origin);
+		logger.info('[OAUTH] Using origin:', origin);
 		const redirectUrl = await account.createOAuth2Token({
 			provider: OAuthProvider.Google,
 			success: `${origin}/auth/callback`,

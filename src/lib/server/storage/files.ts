@@ -1,5 +1,5 @@
 import { createAdminClient } from '$lib/server/appwrite';
-import { ID, Query, type Models } from 'node-appwrite';
+import { ID, Query, type Models, TablesDB } from 'node-appwrite';
 import { deleteR2Object, getDownloadUrl } from './r2';
 import { checkStorageQuota, MAIN_STORAGE_OWNER_ID } from '../roles';
 import { getCached, setCache, deleteCache, invalidateByPrefix } from '../cache';
@@ -11,9 +11,74 @@ import type {
 	ListResult,
 	FileDownloadResult
 } from '$lib/types/storage';
+import { logger } from '$lib/server/logger';
 
 const DATABASE_ID = DATABASE.ID;
 const FILES_TABLE = DATABASE.TABLES.FILES;
+
+async function ensureUniqueFilename(
+	tablesDB: TablesDB,
+	name: string,
+	userId: string,
+	parentFolderId: string | null,
+	ignoreFileId: string | null = null
+): Promise<string> {
+	let uniqueName = name;
+	let counter = 1;
+	const queries = [Query.equal('ownerId', userId), Query.equal('name', uniqueName)];
+	if (parentFolderId) {
+		queries.push(Query.equal('parentFolderId', parentFolderId));
+	} else {
+		queries.push(Query.isNull('parentFolderId'));
+	}
+
+	const existing = await tablesDB.listRows({
+		databaseId: DATABASE_ID,
+		tableId: FILES_TABLE,
+		queries
+	});
+
+	const conflicts = existing.rows.filter((row) => row.$id !== ignoreFileId);
+
+	if (conflicts.length === 0) {
+		return uniqueName;
+	}
+
+	const lastDotIndex = name.lastIndexOf('.');
+	let baseName = name;
+	let visibleBaseName = name;
+	let extension = '';
+
+	if (lastDotIndex > 0) {
+		baseName = name.substring(0, lastDotIndex);
+		extension = name.substring(lastDotIndex);
+	}
+
+	while (true) {
+		uniqueName = `${baseName}_${counter}${extension}`;
+
+		const checkQueries = [Query.equal('ownerId', userId), Query.equal('name', uniqueName)];
+		if (parentFolderId) {
+			checkQueries.push(Query.equal('parentFolderId', parentFolderId));
+		} else {
+			checkQueries.push(Query.isNull('parentFolderId'));
+		}
+
+		const check = await tablesDB.listRows({
+			databaseId: DATABASE_ID,
+			tableId: FILES_TABLE,
+			queries: checkQueries
+		});
+
+		const validConflicts = check.rows.filter((row) => row.$id !== ignoreFileId);
+
+		if (validConflicts.length === 0) {
+			return uniqueName;
+		}
+
+		counter++;
+	}
+}
 
 export async function getFile(fileId: string, userId: string): Promise<FileDocument> {
 	const { tablesDB } = createAdminClient();
@@ -71,6 +136,14 @@ export async function createFile(metadata: FileMetadata): Promise<FileDocument> 
 		}
 	}
 
+	const uniqueName = await ensureUniqueFilename(
+		tablesDB as any,
+		metadata.name,
+		metadata.ownerId,
+		metadata.parentFolderId || null
+	);
+	metadata.name = uniqueName;
+
 	const file = await tablesDB.createRow({
 		databaseId: DATABASE_ID,
 		tableId: FILES_TABLE,
@@ -124,7 +197,8 @@ export async function listFiles(
 export async function renameFile(
 	fileId: string,
 	newName: string,
-	userId: string
+	userId: string,
+	autoRename = false
 ): Promise<Models.Row> {
 	const { tablesDB } = createAdminClient();
 
@@ -138,11 +212,23 @@ export async function renameFile(
 		throw new Error('Access denied: File does not belong to user.');
 	}
 
+	const uniqueName = await ensureUniqueFilename(
+		tablesDB as any,
+		newName,
+		userId,
+		(file.parentFolderId as string | null) || null,
+		fileId
+	);
+
+	if (!autoRename && uniqueName !== newName) {
+		throw new Error(`Conflict: ${uniqueName}`);
+	}
+
 	const updated = await tablesDB.updateRow({
 		databaseId: DATABASE_ID,
 		tableId: FILES_TABLE,
 		rowId: fileId,
-		data: { name: newName }
+		data: { name: uniqueName }
 	});
 
 	deleteCache(CacheKeys.fileMetadata(fileId));
@@ -224,7 +310,7 @@ export async function deleteFile(fileId: string, userId: string): Promise<FileDo
 	try {
 		await deleteR2Object(r2Key);
 	} catch (error) {
-		console.error(`Failed to delete R2 object ${r2Key}:`, error);
+		logger.error(`Failed to delete R2 object ${r2Key}:`, error);
 	}
 
 	deleteCache(CacheKeys.fileMetadata(fileId));
