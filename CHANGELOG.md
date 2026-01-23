@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.8.0...v1.9.0) (2026-01-23)
+
+
+### Features
+
+* enhance files sharing step 1 ([bc6a655](https://github.com/Dan1el-19/effinity-cloud/commit/bc6a6550d65a92d07d1d493249271e40eff28fd6))
+
 # [1.8.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.7.2...v1.8.0) (2026-01-18)
 
 
