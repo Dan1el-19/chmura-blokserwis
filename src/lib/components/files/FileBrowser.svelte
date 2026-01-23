@@ -9,7 +9,7 @@
 	let { files, folders } = $props();
 
 	let renamingItem = $state<{ id: string; name: string; isFolder: boolean } | null>(null);
-	let sharingItem = $state<{ id: string } | null>(null);
+	let sharingItem = $state<{ id: string; isFolder: boolean } | null>(null);
 
 	async function onNavigate(id: string) {
 		window.location.href = `?folder=${id}`;
@@ -18,13 +18,13 @@
 	async function onDownload(id: string, name: string, isFolder: boolean) {
 		try {
 			if (isFolder) {
-				toast.info(`Preparing zip: ${name}.zip`);
+				toast.info(`Przygotowywanie: ${name}.zip`);
 				window.location.href = `/api/folders/${id}/download`;
 			} else {
 				const res = await fetch(`/api/files/${id}?download=true`);
 				const data = await res.json();
 				if (data.downloadUrl) {
-					toast.info(`Downloading: ${name}`);
+					toast.info(`Pobieranie: ${name}`);
 					window.location.href = data.downloadUrl;
 				}
 			}
@@ -34,15 +34,15 @@
 	}
 
 	async function onDelete(id: string, name: string, isFolder: boolean) {
-		if (!confirm(`Delete "${name}"?`)) return;
+		if (!confirm(`Usunąć "${name}"?`)) return;
 		try {
 			const endpoint = isFolder ? `/api/folders/${id}` : `/api/files/${id}`;
 			const res = await fetch(endpoint, { method: 'DELETE' });
 			if (res.ok) {
-				toast.success(`Deleted "${name}"`);
+				toast.success(`Usunięto "${name}"`);
 				invalidateAll();
 			} else {
-				toast.error('Failed to delete');
+				toast.error('Nie udało się usunąć');
 			}
 		} catch (e: any) {
 			toast.error(e.message);
@@ -53,8 +53,8 @@
 		renamingItem = { id, name, isFolder };
 	}
 
-	function onShare(id: string) {
-		sharingItem = { id };
+	function onShare(id: string, isFolder: boolean = false) {
+		sharingItem = { id, isFolder };
 	}
 </script>
 
@@ -78,5 +78,10 @@
 {/if}
 
 {#if sharingItem}
-	<ShareDialog fileId={sharingItem.id} onClose={() => (sharingItem = null)} />
+	{#if sharingItem.isFolder}
+		<ShareDialog folderId={sharingItem.id} onClose={() => (sharingItem = null)} />
+	{:else}
+		<ShareDialog fileId={sharingItem.id} onClose={() => (sharingItem = null)} />
+	{/if}
 {/if}
+

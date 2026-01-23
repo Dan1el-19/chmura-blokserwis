@@ -12,7 +12,7 @@
 		onRename: (id: string, name: string, isFolder: boolean) => void;
 		onDelete: (id: string, name: string, isFolder: boolean) => void;
 		onNavigate: (id: string) => void;
-		onShare: (id: string) => void;
+		onShare: (id: string, isFolder: boolean) => void;
 	}>();
 
 	const formatDate = (date: string) =>
@@ -70,23 +70,30 @@
 					<td class="px-4 py-3 text-right lg:px-6 lg:py-4">
 						<div class="flex justify-end gap-1 lg:gap-2">
 							<button
+								onclick={() => onShare(folder.$id, true)}
+								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-blue-500 lg:p-2 dark:hover:bg-zinc-700"
+								title="Udostępnij"
+							>
+								<Share class="h-4 w-4 lg:h-5 lg:w-5" />
+							</button>
+							<button
 								onclick={() => onDownload(folder.$id, folder.name, true)}
 								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-primary lg:p-2 dark:hover:bg-zinc-700"
-								title="Download"
+								title="Pobierz"
 							>
 								<DownloadSimple class="h-4 w-4 lg:h-5 lg:w-5" />
 							</button>
 							<button
 								onclick={() => onRename(folder.$id, folder.name, true)}
 								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-text-main lg:p-2 dark:hover:bg-zinc-700"
-								title="Rename"
+								title="Zmień nazwę"
 							>
 								<Pencil class="h-4 w-4 lg:h-5 lg:w-5" />
 							</button>
 							<button
 								onclick={() => onDelete(folder.$id, folder.name, true)}
 								class="rounded-md p-1.5 text-text-muted hover:bg-red-50 hover:text-red-600 lg:p-2 dark:hover:bg-red-900/20"
-								title="Delete"
+								title="Usuń"
 							>
 								<Trash class="h-4 w-4 lg:h-5 lg:w-5" />
 							</button>
@@ -115,9 +122,9 @@
 					<td class="px-4 py-3 text-right lg:px-6 lg:py-4">
 						<div class="flex justify-end gap-1 lg:gap-2">
 							<button
-								onclick={() => onShare(file.$id)}
+								onclick={() => onShare(file.$id, false)}
 								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-blue-500 lg:p-2 dark:hover:bg-zinc-700"
-								title="Share"
+								title="Udostępnij"
 							>
 								<Share class="h-4 w-4 lg:h-5 lg:w-5" />
 							</button>
