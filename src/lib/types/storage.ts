@@ -47,12 +47,19 @@ export interface FileDownloadResult {
 	url: string;
 }
 
+export type ShareType = 'file' | 'folder' | 'zip';
+
 export interface FileShare extends AppwriteDocument {
-	fileId: string;
+	fileId: string | null;
+	folderId: string | null;
+	shareType: ShareType;
 	token: string;
 	label: string | null;
 	expiresAt: string | null;
 	autoDelete: boolean;
 	clicks: number;
 	createdBy: string;
+	passwordHash: string | null;
+	maxDownloads: number | null;
+	downloadCount: number;
 }

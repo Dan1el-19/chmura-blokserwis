@@ -20,7 +20,7 @@
 		onRename: (id: string, name: string, isFolder: boolean) => void;
 		onDelete: (id: string, name: string, isFolder: boolean) => void;
 		onNavigate: (id: string) => void;
-		onShare: (id: string) => void;
+		onShare: (id: string, isFolder: boolean) => void;
 	}>();
 
 	let activeMenuId = $state<string | null>(null);
@@ -59,7 +59,17 @@
 
 			<!-- Context Menu -->
 			{#if activeMenuId === folder.$id}
-				<div class="mt-3 grid grid-cols-3 gap-2 border-t border-border-line pt-3">
+				<div class="mt-3 grid grid-cols-4 gap-2 border-t border-border-line pt-3">
+					<button
+						onclick={() => {
+							onShare(folder.$id, true);
+							activeMenuId = null;
+						}}
+						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-gray-50"
+					>
+						<Share class="h-5 w-5 text-blue-500" />
+						<span class="text-[10px] text-text-muted">Udostępnij</span>
+					</button>
 					<button
 						onclick={() => {
 							onRename(folder.$id, folder.name, true);
@@ -68,7 +78,7 @@
 						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-gray-50"
 					>
 						<Pencil class="h-5 w-5 text-text-main" />
-						<span class="text-[10px] text-text-muted">Rename</span>
+						<span class="text-[10px] text-text-muted">Zmień</span>
 					</button>
 					<button
 						onclick={() => {
@@ -78,7 +88,7 @@
 						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-gray-50"
 					>
 						<DownloadSimple class="h-5 w-5 text-primary" />
-						<span class="text-[10px] text-text-muted">Download</span>
+						<span class="text-[10px] text-text-muted">Pobierz</span>
 					</button>
 					<button
 						onclick={() => {
@@ -88,7 +98,7 @@
 						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-red-50"
 					>
 						<Trash class="h-5 w-5 text-red-600" />
-						<span class="text-[10px] text-text-muted">Delete</span>
+						<span class="text-[10px] text-text-muted">Usuń</span>
 					</button>
 				</div>
 			{/if}
@@ -117,13 +127,13 @@
 				<div class="mt-3 grid grid-cols-4 gap-2 border-t border-border-line pt-3">
 					<button
 						onclick={() => {
-							onShare(file.$id);
+							onShare(file.$id, false);
 							activeMenuId = null;
 						}}
 						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-gray-50"
 					>
 						<Share class="h-5 w-5 text-blue-500" />
-						<span class="text-[10px] text-text-muted">Share</span>
+						<span class="text-[10px] text-text-muted">Udostępnij</span>
 					</button>
 					<button
 						onclick={() => {

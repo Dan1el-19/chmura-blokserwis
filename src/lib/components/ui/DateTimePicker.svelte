@@ -90,7 +90,7 @@
 
 	<Popover.Root bind:open={isOpen}>
 		<Popover.Trigger
-			class="flex h-10 w-full cursor-pointer items-center justify-between rounded-md border border-border-line bg-white px-3 py-2 text-left text-sm transition-colors hover:border-primary/50 focus:ring-1 focus:ring-primary focus:outline-none dark:bg-zinc-950 dark:text-white"
+			class="flex h-10 w-full cursor-pointer items-center justify-between rounded-md border border-border-line bg-white px-3 py-2 text-left text-sm transition-colors hover:border-primary/50 focus:ring-1 focus:ring-primary focus:outline-none dark:bg-zinc-900 dark:text-white"
 		>
 			<span class={calendarValue ? 'text-text-main' : 'text-text-muted/50'}>
 				{displayValue() || placeholder}

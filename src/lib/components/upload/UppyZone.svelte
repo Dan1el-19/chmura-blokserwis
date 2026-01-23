@@ -25,7 +25,7 @@
 
 <div class="space-y-4">
 	<!-- Drop Zone - Desktop only -->
-	<DropZone {uppyState} {openFilePicker} />
+	<DropZone {uppyState} {openFilePicker} {onNewFolder} />
 
 	<!-- File List & Progress -->
 	<UploadProgressList {uppyState} />
