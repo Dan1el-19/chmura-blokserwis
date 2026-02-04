@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.9.0...v1.10.0) (2026-02-04)
+
+
+### Features
+
+* Add server-side logic and API routes for file and folder sharing, including share creation, retrieval, listing, deletion, password protection, expiration, and download limits. ([55263a8](https://github.com/Dan1el-19/effinity-cloud/commit/55263a81bf4a9c4ce6ee99fa2d72aecfd992c00c))
+
 # [1.9.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.8.0...v1.9.0) (2026-01-23)
 
 
