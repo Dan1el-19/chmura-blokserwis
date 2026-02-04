@@ -6,7 +6,7 @@ import {
 	incrementDownloadCount,
 	isDownloadLimitReached
 } from '$lib/server/storage/shares';
-import { getFile } from '$lib/server/storage/files';
+import { getFileMetadata } from '$lib/server/storage/files';
 import { getDownloadUrl } from '$lib/server/storage/r2';
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -52,8 +52,10 @@ export const load: PageServerLoad = async ({ params }) => {
 			};
 		}
 
+		// Use getFileMetadata instead of getFile to avoid access denied for main-storage files
+		const file = await getFileMetadata(share.fileId as string);
+
 		if (share.passwordHash) {
-			const file = await getFile(share.fileId as string, share.createdBy);
 			return {
 				expired: false,
 				fileName: file.name,
@@ -69,7 +71,6 @@ export const load: PageServerLoad = async ({ params }) => {
 			};
 		}
 
-		const file = await getFile(share.fileId as string, share.createdBy);
 		const downloadUrl = await getDownloadUrl(file.r2Key, file.name);
 
 		await incrementDownloadCount(share.$id);
@@ -126,7 +127,8 @@ export const actions: Actions = {
 				return fail(401, { error: 'Nieprawidłowe hasło' });
 			}
 
-			const file = await getFile(share.fileId as string, share.createdBy);
+			// Use getFileMetadata instead of getFile
+			const file = await getFileMetadata(share.fileId as string);
 			const downloadUrl = await getDownloadUrl(file.r2Key, file.name);
 
 			await incrementDownloadCount(share.$id);
