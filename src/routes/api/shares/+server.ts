@@ -1,9 +1,47 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createShare, listShares } from '$lib/server/storage/shares';
-import { getFile } from '$lib/server/storage/files';
-import { getFolder } from '$lib/server/storage/folders';
-import type { ShareType } from '$lib/types/storage';
+import { getFile, getFileMetadata } from '$lib/server/storage/files';
+import { getFolder, getFolderMetadata } from '$lib/server/storage/folders';
+import { getUserRole, MAIN_STORAGE_OWNER_ID, type UserPreferences } from '$lib/server/roles';
+import type { ShareType, FileDocument, FolderDocument } from '$lib/types/storage';
+import type { Models } from 'node-appwrite';
+
+// Helper function to get file with main-storage access support
+async function getFileWithAccess(fileId: string, user: Models.User<UserPreferences>): Promise<{ file: FileDocument; effectiveUserId: string }> {
+	const role = getUserRole(user);
+	const file = await getFileMetadata(fileId);
+	
+	// Owner has access
+	if (file.ownerId === user.$id) {
+		return { file, effectiveUserId: user.$id };
+	}
+	
+	// Admin and plus users can access main-storage files
+	if (file.ownerId === MAIN_STORAGE_OWNER_ID && role !== 'basic') {
+		return { file, effectiveUserId: MAIN_STORAGE_OWNER_ID };
+	}
+	
+	throw new Error('Access denied: File does not belong to user.');
+}
+
+// Helper function to get folder with main-storage access support
+async function getFolderWithAccess(folderId: string, user: Models.User<UserPreferences>): Promise<{ folder: FolderDocument; effectiveUserId: string }> {
+	const role = getUserRole(user);
+	const folder = await getFolderMetadata(folderId);
+	
+	// Owner has access
+	if (folder.ownerId === user.$id) {
+		return { folder, effectiveUserId: user.$id };
+	}
+	
+	// Admin and plus users can access main-storage folders
+	if (folder.ownerId === MAIN_STORAGE_OWNER_ID && role !== 'basic') {
+		return { folder, effectiveUserId: MAIN_STORAGE_OWNER_ID };
+	}
+	
+	throw new Error('Access denied: Folder does not belong to user.');
+}
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -17,11 +55,11 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	try {
 		if (fileId) {
-			await getFile(fileId, locals.user.$id);
+			await getFileWithAccess(fileId, locals.user as Models.User<UserPreferences>);
 			const shares = await listShares({ fileId });
 			return json(shares);
 		} else if (folderId) {
-			await getFolder(folderId, locals.user.$id);
+			await getFolderWithAccess(folderId, locals.user as Models.User<UserPreferences>);
 			const shares = await listShares({ folderId });
 			return json(shares);
 		}
@@ -61,10 +99,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		let name: string;
 
 		if (fileId) {
-			const file = await getFile(fileId, locals.user.$id);
+			const { file } = await getFileWithAccess(fileId, locals.user as Models.User<UserPreferences>);
 			name = file.name;
 		} else {
-			const folder = await getFolder(folderId, locals.user.$id);
+			const { folder } = await getFolderWithAccess(folderId, locals.user as Models.User<UserPreferences>);
 			name = folder.name;
 		}
 

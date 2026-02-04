@@ -2,8 +2,9 @@ import { createAdminClient } from '$lib/server/appwrite';
 import { DATABASE } from '$lib/constants';
 import { ID, Query } from 'node-appwrite';
 import type { FileShare, ShareType } from '$lib/types/storage';
-import { deleteFile, getFile } from './files';
-import { deleteFolder } from './folders';
+import { deleteFile, getFileMetadata } from './files';
+import { deleteFolder, getFolderMetadata } from './folders';
+import { getUserRole, MAIN_STORAGE_OWNER_ID, type UserPreferences } from '$lib/server/roles';
 import bcrypt from 'bcrypt';
 
 function randomHash(length: number = 6): string {
@@ -147,13 +148,38 @@ export async function getShareByTokenWithExpiredCheck(
 	if (share.expiresAt && new Date(share.expiresAt) < new Date()) {
 		if (share.autoDelete) {
 			try {
+				const { users } = createAdminClient();
+				let effectiveUserId = share.createdBy;
+
+				// Check if user has access to main storage if needed
+				const checkMainStorageAccess = async () => {
+					try {
+						const user = await users.get<UserPreferences>(share.createdBy);
+						const role = getUserRole(user);
+						if (role !== 'basic') {
+							effectiveUserId = MAIN_STORAGE_OWNER_ID;
+						}
+					} catch (e) {
+						console.error('Failed to check user role for auto-delete:', e);
+					}
+				};
+
 				if (share.fileId) {
-					const file = await getFile(share.fileId, share.createdBy).catch(() => null);
+					const file = await getFileMetadata(share.fileId).catch(() => null);
 					if (file) {
-						await deleteFile(share.fileId as string, share.createdBy);
+						if (file.ownerId === MAIN_STORAGE_OWNER_ID) {
+							await checkMainStorageAccess();
+						}
+						await deleteFile(share.fileId as string, effectiveUserId);
 					}
 				} else if (share.folderId) {
-					await deleteFolder(share.folderId, share.createdBy).catch(() => null);
+					const folder = await getFolderMetadata(share.folderId).catch(() => null);
+					if (folder) {
+						if (folder.ownerId === MAIN_STORAGE_OWNER_ID) {
+							await checkMainStorageAccess();
+						}
+						await deleteFolder(share.folderId, effectiveUserId);
+					}
 				}
 				await deleteShare(share.$id);
 			} catch (e) {
