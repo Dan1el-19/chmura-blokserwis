@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.11.0...v1.12.0) (2026-03-24)
+
+
+### Features
+
+* Add release upload functionality with a dedicated modal, API endpoint, and external app configuration updates. ([27e2696](https://github.com/Dan1el-19/effinity-cloud/commit/27e2696216bd911db5566eb14d4b016a1718afc9))
+
 # [1.11.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.10.0...v1.11.0) (2026-03-24)
 
 
