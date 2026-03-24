@@ -53,3 +53,35 @@ export function parseOrError<T>(
 	}
 	return { error: result.error };
 }
+
+// Releases schemas
+export const releaseTagSchema = z
+	.string()
+	.min(1)
+	.max(50)
+	.regex(/^[a-zA-Z0-9._-]+$/, 'Invalid tag format');
+
+export const releaseFilenameSchema = z
+	.string()
+	.min(1, 'Filename cannot be empty')
+	.max(255, 'Filename too long')
+	.regex(/^[\w\-. ]+\.apk$/i, 'Only .apk files are allowed');
+
+export const releaseUploadSchema = z.object({
+	filename: releaseFilenameSchema,
+	type: z.string(),
+	overwrite: z.boolean().optional()
+});
+
+export const createReleaseSchema = z.object({
+	name: releaseFilenameSchema,
+	size: z.number().int().positive(),
+	r2Key: z.string().min(1),
+	tags: z.array(releaseTagSchema).max(10).optional(),
+	notes: z.string().max(2048).optional()
+});
+
+export const updateReleaseSchema = z.object({
+	tags: z.array(releaseTagSchema).max(10).optional(),
+	notes: z.string().max(2048).optional()
+});

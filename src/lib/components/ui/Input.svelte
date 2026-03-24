@@ -6,8 +6,7 @@
 		[key: string]: any;
 	};
 
-	let { label, value = $bindable(), error, class: className = '', ...rest }: Props = $props();
-	const id = rest.id || `input-${Math.random().toString(36).substring(2, 9)}`;
+	let { label, value = $bindable(), error, class: className = '', id = `input-${Math.random().toString(36).substring(2, 9)}`, ...rest }: Props = $props();
 </script>
 
 <div class={className}>

@@ -17,7 +17,7 @@
 	} from 'phosphor-svelte';
 	import DateTimePicker from '$lib/components/ui/DateTimePicker.svelte';
 	import type { FileShare, ShareType } from '$lib/types/storage';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 
 	interface Props {
 		fileId?: string;
@@ -27,7 +27,7 @@
 
 	let { fileId, folderId, onClose }: Props = $props();
 
-	const isFolder = !!folderId;
+	let isFolder = $derived(!!folderId);
 
 	let shares = $state<FileShare[]>([]);
 	let loading = $state(false);
@@ -41,7 +41,7 @@
 	let slugError = $state('');
 	let password = $state('');
 	let maxDownloads = $state<number | null>(null);
-	let shareType = $state<ShareType>(isFolder ? 'folder' : 'file');
+	let shareType = $state<ShareType>(untrack(() => folderId ? 'folder' : 'file'));
 
 	async function loadShares() {
 		loading = true;
@@ -184,7 +184,7 @@
 					<!-- Folder share type selector -->
 					{#if isFolder}
 						<div>
-							<label class="mb-1.5 block text-sm font-medium text-text-main">Typ udostępnienia</label>
+							<span class="mb-1.5 block text-sm font-medium text-text-main">Typ udostępnienia</span>
 							<div class="flex gap-2">
 								<button
 									type="button"

@@ -3,7 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { Toaster } from 'svelte-sonner';
 	import { page } from '$app/state';
-	import { Folder, GearSix, Shield } from 'phosphor-svelte';
+	import { Folder, GearSix, Shield, RocketLaunch } from 'phosphor-svelte';
 	import DesktopSidebar from '$lib/components/layout/DesktopSidebar.svelte';
 	import MobileHeader from '$lib/components/layout/MobileHeader.svelte';
 	import MobileDrawer from '$lib/components/layout/MobileDrawer.svelte';
@@ -25,6 +25,13 @@
 			icon: Shield,
 			color: 'bg-emerald-500',
 			roles: ['plus', 'admin']
+		},
+		{
+			href: '/releases',
+			label: 'Releases',
+			icon: RocketLaunch,
+			color: 'bg-orange-500',
+			roles: ['admin']
 		},
 		{ href: '/admin', label: 'Admin', icon: GearSix, color: 'bg-violet-500', roles: ['admin'] }
 	];

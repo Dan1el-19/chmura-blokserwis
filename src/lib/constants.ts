@@ -3,7 +3,8 @@ export const DATABASE = {
 	TABLES: {
 		FILES: 'files',
 		FOLDERS: 'folders',
-		FILE_SHARES: 'file_shares'
+		FILE_SHARES: 'file_shares',
+		RELEASES: 'releases'
 	}
 } as const;
 

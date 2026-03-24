@@ -47,7 +47,9 @@
 						? 'bg-emerald-50 dark:bg-emerald-900/20'
 						: item.color === 'bg-violet-500'
 							? 'bg-violet-50 dark:bg-violet-900/20'
-							: 'bg-bg-panel'}
+							: item.color === 'bg-orange-500'
+								? 'bg-orange-50 dark:bg-orange-900/20'
+								: 'bg-bg-panel'}
 			<a
 				href={item.href}
 				class="flex items-center gap-4 rounded-full py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]
