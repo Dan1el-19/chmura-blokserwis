@@ -9,7 +9,7 @@
 	type Props = {
 		file: File;
 		existingRelease?: ParsedRelease | null;
-		onConfirm: (data: { name: string; tags: string[]; notes: string; overwrite: boolean }) => void;
+		onConfirm: (data: { name: string; tags: string[]; notes: string; overwrite: boolean; forceUpdate: boolean }) => void;
 		onCancel: () => void;
 	};
 
@@ -17,14 +17,23 @@
 
 	let { file, existingRelease = null, onConfirm, onCancel }: Props = $props();
 
-	let name = $state(untrack(() => file.name));
+	// Automatically format the filename to match blokserwis-X.Y.Z.apk if it doesn't already
+	let initialName = untrack(() => file.name);
+	if (!initialName.startsWith('blokserwis-')) {
+		const vMatch = initialName.match(/(\d+\.\d+\.\d+)/);
+		if (vMatch) {
+			initialName = `blokserwis-${vMatch[1]}.apk`;
+		}
+	}
+	let name = $state(initialName);
 	let tags = $state<string[]>([]);
 	let notes = $state('');
 	let overwrite = $state(false);
+	let forceUpdate = $state(false);
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
-		onConfirm({ name, tags, notes, overwrite });
+		onConfirm({ name, tags, notes, overwrite, forceUpdate });
 	}
 
 	function formatSize(bytes: number): string {
@@ -40,9 +49,18 @@
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<div class="rounded-md bg-gray-50 p-3 dark:bg-zinc-800/50">
 				<p class="text-sm text-text-muted">
-					Selected file: <span class="font-medium text-text-main">{file.name}</span>
+					Wybrany plik: <span class="font-medium text-text-main">{file.name}</span>
 				</p>
+				{#if file.name !== name}
+					<p class="mt-1 text-xs text-yellow-600 dark:text-yellow-400">
+						Automatycznie sformatowano nazwę docelową
+					</p>
+				{/if}
 				<p class="mt-1 text-xs text-text-muted">Size: {formatSize(file.size)}</p>
+				<div class="mt-2 border-t border-border-line pt-2 text-xs text-text-muted">
+					<p>Zostanie nagrany do bazy jako wersja: <span class="font-medium text-text-main">{name.match(/(\d+\.\d+\.\d+)/)?.[1] || '?'}</span></p>
+					<p class="mt-0.5">Ścieżka na R2 (r2Key): <span class="font-mono text-[10px] text-text-main">releases/{name}</span></p>
+				</div>
 			</div>
 
 			{#if existingRelease}
@@ -81,6 +99,18 @@
 					rows="3"
 					class="w-full rounded-md border border-border-line bg-transparent px-3 py-2 text-sm placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
 				></textarea>
+			</div>
+
+			<div class="flex items-center gap-2 pt-1">
+				<input
+					type="checkbox"
+					id="forceUpdate"
+					bind:checked={forceUpdate}
+					class="h-4 w-4 rounded border-border-line text-red-500 focus:ring-red-500"
+				/>
+				<label for="forceUpdate" class="text-sm font-medium text-text-main">
+					Wymuś aktualizację (Force Update)
+				</label>
 			</div>
 
 			<div class="flex justify-end gap-2 pt-2">

@@ -78,7 +78,9 @@ export const createReleaseSchema = z.object({
 	size: z.number().int().positive(),
 	r2Key: z.string().min(1),
 	tags: z.array(releaseTagSchema).max(10).optional(),
-	notes: z.string().max(2048).optional()
+	notes: z.string().max(2048).optional(),
+	overwrite: z.boolean().optional(),
+	forceUpdate: z.boolean().default(false).optional()
 });
 
 export const updateReleaseSchema = z.object({
