@@ -50,6 +50,7 @@
 		tags: string[];
 		notes: string;
 		overwrite: boolean;
+		forceUpdate: boolean;
 	}) {
 		if (!pendingFile) return;
 
@@ -63,7 +64,7 @@
 			},
 			onComplete: async (result) => {
 				// Create release record in DB
-				await fetch('/api/releases', {
+				const res = await fetch('/api/releases', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
@@ -72,9 +73,16 @@
 						r2Key: result.key,
 						tags: uploadData.tags,
 						notes: uploadData.notes,
-						overwrite: uploadData.overwrite
+						overwrite: uploadData.overwrite,
+						forceUpdate: uploadData.forceUpdate
 					})
 				});
+
+				if (!res.ok) {
+					console.error('Failed to register release in DB:', await res.text());
+					// It's a best effort to clean up, but file might be orphaned in R2.
+					// At least the user should see an error, but let's reset state for now.
+				}
 
 				// Reset state and refresh
 				pendingFile = null;
