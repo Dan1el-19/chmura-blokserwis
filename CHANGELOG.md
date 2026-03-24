@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.10.0...v1.11.0) (2026-03-24)
+
+
+### Features
+
+* Implement comprehensive APK release management system with dedicated UI, API endpoints, and server-side storage. ([243098f](https://github.com/Dan1el-19/effinity-cloud/commit/243098fee4afff38330ccf3cfaa0edaa11186a1e))
+
 # [1.10.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.9.0...v1.10.0) (2026-02-04)
 
 
