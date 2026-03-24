@@ -59,9 +59,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 			event.locals.user = await account.get();
 			logger.info('[HOOKS]', event.url.pathname, 'User authenticated:', event.locals.user.$id);
-		} catch (err) {
+		} catch (err: any) {
 			if (sessionCookie) {
-				logger.error('[HOOKS]', event.url.pathname, 'Failed to get user from session:', err);
+				if (err?.code === 401 && err?.type === 'general_unauthorized_scope') {
+					logger.debug('[HOOKS]', event.url.pathname, 'Session expired or invalidated (requires login).');
+				} else {
+					logger.error('[HOOKS]', event.url.pathname, 'Failed to get user from session:', err);
+				}
 			}
 			event.locals.user = undefined;
 		}
@@ -87,7 +91,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const isAdminRoute =
 			event.url.pathname.startsWith('/admin') ||
 			event.url.pathname.startsWith('/api/admin') ||
-			event.url.pathname.startsWith('/preview/');
+			event.url.pathname.startsWith('/preview/') ||
+			event.url.pathname.startsWith('/releases') ||
+			event.url.pathname.startsWith('/api/releases');
 
 		if (isAdminRoute && event.locals.user) {
 			const role = getUserRole(event.locals.user);

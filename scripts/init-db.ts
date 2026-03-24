@@ -179,6 +179,71 @@ async function createCollections() {
 		];
 		await runAttributes(fileAttrs);
 
+		console.log("Creating 'releases' collection...");
+		try {
+			await tablesDB.createTable({
+				databaseId: DATABASE_ID,
+				tableId: 'releases',
+				name: 'Releases'
+			});
+			console.log("Created 'releases' collection.");
+		} catch (e: any) {
+			if (e.code === 409) console.log("'releases' collection already exists.");
+			else console.error("Error creating 'releases':", e.message);
+		}
+
+		console.log("Creating attributes for 'releases'...");
+		const releaseAttrs = [
+			() =>
+				tablesDB.createStringColumn({
+					databaseId: DATABASE_ID,
+					tableId: 'releases',
+					key: 'name',
+					size: 255,
+					required: true
+				}),
+			() =>
+				tablesDB.createIntegerColumn({
+					databaseId: DATABASE_ID,
+					tableId: 'releases',
+					key: 'size',
+					required: true
+				}),
+			() =>
+				tablesDB.createStringColumn({
+					databaseId: DATABASE_ID,
+					tableId: 'releases',
+					key: 'r2Key',
+					size: 512,
+					required: true
+				}),
+			() =>
+				tablesDB.createStringColumn({
+					databaseId: DATABASE_ID,
+					tableId: 'releases',
+					key: 'tags',
+					size: 1024,
+					required: false
+				}),
+			() =>
+				tablesDB.createStringColumn({
+					databaseId: DATABASE_ID,
+					tableId: 'releases',
+					key: 'uploadedBy',
+					size: 36,
+					required: true
+				}),
+			() =>
+				tablesDB.createStringColumn({
+					databaseId: DATABASE_ID,
+					tableId: 'releases',
+					key: 'notes',
+					size: 2048,
+					required: false
+				})
+		];
+		await runAttributes(releaseAttrs);
+
 		console.log('Creating indexes...');
 		await createIndexes();
 
@@ -208,7 +273,8 @@ async function createIndexes() {
 		{ tableId: 'files', key: 'files_owner_parent_idx', columns: ['ownerId', 'parentFolderId'] },
 		{ tableId: 'folders', key: 'folders_ownerId_idx', columns: ['ownerId'] },
 		{ tableId: 'folders', key: 'folders_parentFolderId_idx', columns: ['parentFolderId'] },
-		{ tableId: 'folders', key: 'folders_owner_parent_idx', columns: ['ownerId', 'parentFolderId'] }
+		{ tableId: 'folders', key: 'folders_owner_parent_idx', columns: ['ownerId', 'parentFolderId'] },
+		{ tableId: 'releases', key: 'releases_name_idx', columns: ['name'] }
 	];
 
 	for (const idx of indexes) {
