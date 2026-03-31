@@ -5,7 +5,6 @@
 	import TagsInput from './TagsInput.svelte';
 	import { Warning } from 'phosphor-svelte';
 	import type { ParsedRelease } from '$lib/types/releases';
-	import { untrack } from 'svelte';
 
 	type Props = {
 		file: File;
@@ -16,7 +15,7 @@
 
 	let { file, existingRelease = null, onConfirm, onCancel }: Props = $props();
 
-	let name = $state(untrack(() => file.name));
+	let name = $state(file.name);
 	let tags = $state<string[]>([]);
 	let notes = $state('');
 	let overwrite = $state(false);
@@ -45,14 +44,18 @@
 			</div>
 
 			{#if existingRelease}
-				<div class="flex items-start gap-3 rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3">
+				<div
+					class="flex items-start gap-3 rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3"
+				>
 					<Warning class="h-5 w-5 shrink-0 text-yellow-500" weight="fill" />
 					<div class="space-y-2 text-sm">
 						<p class="font-medium text-yellow-600 dark:text-yellow-400">
 							A release with this name already exists
 						</p>
 						<p class="text-text-muted">
-							Existing version uploaded on {new Date(existingRelease.$createdAt).toLocaleDateString()}
+							Existing version uploaded on {new Date(
+								existingRelease.$createdAt
+							).toLocaleDateString()}
 							({formatSize(existingRelease.size)})
 						</p>
 						<label class="flex items-center gap-2">

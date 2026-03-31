@@ -16,10 +16,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const validated = releaseUploadSchema.safeParse(body);
 
 	if (!validated.success) {
-		return json(
-			{ error: 'Validation error', details: validated.error.issues },
-			{ status: 400 }
-		);
+		return json({ error: 'Validation error', details: validated.error.issues }, { status: 400 });
 	}
 
 	const { filename, type, overwrite } = validated.data;

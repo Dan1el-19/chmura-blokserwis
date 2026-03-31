@@ -19,7 +19,9 @@
 	let showSuggestions = $state(false);
 
 	const filteredSuggestions = $derived(
-		suggestions.filter((s) => !value.includes(s) && s.toLowerCase().includes(inputValue.toLowerCase()))
+		suggestions.filter(
+			(s) => !value.includes(s) && s.toLowerCase().includes(inputValue.toLowerCase())
+		)
 	);
 
 	function addTag(tag: string) {
@@ -48,7 +50,7 @@
 
 <div class="space-y-1.5">
 	{#if label}
-		<label class="block text-sm font-medium text-text-muted" for="tags-input-element">{label}</label>
+		<label class="block text-sm font-medium text-text-muted">{label}</label>
 	{/if}
 
 	<div
@@ -71,19 +73,18 @@
 
 		<div class="relative flex-1">
 			<input
-				id="tags-input-element"
 				type="text"
 				bind:value={inputValue}
 				onkeydown={handleKeydown}
 				onfocus={() => (showSuggestions = true)}
 				onblur={() => setTimeout(() => (showSuggestions = false), 200)}
 				{placeholder}
-				class="w-full min-w-25 border-0 bg-transparent p-0 text-sm text-text-main placeholder:text-text-muted focus:outline-none focus:ring-0"
+				class="w-full min-w-25 border-0 bg-transparent p-0 text-sm text-text-main placeholder:text-text-muted focus:ring-0 focus:outline-none"
 			/>
 
 			{#if showSuggestions && filteredSuggestions.length > 0}
 				<div
-					class="absolute left-0 top-full z-10 mt-1 w-48 rounded-md border border-border-line bg-bg-panel py-1 shadow-lg"
+					class="absolute top-full left-0 z-10 mt-1 w-48 rounded-md border border-border-line bg-bg-panel py-1 shadow-lg"
 				>
 					{#each filteredSuggestions as suggestion}
 						<button

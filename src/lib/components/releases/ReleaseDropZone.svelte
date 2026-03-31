@@ -62,7 +62,9 @@
 	onkeydown={(e) => e.key === 'Enter' && openPicker()}
 	class="hidden cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors lg:block {isDragging
 		? 'border-primary bg-primary/5'
-		: 'border-border-line hover:border-primary/50'} {disabled ? 'cursor-not-allowed opacity-50' : ''}"
+		: 'border-border-line hover:border-primary/50'} {disabled
+		? 'cursor-not-allowed opacity-50'
+		: ''}"
 >
 	<div class="flex flex-col items-center gap-3">
 		{#if isDragging}
@@ -73,7 +75,9 @@
 				<CloudArrowUp class="h-6 w-6 text-primary lg:h-7 lg:w-7" />
 			</div>
 			<div>
-				<p class="font-medium text-text-main">Przeciągnij plik APK lub <span class="text-primary hover:underline">wybierz</span></p>
+				<p class="font-medium text-text-main">
+					Przeciągnij plik APK lub <span class="text-primary hover:underline">wybierz</span>
+				</p>
 				<p class="mt-1 text-sm text-text-muted">Akceptowane tylko pliki .apk</p>
 			</div>
 		{/if}

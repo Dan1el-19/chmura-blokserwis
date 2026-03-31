@@ -175,7 +175,9 @@
 
 		<div class="space-y-6 overflow-y-auto p-4">
 			<!-- Create New Share -->
-			<div class="space-y-4 rounded-lg border border-border-line bg-gray-50 p-4 dark:bg-zinc-900/50">
+			<div
+				class="space-y-4 rounded-lg border border-border-line bg-gray-50 p-4 dark:bg-zinc-900/50"
+			>
 				<h4 class="flex items-center gap-2 text-sm font-medium">
 					<Plus size={16} /> Utwórz nowy link
 				</h4>
@@ -184,7 +186,9 @@
 					<!-- Folder share type selector -->
 					{#if isFolder}
 						<div>
-							<label class="mb-1.5 block text-sm font-medium text-text-main">Typ udostępnienia</label>
+							<label class="mb-1.5 block text-sm font-medium text-text-main"
+								>Typ udostępnienia</label
+							>
 							<div class="flex gap-2">
 								<button
 									type="button"
@@ -220,7 +224,11 @@
 					{/if}
 
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-						<Input label="Etykieta (opcjonalne)" placeholder="np. Dla klienta X" bind:value={label} />
+						<Input
+							label="Etykieta (opcjonalne)"
+							placeholder="np. Dla klienta X"
+							bind:value={label}
+						/>
 						<div>
 							<Input
 								label="Własny slug URL (opcjonalne)"
@@ -311,7 +319,8 @@
 										<span class="truncate text-sm font-medium">{share.label || share.token}</span>
 										<span
 											class="rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase {badge.class}"
-										>{badge.label}</span>
+											>{badge.label}</span
+										>
 										{#if share.autoDelete}
 											<span
 												class="rounded bg-red-500/10 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-red-500 uppercase"
