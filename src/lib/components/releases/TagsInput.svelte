@@ -48,7 +48,7 @@
 
 <div class="space-y-1.5">
 	{#if label}
-		<span class="block text-sm font-medium text-text-muted">{label}</span>
+		<label class="block text-sm font-medium text-text-muted" for="tags-input-element">{label}</label>
 	{/if}
 
 	<div
@@ -71,13 +71,14 @@
 
 		<div class="relative flex-1">
 			<input
+				id="tags-input-element"
 				type="text"
 				bind:value={inputValue}
 				onkeydown={handleKeydown}
 				onfocus={() => (showSuggestions = true)}
 				onblur={() => setTimeout(() => (showSuggestions = false), 200)}
 				{placeholder}
-				class="w-full min-w-[100px] border-0 bg-transparent p-0 text-sm text-text-main placeholder:text-text-muted focus:outline-none focus:ring-0"
+				class="w-full min-w-25 border-0 bg-transparent p-0 text-sm text-text-main placeholder:text-text-muted focus:outline-none focus:ring-0"
 			/>
 
 			{#if showSuggestions && filteredSuggestions.length > 0}

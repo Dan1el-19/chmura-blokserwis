@@ -59,13 +59,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 			event.locals.user = await account.get();
 			logger.info('[HOOKS]', event.url.pathname, 'User authenticated:', event.locals.user.$id);
-		} catch (err: any) {
+		} catch (err) {
 			if (sessionCookie) {
-				if (err?.code === 401 && err?.type === 'general_unauthorized_scope') {
-					logger.debug('[HOOKS]', event.url.pathname, 'Session expired or invalidated (requires login).');
-				} else {
-					logger.error('[HOOKS]', event.url.pathname, 'Failed to get user from session:', err);
-				}
+				logger.error('[HOOKS]', event.url.pathname, 'Failed to get user from session:', err);
 			}
 			event.locals.user = undefined;
 		}
