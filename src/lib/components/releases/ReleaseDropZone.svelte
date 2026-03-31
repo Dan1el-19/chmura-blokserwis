@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CloudArrowUp, AndroidLogo, Plus } from 'phosphor-svelte';
+	import { CloudArrowUp, AndroidLogo } from 'phosphor-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	type Props = {
@@ -78,16 +78,4 @@
 			</div>
 		{/if}
 	</div>
-</div>
-
-<!-- Mobile FAB -->
-<div class="fixed right-6 bottom-6 z-40 lg:hidden">
-	<button
-		class="flex h-14 w-14 items-center justify-center rounded-xl bg-primary shadow-lg transition-transform active:scale-95 {disabled ? 'cursor-not-allowed opacity-50' : ''}"
-		onclick={openPicker}
-		aria-label="Upload APK"
-		{disabled}
-	>
-		<Plus class="h-6 w-6 text-white" weight="bold" />
-	</button>
 </div>

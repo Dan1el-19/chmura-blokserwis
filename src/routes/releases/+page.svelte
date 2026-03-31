@@ -4,10 +4,12 @@
 	import ReleaseUploadModal from '$lib/components/releases/ReleaseUploadModal.svelte';
 	import ReleasesList from '$lib/components/releases/ReleasesList.svelte';
 	import EditReleaseDialog from '$lib/components/releases/EditReleaseDialog.svelte';
+	import ForceSyncModal from '$lib/components/releases/ForceSyncModal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ReleaseUploader } from '$lib/modules/release-upload.svelte';
 	import type { ParsedRelease } from '$lib/types/releases';
-	import { Trash, Warning } from 'phosphor-svelte';
+	import { Trash, Warning, ArrowsClockwise, CloudCheck } from 'phosphor-svelte';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
 
@@ -25,6 +27,53 @@
 	// Delete state
 	let deletingRelease = $state<ParsedRelease | null>(null);
 	let deleteLoading = $state(false);
+
+	// Sync state
+	let externalConfig = $state<any>(null);
+	let configLoading = $state(true);
+	let syncReleaseInfo = $state<ParsedRelease | null>(null);
+	let syncLoading = $state(false);
+
+	async function fetchExternalConfig() {
+		configLoading = true;
+		try {
+			const res = await fetch('/api/releases/sync');
+			if (res.ok) {
+				const json = await res.json();
+				externalConfig = json.config;
+			}
+		} catch (error) {
+			console.error("Couldn't fetch external config:", error);
+		} finally {
+			configLoading = false;
+		}
+	}
+
+	onMount(() => {
+		fetchExternalConfig();
+	});
+
+	function handleForceSyncInit(release: ParsedRelease) {
+		syncReleaseInfo = release;
+	}
+
+	async function confirmForceSync(data: { forceUpdate: boolean }) {
+		if (!syncReleaseInfo) return;
+
+		syncLoading = true;
+		const res = await fetch('/api/releases/sync', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ releaseId: syncReleaseInfo.$id, forceUpdate: data.forceUpdate })
+		});
+		
+		syncLoading = false;
+		syncReleaseInfo = null;
+
+		if (res.ok) {
+			await fetchExternalConfig();
+		}
+	}
 
 	async function handleFileSelect(file: File) {
 		// Check if release with same name exists
@@ -50,7 +99,6 @@
 		tags: string[];
 		notes: string;
 		overwrite: boolean;
-		forceUpdate: boolean;
 	}) {
 		if (!pendingFile) return;
 
@@ -64,7 +112,7 @@
 			},
 			onComplete: async (result) => {
 				// Create release record in DB
-				const res = await fetch('/api/releases', {
+				const response = await fetch('/api/releases', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
@@ -73,15 +121,19 @@
 						r2Key: result.key,
 						tags: uploadData.tags,
 						notes: uploadData.notes,
-						overwrite: uploadData.overwrite,
-						forceUpdate: uploadData.forceUpdate
+						overwrite: uploadData.overwrite
 					})
 				});
 
-				if (!res.ok) {
-					console.error('Failed to register release in DB:', await res.text());
-					// It's a best effort to clean up, but file might be orphaned in R2.
-					// At least the user should see an error, but let's reset state for now.
+				if (!response.ok) {
+					const payload = await response.json().catch(() => ({}));
+					const errorMessage = payload?.error || payload?.message || 'Failed to register release in DB';
+					throw new Error(errorMessage);
+				}
+
+				const payload = await response.json().catch(() => ({}));
+				if (payload?.warning) {
+					console.warn('Release created with warning:', payload.warning);
 				}
 
 				// Reset state and refresh
@@ -93,6 +145,7 @@
 				uploader = null;
 
 				await invalidateAll();
+				await fetchExternalConfig();
 			},
 			onError: (err) => {
 				console.error('Upload error:', err);
@@ -156,6 +209,7 @@
 		deleteLoading = false;
 		deletingRelease = null;
 		await invalidateAll();
+		await fetchExternalConfig();
 	}
 </script>
 
@@ -168,6 +222,39 @@
 		<h1 class="text-2xl font-bold tracking-tight text-text-main">Releases</h1>
 		<p class="mt-1 text-sm text-text-muted">Manage APK releases for the mobile application</p>
 	</header>
+
+	<!-- External config box -->
+	<div class="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-5 py-4 dark:border-primary/10 dark:bg-primary/10">
+		<div class="flex items-start gap-4">
+			<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
+				<CloudCheck class="h-5 w-5" weight="bold" />
+			</div>
+			<div>
+				<h3 class="font-medium text-text-main flex items-center gap-2">
+					Aktualna wersja konfiguracji na środowisku zdalnym
+					{#if configLoading}
+						<span class="inline-block h-3 w-3 animate-ping rounded-full bg-primary/50"></span>
+					{/if}
+				</h3>
+				{#if !configLoading && externalConfig}
+					<p class="mt-1 text-sm text-text-muted">
+						Wersja: <strong class="text-text-main">{externalConfig.latestVersion}</strong>
+						<span class="mx-2">•</span> 
+						Rozmiar: {(externalConfig.apkSizeBytes / (1024 * 1024)).toFixed(2)} MB
+						{#if externalConfig.forceUpdate}
+							<span class="mx-2">•</span> 
+							<span class="text-xs font-semibold text-rose-500 bg-rose-500/10 px-1.5 py-0.5 rounded-sm">Force Update ON</span>
+						{/if}
+					</p>
+				{:else if !configLoading}
+					<p class="mt-1 text-sm text-text-muted">Brak konfiguracji bazy zewnętrznej lub problem z pobraniem.</p>
+				{/if}
+			</div>
+		</div>
+		<Button variant="secondary" size="sm" onclick={fetchExternalConfig} title="Odśwież">
+			<ArrowsClockwise class="h-4 w-4" />
+		</Button>
+	</div>
 
 	{#if isUploading}
 		<div class="rounded-lg border border-border-line bg-bg-panel p-6">
@@ -194,6 +281,7 @@
 		onDownload={handleDownload}
 		onEdit={handleEdit}
 		onDelete={handleDelete}
+		onForceSync={handleForceSyncInit}
 	/>
 </div>
 
@@ -244,4 +332,14 @@
 			</div>
 		</div>
 	</div>
+{/if}
+
+<!-- Force Sync Dialog -->
+{#if syncReleaseInfo}
+	<ForceSyncModal
+		release={syncReleaseInfo}
+		loading={syncLoading}
+		onConfirm={confirmForceSync}
+		onCancel={() => (syncReleaseInfo = null)}
+	/>
 {/if}

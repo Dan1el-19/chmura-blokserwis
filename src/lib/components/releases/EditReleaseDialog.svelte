@@ -3,6 +3,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import TagsInput from './TagsInput.svelte';
 	import type { ParsedRelease } from '$lib/types/releases';
+	import { untrack } from 'svelte';
 
 	type Props = {
 		release: ParsedRelease;
@@ -11,11 +12,9 @@
 		loading?: boolean;
 	};
 
-	import { untrack } from 'svelte';
-
 	let { release, onSave, onCancel, loading = false }: Props = $props();
 
-	let tags = $state<string[]>(untrack(() => [...release.tags]));
+	let tags = $state(untrack(() => [...release.tags]));
 	let notes = $state(untrack(() => release.notes || ''));
 
 	function handleSubmit(e: Event) {

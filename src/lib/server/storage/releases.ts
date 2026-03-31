@@ -108,7 +108,7 @@ export async function updateRelease(
 	return parseRelease(release as unknown as ReleaseDocument);
 }
 
-export async function deleteRelease(releaseId: string, keepR2Object: boolean = false): Promise<void> {
+export async function deleteRelease(releaseId: string): Promise<void> {
 	const { tablesDB } = createAdminClient();
 
 	const release = await tablesDB.getRow({
@@ -125,12 +125,10 @@ export async function deleteRelease(releaseId: string, keepR2Object: boolean = f
 		rowId: releaseId
 	});
 
-	if (!keepR2Object) {
-		try {
-			await deleteR2Object(r2Key);
-		} catch (error) {
-			logger.error(`Failed to delete R2 object ${r2Key}:`, error);
-		}
+	try {
+		await deleteR2Object(r2Key);
+	} catch (error) {
+		logger.error(`Failed to delete R2 object ${r2Key}:`, error);
 	}
 }
 
