@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.12.0...v1.13.0) (2026-03-31)
+
+
+### Features
+
+* implement release management system with external configuration synchronization and UI components ([7edfb57](https://github.com/Dan1el-19/effinity-cloud/commit/7edfb57f24a537fc75a0978ce17a19734c692860))
+
 # [1.12.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.11.0...v1.12.0) (2026-03-24)
 
 
