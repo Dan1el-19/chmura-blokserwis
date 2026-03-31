@@ -4,12 +4,9 @@ import {
 	getRelease,
 	updateRelease,
 	deleteRelease,
-	getReleaseDownloadUrl,
-	listReleases
+	getReleaseDownloadUrl
 } from '$lib/server/storage/releases';
 import { updateReleaseSchema } from '$lib/schemas';
-import { getExternalAppConfig, updateExternalAppConfig, withRetry } from '$lib/server/externalConfig';
-import { logger } from '$lib/server/logger';
 
 export const GET: RequestHandler = async ({ params }) => {
 	const { releaseId } = params;
@@ -29,10 +26,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 	const validated = updateReleaseSchema.safeParse(body);
 
 	if (!validated.success) {
-		return json(
-			{ error: 'Validation error', details: validated.error.issues },
-			{ status: 400 }
-		);
+		return json({ error: 'Validation error', details: validated.error.issues }, { status: 400 });
 	}
 
 	try {
@@ -46,51 +40,10 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 export const DELETE: RequestHandler = async ({ params }) => {
 	const { releaseId } = params;
 
-	let releaseToDelete;
-	try {
-		releaseToDelete = await getRelease(releaseId);
-	} catch {
-		return json({ error: 'Release not found' }, { status: 404 });
-	}
-
-	// Extract version number dynamically
-	const versionMatch = releaseToDelete.name.match(/[\w\-]+-(\d+\.\d+\.\d+)\.apk$/);
-	const versionToDelete = versionMatch ? versionMatch[1] : releaseToDelete.name;
-
 	try {
 		await deleteRelease(releaseId);
-
-		// Re-sync logic to maintain continuity in app_config
-		try {
-			const externalConfig = await getExternalAppConfig();
-			
-			// Jeśli skasowano plik który przed chwilą był hostowany jako "latestVersion"
-			if (externalConfig && externalConfig.latestVersion === versionToDelete) {
-				const remainingReleases = await listReleases();
-				
-				if (remainingReleases.length > 0) {
-					const nextLatest = remainingReleases[0];
-					const nextVerMatch = nextLatest.name.match(/[\w\-]+-(\d+\.\d+\.\d+)\.apk$/);
-					const nextVersion = nextVerMatch ? nextVerMatch[1] : nextLatest.name;
-
-					await withRetry(() => 
-						updateExternalAppConfig(nextVersion, false, nextLatest.notes || undefined, nextLatest.size)
-					);
-					logger.info(`Reverted external config to version ${nextVersion} after deleting ${versionToDelete}.`);
-				} else {
-					// Fallback kiedy skasują wszystko z serwera
-					await withRetry(() => 
-						updateExternalAppConfig('', false, 'System holds no viable releases available', 0)
-					);
-					logger.info(`Cleared external config as all releases were entirely deleted.`);
-				}
-			}
-		} catch (syncError) {
-			logger.error("Failed to safely re-sync app config during a release deletion: ", syncError);
-		}
-
 		return json({ success: true });
 	} catch {
-		return json({ error: 'Failed to safely delete release' }, { status: 500 });
+		return json({ error: 'Release not found' }, { status: 404 });
 	}
 };
