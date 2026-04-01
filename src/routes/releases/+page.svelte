@@ -41,9 +41,12 @@
 			if (res.ok) {
 				const json = await res.json();
 				externalConfig = json.config;
+			} else {
+				const jsErr = await res.json();
+				console.error('Remote Config 500 Details:', jsErr.details || jsErr.error);
 			}
 		} catch (error) {
-			console.error("Couldn't fetch external config:", error);
+			console.error("Fetch API completely failed:", error);
 		} finally {
 			configLoading = false;
 		}
