@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.0...v1.13.1) (2026-04-01)
+
+
+### Bug Fixes
+
+* rescue forcesync features after refactor oversight ([7afc088](https://github.com/Dan1el-19/effinity-cloud/commit/7afc0882a3d2d157f0bfb1fe3e7e99fceefefe11))
+
 # [1.13.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.12.0...v1.13.0) (2026-03-31)
 
 
