@@ -1,3 +1,10 @@
+## [1.13.4](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.3...v1.13.4) (2026-04-01)
+
+
+### Bug Fixes
+
+* implement release management API endpoints and upload modal with version validation and auto-syncing configuration ([d7d1b2e](https://github.com/Dan1el-19/effinity-cloud/commit/d7d1b2e50daf15f0ae57d74099d139bed7ce1209))
+
 ## [1.13.3](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.2...v1.13.3) (2026-04-01)
 
 
