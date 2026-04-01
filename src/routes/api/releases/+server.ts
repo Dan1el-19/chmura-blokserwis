@@ -4,7 +4,8 @@ import {
 	listReleases,
 	createRelease,
 	getReleaseByName,
-	deleteRelease
+	deleteRelease,
+	updateRelease
 } from '$lib/server/storage/releases';
 import { createReleaseSchema } from '$lib/schemas';
 import { deleteR2Object } from '$lib/server/storage/r2';
@@ -66,6 +67,24 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	} catch (error: any) {
 		logger.error('Failed to create release locally:', error);
 		return json({ error: error?.message || 'Failed to register release in local DB' }, { status: 500 });
+	}
+
+	// Post-create tag shift:
+	try {
+		const allReleases = await listReleases();
+		for (const r of allReleases) {
+			if (r.$id !== release.$id && r.tags?.includes('latest')) {
+				const updatedTags = r.tags.filter((t: string) => t !== 'latest');
+				await updateRelease(r.$id, { tags: updatedTags });
+			}
+		}
+
+		if (!release.tags?.includes('latest')) {
+			const newTags = [...(release.tags || []), 'latest'];
+			release = await updateRelease(release.$id, { tags: newTags });
+		}
+	} catch (e) {
+		logger.warn('Failed to shift latest tag across releases: ', e);
 	}
 
 	// Post-create sync
