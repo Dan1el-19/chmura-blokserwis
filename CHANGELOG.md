@@ -1,3 +1,10 @@
+## [1.13.3](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.2...v1.13.3) (2026-04-01)
+
+
+### Bug Fixes
+
+* Appwrite environment variables for release synchronization ([567b352](https://github.com/Dan1el-19/effinity-cloud/commit/567b352f9934a448eed330197451e9634a112df2))
+
 ## [1.13.2](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.1...v1.13.2) (2026-04-01)
 
 
