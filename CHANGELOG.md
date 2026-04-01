@@ -1,3 +1,10 @@
+## [1.13.2](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.1...v1.13.2) (2026-04-01)
+
+
+### Bug Fixes
+
+* implement external Appwrite configuration sync service and API route ([058d304](https://github.com/Dan1el-19/effinity-cloud/commit/058d3042cb08b3665c3946ec9d3de0b32faa4756))
+
 ## [1.13.1](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.0...v1.13.1) (2026-04-01)
 
 
