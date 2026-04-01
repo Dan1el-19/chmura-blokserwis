@@ -5,6 +5,7 @@
 	import TagsInput from './TagsInput.svelte';
 	import { Warning } from 'phosphor-svelte';
 	import type { ParsedRelease } from '$lib/types/releases';
+	import { untrack } from 'svelte';
 
 	type Props = {
 		file: File;
@@ -15,7 +16,7 @@
 
 	let { file, existingRelease = null, onConfirm, onCancel }: Props = $props();
 
-	let name = $state(file.name);
+	let name = $state(untrack(() => file.name));
 	let tags = $state<string[]>([]);
 	let notes = $state('');
 	let overwrite = $state(false);
