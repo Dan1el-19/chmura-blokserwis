@@ -9,6 +9,7 @@ import {
 import { createReleaseSchema } from '$lib/schemas';
 import { deleteR2Object } from '$lib/server/storage/r2';
 import { logger } from '$lib/server/logger';
+import { updateExternalAppConfig, withRetry } from '$lib/server/externalConfig';
 
 export const GET: RequestHandler = async () => {
 	const releases = await listReleases();
@@ -28,7 +29,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ error: 'Validation error', details: validated.error.issues }, { status: 400 });
 	}
 
-	const { name, size, r2Key, tags, notes } = validated.data;
+	const { name, size, r2Key, tags, notes, forceUpdate } = validated.data;
 
 	// Check if release with same name exists and overwrite flag is set
 	const existing = await getReleaseByName(name);
@@ -48,8 +49,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		await deleteRelease(existing.$id);
 	}
 
+	// Extract version from name if possible (e.g. blokserwis-1.0.0.apk -> 1.0.0)
+	const versionMatch = name.match(/[\w\-]+-(\d+\.\d+\.\d+)\.apk$/);
+	const version = versionMatch ? versionMatch[1] : name;
+
+	let release;
 	try {
-		const release = await createRelease({
+		release = await createRelease({
 			name,
 			size,
 			r2Key,
@@ -57,7 +63,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			uploadedBy: user.$id,
 			notes
 		});
+	} catch (error: any) {
+		logger.error('Failed to create release locally:', error);
+		return json({ error: error?.message || 'Failed to register release in local DB' }, { status: 500 });
+	}
 
+	// Post-create sync
+	try {
+		await withRetry(() => updateExternalAppConfig(version, forceUpdate ?? false, notes, size));
+		logger.info('External app config updated successfully');
 		return json({ release }, { status: 201 });
 	} catch (error: any) {
 		const message = error?.message || 'Failed to register release in DB';

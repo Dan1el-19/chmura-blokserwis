@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
-	import { DownloadSimple, PencilSimple, Trash, AndroidLogo } from 'phosphor-svelte';
+	import { DownloadSimple, PencilSimple, Trash, AndroidLogo, ArrowsClockwise } from 'phosphor-svelte';
 	import type { ParsedRelease } from '$lib/types/releases';
 
 	type Props = {
@@ -8,9 +8,10 @@
 		onEdit: (release: ParsedRelease) => void;
 		onDelete: (release: ParsedRelease) => void;
 		onDownload: (release: ParsedRelease) => void;
+		onForceSync: (release: ParsedRelease) => void;
 	};
 
-	let { releases, onEdit, onDelete, onDownload }: Props = $props();
+	let { releases, onEdit, onDelete, onDownload, onForceSync }: Props = $props();
 
 	function formatSize(bytes: number): string {
 		if (bytes >= 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
@@ -83,6 +84,9 @@
 						</td>
 						<td class="px-4 py-3">
 							<div class="flex justify-end gap-1">
+								<Button variant="ghost" size="icon" onclick={() => onForceSync(release)} title="Force Sync">
+									<ArrowsClockwise class="h-4 w-4" />
+								</Button>
 								<Button
 									variant="ghost"
 									size="icon"

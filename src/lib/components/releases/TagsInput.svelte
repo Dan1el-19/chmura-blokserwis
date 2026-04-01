@@ -50,7 +50,7 @@
 
 <div class="space-y-1.5">
 	{#if label}
-		<label class="block text-sm font-medium text-text-muted">{label}</label>
+		<label for="tags-input-field" class="block text-sm font-medium text-text-muted">{label}</label>
 	{/if}
 
 	<div
@@ -73,6 +73,7 @@
 
 		<div class="relative flex-1">
 			<input
+				id="tags-input-field"
 				type="text"
 				bind:value={inputValue}
 				onkeydown={handleKeydown}
