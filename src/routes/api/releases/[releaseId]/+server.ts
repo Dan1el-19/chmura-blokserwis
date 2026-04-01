@@ -73,6 +73,12 @@ export const DELETE: RequestHandler = async ({ params }) => {
 					await withRetry(() => 
 						updateExternalAppConfig(nextVersion, false, nextLatest.notes || undefined, nextLatest.size)
 					);
+					
+					if (!nextLatest.tags?.includes('latest')) {
+						const updatedTags = [...(nextLatest.tags || []), 'latest'];
+						await updateRelease(nextLatest.$id, { tags: updatedTags });
+					}
+					
 					logger.info(`Reverted external config to version ${nextVersion} after deleting ${versionToDelete}.`);
 				} else {
 					// Fallback kiedy skasują wszystko z serwera
