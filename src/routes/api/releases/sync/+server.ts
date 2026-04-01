@@ -14,7 +14,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		const config = await getExternalAppConfig();
 		return json({ config });
 	} catch (error: any) {
-		return json({ error: 'Failed to fetch remote config' }, { status: 500 });
+		return json({ error: 'Failed to fetch remote config', details: error?.message }, { status: 500 });
 	}
 };
 
@@ -49,6 +49,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ success: true, config: result }, { status: 200 });
 	} catch (error: any) {
 		logger.error('Failed to sync release to remote app config:', error);
-		return json({ error: 'Failed to sync to remote config DB' }, { status: 500 });
+		return json({ error: 'Failed to sync to remote config DB', details: error?.message }, { status: 500 });
 	}
 };

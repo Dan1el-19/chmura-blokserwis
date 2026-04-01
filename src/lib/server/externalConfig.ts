@@ -1,4 +1,4 @@
-import { Client, TablesDB, AppwriteException } from 'node-appwrite';
+import { Client, Databases, AppwriteException } from 'node-appwrite';
 import { PUBLIC_APPWRITE_ENDPOINT, PUBLIC_APPWRITE_PROJECT_ID } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 import { logger } from './logger';
@@ -17,7 +17,7 @@ function getExternalClient() {
 		.setProject(env.RELEASES_APPWRITE_PROJECT_ID)
 		.setKey(env.RELEASES_APPWRITE_API_KEY);
 
-	return new TablesDB(client);
+	return new Databases(client);
 }
 
 export type ExternalAppConfig = {
@@ -31,12 +31,15 @@ export type ExternalAppConfig = {
 // Helper for fetching Appwrite external sync document
 export async function getExternalAppConfig(): Promise<ExternalAppConfig | null> {
     try {
-        const tablesDB = getExternalClient();
-        const doc = await tablesDB.getRow({
+        const databases = getExternalClient();
+        const ObjectArgs = {
 			databaseId: DB_ID,
-			tableId: TABLE_ID,
-			rowId: ROW_ID
-		});
+			collectionId: TABLE_ID,
+			documentId: ROW_ID
+		};
+        const doc = await databases.getDocument(
+			ObjectArgs.databaseId, ObjectArgs.collectionId, ObjectArgs.documentId
+		);
         
         return {
             latestVersion: doc.latestVersion as string,
@@ -61,7 +64,7 @@ export async function updateExternalAppConfig(
 	changelog: string | undefined,
 	apkSizeBytes: number
 ) {
-	const tablesDB = getExternalClient();
+	const databases = getExternalClient();
 
 	const data = {
 		latestVersion: version,
@@ -71,20 +74,20 @@ export async function updateExternalAppConfig(
 	};
 
 	try {
-		return await tablesDB.updateRow({
-			databaseId: DB_ID,
-			tableId: TABLE_ID,
-			rowId: ROW_ID,
+		return await databases.updateDocument(
+			DB_ID,
+			TABLE_ID,
+			ROW_ID,
 			data
-		});
+		);
 	} catch (error: any) {
 		if (error instanceof AppwriteException && error.code === 404) {
-			return await tablesDB.createRow({
-				databaseId: DB_ID,
-				tableId: TABLE_ID,
-				rowId: ROW_ID,
+			return await databases.createDocument(
+				DB_ID,
+				TABLE_ID,
+				ROW_ID,
 				data
-			});
+			);
 		} else {
 			throw error;
 		}
