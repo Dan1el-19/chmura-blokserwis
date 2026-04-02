@@ -6,7 +6,7 @@
 
 	type Props = {
 		release: ParsedRelease;
-		onConfirm: (data: { forceUpdate: boolean }) => void;
+		onConfirm: (data: { forceUpdate: boolean; channel: 'stable' | 'beta' }) => void;
 		onCancel: () => void;
 		loading?: boolean;
 	};
@@ -14,10 +14,11 @@
 	let { release, onConfirm, onCancel, loading = false }: Props = $props();
 
 	let forceUpdate = $state(true);
+	let channel = $state<'stable' | 'beta'>('stable');
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
-		onConfirm({ forceUpdate });
+		onConfirm({ forceUpdate, channel });
 	}
 </script>
 
@@ -27,10 +28,36 @@
 			<div class="rounded-md bg-gray-50 p-3 dark:bg-zinc-800/50">
 				<p class="text-sm font-medium text-text-main">Sync target: <span class="font-bold text-primary">{release.name}</span></p>
 			</div>
-            
+
 			<p class="text-sm text-text-muted">
-				You are about to force external app configuration to match this release. This action sets the latest version available over-the-air.
+				Wymuszasz aktualizację zewnętrznej konfiguracji aplikacji do tej wersji. Wybierz kanał dystrybucji.
 			</p>
+
+			<div class="space-y-2">
+				<p class="block text-sm font-medium text-text-muted">Kanał</p>
+				<div class="flex gap-3">
+					<label class="flex items-center gap-2 cursor-pointer select-none">
+						<input
+							type="radio"
+							name="channel"
+							value="stable"
+							bind:group={channel}
+							class="h-4 w-4 border-border-line text-primary focus:ring-primary"
+						/>
+						<span class="text-sm font-medium text-text-main">stable</span>
+					</label>
+					<label class="flex items-center gap-2 cursor-pointer select-none">
+						<input
+							type="radio"
+							name="channel"
+							value="beta"
+							bind:group={channel}
+							class="h-4 w-4 border-border-line text-primary focus:ring-primary"
+						/>
+						<span class="text-sm font-medium text-text-main">beta</span>
+					</label>
+				</div>
+			</div>
 
 			<div class="flex items-center gap-3">
 				<input
@@ -40,7 +67,7 @@
 					class="h-4 w-4 rounded border-border-line text-primary focus:ring-primary"
 				/>
 				<label for="forceUpdate" class="text-sm font-medium text-text-main cursor-pointer select-none">
-					Require app update (Force Update)
+					Wymagaj aktualizacji (Force Update)
 				</label>
 			</div>
 
@@ -48,9 +75,10 @@
 				<Button variant="ghost" onclick={onCancel} type="button">Cancel</Button>
 				<Button type="submit" {loading}>
 					<ArrowsClockwise class="mr-2 h-4 w-4" />
-					Synchronize
+					Synchronizuj
 				</Button>
 			</div>
 		</form>
 	</Card>
 </div>
+
