@@ -10,7 +10,7 @@
 	type Props = {
 		file: File;
 		existingRelease?: ParsedRelease | null;
-		onConfirm: (data: { name: string; tags: string[]; notes: string; overwrite: boolean }) => void;
+		onConfirm: (data: { name: string; tags: string[]; notes: string; overwrite: boolean; channel: 'stable' | 'beta' }) => void;
 		onCancel: () => void;
 	};
 
@@ -18,22 +18,29 @@
 
 	let name = $state(untrack(() => file.name));
 	let extractedVersion = $derived.by(() => {
-		const match = name.match(/[\w\-]+-(\d+\.\d+\.\d+)[\w\-]*\.apk$/i); 
+		const match = name.match(/[\w\-]+-(\d+\.\d+\.\d+(?:[.-][\w.]+)?)[\w\-]*\.apk$/i);
 		const fallbackMatch = name.match(/(\d+\.\d+\.\d+)/);
-		
+
 		if (match) return match[1];
 		return fallbackMatch ? fallbackMatch[1] : null;
 	});
-	
-	let isValidFormat = $derived(/^blokse?rwis-\d+\.\d+\.\d+\.apk$/i.test(name));
+
+	// Beta detected when filename contains pre-release suffix (e.g. -dev, -alpha, -beta, -rc)
+	let isBetaFilename = $derived(/[.-](dev|alpha|beta|rc)[.\d]*/i.test(name));
+	let isValidFormat = $derived(/^blokse?rwis-\d+\.\d+\.\d+(?:[.-][\w.]+)?\.apk$/i.test(name));
 
 	let tags = $state<string[]>([]);
 	let notes = $state('');
 	let overwrite = $state(false);
+	let channel = $state<'stable' | 'beta'>('stable');
+
+	$effect(() => {
+		channel = isBetaFilename ? 'beta' : 'stable';
+	});
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
-		onConfirm({ name, tags, notes, overwrite });
+		onConfirm({ name, tags, notes, overwrite, channel });
 	}
 
 	function formatSize(bytes: number): string {
@@ -97,7 +104,7 @@
 							Brak wykrytej wersji
 						</span>
 					{/if}
-					
+
 					{#if isValidFormat}
 						<span class="inline-flex items-center rounded-md bg-emerald-500/10 px-2 py-0.5 text-[0.7rem] font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
 							<Check class="mr-1 h-3 w-3" /> Szablon poprawny
@@ -108,6 +115,35 @@
 						</span>
 					{/if}
 				</div>
+			</div>
+
+			<div class="space-y-2">
+				<p class="block text-sm font-medium text-text-muted">Kanał dystrybucji</p>
+				<div class="flex gap-4">
+					<label class="flex items-center gap-2 cursor-pointer select-none">
+						<input
+							type="radio"
+							name="upload-channel"
+							value="stable"
+							bind:group={channel}
+							class="h-4 w-4 border-border-line text-primary focus:ring-primary"
+						/>
+						<span class="text-sm font-medium text-text-main">stable</span>
+					</label>
+					<label class="flex items-center gap-2 cursor-pointer select-none">
+						<input
+							type="radio"
+							name="upload-channel"
+							value="beta"
+							bind:group={channel}
+							class="h-4 w-4 border-border-line text-primary focus:ring-primary"
+						/>
+						<span class="text-sm font-medium text-text-main">beta</span>
+					</label>
+				</div>
+				{#if isBetaFilename}
+					<p class="text-xs text-amber-500">Wykryto sufiks beta – kanał ustawiony automatycznie na <strong>beta</strong>.</p>
+				{/if}
 			</div>
 
 			<TagsInput bind:value={tags} label="Tags" placeholder="Add version tags..." />

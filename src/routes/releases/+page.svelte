@@ -29,7 +29,8 @@
 	let deleteLoading = $state(false);
 
 	// Sync state
-	let externalConfig = $state<any>(null);
+	let externalConfigStable = $state<any>(null);
+	let externalConfigBeta = $state<any>(null);
 	let configLoading = $state(true);
 	let syncReleaseInfo = $state<ParsedRelease | null>(null);
 	let syncLoading = $state(false);
@@ -37,16 +38,14 @@
 	async function fetchExternalConfig() {
 		configLoading = true;
 		try {
-			const res = await fetch('/api/releases/sync');
-			if (res.ok) {
-				const json = await res.json();
-				externalConfig = json.config;
-			} else {
-				const jsErr = await res.json();
-				console.error('Remote Config 500 Details:', jsErr.details || jsErr.error);
-			}
+			const [resStable, resBeta] = await Promise.all([
+				fetch('/api/releases/sync?channel=stable'),
+				fetch('/api/releases/sync?channel=beta')
+			]);
+			if (resStable.ok) externalConfigStable = (await resStable.json()).config;
+			if (resBeta.ok) externalConfigBeta = (await resBeta.json()).config;
 		} catch (error) {
-			console.error("Fetch API completely failed:", error);
+			console.error('Fetch external config failed:', error);
 		} finally {
 			configLoading = false;
 		}
@@ -60,16 +59,20 @@
 		syncReleaseInfo = release;
 	}
 
-	async function confirmForceSync(data: { forceUpdate: boolean }) {
+	async function confirmForceSync(data: { forceUpdate: boolean; channel: 'stable' | 'beta' }) {
 		if (!syncReleaseInfo) return;
 
 		syncLoading = true;
 		const res = await fetch('/api/releases/sync', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ releaseId: syncReleaseInfo.$id, forceUpdate: data.forceUpdate })
+			body: JSON.stringify({
+				releaseId: syncReleaseInfo.$id,
+				forceUpdate: data.forceUpdate,
+				channel: data.channel
+			})
 		});
-		
+
 		syncLoading = false;
 		syncReleaseInfo = null;
 
@@ -102,6 +105,7 @@
 		tags: string[];
 		notes: string;
 		overwrite: boolean;
+		channel: 'stable' | 'beta';
 	}) {
 		if (!pendingFile) return;
 
@@ -114,7 +118,6 @@
 				uploadProgress = p;
 			},
 			onComplete: async (result) => {
-				// Create release record in DB
 				const response = await fetch('/api/releases', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -124,7 +127,8 @@
 						r2Key: result.key,
 						tags: uploadData.tags,
 						notes: uploadData.notes,
-						overwrite: uploadData.overwrite
+						overwrite: uploadData.overwrite,
+						channel: uploadData.channel
 					})
 				});
 
@@ -228,37 +232,47 @@
 	</header>
 
 	<!-- External config box -->
-	<div class="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-5 py-4 dark:border-primary/10 dark:bg-primary/10">
-		<div class="flex items-start gap-4">
-			<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
-				<CloudCheck class="h-5 w-5" weight="bold" />
-			</div>
-			<div>
-				<h3 class="font-medium text-text-main flex items-center gap-2">
-					Aktualna wersja konfiguracji na środowisku zdalnym
-					{#if configLoading}
-						<span class="inline-block h-3 w-3 animate-ping rounded-full bg-primary/50"></span>
-					{/if}
-				</h3>
-				{#if !configLoading && externalConfig}
-					<p class="mt-1 text-sm text-text-muted">
-						Wersja: <strong class="text-text-main">{externalConfig.latestVersion}</strong>
-						<span class="mx-2">•</span> 
-						Rozmiar: {(externalConfig.apkSizeBytes / (1024 * 1024)).toFixed(2)} MB
-						{#if externalConfig.forceUpdate}
-							<span class="mx-2">•</span> 
-							<span class="text-xs font-semibold text-rose-500 bg-rose-500/10 px-1.5 py-0.5 rounded-sm">Force Update ON</span>
-						{/if}
-					</p>
-				{:else if !configLoading}
-					<p class="mt-1 text-sm text-text-muted">Brak konfiguracji bazy zewnętrznej lub problem z pobraniem.</p>
+	<div class="space-y-3">
+		<div class="flex items-center justify-between">
+			<h3 class="flex items-center gap-2 font-medium text-text-main">
+				<CloudCheck class="h-4 w-4 text-primary" weight="bold" />
+				Konfiguracja zdalna
+				{#if configLoading}
+					<span class="inline-block h-2.5 w-2.5 animate-ping rounded-full bg-primary/50"></span>
 				{/if}
-			</div>
+			</h3>
+			<Button variant="secondary" size="sm" onclick={fetchExternalConfig} title="Odśwież">
+				<ArrowsClockwise class="h-4 w-4" />
+			</Button>
 		</div>
-		<Button variant="secondary" size="sm" onclick={fetchExternalConfig} title="Odśwież">
-			<ArrowsClockwise class="h-4 w-4" />
-		</Button>
+		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+			{#snippet configCard(label: string, cfg: any, accent: string)}
+				<div class="rounded-lg border border-border-line bg-bg-panel px-4 py-3">
+					<p class="mb-1.5 text-xs font-semibold uppercase tracking-wide {accent}">{label}</p>
+					{#if !configLoading && cfg}
+						<p class="text-sm text-text-muted">
+							Wersja: <strong class="text-text-main">{cfg.latestVersion}</strong>
+							<span class="mx-1.5">•</span>
+							{(cfg.apkSizeBytes / (1024 * 1024)).toFixed(2)} MB
+						</p>
+						{#if cfg.apkStoragePath}
+							<p class="mt-0.5 truncate text-xs text-text-muted" title={cfg.apkStoragePath}>
+								{cfg.apkStoragePath}
+							</p>
+						{/if}
+						{#if cfg.forceUpdate}
+							<span class="mt-1.5 inline-flex rounded-sm bg-rose-500/10 px-1.5 py-0.5 text-xs font-semibold text-rose-500">Force Update ON</span>
+						{/if}
+					{:else if !configLoading}
+						<p class="text-sm text-text-muted">Brak danych</p>
+					{/if}
+				</div>
+			{/snippet}
+			{@render configCard('stable', externalConfigStable, 'text-emerald-500')}
+			{@render configCard('beta', externalConfigBeta, 'text-amber-500')}
+		</div>
 	</div>
+
 
 	{#if isUploading}
 		<div class="rounded-lg border border-border-line bg-bg-panel p-6">
