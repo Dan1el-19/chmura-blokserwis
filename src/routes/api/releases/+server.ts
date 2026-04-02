@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ error: 'Validation error', details: validated.error.issues }, { status: 400 });
 	}
 
-	const { name, size, r2Key, tags, notes, forceUpdate, channel, apkStoragePath } = validated.data;
+	const { name, size, r2Key, tags, notes, forceUpdate } = validated.data;
 
 	// Check if release with same name exists and overwrite flag is set
 	const existing = await getReleaseByName(name);
@@ -54,7 +54,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	// Also extract pre-release version (e.g. blokserwis-1.10.0-dev.3.apk -> 1.10.0-dev.3)
 	const versionMatch = name.match(/[\w\-]+-(\d+\.\d+\.\d+(?:[.-][\w.]+)?)\.apk$/i);
 	const version = versionMatch ? versionMatch[1] : name;
-	const resolvedStoragePath = apkStoragePath ?? `${channel}/${name}`;
 
 	let release;
 	try {
@@ -92,7 +91,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	// Post-create sync
 	try {
 		await withRetry(() =>
-			updateExternalAppConfig(channel, version, forceUpdate ?? false, notes, size, resolvedStoragePath)
+			updateExternalAppConfig('stable', version, forceUpdate ?? false, notes, size)
 		);
 		logger.info('External app config updated successfully');
 		return json({ release }, { status: 201 });
