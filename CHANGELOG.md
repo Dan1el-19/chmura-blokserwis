@@ -1,3 +1,10 @@
+## [1.14.2](https://github.com/Dan1el-19/effinity-cloud/compare/v1.14.1...v1.14.2) (2026-04-02)
+
+
+### Bug Fixes
+
+* add FAB button to the mobile releases ([14335da](https://github.com/Dan1el-19/effinity-cloud/commit/14335dacdb2aa36d90728080b3a5f8edbd264f1a))
+
 ## [1.14.1](https://github.com/Dan1el-19/effinity-cloud/compare/v1.14.0...v1.14.1) (2026-04-02)
 
 
