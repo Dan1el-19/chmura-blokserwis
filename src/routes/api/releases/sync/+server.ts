@@ -47,7 +47,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const versionMatch = release.name.match(/[\w\-]+-([\d]+\.[\d]+\.[\d]+(?:[.-][\w.]+)?)\.apk$/i);
 	const version = versionMatch ? versionMatch[1] : release.name;
-	const apkStoragePath = `${channel}/${release.name}`;
 
 	try {
 		const result = await withRetry(() =>
@@ -56,8 +55,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				version,
 				forceUpdate === true,
 				release.notes || undefined,
-				release.size,
-				apkStoragePath
+				release.size
 			)
 		);
 		logger.info(`Force synced release ${version} [${channel}] to external app config`);

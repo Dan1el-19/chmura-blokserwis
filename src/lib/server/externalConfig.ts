@@ -31,7 +31,6 @@ export type ExternalAppConfig = {
 	forceUpdate: boolean;
 	changelog: string;
 	apkSizeBytes: number;
-	apkStoragePath: string;
 	channel: ReleaseChannel;
 	updatedAt?: string;
 };
@@ -49,7 +48,6 @@ export async function getExternalAppConfig(
 			forceUpdate: doc.forceUpdate as boolean,
 			changelog: doc.changelog as string,
 			apkSizeBytes: doc.apkSizeBytes as number,
-			apkStoragePath: doc.apkStoragePath as string,
 			channel,
 			updatedAt: doc.$updatedAt as string
 		};
@@ -67,8 +65,7 @@ export async function updateExternalAppConfig(
 	version: string,
 	forceUpdate: boolean,
 	changelog: string | undefined,
-	apkSizeBytes: number,
-	apkStoragePath: string
+	apkSizeBytes: number
 ) {
 	const rowId = ROW_ID_MAP[channel];
 	const databases = getExternalClient();
@@ -77,8 +74,7 @@ export async function updateExternalAppConfig(
 		latestVersion: version,
 		forceUpdate,
 		changelog: changelog || '',
-		apkSizeBytes,
-		apkStoragePath
+		apkSizeBytes
 	};
 
 	try {

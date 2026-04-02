@@ -79,9 +79,7 @@ export const createReleaseSchema = z.object({
 	r2Key: z.string().min(1),
 	tags: z.array(releaseTagSchema).max(10).optional(),
 	notes: z.string().max(2048).optional(),
-	forceUpdate: z.boolean().optional(),
-	channel: z.enum(['stable', 'beta']).default('stable'),
-	apkStoragePath: z.string().min(1).optional()
+	forceUpdate: z.boolean().optional()
 });
 
 export const updateReleaseSchema = z.object({
