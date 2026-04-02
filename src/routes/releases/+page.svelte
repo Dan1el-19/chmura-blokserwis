@@ -8,7 +8,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ReleaseUploader } from '$lib/modules/release-upload.svelte';
 	import type { ParsedRelease } from '$lib/types/releases';
-	import { Trash, Warning, ArrowsClockwise, CloudCheck } from 'phosphor-svelte';
+	import { Trash, Warning, ArrowsClockwise, CloudCheck, AndroidLogo } from 'phosphor-svelte';
 	import { onMount } from 'svelte';
 
 	let { data } = $props();
@@ -19,6 +19,7 @@
 	let uploader = $state<ReleaseUploader | null>(null);
 	let uploadProgress = $state(0);
 	let isUploading = $state(false);
+	let dropZone = $state<ReleaseDropZone | null>(null);
 
 	// Edit state
 	let editingRelease = $state<ParsedRelease | null>(null);
@@ -291,7 +292,7 @@
 			</div>
 		</div>
 	{:else}
-		<ReleaseDropZone onFileSelect={handleFileSelect} />
+		<ReleaseDropZone bind:this={dropZone} onFileSelect={handleFileSelect} />
 	{/if}
 
 	<ReleasesList
@@ -362,4 +363,15 @@
 		onConfirm={confirmForceSync}
 		onCancel={() => (syncReleaseInfo = null)}
 	/>
+{/if}
+
+<!-- Mobile FAB -->
+{#if !isUploading && !pendingFile}
+	<button
+		onclick={() => dropZone?.openPicker()}
+		class="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/30 text-white transition-all duration-200 hover:scale-105 active:scale-95 lg:hidden"
+		title="Wgraj nową wersję APK"
+	>
+		<AndroidLogo class="h-6 w-6" weight="fill" />
+	</button>
 {/if}
