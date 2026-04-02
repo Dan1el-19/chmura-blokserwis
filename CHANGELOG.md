@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.4...v1.14.0) (2026-04-02)
+
+
+### Features
+
+* implement release beta/stable management system with upload UI, validation schemas, and API endpoints for APK distribution. ([08ed242](https://github.com/Dan1el-19/effinity-cloud/commit/08ed242d90a693238f7307d41d3b65b2ffb5faf0))
+
 ## [1.13.4](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.3...v1.13.4) (2026-04-01)
 
 
