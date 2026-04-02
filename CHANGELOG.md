@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/Dan1el-19/effinity-cloud/compare/v1.14.0...v1.14.1) (2026-04-02)
+
+
+### Bug Fixes
+
+*  external Appwrite configuration sync service and API endpoints for release management ([81bb307](https://github.com/Dan1el-19/effinity-cloud/commit/81bb30700f68f26b35fc1fe70d661baf0525be48))
+
 # [1.14.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.4...v1.14.0) (2026-04-02)
 
 
