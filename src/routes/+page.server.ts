@@ -27,9 +27,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			currentFolderId: parentFolderId,
 			usage,
 			limit,
-			role: JSON.parse(JSON.stringify(getUserRole(locals.user)))
+			role: getUserRole(locals.user)
 		};
-	} catch (error: any) {
+	} catch (error: unknown) {
 		logger.error('Error fetching storage items:', error);
 		return {
 			files: [],
@@ -44,7 +44,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 };
 
 export const actions: Actions = {
-	createFolder: async ({ request, locals, url }) => {
+	createFolder: async ({ request, locals }) => {
 		if (!locals.user) {
 			return fail(401, { error: 'Unauthorized' });
 		}
@@ -60,9 +60,11 @@ export const actions: Actions = {
 		try {
 			await createFolder(locals.user.$id, name, parentId);
 			return { success: true };
-		} catch (error: any) {
+		} catch (error: unknown) {
 			logger.error('Error creating folder:', error);
-			return fail(500, { error: error.message });
+			return fail(500, {
+				error: error instanceof Error ? error.message : 'Failed to create folder'
+			});
 		}
 	},
 
@@ -95,9 +97,11 @@ export const actions: Actions = {
 				parentFolderId
 			});
 			return { success: true };
-		} catch (error: any) {
+		} catch (error: unknown) {
 			logger.error('Error creating file metadata:', error);
-			return fail(500, { error: error.message });
+			return fail(500, {
+				error: error instanceof Error ? error.message : 'Failed to create file metadata'
+			});
 		}
 	}
 };
