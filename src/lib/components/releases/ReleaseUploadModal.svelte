@@ -10,7 +10,7 @@
 	type Props = {
 		file: File;
 		existingRelease?: ParsedRelease | null;
-		onConfirm: (data: { name: string; tags: string[]; notes: string; overwrite: boolean; channel: 'stable' | 'beta' }) => void;
+		onConfirm: (data: { name: string; tags: string[]; notes: string; overwrite: boolean; forceUpdate: boolean; channel: 'stable' | 'beta' }) => void;
 		onCancel: () => void;
 	};
 
@@ -32,6 +32,7 @@
 	let tags = $state<string[]>([]);
 	let notes = $state('');
 	let overwrite = $state(false);
+	let forceUpdate = $state(false);
 	let channel = $state<'stable' | 'beta'>('stable');
 
 	$effect(() => {
@@ -40,7 +41,7 @@
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
-		onConfirm({ name, tags, notes, overwrite, channel });
+		onConfirm({ name, tags, notes, overwrite, forceUpdate, channel });
 	}
 
 	function formatSize(bytes: number): string {
@@ -158,6 +159,23 @@
 					class="w-full rounded-md border border-border-line bg-transparent px-3 py-2 text-sm placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
 				></textarea>
 			</div>
+
+			<!-- Force Update toggle -->
+			<label
+				class="flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors {forceUpdate
+					? 'border-rose-500/40 bg-rose-500/10'
+					: 'border-border-line hover:border-border-line/80'}"
+			>
+				<input
+					type="checkbox"
+					bind:checked={forceUpdate}
+					class="mt-0.5 h-4 w-4 shrink-0 rounded border-border-line text-rose-500 focus:ring-rose-500"
+				/>
+				<div>
+					<p class="text-sm font-medium {forceUpdate ? 'text-rose-500' : 'text-text-main'}">Force Update</p>
+					<p class="mt-0.5 text-xs text-text-muted">Aplikacja mobilna wymusi aktualizację — użytkownicy nie będą mogli pominąć.</p>
+				</div>
+			</label>
 
 			<div class="flex justify-end gap-2 pt-2">
 				<Button variant="ghost" onclick={onCancel} type="button">Cancel</Button>

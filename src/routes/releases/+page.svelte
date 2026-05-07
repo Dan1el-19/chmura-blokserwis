@@ -106,6 +106,7 @@
 		tags: string[];
 		notes: string;
 		overwrite: boolean;
+		forceUpdate: boolean;
 		channel: 'stable' | 'beta';
 	}) {
 		if (!pendingFile) return;
@@ -129,6 +130,7 @@
 						tags: uploadData.tags,
 						notes: uploadData.notes,
 						overwrite: uploadData.overwrite,
+						forceUpdate: uploadData.forceUpdate,
 						channel: uploadData.channel
 					})
 				});
