@@ -1,3 +1,15 @@
+# [1.15.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.14.2...v1.15.0) (2026-05-07)
+
+
+### Bug Fixes
+
+* Add bcrypt to onlyBuiltDependencies in pnpm workspace configuration ([dd759a1](https://github.com/Dan1el-19/effinity-cloud/commit/dd759a1e48146eb703d91ec6d4446834dca6851e))
+
+
+### Features
+
+* Implement toPublicUser function and related tests for user data serialization ([1f3a117](https://github.com/Dan1el-19/effinity-cloud/commit/1f3a117dd397389eddee8909a17026a34a149cec))
+
 ## [1.14.2](https://github.com/Dan1el-19/effinity-cloud/compare/v1.14.1...v1.14.2) (2026-04-02)
 
 
