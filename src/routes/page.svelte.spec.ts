@@ -5,7 +5,19 @@ import Page from './+page.svelte';
 
 describe('/+page.svelte', () => {
 	it('should render h1', async () => {
-		render(Page);
+		render(Page, {
+			props: {
+				data: {
+					files: [],
+					folders: [],
+					currentFolderId: null,
+					fileNextCursor: null,
+					folderNextCursor: null,
+					role: 'basic',
+					storageKind: 'user' as const
+				}
+			}
+		});
 
 		const heading = page.getByRole('heading', { level: 1 });
 		await expect.element(heading).toBeInTheDocument();

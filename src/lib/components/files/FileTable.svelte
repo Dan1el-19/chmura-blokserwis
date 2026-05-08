@@ -70,20 +70,6 @@
 					<td class="px-4 py-3 text-right lg:px-6 lg:py-4">
 						<div class="flex justify-end gap-1 lg:gap-2">
 							<button
-								onclick={() => onShare(folder.$id, true)}
-								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-blue-500 lg:p-2 dark:hover:bg-zinc-700"
-								title="Udostępnij"
-							>
-								<Share class="h-4 w-4 lg:h-5 lg:w-5" />
-							</button>
-							<button
-								onclick={() => onDownload(folder.$id, folder.name, true)}
-								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-primary lg:p-2 dark:hover:bg-zinc-700"
-								title="Pobierz"
-							>
-								<DownloadSimple class="h-4 w-4 lg:h-5 lg:w-5" />
-							</button>
-							<button
 								onclick={() => onRename(folder.$id, folder.name, true)}
 								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-text-main lg:p-2 dark:hover:bg-zinc-700"
 								title="Zmień nazwę"

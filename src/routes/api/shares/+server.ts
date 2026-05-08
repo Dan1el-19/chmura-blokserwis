@@ -1,132 +1,62 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createShare, listShares } from '$lib/server/storage/shares';
-import { getFile, getFileMetadata } from '$lib/server/storage/files';
-import { getFolder, getFolderMetadata } from '$lib/server/storage/folders';
-import { getUserRole, MAIN_STORAGE_OWNER_ID, type UserPreferences } from '$lib/server/roles';
-import type { ShareType, FileDocument, FolderDocument } from '$lib/types/storage';
-import type { Models } from 'node-appwrite';
 
-// Helper function to get file with main-storage access support
-async function getFileWithAccess(fileId: string, user: Models.User<UserPreferences>): Promise<{ file: FileDocument; effectiveUserId: string }> {
-	const role = getUserRole(user);
-	const file = await getFileMetadata(fileId);
-	
-	// Owner has access
-	if (file.ownerId === user.$id) {
-		return { file, effectiveUserId: user.$id };
-	}
-	
-	// Admin and plus users can access main-storage files
-	if (file.ownerId === MAIN_STORAGE_OWNER_ID && role !== 'basic') {
-		return { file, effectiveUserId: MAIN_STORAGE_OWNER_ID };
-	}
-	
-	throw new Error('Access denied: File does not belong to user.');
+import { createUserUnisourceClient } from '$lib/server/unisource';
+import { mapShareLinkFromUnisource } from '$lib/server/unisource-mappers';
+import { unisourceErrorResponse } from '$lib/server/unisource-errors';
+
+function toUnixTimestamp(value: unknown): number | undefined {
+	if (typeof value !== 'string' || value.length === 0) return undefined;
+	const timestamp = Math.floor(new Date(value).getTime() / 1000);
+	return Number.isFinite(timestamp) ? timestamp : undefined;
 }
 
-// Helper function to get folder with main-storage access support
-async function getFolderWithAccess(folderId: string, user: Models.User<UserPreferences>): Promise<{ folder: FolderDocument; effectiveUserId: string }> {
-	const role = getUserRole(user);
-	const folder = await getFolderMetadata(folderId);
-	
-	// Owner has access
-	if (folder.ownerId === user.$id) {
-		return { folder, effectiveUserId: user.$id };
+export const GET: RequestHandler = async (event) => {
+	if (!event.locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+	const fileId = event.url.searchParams.get('fileId');
+	const folderId = event.url.searchParams.get('folderId');
+
+	if (folderId) {
+		return json({ error: 'Folder shares are postponed in UniSource migration' }, { status: 410 });
 	}
-	
-	// Admin and plus users can access main-storage folders
-	if (folder.ownerId === MAIN_STORAGE_OWNER_ID && role !== 'basic') {
-		return { folder, effectiveUserId: MAIN_STORAGE_OWNER_ID };
-	}
-	
-	throw new Error('Access denied: Folder does not belong to user.');
-}
 
-export const GET: RequestHandler = async ({ url, locals }) => {
-	if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
-
-	const fileId = url.searchParams.get('fileId');
-	const folderId = url.searchParams.get('folderId');
-
-	if (!fileId && !folderId) {
-		return json({ error: 'Missing fileId or folderId' }, { status: 400 });
+	if (!fileId) {
+		return json({ error: 'Missing fileId' }, { status: 400 });
 	}
 
 	try {
-		if (fileId) {
-			await getFileWithAccess(fileId, locals.user as Models.User<UserPreferences>);
-			const shares = await listShares({ fileId });
-			return json(shares);
-		} else if (folderId) {
-			await getFolderWithAccess(folderId, locals.user as Models.User<UserPreferences>);
-			const shares = await listShares({ folderId });
-			return json(shares);
-		}
-
-		return json({ error: 'Invalid request' }, { status: 400 });
-	} catch (e) {
-		console.error('List Shares Error:', e);
-		return json({ error: 'Failed to list shares' }, { status: 500 });
+		const client = await createUserUnisourceClient(event);
+		const result = await client.shareLinks.list(fileId);
+		return json(result.items.map(mapShareLinkFromUnisource));
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to list shares');
 	}
 };
 
-export const POST: RequestHandler = async ({ request, locals }) => {
-	if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
+export const POST: RequestHandler = async (event) => {
+	if (!event.locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
 	try {
-		const body = await request.json();
-		const {
-			fileId,
-			folderId,
-			shareType,
-			label,
-			expiresAt,
-			autoDelete,
-			customSlug,
-			password,
-			maxDownloads
-		} = body;
-
-		if (!fileId && !folderId) {
-			return json({ error: 'Missing fileId or folderId' }, { status: 400 });
+		const body = await event.request.json();
+		if (body.folderId) {
+			return json({ error: 'Folder shares are postponed in UniSource migration' }, { status: 410 });
+		}
+		if (!body.fileId) {
+			return json({ error: 'Missing fileId' }, { status: 400 });
 		}
 
-		if (fileId && folderId) {
-			return json({ error: 'Cannot share both file and folder at once' }, { status: 400 });
-		}
-
-		let name: string;
-
-		if (fileId) {
-			const { file } = await getFileWithAccess(fileId, locals.user as Models.User<UserPreferences>);
-			name = file.name;
-		} else {
-			const { folder } = await getFolderWithAccess(folderId, locals.user as Models.User<UserPreferences>);
-			name = folder.name;
-		}
-
-		const share = await createShare(locals.user.$id, name, {
-			fileId: fileId || null,
-			folderId: folderId || null,
-			shareType: shareType as ShareType,
-			label,
-			expiresAt,
-			autoDelete,
-			customSlug,
-			password,
-			maxDownloads
+		const client = await createUserUnisourceClient(event);
+		const result = await client.shareLinks.create(body.fileId, {
+			...(body.customSlug ? { slug: body.customSlug } : {}),
+			...(body.label ? { name: body.label } : {}),
+			...(body.password ? { password: body.password } : {}),
+			...(toUnixTimestamp(body.expiresAt) ? { expires_at: toUnixTimestamp(body.expiresAt) } : {}),
+			...(body.maxDownloads ? { max_downloads: Number(body.maxDownloads) } : {})
 		});
 
-		return json(share);
-	} catch (e: any) {
-		console.error('Create Share Error:', e);
-		if (e.message?.includes('already taken')) {
-			return json({ error: e.message }, { status: 409 });
-		}
-		if (e.message?.includes('Access denied')) {
-			return json({ error: 'Access denied' }, { status: 403 });
-		}
-		return json({ error: 'Failed to create share' }, { status: 500 });
+		return json(mapShareLinkFromUnisource(result.link));
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to create share');
 	}
 };

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
 	import Card from '$lib/components/ui/Card.svelte';
-	import Icon from '$lib/assets/favicon.svg'
+	import Icon from '$lib/assets/favicon.svg';
 	import { File, DownloadSimple, ClockCountdown, Lock, Warning } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
 
@@ -25,9 +25,9 @@
 	<div class="mb-8 flex flex-col items-center">
 		<div class="flex items-center gap-2 text-2xl font-bold tracking-tight text-text-main">
 			<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-				<img src={Icon} alt="Effinity Cloud Logo" class="h-6 w-6" />
+				<img src={Icon} alt="Chmura Blokserwis Logo" class="h-6 w-6" />
 			</div>
-			Effinity Cloud
+			Chmura Blokserwis
 		</div>
 	</div>
 	<Card
@@ -115,7 +115,9 @@
 						class="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary text-base font-medium text-white shadow-lg shadow-primary/20 transition-colors hover:bg-primary/90 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none disabled:opacity-50"
 					>
 						{#if loading}
-							<span class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+							<span
+								class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+							></span>
 						{:else}
 							<Lock size={20} class="mr-2" />
 						{/if}
@@ -165,6 +167,6 @@
 	</Card>
 
 	<div class="mt-8 text-xs text-text-muted/40">
-		&copy; {new Date().getFullYear()} Effinity Cloud
+		&copy; {new Date().getFullYear()} Chmura Blokserwis
 	</div>
 </div>

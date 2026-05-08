@@ -16,7 +16,7 @@
 >
 	<img src={favicon} alt="" class="h-6 w-6" />
 	<span class="absolute left-1/2 -translate-x-1/2 font-mono text-sm font-bold text-text-main"
-		>Effinity Cloud</span
+		>Chmura Blokserwis</span
 	>
 	<button
 		onclick={toggleDrawer}

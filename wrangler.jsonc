@@ -1,0 +1,33 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "chmura-blokserwis",
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"compatibility_date": "2026-05-08",
+	"compatibility_flags": ["nodejs_compat"],
+	"assets": {
+		"directory": ".svelte-kit/cloudflare",
+		"binding": "ASSETS"
+	},
+	"workers_dev": false,
+	"route": {
+		"pattern": "chmura.blokserwis.pl/*",
+		"zone_name": "blokserwis.pl"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"keep_vars": true,
+	"vars": {
+		"PUBLIC_APPWRITE_PROJECT_NAME": "Chmura Blokserwis",
+		"ORIGIN": "https://chmura.blokserwis.pl"
+	},
+	"secrets": {
+		"required": [
+			"APPWRITE_API_KEY",
+			"UNISOURCE_API_KEY",
+			"UPSTASH_REDIS_REST_TOKEN",
+			"R2_ACCESS_KEY_ID",
+			"R2_SECRET_ACCESS_KEY"
+		]
+	}
+}
