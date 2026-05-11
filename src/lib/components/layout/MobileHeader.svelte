@@ -15,8 +15,8 @@
 	class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border-line bg-bg-panel px-4 lg:hidden"
 >
 	<img src={favicon} alt="" class="h-6 w-6" />
-	<span class="absolute left-1/2 -translate-x-1/2 font-mono text-sm font-bold text-text-main"
-		>Effinity Cloud</span
+	<span class="absolute left-1/2 -translate-x-1/2 whitespace-nowrap font-mono text-sm font-bold text-text-main"
+		>Chmura Blokserwis</span
 	>
 	<button
 		onclick={toggleDrawer}

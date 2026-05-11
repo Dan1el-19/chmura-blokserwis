@@ -18,13 +18,13 @@
 </script>
 
 <aside
-	class="sticky top-0 hidden h-dvh w-[280px] shrink-0 flex-col border-r border-border-line bg-bg-panel lg:flex"
+	class="sticky top-0 hidden h-dvh w-65 shrink-0 flex-col border-r border-border-line bg-bg-panel lg:flex"
 >
 	<div class="relative flex h-16 items-center border-b border-border-line px-6">
 		<img src={favicon} alt="" class="h-6 w-6" />
 		<span
-			class="absolute left-1/2 -translate-x-1/2 font-mono text-base font-bold tracking-tight text-text-main"
-			>Effinity Cloud</span
+			class="absolut ml-3 whitespace-nowrap font-mono text-base font-bold tracking-tight text-text-main"
+			>Chmura Blokserwis</span
 		>
 	</div>
 

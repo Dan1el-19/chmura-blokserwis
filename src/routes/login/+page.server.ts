@@ -2,12 +2,8 @@ import { redirect } from '@sveltejs/kit';
 import type { Actions, RequestEvent } from '@sveltejs/kit';
 import { createAdminClient, SESSION_COOKIE } from '$lib/server/appwrite';
 import { OAuthProvider } from 'node-appwrite';
-import { env } from '$env/dynamic/private';
 import { logger } from '$lib/server/logger';
-
-const getOrigin = (event: RequestEvent): string => {
-	return env.ORIGIN || event.url.origin;
-};
+import { createOAuth2RedirectUrl } from '$lib/server/oauth';
 
 const isSecureContext = (event: RequestEvent): boolean => {
 	return event.url.protocol === 'https:';
@@ -23,7 +19,7 @@ export const actions: Actions = {
 			return { error: 'Email and password are required' };
 		}
 
-		const { account } = createAdminClient();
+		const { account } = createAdminClient(event);
 
 		try {
 			logger.info('[LOGIN] Attempting email/password session...', { email });
@@ -45,28 +41,10 @@ export const actions: Actions = {
 	},
 
 	oauth: async (event) => {
-		const { account } = createAdminClient();
-		const origin = getOrigin(event);
-		logger.info('[OAUTH] Using origin:', origin);
-		const redirectUrl = await account.createOAuth2Token({
-			provider: OAuthProvider.Github,
-			success: `${origin}/auth/callback`,
-			failure: `${origin}/login?failure=true`
-		});
-
-		throw redirect(302, redirectUrl);
+		throw redirect(302, createOAuth2RedirectUrl(event, OAuthProvider.Github));
 	},
 
 	google: async (event) => {
-		const { account } = createAdminClient();
-		const origin = getOrigin(event);
-		logger.info('[OAUTH] Using origin:', origin);
-		const redirectUrl = await account.createOAuth2Token({
-			provider: OAuthProvider.Google,
-			success: `${origin}/auth/callback`,
-			failure: `${origin}/login?failure=true`
-		});
-
-		throw redirect(302, redirectUrl);
+		throw redirect(302, createOAuth2RedirectUrl(event, OAuthProvider.Google));
 	}
 };

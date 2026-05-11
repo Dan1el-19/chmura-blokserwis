@@ -1,84 +1,54 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import {
-	getFolder,
-	deleteFolder,
-	renameFolder,
-	moveFolder,
-	getFolderMetadata
-} from '$lib/server/storage/folders';
-import { getUserRole, MAIN_STORAGE_OWNER_ID } from '$lib/server/roles';
+import { createUserUnisourceClient } from '$lib/server/unisource';
+import { mapFolderFromUnisource } from '$lib/server/unisource-mappers';
+import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { updateFolderSchema } from '$lib/schemas';
 
-async function checkAccess(folderId: string, user: any, targetUserId?: string | null) {
-	const folder = await getFolderMetadata(folderId);
-	const role = getUserRole(user);
-
-	if (role === 'admin' && targetUserId) {
-		if (folder.ownerId === targetUserId) {
-			return { folder, effectiveUserId: targetUserId };
-		}
-	}
-
-	if (folder.ownerId === user.$id) return { folder, effectiveUserId: user.$id };
-
-	if (folder.ownerId === MAIN_STORAGE_OWNER_ID && role !== 'basic') {
-		return { folder, effectiveUserId: MAIN_STORAGE_OWNER_ID };
-	}
-
-	throw new Error('Access denied');
-}
-
-export const GET: RequestHandler = async ({ params, locals, url }) => {
-	const user = locals.user;
-	if (!user) {
+export const GET: RequestHandler = async (event) => {
+	if (!event.locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	const { folderId } = params;
-	const targetUserId = url.searchParams.get('targetUserId');
+	const targetUserId = event.url.searchParams.get('targetUserId') || undefined;
 
 	try {
-		const { folder } = await checkAccess(folderId, user, targetUserId);
-		return json(folder);
-	} catch (error: any) {
-		if (error.message.includes('Access denied')) {
-			return json({ error: 'Forbidden' }, { status: 403 });
-		}
-		return json({ error: error.message }, { status: 404 });
+		const client = await createUserUnisourceClient(event);
+		const result = await client.folders.get(event.params.folderId, undefined, {
+			asUser: targetUserId
+		});
+		return json(mapFolderFromUnisource(result.folder));
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to get folder');
 	}
 };
 
-export const DELETE: RequestHandler = async ({ params, locals, url }) => {
-	const user = locals.user;
-	if (!user) {
+export const DELETE: RequestHandler = async (event) => {
+	if (!event.locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	const { folderId } = params;
-	const targetUserId = url.searchParams.get('targetUserId');
+	const targetUserId = event.url.searchParams.get('targetUserId') || undefined;
+	const permanent = event.url.searchParams.get('permanent') === 'true';
 
 	try {
-		const { effectiveUserId } = await checkAccess(folderId, user, targetUserId);
-		await deleteFolder(folderId, effectiveUserId);
+		const client = await createUserUnisourceClient(event);
+		await client.folders.delete(event.params.folderId, { permanent }, undefined, {
+			asUser: targetUserId
+		});
 		return json({ success: true });
-	} catch (error: any) {
-		if (error.message.includes('Access denied')) {
-			return json({ error: 'Forbidden' }, { status: 403 });
-		}
-		return json({ error: error.message }, { status: 500 });
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to delete folder');
 	}
 };
 
-export const PATCH: RequestHandler = async ({ params, locals, request, url }) => {
-	const user = locals.user;
-	if (!user) {
+export const PATCH: RequestHandler = async (event) => {
+	if (!event.locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	const { folderId } = params;
-	const body = await request.json();
-	const targetUserId = url.searchParams.get('targetUserId');
+	const body = await event.request.json();
+	const targetUserId = event.url.searchParams.get('targetUserId') || undefined;
 
 	const validated = updateFolderSchema.safeParse(body);
 	if (!validated.success) {
@@ -88,23 +58,40 @@ export const PATCH: RequestHandler = async ({ params, locals, request, url }) =>
 	const { name, parentFolderId } = validated.data;
 
 	try {
-		const { effectiveUserId } = await checkAccess(folderId, user, targetUserId);
+		const client = await createUserUnisourceClient(event);
 
 		if (name !== undefined) {
-			const folder = await renameFolder(folderId, name, effectiveUserId);
-			return json(folder);
+			const result = await client.folders.update(event.params.folderId, { name }, undefined, {
+				asUser: targetUserId
+			});
+			return json(mapFolderFromUnisource(result.folder));
 		}
 
 		if (parentFolderId !== undefined) {
-			const folder = await moveFolder(folderId, parentFolderId, effectiveUserId);
-			return json(folder);
+			return json({ error: 'Folder move is postponed in UniSource migration' }, { status: 410 });
 		}
 
 		return json({ error: 'No valid operation specified' }, { status: 400 });
-	} catch (error: any) {
-		if (error.message.includes('Access denied')) {
-			return json({ error: 'Forbidden' }, { status: 403 });
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to update folder');
+	}
+};
+
+export const POST: RequestHandler = async (event) => {
+	if (!event.locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+	const targetUserId = event.url.searchParams.get('targetUserId') || undefined;
+
+	try {
+		const body = await event.request.json().catch(() => ({}));
+		if (body.action !== 'restore') {
+			return json({ error: 'Unsupported action' }, { status: 400 });
 		}
-		return json({ error: error.message }, { status: 500 });
+
+		const client = await createUserUnisourceClient(event);
+		await client.folders.restore(event.params.folderId, undefined, { asUser: targetUserId });
+		return json({ success: true });
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to restore folder');
 	}
 };

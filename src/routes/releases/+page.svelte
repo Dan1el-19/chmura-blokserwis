@@ -225,7 +225,7 @@
 </script>
 
 <svelte:head>
-	<title>Releases | Effinity Cloud</title>
+	<title>Releases | Chmura Blokserwis</title>
 </svelte:head>
 
 <div class="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
@@ -251,7 +251,7 @@
 		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 			{#snippet configCard(label: string, cfg: any, accent: string)}
 				<div class="rounded-lg border border-border-line bg-bg-panel px-4 py-3">
-					<p class="mb-1.5 text-xs font-semibold uppercase tracking-wide {accent}">{label}</p>
+					<p class="mb-1.5 text-xs font-semibold tracking-wide uppercase {accent}">{label}</p>
 					{#if !configLoading && cfg}
 						<p class="text-sm text-text-muted">
 							Wersja: <strong class="text-text-main">{cfg.latestVersion}</strong>
@@ -264,7 +264,10 @@
 							</p>
 						{/if}
 						{#if cfg.forceUpdate}
-							<span class="mt-1.5 inline-flex rounded-sm bg-rose-500/10 px-1.5 py-0.5 text-xs font-semibold text-rose-500">Force Update ON</span>
+							<span
+								class="mt-1.5 inline-flex rounded-sm bg-rose-500/10 px-1.5 py-0.5 text-xs font-semibold text-rose-500"
+								>Force Update ON</span
+							>
 						{/if}
 					{:else if !configLoading}
 						<p class="text-sm text-text-muted">Brak danych</p>
@@ -275,7 +278,6 @@
 			{@render configCard('beta', externalConfigBeta, 'text-amber-500')}
 		</div>
 	</div>
-
 
 	{#if isUploading}
 		<div class="rounded-lg border border-border-line bg-bg-panel p-6">
@@ -371,7 +373,7 @@
 {#if !isUploading && !pendingFile}
 	<button
 		onclick={() => dropZone?.openPicker()}
-		class="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/30 text-white transition-all duration-200 hover:scale-105 active:scale-95 lg:hidden"
+		class="fixed right-6 bottom-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 transition-all duration-200 hover:scale-105 active:scale-95 lg:hidden"
 		title="Wgraj nową wersję APK"
 	>
 		<AndroidLogo class="h-6 w-6" weight="fill" />

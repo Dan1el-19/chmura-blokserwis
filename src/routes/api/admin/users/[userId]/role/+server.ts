@@ -1,36 +1,26 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createAdminClient } from '$lib/server/appwrite';
-import { getUserRole } from '$lib/server/roles';
 
-export const PUT: RequestHandler = async ({ params, request, locals }) => {
-	if (!locals.user || getUserRole(locals.user) !== 'admin') {
+import { getUserRole } from '$lib/server/roles';
+import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { mapRoleToUnisource } from '$lib/server/unisource-mappers';
+import { unisourceErrorResponse } from '$lib/server/unisource-errors';
+
+export const PUT: RequestHandler = async (event) => {
+	if (!event.locals.user || getUserRole(event.locals.user) !== 'admin') {
 		throw error(403, 'Brak uprawnień');
 	}
 
-	const { userId } = params;
-	const { role } = await request.json();
-
+	const { role } = await event.request.json();
 	if (!['basic', 'plus', 'admin'].includes(role)) {
 		throw error(400, 'Nieprawidłowa rola');
 	}
 
-	const { users } = createAdminClient();
-
 	try {
-		const user = await users.get({ userId });
-		const currentLabels = user.labels.filter(
-			(l: string) => !['basic', 'plus', 'admin'].includes(l)
-		);
-
-		if (role !== 'basic') {
-			currentLabels.push(role);
-		}
-
-		await users.updateLabels({ userId, labels: currentLabels });
-
+		const admin = createAdminUnisourceClient(event);
+		await admin.admin.updateUser(event.params.userId, { role: mapRoleToUnisource(role) });
 		return json({ success: true });
-	} catch (e: any) {
-		throw error(500, e.message);
+	} catch (e) {
+		return unisourceErrorResponse(e, 'Failed to update user role');
 	}
 };

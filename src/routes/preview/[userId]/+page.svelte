@@ -6,7 +6,6 @@
 		DownloadSimple,
 		Trash,
 		ArrowLeft,
-		Folder as FolderDownload,
 		House,
 		Cloud
 	} from 'phosphor-svelte';
@@ -44,7 +43,7 @@
 			const result = await res.json();
 			if (result.downloadUrl) {
 				toast.info(`Downloading: ${fileName}`);
-				window.location.href = result.downloadUrl;
+				window.location.href = `/api/proxy-download?url=${encodeURIComponent(result.downloadUrl)}&name=${encodeURIComponent(fileName)}`;
 			}
 		} catch (e: any) {
 			toast.error(e.message);
@@ -118,7 +117,7 @@
 	</div>
 
 	<!-- Content -->
-	<Card class="min-h-[400px]">
+	<Card class="min-h-100">
 		{#if data.files.length === 0 && data.folders.length === 0}
 			<div class="flex h-64 flex-col items-center justify-center text-text-muted">
 				<div class="mb-4 rounded-full bg-bg-app p-4">
@@ -161,7 +160,7 @@
 								{new Date(folder.$createdAt).toLocaleDateString('pl-PL')}
 							</div>
 							<div class="text-xs text-text-muted lg:text-sm">
-								{folder.size ? formatFileSize(folder.size) : '-'}
+								{'-'}
 							</div>
 							<div class="flex justify-end gap-1">
 								<Button

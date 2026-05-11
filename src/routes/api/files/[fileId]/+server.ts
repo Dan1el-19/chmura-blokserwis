@@ -1,96 +1,62 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import {
-	deleteFile,
-	renameFile,
-	moveFile,
-	getFileMetadata,
-	getFileDownloadUrl
-} from '$lib/server/storage/files';
-import { getUserRole, MAIN_STORAGE_OWNER_ID } from '$lib/server/roles';
+import { createUserUnisourceClient } from '$lib/server/unisource';
+import { mapFileFromUnisource } from '$lib/server/unisource-mappers';
+import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { updateFileSchema } from '$lib/schemas';
 
-async function checkAccess(
-	fileId: string,
-	user: any,
-	mode: 'read' | 'write' = 'read',
-	targetUserId?: string | null
-) {
-	const file = await getFileMetadata(fileId);
-	const role = getUserRole(user);
-
-	if (role === 'admin' && targetUserId) {
-		if (file.ownerId === targetUserId) {
-			return { file, effectiveUserId: targetUserId };
-		}
-	}
-
-	if (file.ownerId === user.$id) return { file, effectiveUserId: user.$id };
-
-	if (file.ownerId === MAIN_STORAGE_OWNER_ID && role !== 'basic') {
-		return { file, effectiveUserId: MAIN_STORAGE_OWNER_ID };
-	}
-
-	throw new Error('Access denied');
-}
-
-export const GET: RequestHandler = async ({ params, locals, url }) => {
-	const user = locals.user;
-	if (!user) {
+export const GET: RequestHandler = async (event) => {
+	if (!event.locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	const { fileId } = params;
-	const targetUserId = url.searchParams.get('targetUserId');
+	const { fileId } = event.params;
+	const targetUserId = event.url.searchParams.get('targetUserId') || undefined;
 
 	try {
-		const { file, effectiveUserId } = await checkAccess(fileId, user, 'read', targetUserId);
-		const includeDownloadUrl = url.searchParams.get('download') === 'true';
+		const client = await createUserUnisourceClient(event);
+		const includeDownloadUrl = event.url.searchParams.get('download') === 'true';
 
 		if (includeDownloadUrl) {
-			const { file: fileObj, url: downloadUrl } = await getFileDownloadUrl(fileId, effectiveUserId);
-			return json({ ...fileObj, downloadUrl });
+			const download = await client.myFiles.downloadUrl(fileId, undefined, {
+				asUser: targetUserId
+			});
+			return json({ downloadUrl: download.download_url, expiresAt: download.expires_at });
 		}
 
-		return json(file);
-	} catch (error: any) {
-		if (error.message.includes('Access denied') || error.message.includes('Forbidden')) {
-			return json({ error: 'Forbidden' }, { status: 403 });
-		}
-		return json({ error: error.message }, { status: 404 });
+		const result = await client.myFiles.get(fileId, undefined, { asUser: targetUserId });
+		return json(mapFileFromUnisource(result.file));
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to get file');
 	}
 };
 
-export const DELETE: RequestHandler = async ({ params, locals, url }) => {
-	const user = locals.user;
-	if (!user) {
+export const DELETE: RequestHandler = async (event) => {
+	if (!event.locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	const { fileId } = params;
-	const targetUserId = url.searchParams.get('targetUserId');
+	const { fileId } = event.params;
+	const targetUserId = event.url.searchParams.get('targetUserId') || undefined;
+	const permanent = event.url.searchParams.get('permanent') === 'true';
 
 	try {
-		const { effectiveUserId } = await checkAccess(fileId, user, 'write', targetUserId);
-		await deleteFile(fileId, effectiveUserId);
+		const client = await createUserUnisourceClient(event);
+		await client.myFiles.delete(fileId, { permanent }, undefined, { asUser: targetUserId });
 		return json({ success: true });
-	} catch (error: any) {
-		if (error.message.includes('Access denied') || error.message.includes('Forbidden')) {
-			return json({ error: 'Forbidden' }, { status: 403 });
-		}
-		return json({ error: error.message }, { status: 500 });
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to delete file');
 	}
 };
 
-export const PATCH: RequestHandler = async ({ params, locals, request, url }) => {
-	const user = locals.user;
-	if (!user) {
+export const PATCH: RequestHandler = async (event) => {
+	if (!event.locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	const { fileId } = params;
-	const body = await request.json();
-	const targetUserId = url.searchParams.get('targetUserId');
+	const { fileId } = event.params;
+	const body = await event.request.json();
+	const targetUserId = event.url.searchParams.get('targetUserId') || undefined;
 
 	const validated = updateFileSchema.safeParse(body);
 	if (!validated.success) {
@@ -100,28 +66,43 @@ export const PATCH: RequestHandler = async ({ params, locals, request, url }) =>
 	const { name, parentFolderId } = validated.data;
 
 	try {
-		const { effectiveUserId } = await checkAccess(fileId, user, 'write', targetUserId);
+		const client = await createUserUnisourceClient(event);
 
 		if (name !== undefined) {
-			const autoRename = body.autoRename === true;
-			const file = await renameFile(fileId, name, effectiveUserId, autoRename);
-			return json(file);
+			const result = await client.myFiles.update(fileId, { filename: name }, undefined, {
+				asUser: targetUserId
+			});
+			return json(mapFileFromUnisource(result.file));
 		}
 
 		if (parentFolderId !== undefined) {
-			const file = await moveFile(fileId, parentFolderId, effectiveUserId);
-			return json(file);
+			const result = await client.myFiles.move(fileId, { folder_id: parentFolderId }, undefined, {
+				asUser: targetUserId
+			});
+			return json(mapFileFromUnisource(result.file));
 		}
 
 		return json({ error: 'No valid operation specified' }, { status: 400 });
-	} catch (error: any) {
-		if (error.message.startsWith('Conflict:')) {
-			const suggestion = error.message.replace('Conflict: ', '');
-			return json({ error: 'Conflict', suggestion }, { status: 409 });
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to update file');
+	}
+};
+
+export const POST: RequestHandler = async (event) => {
+	if (!event.locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+	const targetUserId = event.url.searchParams.get('targetUserId') || undefined;
+
+	try {
+		const body = await event.request.json().catch(() => ({}));
+		if (body.action !== 'restore') {
+			return json({ error: 'Unsupported action' }, { status: 400 });
 		}
-		if (error.message.includes('Access denied') || error.message.includes('Forbidden')) {
-			return json({ error: 'Forbidden' }, { status: 403 });
-		}
-		return json({ error: error.message }, { status: 500 });
+
+		const client = await createUserUnisourceClient(event);
+		await client.myFiles.restore(event.params.fileId, undefined, { asUser: targetUserId });
+		return json({ success: true });
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to restore file');
 	}
 };

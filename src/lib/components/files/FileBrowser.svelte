@@ -18,14 +18,13 @@
 	async function onDownload(id: string, name: string, isFolder: boolean) {
 		try {
 			if (isFolder) {
-				toast.info(`Przygotowywanie: ${name}.zip`);
-				window.location.href = `/api/folders/${id}/download`;
+				toast.info('Pobieranie folderów jako ZIP zostało wyłączone');
 			} else {
 				const res = await fetch(`/api/files/${id}?download=true`);
 				const data = await res.json();
 				if (data.downloadUrl) {
 					toast.info(`Pobieranie: ${name}`);
-					window.location.href = data.downloadUrl;
+					window.location.href = `/api/proxy-download?url=${encodeURIComponent(data.downloadUrl)}&name=${encodeURIComponent(name)}`;
 				}
 			}
 		} catch (e: any) {
@@ -54,6 +53,10 @@
 	}
 
 	function onShare(id: string, isFolder: boolean = false) {
+		if (isFolder) {
+			toast.info('Udostępnianie folderów jest poza zakresem migracji');
+			return;
+		}
 		sharingItem = { id, isFolder };
 	}
 </script>
@@ -78,10 +81,5 @@
 {/if}
 
 {#if sharingItem}
-	{#if sharingItem.isFolder}
-		<ShareDialog folderId={sharingItem.id} onClose={() => (sharingItem = null)} />
-	{:else}
-		<ShareDialog fileId={sharingItem.id} onClose={() => (sharingItem = null)} />
-	{/if}
+	<ShareDialog fileId={sharingItem.id} onClose={() => (sharingItem = null)} />
 {/if}
-

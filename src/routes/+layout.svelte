@@ -50,14 +50,14 @@
 	let pageTitle = $derived.by(() => {
 		const path = currentPath;
 		const navItem = allNavItems.find((item) => item.href === path);
-		if (navItem) return `${navItem.label} | Effinity Cloud`;
-		if (path.startsWith('/login')) return 'Login | Effinity Cloud';
+		if (navItem) return `${navItem.label} | Chmura Blokserwis`;
+		if (path.startsWith('/login')) return 'Login | Chmura Blokserwis';
 		if (path.startsWith('/admin/users')) {
-			if (path.split('/').length > 3) return 'User Details | Effinity Cloud';
-			return 'Users | Effinity Cloud';
+			if (path.split('/').length > 3) return 'User Details | Chmura Blokserwis';
+			return 'Users | Chmura Blokserwis';
 		}
-		if (path.startsWith('/preview')) return 'Preview | Effinity Cloud';
-		return 'Effinity Cloud';
+		if (path.startsWith('/preview')) return 'Preview | Chmura Blokserwis';
+		return 'Chmura Blokserwis';
 	});
 </script>
 
@@ -79,7 +79,7 @@
 	<div class="flex h-dvh w-full flex-col overflow-hidden lg:flex-row">
 		<DesktopSidebar {navItems} {currentPath} />
 
-		<div class="flex min-w-0 flex-1 flex-col">
+		<div class="flex min-h-0 min-w-0 flex-1 flex-col">
 			<MobileHeader bind:isDrawerOpen />
 
 			<MobileDrawer {navItems} {currentPath} bind:isDrawerOpen />

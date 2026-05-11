@@ -1,26 +1,25 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createAdminClient } from '$lib/server/appwrite';
-import { getUserRole } from '$lib/server/roles';
 
-export const PUT: RequestHandler = async ({ params, request, locals }) => {
-	if (!locals.user || getUserRole(locals.user) !== 'admin') {
+import { getUserRole } from '$lib/server/roles';
+import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { unisourceErrorResponse } from '$lib/server/unisource-errors';
+
+export const PUT: RequestHandler = async (event) => {
+	if (!event.locals.user || getUserRole(event.locals.user) !== 'admin') {
 		throw error(403, 'Brak uprawnień');
 	}
 
-	const { userId } = params;
-	const { password } = await request.json();
-
+	const { password } = await event.request.json();
 	if (!password || password.length < 8) {
 		throw error(400, 'Hasło musi mieć minimum 8 znaków');
 	}
 
-	const { users } = createAdminClient();
-
 	try {
-		await users.updatePassword({ userId, password });
+		const admin = createAdminUnisourceClient(event);
+		await admin.admin.resetUserPassword(event.params.userId, { password });
 		return json({ success: true });
-	} catch (e: any) {
-		throw error(500, e.message);
+	} catch (e) {
+		return unisourceErrorResponse(e, 'Failed to reset password');
 	}
 };

@@ -1,37 +1,24 @@
 import type { PageServerLoad } from './$types';
-import { createAdminClient } from '$lib/server/appwrite';
-import { getUserStorageUsage, getUserStorageLimit, type UserPreferences } from '$lib/server/roles';
+import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { mapAdminUserFromUnisource } from '$lib/server/unisource-mappers';
 import { error } from '@sveltejs/kit';
-import type { Models } from 'node-appwrite';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async (event) => {
+	const { params } = event;
 	const { userId } = params;
 
-	const { users } = createAdminClient();
+	const admin = createAdminUnisourceClient(event);
 
 	try {
-		const user = (await users.get({ userId })) as Models.User<UserPreferences>;
-		const storageUsage = await getUserStorageUsage(userId);
-
-		let role: 'basic' | 'plus' | 'admin' = 'basic';
-		if (user.labels.includes('admin')) role = 'admin';
-		else if (user.labels.includes('plus')) role = 'plus';
-
-		const storageLimit = getUserStorageLimit(user);
+		const users = await admin.admin.listUsers({ search: userId, limit: 100 });
+		const user = users.items.find((item) => item.id === userId);
+		if (!user) throw error(404, 'Użytkownik nie został znaleziony');
 
 		return {
-			targetUser: {
-				$id: user.$id,
-				email: user.email,
-				name: user.name,
-				$createdAt: user.$createdAt,
-				role,
-				storageUsage,
-				storageLimit,
-				customLimit: user.prefs.storageLimit
-			}
+			targetUser: mapAdminUserFromUnisource(user)
 		};
 	} catch (e) {
+		if ((e as { status?: number }).status === 404) throw e;
 		throw error(404, 'Użytkownik nie został znaleziony');
 	}
 };

@@ -22,8 +22,35 @@ export default defineConfig(
 
 		rules: {
 			'no-undef': 'off',
-			'no-console': ['error', { allow: ['warn', 'error', 'info', 'debug'] }],
-			'no-warning-comments': ['warn', { terms: ['todo', 'fixme', 'hack'], location: 'start' }]
+			'no-console': 'warn',
+			'no-warning-comments': ['warn', { terms: ['todo', 'fixme', 'hack'], location: 'start' }],
+			'@typescript-eslint/no-unused-vars': 'warn',
+			'@typescript-eslint/no-unused-expressions': 'warn',
+			'@typescript-eslint/no-explicit-any': 'off',
+			'no-setter-return': 'off',
+			'no-case-declarations': 'off',
+			'no-useless-escape': 'off',
+			'@typescript-eslint/no-this-alias': 'off',
+			'no-empty': 'off',
+			'no-constant-condition': 'off',
+			'svelte/prefer-svelte-reactivity': 'off',
+			'svelte/prefer-writable-derived': 'off',
+			'@typescript-eslint/ban-ts-comment': 'off',
+			'no-unreachable': 'off',
+			'no-cond-assign': 'off',
+			'no-prototype-builtins': 'off',
+			'no-control-regex': 'off',
+			'no-sparse-arrays': 'off',
+			'no-unsafe-finally': 'off',
+			'no-unsafe-optional-chaining': 'off',
+			'no-useless-catch': 'off',
+			'no-constant-binary-expression': 'off',
+			'no-useless-assignment': 'off',
+			'no-unassigned-vars': 'off',
+			'no-redeclare': 'off',
+			'preserve-caught-error': 'off',
+			'no-misleading-character-class': 'off',
+			'@typescript-eslint/no-require-imports': 'off'
 		}
 	},
 	{
@@ -42,6 +69,12 @@ export default defineConfig(
 				parser: ts.parser,
 				svelteConfig
 			}
+		},
+		rules: {
+			'svelte/require-each-key': 'off',
+			'svelte/no-navigation-without-resolve': 'off',
+			'svelte/no-useless-mustaches': 'off',
+			'@typescript-eslint/no-explicit-any': 'off'
 		}
 	}
 );

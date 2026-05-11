@@ -20,7 +20,7 @@ export interface FileDocument extends AppwriteDocument {
 	name: string;
 	size: number;
 	mimeType: string;
-	r2Key: string;
+	r2Key: string | null;
 	bucketId: string;
 	ownerId: string;
 	parentFolderId: string | null;

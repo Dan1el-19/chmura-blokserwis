@@ -1,10 +1,11 @@
 import { Client, Databases, AppwriteException } from 'node-appwrite';
-import { PUBLIC_APPWRITE_ENDPOINT, PUBLIC_APPWRITE_PROJECT_ID } from '$env/static/public';
-import { env } from '$env/dynamic/private';
+import type { RequestEvent } from '@sveltejs/kit';
 import { logger } from './logger';
+import { requireRuntimeEnv } from './runtime-env';
 
 const DB_ID = 'blokserwis-db';
 const TABLE_ID = 'app_config';
+type RuntimeEvent = Pick<RequestEvent, 'platform'> | undefined;
 
 export type ReleaseChannel = 'stable' | 'beta';
 
@@ -13,15 +14,11 @@ const ROW_ID_MAP: Record<ReleaseChannel, string> = {
 	beta: 'config_beta'
 };
 
-function getExternalClient() {
-	if (!env.RELEASES_APPWRITE_API_KEY || !env.RELEASES_APPWRITE_PROJECT_ID) {
-		throw new Error('External app config keys missing. Sync operations skipped.');
-	}
-
+function getExternalClient(event?: RuntimeEvent) {
 	const client = new Client()
-		.setEndpoint(env.RELEASES_APPWRITE_ENDPOINT || PUBLIC_APPWRITE_ENDPOINT)
-		.setProject(env.RELEASES_APPWRITE_PROJECT_ID)
-		.setKey(env.RELEASES_APPWRITE_API_KEY);
+		.setEndpoint(requireRuntimeEnv(event, 'PUBLIC_APPWRITE_ENDPOINT'))
+		.setProject(requireRuntimeEnv(event, 'PUBLIC_APPWRITE_PROJECT_ID'))
+		.setKey(requireRuntimeEnv(event, 'APPWRITE_API_KEY'));
 
 	return new Databases(client);
 }
@@ -36,11 +33,12 @@ export type ExternalAppConfig = {
 };
 
 export async function getExternalAppConfig(
-	channel: ReleaseChannel = 'stable'
+	channel: ReleaseChannel = 'stable',
+	event?: RuntimeEvent
 ): Promise<ExternalAppConfig | null> {
 	const rowId = ROW_ID_MAP[channel];
 	try {
-		const databases = getExternalClient();
+		const databases = getExternalClient(event);
 		const doc = await databases.getDocument(DB_ID, TABLE_ID, rowId);
 
 		return {
@@ -65,10 +63,11 @@ export async function updateExternalAppConfig(
 	version: string,
 	forceUpdate: boolean,
 	changelog: string | undefined,
-	apkSizeBytes: number
+	apkSizeBytes: number,
+	event?: RuntimeEvent
 ) {
 	const rowId = ROW_ID_MAP[channel];
-	const databases = getExternalClient();
+	const databases = getExternalClient(event);
 
 	const data = {
 		latestVersion: version,

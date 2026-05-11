@@ -1,7 +1,10 @@
 import type { PageServerLoad } from './$types';
-import { listReleases } from '$lib/server/storage/releases';
+import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { mapReleaseFromUnisource } from '$lib/server/unisource-mappers';
 
-export const load: PageServerLoad = async () => {
-	const releases = await listReleases();
+export const load: PageServerLoad = async (event) => {
+	const admin = createAdminUnisourceClient(event);
+	const response = await admin.releases.list({ limit: 100 });
+	const releases = response.items.map(mapReleaseFromUnisource);
 	return { releases };
 };

@@ -1,15 +1,15 @@
-import { PUBLIC_APPWRITE_ENDPOINT, PUBLIC_APPWRITE_PROJECT_ID } from '$env/static/public';
-import { APPWRITE_API_KEY } from '$env/static/private';
 import { Client, Account, TablesDB, Users } from 'node-appwrite';
 import { type RequestEvent } from '@sveltejs/kit';
 
+import { requireRuntimeEnv } from './runtime-env';
+
 export const SESSION_COOKIE = '__session';
 
-export function createAdminClient() {
+export function createAdminClient(event?: Pick<RequestEvent, 'platform'>) {
 	const client = new Client()
-		.setEndpoint(PUBLIC_APPWRITE_ENDPOINT)
-		.setProject(PUBLIC_APPWRITE_PROJECT_ID)
-		.setKey(APPWRITE_API_KEY);
+		.setEndpoint(requireRuntimeEnv(event, 'PUBLIC_APPWRITE_ENDPOINT'))
+		.setProject(requireRuntimeEnv(event, 'PUBLIC_APPWRITE_PROJECT_ID'))
+		.setKey(requireRuntimeEnv(event, 'APPWRITE_API_KEY'));
 
 	return {
 		get account() {
@@ -26,8 +26,8 @@ export function createAdminClient() {
 
 export function createSessionClient(event: RequestEvent) {
 	const client = new Client()
-		.setEndpoint(PUBLIC_APPWRITE_ENDPOINT)
-		.setProject(PUBLIC_APPWRITE_PROJECT_ID);
+		.setEndpoint(requireRuntimeEnv(event, 'PUBLIC_APPWRITE_ENDPOINT'))
+		.setProject(requireRuntimeEnv(event, 'PUBLIC_APPWRITE_PROJECT_ID'));
 
 	const session = event.cookies.get(SESSION_COOKIE);
 	if (session) {
