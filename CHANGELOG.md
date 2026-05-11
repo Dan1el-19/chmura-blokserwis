@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v1.15.0...v1.16.0) (2026-05-11)
+
+
+### Features
+
+* **sdk:** migrate storage to UniSource SDK and deploy on Cloudflare Workers ([8480376](https://github.com/Dan1el-19/chmura-blokserwis/commit/8480376c3ec3584c71c16ea8f31cfdaa3147bc1b))
+
 # [1.15.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.14.2...v1.15.0) (2026-05-07)
 
 ### Bug Fixes
