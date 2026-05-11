@@ -18,7 +18,9 @@ export const GET: RequestHandler = async (event) => {
 		const includeDownloadUrl = event.url.searchParams.get('download') === 'true';
 
 		if (includeDownloadUrl) {
-			const download = await client.myFiles.downloadUrl(fileId, undefined, { asUser: targetUserId });
+			const download = await client.myFiles.downloadUrl(fileId, undefined, {
+				asUser: targetUserId
+			});
 			return json({ downloadUrl: download.download_url, expiresAt: download.expires_at });
 		}
 
@@ -67,22 +69,16 @@ export const PATCH: RequestHandler = async (event) => {
 		const client = await createUserUnisourceClient(event);
 
 		if (name !== undefined) {
-			const result = await client.myFiles.update(
-				fileId,
-				{ filename: name },
-				undefined,
-				{ asUser: targetUserId }
-			);
+			const result = await client.myFiles.update(fileId, { filename: name }, undefined, {
+				asUser: targetUserId
+			});
 			return json(mapFileFromUnisource(result.file));
 		}
 
 		if (parentFolderId !== undefined) {
-			const result = await client.myFiles.move(
-				fileId,
-				{ folder_id: parentFolderId },
-				undefined,
-				{ asUser: targetUserId }
-			);
+			const result = await client.myFiles.move(fileId, { folder_id: parentFolderId }, undefined, {
+				asUser: targetUserId
+			});
 			return json(mapFileFromUnisource(result.file));
 		}
 

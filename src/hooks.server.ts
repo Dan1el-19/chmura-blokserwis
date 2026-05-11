@@ -14,6 +14,15 @@ const PUBLIC_ROUTES = ['/login', '/register', '/auth/callback'];
 
 const RATE_LIMIT_ENABLED = !!env.UPSTASH_REDIS_REST_URL;
 
+function isUnauthorizedSessionError(error: unknown): boolean {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'code' in error &&
+		(error as { code?: unknown }).code === 401
+	);
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
 	try {
 		if (RATE_LIMIT_ENABLED && event.url.pathname.startsWith('/api/')) {
@@ -25,7 +34,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 
 			const isStrictEndpoint =
-				event.url.pathname.includes('/api/uppy/') ||
 				event.url.pathname.includes('/api/files') ||
 				event.url.pathname.includes('/api/folders');
 
@@ -62,6 +70,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 		} catch (err) {
 			if (sessionCookie) {
 				logger.error('[HOOKS]', event.url.pathname, 'Failed to get user from session:', err);
+				if (isUnauthorizedSessionError(err)) {
+					event.cookies.delete(SESSION_COOKIE, { path: '/' });
+				}
 			}
 			event.locals.user = undefined;
 		}

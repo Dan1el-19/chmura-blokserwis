@@ -112,7 +112,7 @@
 					<button
 						type="submit"
 						disabled={loading}
-						class="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary text-base font-medium text-white shadow-lg shadow-primary/20 transition-colors hover:bg-primary/90 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none disabled:opacity-50"
+						class="group inline-flex h-12 w-full items-center justify-center rounded-xl bg-primary text-base font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-50 active:scale-[0.98]"
 					>
 						{#if loading}
 							<span
@@ -153,20 +153,15 @@
 
 				<div class="w-full px-8">
 					<a
-						href={downloadUrl}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary text-base font-medium text-white shadow-lg shadow-primary/20 transition-colors hover:bg-primary/90 focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
+						href={`/api/proxy-download?url=${encodeURIComponent(downloadUrl ?? '')}&name=${encodeURIComponent(data.fileName ?? '')}`}
+						download={data.fileName}
+						class="group flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/40 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
 					>
-						<DownloadSimple size={20} class="mr-2" />
+						<DownloadSimple size={22} weight="bold" />
 						Pobierz plik
 					</a>
 				</div>
 			</div>
 		{/if}
 	</Card>
-
-	<div class="mt-8 text-xs text-text-muted/40">
-		&copy; {new Date().getFullYear()} Chmura Blokserwis
-	</div>
 </div>

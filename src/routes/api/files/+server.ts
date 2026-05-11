@@ -20,11 +20,9 @@ export const GET: RequestHandler = async (event) => {
 		const client = await createUserUnisourceClient(event);
 		const result = trash
 			? await client.myFiles.trash({ cursor, limit }, undefined, { asUser: targetUserId })
-			: await client.myFiles.list(
-					{ folder_id: folderId, cursor, limit },
-					undefined,
-					{ asUser: targetUserId }
-				);
+			: await client.myFiles.list({ folder_id: folderId, cursor, limit }, undefined, {
+					asUser: targetUserId
+				});
 
 		return json({
 			items: result.items.map(mapFileFromUnisource),

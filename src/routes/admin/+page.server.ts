@@ -6,7 +6,7 @@ export const load: PageServerLoad = async (event) => {
 	const admin = createAdminUnisourceClient(event);
 	const [usage, users] = await Promise.all([
 		admin.admin.usage(),
-		admin.admin.listUsers({ limit: 500 })
+		admin.admin.listUsers({ limit: 100 })
 	]);
 
 	const usersByRole = { basic: 0, plus: 0, admin: 0 };

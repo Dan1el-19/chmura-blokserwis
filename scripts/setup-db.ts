@@ -1,15 +1,20 @@
 import 'dotenv/config';
 import { Client, TablesDB, IndexType } from 'node-appwrite';
+import { normalizeAppwriteEnv } from '../src/lib/server/appwrite-env';
 
-const ENDPOINT = process.env.PUBLIC_APPWRITE_ENDPOINT;
-const PROJECT_ID = process.env.PUBLIC_APPWRITE_PROJECT_ID;
-const API_KEY = process.env.APPWRITE_API_KEY;
+const appwriteEnv = normalizeAppwriteEnv(process.env as Record<string, string | undefined>);
+
+const ENDPOINT = appwriteEnv.PUBLIC_APPWRITE_ENDPOINT;
+const PROJECT_ID = appwriteEnv.PUBLIC_APPWRITE_PROJECT_ID;
+const API_KEY = appwriteEnv.APPWRITE_API_KEY;
 const DATABASE_ID = 'main';
 const TABLE_ID = 'file_shares';
 const TABLE_NAME = 'file_shares';
 
 if (!ENDPOINT || !PROJECT_ID || !API_KEY) {
-	console.error('Błąd: Brak wymaganych zmiennych środowiskowych (PUBLIC_APPWRITE_ENDPOINT, PUBLIC_APPWRITE_PROJECT_ID lub APPWRITE_API_KEY).');
+	console.error(
+		'Błąd: Brak wymaganych zmiennych środowiskowych (PUBLIC_APPWRITE_ENDPOINT, PUBLIC_APPWRITE_PROJECT_ID lub APPWRITE_API_KEY).'
+	);
 	process.exit(1);
 }
 

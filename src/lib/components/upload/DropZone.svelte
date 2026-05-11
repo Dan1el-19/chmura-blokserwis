@@ -59,7 +59,7 @@
 		<button
 			type="button"
 			onclick={onNewFolder}
-			class="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border-line px-8 py-6 transition-colors hover:border-primary hover:bg-primary/5 cursor-pointer"
+			class="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border-line px-8 py-6 transition-colors hover:border-primary hover:bg-primary/5"
 		>
 			<div class="rounded-full border border-border-line bg-bg-panel p-3">
 				<FolderPlus class="h-6 w-6 text-primary lg:h-7 lg:w-7" />

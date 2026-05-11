@@ -79,7 +79,7 @@
 	<div class="flex h-dvh w-full flex-col overflow-hidden lg:flex-row">
 		<DesktopSidebar {navItems} {currentPath} />
 
-		<div class="flex min-w-0 flex-1 flex-col">
+		<div class="flex min-h-0 min-w-0 flex-1 flex-col">
 			<MobileHeader bind:isDrawerOpen />
 
 			<MobileDrawer {navItems} {currentPath} bind:isDrawerOpen />

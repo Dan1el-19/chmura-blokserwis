@@ -8,6 +8,7 @@ describe('/+page.svelte', () => {
 		render(Page, {
 			props: {
 				data: {
+					user: null,
 					files: [],
 					folders: [],
 					currentFolderId: null,

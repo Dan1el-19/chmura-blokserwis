@@ -2,16 +2,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import { toast } from 'svelte-sonner';
-	import {
-		Copy,
-		Trash,
-		Plus,
-		Globe,
-		Clock,
-		X,
-		Lock,
-		Hash
-	} from 'phosphor-svelte';
+	import { Copy, Trash, Plus, Globe, Clock, X, Lock, Hash } from 'phosphor-svelte';
 	import DateTimePicker from '$lib/components/ui/DateTimePicker.svelte';
 	import type { FileShare } from '$lib/types/storage';
 	import { onMount } from 'svelte';

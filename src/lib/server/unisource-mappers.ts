@@ -4,10 +4,12 @@ import type {
 	Folder,
 	PublicFileAccessResponse,
 	PublicFileLockedResponse,
+	ReleaseDTO,
 	ShareLink
 } from '@unisource/sdk';
 
 import type { FileDocument, FileShare, FolderDocument } from '$lib/types/storage';
+import type { ParsedRelease } from '$lib/types/releases';
 import type { UserRole } from './roles';
 
 const DATABASE_ID = 'unisource';
@@ -97,6 +99,22 @@ export function mapAdminUserFromUnisource(user: AdminUser) {
 		labels: user.labels,
 		emailVerification: user.email_verification,
 		hasServiceAccess: user.has_service_access
+	};
+}
+
+export function mapReleaseFromUnisource(release: ReleaseDTO): ParsedRelease {
+	return {
+		$id: release.id,
+		$createdAt: release.created_at,
+		$updatedAt: release.created_at,
+		$collectionId: 'releases',
+		$databaseId: DATABASE_ID,
+		name: release.name,
+		size: release.size,
+		r2Key: release.r2_key,
+		tags: release.tags,
+		uploadedBy: release.uploaded_by,
+		notes: release.notes
 	};
 }
 

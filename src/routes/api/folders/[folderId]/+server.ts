@@ -14,7 +14,9 @@ export const GET: RequestHandler = async (event) => {
 
 	try {
 		const client = await createUserUnisourceClient(event);
-		const result = await client.folders.get(event.params.folderId, undefined, { asUser: targetUserId });
+		const result = await client.folders.get(event.params.folderId, undefined, {
+			asUser: targetUserId
+		});
 		return json(mapFolderFromUnisource(result.folder));
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to get folder');
@@ -31,12 +33,9 @@ export const DELETE: RequestHandler = async (event) => {
 
 	try {
 		const client = await createUserUnisourceClient(event);
-		await client.folders.delete(
-			event.params.folderId,
-			{ permanent },
-			undefined,
-			{ asUser: targetUserId }
-		);
+		await client.folders.delete(event.params.folderId, { permanent }, undefined, {
+			asUser: targetUserId
+		});
 		return json({ success: true });
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to delete folder');
@@ -62,12 +61,9 @@ export const PATCH: RequestHandler = async (event) => {
 		const client = await createUserUnisourceClient(event);
 
 		if (name !== undefined) {
-			const result = await client.folders.update(
-				event.params.folderId,
-				{ name },
-				undefined,
-				{ asUser: targetUserId }
-			);
+			const result = await client.folders.update(event.params.folderId, { name }, undefined, {
+				asUser: targetUserId
+			});
 			return json(mapFolderFromUnisource(result.folder));
 		}
 

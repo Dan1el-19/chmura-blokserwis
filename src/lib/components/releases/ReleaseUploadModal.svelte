@@ -10,7 +10,14 @@
 	type Props = {
 		file: File;
 		existingRelease?: ParsedRelease | null;
-		onConfirm: (data: { name: string; tags: string[]; notes: string; overwrite: boolean; forceUpdate: boolean; channel: 'stable' | 'beta' }) => void;
+		onConfirm: (data: {
+			name: string;
+			tags: string[];
+			notes: string;
+			overwrite: boolean;
+			forceUpdate: boolean;
+			channel: 'stable' | 'beta';
+		}) => void;
 		onCancel: () => void;
 	};
 
@@ -55,13 +62,19 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/80 p-4 backdrop-blur-sm">
 	<Card class="w-full max-w-md border-border-line bg-bg-panel shadow-lg" title="Upload Release">
 		<form onsubmit={handleSubmit} class="space-y-4">
-			<div class="rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-zinc-700/50 dark:bg-zinc-800/50">
+			<div
+				class="rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-zinc-700/50 dark:bg-zinc-800/50"
+			>
 				<p class="text-sm text-text-muted">
 					Selected file: <span class="font-medium text-text-main">{name}</span>
 				</p>
 				<p class="mt-1 text-xs text-text-muted">
-					<span title={file.name}>Original file: {file.name.length > 25 ? file.name.substring(0, 25) + '...' : file.name}</span>
-					<span class="mx-1">•</span> 
+					<span title={file.name}
+						>Original file: {file.name.length > 25
+							? file.name.substring(0, 25) + '...'
+							: file.name}</span
+					>
+					<span class="mx-1">•</span>
 					Size: {formatSize(file.size)}
 				</p>
 			</div>
@@ -95,23 +108,31 @@
 
 			<div class="space-y-1">
 				<Input bind:value={name} label="Filename" placeholder="blokserwis-1.4.0.apk" required />
-				<div class="flex items-center gap-2 flex-wrap pb-2 pt-1">
+				<div class="flex flex-wrap items-center gap-2 pt-1 pb-2">
 					{#if extractedVersion}
-						<span class="inline-flex items-center rounded-md bg-green-500/10 px-2 py-0.5 text-[0.7rem] font-semibold text-green-600 dark:text-green-400 border border-green-500/20">
+						<span
+							class="inline-flex items-center rounded-md border border-green-500/20 bg-green-500/10 px-2 py-0.5 text-[0.7rem] font-semibold text-green-600 dark:text-green-400"
+						>
 							Version: v{extractedVersion}
 						</span>
 					{:else}
-						<span class="inline-flex items-center rounded-md bg-rose-500/10 px-2 py-0.5 text-[0.7rem] font-semibold text-rose-600 dark:text-rose-400 border border-rose-500/20">
+						<span
+							class="inline-flex items-center rounded-md border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-[0.7rem] font-semibold text-rose-600 dark:text-rose-400"
+						>
 							Brak wykrytej wersji
 						</span>
 					{/if}
 
 					{#if isValidFormat}
-						<span class="inline-flex items-center rounded-md bg-emerald-500/10 px-2 py-0.5 text-[0.7rem] font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+						<span
+							class="inline-flex items-center rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[0.7rem] font-semibold text-emerald-600 dark:text-emerald-400"
+						>
 							<Check class="mr-1 h-3 w-3" /> Szablon poprawny
 						</span>
 					{:else}
-						<span class="inline-flex items-center rounded-md bg-rose-500/10 px-2 py-0.5 text-[0.7rem] font-semibold text-rose-600 dark:text-rose-400 border border-rose-500/20">
+						<span
+							class="inline-flex items-center rounded-md border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-[0.7rem] font-semibold text-rose-600 dark:text-rose-400"
+						>
 							<Warning class="mr-1 h-3 w-3" /> Wymagane: blokserwis-x.x.x.apk
 						</span>
 					{/if}
@@ -121,7 +142,7 @@
 			<div class="space-y-2">
 				<p class="block text-sm font-medium text-text-muted">Kanał dystrybucji</p>
 				<div class="flex gap-4">
-					<label class="flex items-center gap-2 cursor-pointer select-none">
+					<label class="flex cursor-pointer items-center gap-2 select-none">
 						<input
 							type="radio"
 							name="upload-channel"
@@ -131,7 +152,7 @@
 						/>
 						<span class="text-sm font-medium text-text-main">stable</span>
 					</label>
-					<label class="flex items-center gap-2 cursor-pointer select-none">
+					<label class="flex cursor-pointer items-center gap-2 select-none">
 						<input
 							type="radio"
 							name="upload-channel"
@@ -143,7 +164,9 @@
 					</label>
 				</div>
 				{#if isBetaFilename}
-					<p class="text-xs text-amber-500">Wykryto sufiks beta – kanał ustawiony automatycznie na <strong>beta</strong>.</p>
+					<p class="text-xs text-amber-500">
+						Wykryto sufiks beta – kanał ustawiony automatycznie na <strong>beta</strong>.
+					</p>
 				{/if}
 			</div>
 
@@ -172,14 +195,20 @@
 					class="mt-0.5 h-4 w-4 shrink-0 rounded border-border-line text-rose-500 focus:ring-rose-500"
 				/>
 				<div>
-					<p class="text-sm font-medium {forceUpdate ? 'text-rose-500' : 'text-text-main'}">Force Update</p>
-					<p class="mt-0.5 text-xs text-text-muted">Aplikacja mobilna wymusi aktualizację — użytkownicy nie będą mogli pominąć.</p>
+					<p class="text-sm font-medium {forceUpdate ? 'text-rose-500' : 'text-text-main'}">
+						Force Update
+					</p>
+					<p class="mt-0.5 text-xs text-text-muted">
+						Aplikacja mobilna wymusi aktualizację — użytkownicy nie będą mogli pominąć.
+					</p>
 				</div>
 			</label>
 
 			<div class="flex justify-end gap-2 pt-2">
 				<Button variant="ghost" onclick={onCancel} type="button">Cancel</Button>
-				<Button type="submit" disabled={(!!existingRelease && !overwrite) || !isValidFormat}>Upload</Button>
+				<Button type="submit" disabled={(!!existingRelease && !overwrite) || !isValidFormat}
+					>Upload</Button
+				>
 			</div>
 		</form>
 	</Card>

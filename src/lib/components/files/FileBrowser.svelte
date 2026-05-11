@@ -24,7 +24,7 @@
 				const data = await res.json();
 				if (data.downloadUrl) {
 					toast.info(`Pobieranie: ${name}`);
-					window.location.href = data.downloadUrl;
+					window.location.href = `/api/proxy-download?url=${encodeURIComponent(data.downloadUrl)}&name=${encodeURIComponent(name)}`;
 				}
 			}
 		} catch (e: any) {
@@ -83,4 +83,3 @@
 {#if sharingItem}
 	<ShareDialog fileId={sharingItem.id} onClose={() => (sharingItem = null)} />
 {/if}
-

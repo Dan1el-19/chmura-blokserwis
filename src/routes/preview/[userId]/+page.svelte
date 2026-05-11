@@ -43,7 +43,7 @@
 			const result = await res.json();
 			if (result.downloadUrl) {
 				toast.info(`Downloading: ${fileName}`);
-				window.location.href = result.downloadUrl;
+				window.location.href = `/api/proxy-download?url=${encodeURIComponent(result.downloadUrl)}&name=${encodeURIComponent(fileName)}`;
 			}
 		} catch (e: any) {
 			toast.error(e.message);

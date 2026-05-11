@@ -3,17 +3,17 @@ import { UnisourceError, UnisourceNetworkError } from '@unisource/sdk';
 
 export function unisourceErrorResponse(error: unknown, fallback = 'UniSource request failed') {
 	if (error instanceof UnisourceError) {
-		return json({ error: error.body?.message || error.message || fallback }, { status: error.status });
+		return json(
+			{ error: error.body?.message || error.message || fallback },
+			{ status: error.status }
+		);
 	}
 
 	if (error instanceof UnisourceNetworkError) {
 		return json({ error: 'UniSource network request failed' }, { status: 502 });
 	}
 
-	return json(
-		{ error: error instanceof Error ? error.message : fallback },
-		{ status: 500 }
-	);
+	return json({ error: error instanceof Error ? error.message : fallback }, { status: 500 });
 }
 
 export function publicShareErrorState(error: unknown) {
