@@ -1,3 +1,13 @@
+## [2.0.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v1.15.0...v2.0.0) (2026-05-11)
+
+### ⚠ BREAKING CHANGES
+
+* migrated service identity and public product naming.
+
+### Features
+
+* migrate from effinity-cloud to chmura-blokserwis v2 ([7564a7f](https://github.com/Dan1el-19/chmura-blokserwis/commit/7564a7f45ff2d74ba744f22f1d12a13ce61fb9b2))
+
 # [1.16.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v1.15.0...v1.16.0) (2026-05-11)
 
 
