@@ -14,6 +14,9 @@
 		usage?: number;
 		limit?: number;
 		role?: string;
+		fileNextCursor?: string | null;
+		folderNextCursor?: string | null;
+		storageKind?: 'user' | 'main';
 		[key: string]: any;
 	}
 
@@ -26,37 +29,32 @@
 	let showCreateFolder = $state(false);
 
 	const uppyState = new UppyState({
+		getFolderId: () => data.currentFolderId,
+		isMainStorage: () => data.storageKind === 'main',
 		onComplete: handleUploadComplete,
 		onError: (err) => toast.error(`Upload error: ${err.message}`)
 	});
 
 	async function handleUploadComplete(results: UploadResult[]) {
 		for (const result of results) {
-			const formData = new FormData();
-			formData.append('name', result.name);
-			formData.append('size', result.size.toString());
-			formData.append('mimeType', result.type);
-			formData.append('r2Key', result.key);
-			if (data.currentFolderId) {
-				formData.append('parentFolderId', data.currentFolderId);
-			}
-
-			try {
-				const response = await fetch('?/createFile', {
-					method: 'POST',
-					body: formData
-				});
-				if (response.ok) {
-					toast.success(`Uploaded: ${result.name}`);
-				} else {
-					const json = await response.json();
-					toast.error(`Failed to save ${result.name}: ${json?.data?.error || 'Unknown error'}`);
-				}
-			} catch (e: any) {
-				toast.error(`Error saving ${result.name}: ${e.message}`);
-			}
+			toast.success(`Uploaded: ${result.name}`);
 		}
 		invalidateAll();
+	}
+
+	const showStorageWidget = $derived(
+		typeof data.usage === 'number' && typeof data.limit === 'number'
+	);
+
+	function pageHref(kind: 'files' | 'folders', cursor: string) {
+		const params = new URLSearchParams();
+		if (data.currentFolderId) params.set('folder', data.currentFolderId);
+		if (kind === 'files') params.set('fileCursor', cursor);
+		else params.set('folderCursor', cursor);
+		const query = params.toString();
+		if (!query) return rootHref;
+		if (rootHref === '?') return `?${query}`;
+		return `${rootHref}${rootHref.includes('?') ? '&' : '?'}${query}`;
 	}
 </script>
 
@@ -77,13 +75,39 @@
 				{data.files.length} Files, {data.folders.length} Folders
 			</p>
 
-			<StorageWidget usage={data.usage ?? 0} limit={data.limit ?? null} role={data.role} />
+			{#if showStorageWidget}
+				<StorageWidget usage={data.usage ?? 0} limit={data.limit ?? null} role={data.role} />
+			{/if}
 		</div>
 	</div>
 
-	<UppyZone {uppyState} onNewFolder={() => (showCreateFolder = true)} />
+	<UppyZone
+		{uppyState}
+		onNewFolder={data.storageKind === 'main' ? undefined : () => (showCreateFolder = true)}
+	/>
 
 	<FileBrowser files={data.files} folders={data.folders} />
+
+	{#if data.fileNextCursor || data.folderNextCursor}
+		<div class="flex flex-wrap gap-2 border-t border-border-line pt-4">
+			{#if data.fileNextCursor}
+				<a
+					href={pageHref('files', data.fileNextCursor)}
+					class="rounded-md border border-border-line px-3 py-2 text-sm font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"
+				>
+					Load more files
+				</a>
+			{/if}
+			{#if data.folderNextCursor}
+				<a
+					href={pageHref('folders', data.folderNextCursor)}
+					class="rounded-md border border-border-line px-3 py-2 text-sm font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"
+				>
+					Load more folders
+				</a>
+			{/if}
+		</div>
+	{/if}
 </div>
 
 {#if showCreateFolder}

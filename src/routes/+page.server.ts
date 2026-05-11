@@ -1,33 +1,46 @@
 import { fail, redirect } from '@sveltejs/kit';
 
-import { listFiles, createFile } from '$lib/server/storage/files';
-import { listFolders, createFolder } from '$lib/server/storage/folders';
-import { getUserStorageLimit, getUserStorageUsage, getUserRole } from '$lib/server/roles';
+import { createUserUnisourceClient } from '$lib/server/unisource';
+import { mapFileFromUnisource, mapFolderFromUnisource } from '$lib/server/unisource-mappers';
+import { getUserRole } from '$lib/server/roles';
 import type { Actions, PageServerLoad } from './$types';
 import { logger } from '$lib/server/logger';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+const PAGE_LIMIT = 50;
+
+export const load: PageServerLoad = async (event) => {
+	const { locals, url } = event;
 	if (!locals.user) {
 		throw redirect(302, '/login');
 	}
 
 	const parentFolderId = url.searchParams.get('folder') || null;
+	const fileCursor = url.searchParams.get('fileCursor') || undefined;
+	const folderCursor = url.searchParams.get('folderCursor') || undefined;
 
 	try {
-		const [files, folders, usage, limit] = await Promise.all([
-			listFiles(locals.user.$id, parentFolderId),
-			listFolders(locals.user.$id, parentFolderId),
-			getUserStorageUsage(locals.user.$id),
-			Promise.resolve(getUserStorageLimit(locals.user))
+		const client = await createUserUnisourceClient(event);
+		const [files, folders] = await Promise.all([
+			client.myFiles.list({
+				folder_id: parentFolderId,
+				cursor: fileCursor,
+				limit: PAGE_LIMIT
+			}),
+			client.folders.list({
+				parent_id: parentFolderId,
+				cursor: folderCursor,
+				limit: PAGE_LIMIT
+			})
 		]);
 
 		return {
-			files: files.rows,
-			folders: folders.rows,
+			files: files.items.map(mapFileFromUnisource),
+			folders: folders.items.map(mapFolderFromUnisource),
 			currentFolderId: parentFolderId,
-			usage,
-			limit,
-			role: getUserRole(locals.user)
+			fileNextCursor: files.next_cursor,
+			folderNextCursor: folders.next_cursor,
+			role: getUserRole(locals.user),
+			storageKind: 'user' as const
 		};
 	} catch (error: unknown) {
 		logger.error('Error fetching storage items:', error);
@@ -35,16 +48,16 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			files: [],
 			folders: [],
 			currentFolderId: parentFolderId,
-			usage: 0,
-			limit: 0,
 			role: '',
+			storageKind: 'user' as const,
 			error: 'Failed to load storage items'
 		};
 	}
 };
 
 export const actions: Actions = {
-	createFolder: async ({ request, locals }) => {
+	createFolder: async (event) => {
+		const { request, locals } = event;
 		if (!locals.user) {
 			return fail(401, { error: 'Unauthorized' });
 		}
@@ -58,49 +71,16 @@ export const actions: Actions = {
 		}
 
 		try {
-			await createFolder(locals.user.$id, name, parentId);
+			const client = await createUserUnisourceClient(event);
+			await client.folders.create({
+				name,
+				...(parentId ? { parent_id: parentId } : {})
+			});
 			return { success: true };
 		} catch (error: unknown) {
 			logger.error('Error creating folder:', error);
 			return fail(500, {
 				error: error instanceof Error ? error.message : 'Failed to create folder'
-			});
-		}
-	},
-
-	createFile: async ({ request, locals }) => {
-		if (!locals.user) {
-			return fail(401, { error: 'Unauthorized' });
-		}
-
-		const data = await request.formData();
-		const name = data.get('name') as string;
-		const size = parseInt(data.get('size') as string);
-		const mimeType = data.get('mimeType') as string;
-		const r2Key = data.get('r2Key') as string;
-		const parentFolderId = (data.get('parentFolderId') as string) || null;
-
-		if (!name || isNaN(size) || !mimeType || !r2Key) {
-			return fail(400, { error: 'Missing file metadata' });
-		}
-
-		const bucketId = 'default';
-
-		try {
-			await createFile({
-				name,
-				size,
-				mimeType,
-				r2Key,
-				bucketId,
-				ownerId: locals.user.$id,
-				parentFolderId
-			});
-			return { success: true };
-		} catch (error: unknown) {
-			logger.error('Error creating file metadata:', error);
-			return fail(500, {
-				error: error instanceof Error ? error.message : 'Failed to create file metadata'
 			});
 		}
 	}

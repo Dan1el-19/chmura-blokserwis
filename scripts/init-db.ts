@@ -1,6 +1,7 @@
 import { Client, TablesDB, IndexType } from 'node-appwrite';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { normalizeAppwriteEnv } from '../src/lib/server/appwrite-env';
 
 function loadEnv() {
 	try {
@@ -20,9 +21,11 @@ function loadEnv() {
 
 loadEnv();
 
-const ENDPOINT = process.env.PUBLIC_APPWRITE_ENDPOINT;
-const PROJECT_ID = process.env.PUBLIC_APPWRITE_PROJECT_ID;
-const API_KEY = process.env.APPWRITE_API_KEY;
+const appwriteEnv = normalizeAppwriteEnv(process.env as Record<string, string | undefined>);
+
+const ENDPOINT = appwriteEnv.PUBLIC_APPWRITE_ENDPOINT;
+const PROJECT_ID = appwriteEnv.PUBLIC_APPWRITE_PROJECT_ID;
+const API_KEY = appwriteEnv.APPWRITE_API_KEY;
 const DATABASE_ID = 'main';
 
 if (!ENDPOINT || !PROJECT_ID || !API_KEY) {

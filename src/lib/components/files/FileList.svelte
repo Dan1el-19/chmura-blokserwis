@@ -59,17 +59,7 @@
 
 			<!-- Context Menu -->
 			{#if activeMenuId === folder.$id}
-				<div class="mt-3 grid grid-cols-4 gap-2 border-t border-border-line pt-3">
-					<button
-						onclick={() => {
-							onShare(folder.$id, true);
-							activeMenuId = null;
-						}}
-						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-gray-50"
-					>
-						<Share class="h-5 w-5 text-blue-500" />
-						<span class="text-[10px] text-text-muted">Udostępnij</span>
-					</button>
+				<div class="mt-3 grid grid-cols-2 gap-2 border-t border-border-line pt-3">
 					<button
 						onclick={() => {
 							onRename(folder.$id, folder.name, true);
@@ -79,16 +69,6 @@
 					>
 						<Pencil class="h-5 w-5 text-text-main" />
 						<span class="text-[10px] text-text-muted">Zmień</span>
-					</button>
-					<button
-						onclick={() => {
-							onDownload(folder.$id, folder.name, true);
-							activeMenuId = null;
-						}}
-						class="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-gray-50"
-					>
-						<DownloadSimple class="h-5 w-5 text-primary" />
-						<span class="text-[10px] text-text-muted">Pobierz</span>
 					</button>
 					<button
 						onclick={() => {

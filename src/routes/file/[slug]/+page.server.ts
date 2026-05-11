@@ -1,104 +1,24 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import {
-	getShareByTokenWithExpiredCheck,
-	verifySharePassword,
-	incrementDownloadCount,
-	isDownloadLimitReached
-} from '$lib/server/storage/shares';
-import { getFileMetadata } from '$lib/server/storage/files';
-import { getDownloadUrl } from '$lib/server/storage/r2';
 
-export const load: PageServerLoad = async ({ params }) => {
-	const { slug } = params;
+import { getPublicFileInfo, unlockPublicFile } from '$lib/server/unisource';
+import { publicShareErrorState } from '$lib/server/unisource-errors';
+import { mapPublicFileFromUnisource } from '$lib/server/unisource-mappers';
 
+export const load: PageServerLoad = async (event) => {
 	try {
-		const result = await getShareByTokenWithExpiredCheck(slug);
-
-		if (!result.share) {
-			if (result.expired) {
-				return {
-					expired: true,
-					fileName: null,
-					fileSize: null,
-					mimeType: null,
-					downloadUrl: null,
-					expiresAt: null,
-					requiresPassword: false,
-					limitReached: false,
-					remainingDownloads: null
-				};
-			}
-			error(404, 'Link nie istnieje.');
-		}
-
-		const share = result.share;
-
-		if (!share.fileId) {
-			error(501, 'Widok udostępniania folderów jest w przygotowaniu.');
-		}
-
-		if (isDownloadLimitReached(share)) {
-			return {
-				expired: false,
-				fileName: null,
-				fileSize: null,
-				mimeType: null,
-				downloadUrl: null,
-				expiresAt: share.expiresAt,
-				requiresPassword: false,
-				limitReached: true,
-				remainingDownloads: 0
-			};
-		}
-
-		// Use getFileMetadata instead of getFile to avoid access denied for main-storage files
-		const file = await getFileMetadata(share.fileId as string);
-
-		if (share.passwordHash) {
-			return {
-				expired: false,
-				fileName: file.name,
-				fileSize: file.size,
-				mimeType: file.mimeType,
-				downloadUrl: null,
-				expiresAt: share.expiresAt,
-				requiresPassword: true,
-				limitReached: false,
-				remainingDownloads: share.maxDownloads
-					? share.maxDownloads - share.downloadCount
-					: null
-			};
-		}
-
-		const downloadUrl = await getDownloadUrl(file.r2Key, file.name);
-
-		await incrementDownloadCount(share.$id);
-
-		return {
-			expired: false,
-			fileName: file.name,
-			fileSize: file.size,
-			mimeType: file.mimeType,
-			downloadUrl,
-			expiresAt: share.expiresAt,
-			requiresPassword: false,
-			limitReached: false,
-			remainingDownloads: share.maxDownloads
-				? share.maxDownloads - share.downloadCount - 1
-				: null
-		};
-	} catch (e: any) {
-		console.error('Error loading shared file:', e);
-		if (e.status) throw e;
+		const response = await getPublicFileInfo(event, event.params.slug);
+		return mapPublicFileFromUnisource(response);
+	} catch (e) {
+		const state = publicShareErrorState(e);
+		if (state) return state;
 		error(404, 'Link nie istnieje.');
 	}
 };
 
 export const actions: Actions = {
-	unlock: async ({ params, request }) => {
-		const { slug } = params;
-		const formData = await request.formData();
+	unlock: async (event) => {
+		const formData = await event.request.formData();
 		const password = formData.get('password') as string;
 
 		if (!password) {
@@ -106,43 +26,22 @@ export const actions: Actions = {
 		}
 
 		try {
-			const result = await getShareByTokenWithExpiredCheck(slug);
-
-			if (!result.share) {
-				return fail(404, { error: 'Link nie istnieje' });
-			}
-
-			const share = result.share;
-
-			if (!share.fileId) {
-				return fail(501, { error: 'Widok udostępniania folderów jest w przygotowaniu.' });
-			}
-
-			if (isDownloadLimitReached(share)) {
-				return fail(403, { error: 'Limit pobrań został wyczerpany' });
-			}
-
-			const valid = await verifySharePassword(share, password);
-			if (!valid) {
+			const response = await unlockPublicFile(event, event.params.slug, password);
+			const data = mapPublicFileFromUnisource(response);
+			if (data.requiresPassword) {
 				return fail(401, { error: 'Nieprawidłowe hasło' });
 			}
 
-			// Use getFileMetadata instead of getFile
-			const file = await getFileMetadata(share.fileId as string);
-			const downloadUrl = await getDownloadUrl(file.r2Key, file.name);
-
-			await incrementDownloadCount(share.$id);
-
 			return {
 				success: true,
-				downloadUrl,
-				remainingDownloads: share.maxDownloads
-					? share.maxDownloads - share.downloadCount - 1
-					: null
+				downloadUrl: data.downloadUrl,
+				remainingDownloads: data.remainingDownloads
 			};
-		} catch (e: any) {
-			console.error('Error unlocking share:', e);
-			return fail(500, { error: 'Wystąpił błąd' });
+		} catch (e) {
+			const state = publicShareErrorState(e);
+			if (state?.limitReached) return fail(403, { error: 'Limit pobrań został wyczerpany' });
+			if (state?.expired) return fail(410, { error: 'Link wygasł' });
+			return fail(401, { error: 'Nieprawidłowe hasło' });
 		}
 	}
 };

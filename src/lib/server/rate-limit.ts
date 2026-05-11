@@ -11,21 +11,21 @@ export const ratelimit = new Ratelimit({
 	redis,
 	limiter: Ratelimit.slidingWindow(30, '60 s'),
 	analytics: true,
-	prefix: 'effinity-cloud'
+	prefix: 'chmura-blokserwis'
 });
 
 export const strictRatelimit = new Ratelimit({
 	redis,
 	limiter: Ratelimit.slidingWindow(10, '60 s'),
 	analytics: true,
-	prefix: 'effinity-cloud:strict'
+	prefix: 'chmura-blokserwis:strict'
 });
 
 export const uploadRatelimit = new Ratelimit({
 	redis,
 	limiter: Ratelimit.slidingWindow(100, '60 s'),
 	analytics: true,
-	prefix: 'effinity-cloud:upload'
+	prefix: 'chmura-blokserwis:upload'
 });
 
 export interface RateLimitResult {

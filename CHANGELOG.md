@@ -1,115 +1,106 @@
-# [1.15.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.14.2...v1.15.0) (2026-05-07)
-
-
-### Bug Fixes
-
-* Add bcrypt to onlyBuiltDependencies in pnpm workspace configuration ([dd759a1](https://github.com/Dan1el-19/effinity-cloud/commit/dd759a1e48146eb703d91ec6d4446834dca6851e))
+# [1.16.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v1.15.0...v1.16.0) (2026-05-11)
 
 
 ### Features
 
-* Implement toPublicUser function and related tests for user data serialization ([1f3a117](https://github.com/Dan1el-19/effinity-cloud/commit/1f3a117dd397389eddee8909a17026a34a149cec))
+* **sdk:** migrate storage to UniSource SDK and deploy on Cloudflare Workers ([8480376](https://github.com/Dan1el-19/chmura-blokserwis/commit/8480376c3ec3584c71c16ea8f31cfdaa3147bc1b))
+
+# [1.15.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.14.2...v1.15.0) (2026-05-07)
+
+### Bug Fixes
+
+- Add bcrypt to onlyBuiltDependencies in pnpm workspace configuration ([dd759a1](https://github.com/Dan1el-19/effinity-cloud/commit/dd759a1e48146eb703d91ec6d4446834dca6851e))
+
+### Features
+
+- Implement toPublicUser function and related tests for user data serialization ([1f3a117](https://github.com/Dan1el-19/effinity-cloud/commit/1f3a117dd397389eddee8909a17026a34a149cec))
 
 ## [1.14.2](https://github.com/Dan1el-19/effinity-cloud/compare/v1.14.1...v1.14.2) (2026-04-02)
 
-
 ### Bug Fixes
 
-* add FAB button to the mobile releases ([14335da](https://github.com/Dan1el-19/effinity-cloud/commit/14335dacdb2aa36d90728080b3a5f8edbd264f1a))
+- add FAB button to the mobile releases ([14335da](https://github.com/Dan1el-19/effinity-cloud/commit/14335dacdb2aa36d90728080b3a5f8edbd264f1a))
 
 ## [1.14.1](https://github.com/Dan1el-19/effinity-cloud/compare/v1.14.0...v1.14.1) (2026-04-02)
 
-
 ### Bug Fixes
 
-*  external Appwrite configuration sync service and API endpoints for release management ([81bb307](https://github.com/Dan1el-19/effinity-cloud/commit/81bb30700f68f26b35fc1fe70d661baf0525be48))
+- external Appwrite configuration sync service and API endpoints for release management ([81bb307](https://github.com/Dan1el-19/effinity-cloud/commit/81bb30700f68f26b35fc1fe70d661baf0525be48))
 
 # [1.14.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.4...v1.14.0) (2026-04-02)
 
-
 ### Features
 
-* implement release beta/stable management system with upload UI, validation schemas, and API endpoints for APK distribution. ([08ed242](https://github.com/Dan1el-19/effinity-cloud/commit/08ed242d90a693238f7307d41d3b65b2ffb5faf0))
+- implement release beta/stable management system with upload UI, validation schemas, and API endpoints for APK distribution. ([08ed242](https://github.com/Dan1el-19/effinity-cloud/commit/08ed242d90a693238f7307d41d3b65b2ffb5faf0))
 
 ## [1.13.4](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.3...v1.13.4) (2026-04-01)
 
-
 ### Bug Fixes
 
-* implement release management API endpoints and upload modal with version validation and auto-syncing configuration ([d7d1b2e](https://github.com/Dan1el-19/effinity-cloud/commit/d7d1b2e50daf15f0ae57d74099d139bed7ce1209))
+- implement release management API endpoints and upload modal with version validation and auto-syncing configuration ([d7d1b2e](https://github.com/Dan1el-19/effinity-cloud/commit/d7d1b2e50daf15f0ae57d74099d139bed7ce1209))
 
 ## [1.13.3](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.2...v1.13.3) (2026-04-01)
 
-
 ### Bug Fixes
 
-* Appwrite environment variables for release synchronization ([567b352](https://github.com/Dan1el-19/effinity-cloud/commit/567b352f9934a448eed330197451e9634a112df2))
+- Appwrite environment variables for release synchronization ([567b352](https://github.com/Dan1el-19/effinity-cloud/commit/567b352f9934a448eed330197451e9634a112df2))
 
 ## [1.13.2](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.1...v1.13.2) (2026-04-01)
 
-
 ### Bug Fixes
 
-* implement external Appwrite configuration sync service and API route ([058d304](https://github.com/Dan1el-19/effinity-cloud/commit/058d3042cb08b3665c3946ec9d3de0b32faa4756))
+- implement external Appwrite configuration sync service and API route ([058d304](https://github.com/Dan1el-19/effinity-cloud/commit/058d3042cb08b3665c3946ec9d3de0b32faa4756))
 
 ## [1.13.1](https://github.com/Dan1el-19/effinity-cloud/compare/v1.13.0...v1.13.1) (2026-04-01)
 
-
 ### Bug Fixes
 
-* rescue forcesync features after refactor oversight ([7afc088](https://github.com/Dan1el-19/effinity-cloud/commit/7afc0882a3d2d157f0bfb1fe3e7e99fceefefe11))
+- rescue forcesync features after refactor oversight ([7afc088](https://github.com/Dan1el-19/effinity-cloud/commit/7afc0882a3d2d157f0bfb1fe3e7e99fceefefe11))
 
 # [1.13.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.12.0...v1.13.0) (2026-03-31)
 
-
 ### Features
 
-* implement release management system with external configuration synchronization and UI components ([7edfb57](https://github.com/Dan1el-19/effinity-cloud/commit/7edfb57f24a537fc75a0978ce17a19734c692860))
+- implement release management system with external configuration synchronization and UI components ([7edfb57](https://github.com/Dan1el-19/effinity-cloud/commit/7edfb57f24a537fc75a0978ce17a19734c692860))
 
 # [1.12.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.11.0...v1.12.0) (2026-03-24)
 
-
 ### Features
 
-* Add release upload functionality with a dedicated modal, API endpoint, and external app configuration updates. ([27e2696](https://github.com/Dan1el-19/effinity-cloud/commit/27e2696216bd911db5566eb14d4b016a1718afc9))
+- Add release upload functionality with a dedicated modal, API endpoint, and external app configuration updates. ([27e2696](https://github.com/Dan1el-19/effinity-cloud/commit/27e2696216bd911db5566eb14d4b016a1718afc9))
 
 # [1.11.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.10.0...v1.11.0) (2026-03-24)
 
-
 ### Features
 
-* Implement comprehensive APK release management system with dedicated UI, API endpoints, and server-side storage. ([243098f](https://github.com/Dan1el-19/effinity-cloud/commit/243098fee4afff38330ccf3cfaa0edaa11186a1e))
+- Implement comprehensive APK release management system with dedicated UI, API endpoints, and server-side storage. ([243098f](https://github.com/Dan1el-19/effinity-cloud/commit/243098fee4afff38330ccf3cfaa0edaa11186a1e))
 
 # [1.10.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.9.0...v1.10.0) (2026-02-04)
 
-
 ### Features
 
-* Add server-side logic and API routes for file and folder sharing, including share creation, retrieval, listing, deletion, password protection, expiration, and download limits. ([55263a8](https://github.com/Dan1el-19/effinity-cloud/commit/55263a81bf4a9c4ce6ee99fa2d72aecfd992c00c))
+- Add server-side logic and API routes for file and folder sharing, including share creation, retrieval, listing, deletion, password protection, expiration, and download limits. ([55263a8](https://github.com/Dan1el-19/effinity-cloud/commit/55263a81bf4a9c4ce6ee99fa2d72aecfd992c00c))
 
 # [1.9.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.8.0...v1.9.0) (2026-01-23)
 
-
 ### Features
 
-* enhance files sharing step 1 ([bc6a655](https://github.com/Dan1el-19/effinity-cloud/commit/bc6a6550d65a92d07d1d493249271e40eff28fd6))
+- enhance files sharing step 1 ([bc6a655](https://github.com/Dan1el-19/effinity-cloud/commit/bc6a6550d65a92d07d1d493249271e40eff28fd6))
 
 # [1.8.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.7.2...v1.8.0) (2026-01-18)
 
-
 ### Bug Fixes
 
-* cloudbuild.yaml repair ([7467129](https://github.com/Dan1el-19/effinity-cloud/commit/7467129f5c4643753054bb4c40081bd44c0846fe))
-* Correct session cookie name and add private Cache-Control header to responses. ([81a5512](https://github.com/Dan1el-19/effinity-cloud/commit/81a551288ba255d2590fd39726f71548f54238a7))
-* Enhance server hooks logging with request path and no-session cookie status. ([4d2b939](https://github.com/Dan1el-19/effinity-cloud/commit/4d2b939020dba8d41af509470d0305efc5c68b0d))
-* OAuth redirect loop - use env.ORIGIN and proper headers ([797503d](https://github.com/Dan1el-19/effinity-cloud/commit/797503d1a751314382e5c3937664c0584539199c))
-* Resolve layout overflow in main content and sidebar, and update various dependencies. ([7808956](https://github.com/Dan1el-19/effinity-cloud/commit/780895695fa26075791c03a794e89201b0835859))
-
+- cloudbuild.yaml repair ([7467129](https://github.com/Dan1el-19/effinity-cloud/commit/7467129f5c4643753054bb4c40081bd44c0846fe))
+- Correct session cookie name and add private Cache-Control header to responses. ([81a5512](https://github.com/Dan1el-19/effinity-cloud/commit/81a551288ba255d2590fd39726f71548f54238a7))
+- Enhance server hooks logging with request path and no-session cookie status. ([4d2b939](https://github.com/Dan1el-19/effinity-cloud/commit/4d2b939020dba8d41af509470d0305efc5c68b0d))
+- OAuth redirect loop - use env.ORIGIN and proper headers ([797503d](https://github.com/Dan1el-19/effinity-cloud/commit/797503d1a751314382e5c3937664c0584539199c))
+- Resolve layout overflow in main content and sidebar, and update various dependencies. ([7808956](https://github.com/Dan1el-19/effinity-cloud/commit/780895695fa26075791c03a794e89201b0835859))
 
 ### Features
 
-* enhance ESLint configuration and logging ([bdc7e73](https://github.com/Dan1el-19/effinity-cloud/commit/bdc7e738ae25ed0c5b8f664ab48bc4583edbfced))
-* Implement file sharing with public links, expiration, and custom slugs. ([7180be8](https://github.com/Dan1el-19/effinity-cloud/commit/7180be8ff1a7b42b73b246fe08aa7321ab5c1609))
+- enhance ESLint configuration and logging ([bdc7e73](https://github.com/Dan1el-19/effinity-cloud/commit/bdc7e738ae25ed0c5b8f664ab48bc4583edbfced))
+- Implement file sharing with public links, expiration, and custom slugs. ([7180be8](https://github.com/Dan1el-19/effinity-cloud/commit/7180be8ff1a7b42b73b246fe08aa7321ab5c1609))
 
 ## [1.7.3](https://github.com/Dan1el-19/effinity-cloud/compare/v1.7.2...v1.7.3) (2026-01-10)
 
