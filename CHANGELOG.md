@@ -1,3 +1,9 @@
+## [2.1.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.0.0...v2.1.0) (2026-05-12)
+
+### Features
+
+* implement multipart upload system for R2 with selection management and API infrastructure ([18662ce](https://github.com/Dan1el-19/chmura-blokserwis/commit/18662ceedbacc26c6a618d8627caa69a4be6092a))
+
 ## [2.0.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v1.15.0...v2.0.0) (2026-05-11)
 
 ### ⚠ BREAKING CHANGES
