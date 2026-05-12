@@ -5,11 +5,31 @@
 	import FileTable from './FileTable.svelte';
 	import RenameDialog from './RenameDialog.svelte';
 	import ShareDialog from './ShareDialog.svelte';
+	import type { SelectionState } from '$lib/modules/selection.svelte';
 
-	let { files, folders } = $props();
+	type SortBy = 'name' | 'date' | 'size';
+	type SortDir = 'asc' | 'desc';
+
+	let { files, folders, selection, sortBy, sortDir, onSort } = $props<{
+		files: any[];
+		folders: any[];
+		selection: SelectionState;
+		sortBy: SortBy;
+		sortDir: SortDir;
+		onSort: (by: SortBy) => void;
+	}>();
 
 	let renamingItem = $state<{ id: string; name: string; isFolder: boolean } | null>(null);
 	let sharingItem = $state<{ id: string; isFolder: boolean } | null>(null);
+
+	// Refresh after drag-drop move
+	$effect(() => {
+		function onFileMoved() {
+			invalidateAll();
+		}
+		window.addEventListener('file-moved', onFileMoved);
+		return () => window.removeEventListener('file-moved', onFileMoved);
+	});
 
 	async function onNavigate(id: string) {
 		window.location.href = `?folder=${id}`;
@@ -18,7 +38,7 @@
 	async function onDownload(id: string, name: string, isFolder: boolean) {
 		try {
 			if (isFolder) {
-				toast.info('Pobieranie folderów jako ZIP zostało wyłączone');
+				toast.info('Pobieranie folderów jako ZIP jest niedostępne');
 			} else {
 				const res = await fetch(`/api/files/${id}?download=true`);
 				const data = await res.json();
@@ -54,7 +74,7 @@
 
 	function onShare(id: string, isFolder: boolean = false) {
 		if (isFolder) {
-			toast.info('Udostępnianie folderów jest poza zakresem migracji');
+			toast.info('Udostępnianie folderów jest niedostępne');
 			return;
 		}
 		sharingItem = { id, isFolder };
@@ -62,9 +82,29 @@
 </script>
 
 <div class="mt-4">
-	<FileTable {files} {folders} {onDownload} {onDelete} {onRename} {onNavigate} {onShare} />
-
-	<FileList {files} {folders} {onDownload} {onDelete} {onRename} {onNavigate} {onShare} />
+	<FileTable
+		{files}
+		{folders}
+		{selection}
+		{sortBy}
+		{sortDir}
+		{onSort}
+		{onDownload}
+		{onDelete}
+		{onRename}
+		{onNavigate}
+		{onShare}
+	/>
+	<FileList
+		{files}
+		{folders}
+		{selection}
+		{onDownload}
+		{onDelete}
+		{onRename}
+		{onNavigate}
+		{onShare}
+	/>
 </div>
 
 {#if renamingItem}

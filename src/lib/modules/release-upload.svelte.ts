@@ -28,6 +28,9 @@ export type ReleaseUploadResult = {
 export type ReleaseUploadOptions = {
 	filename: string;
 	overwrite: boolean;
+	tags?: string[];
+	notes?: string | null;
+	force_update?: boolean;
 	onProgress?: (progress: number) => void;
 	onComplete?: (result: ReleaseUploadResult) => void;
 	onError?: (error: Error) => void;
@@ -65,7 +68,10 @@ export class ReleaseUploader {
 						body: JSON.stringify({
 							filename: self.options.filename,
 							type: file.type || 'application/vnd.android.package-archive',
-							overwrite: self.options.overwrite
+							overwrite: self.options.overwrite,
+							tags: self.options.tags,
+							notes: self.options.notes,
+							force_update: self.options.force_update
 						})
 					});
 					if (!res.ok) {
@@ -74,6 +80,7 @@ export class ReleaseUploader {
 					}
 					const json = await res.json();
 					file.meta['r2Key'] = json.key;
+					file.meta['releaseId'] = json.release_id;
 					return json;
 				},
 				async createMultipartUpload(file) {
@@ -83,7 +90,10 @@ export class ReleaseUploader {
 						body: JSON.stringify({
 							filename: self.options.filename,
 							type: file.type || 'application/vnd.android.package-archive',
-							overwrite: self.options.overwrite
+							overwrite: self.options.overwrite,
+							tags: self.options.tags,
+							notes: self.options.notes,
+							force_update: self.options.force_update
 						})
 					});
 					if (!res.ok) {
@@ -92,6 +102,7 @@ export class ReleaseUploader {
 					}
 					const json = await res.json();
 					file.meta['r2Key'] = json.key;
+					file.meta['releaseId'] = json.release_id;
 					return json;
 				},
 				async listParts(file, { uploadId, key }) {
@@ -137,12 +148,22 @@ export class ReleaseUploader {
 				options.onProgress?.(this.progress);
 			});
 
-			this.uppy.on('complete', (result) => {
+			this.uppy.on('complete', async (result) => {
 				this.isUploading = false;
 				this.progress = 100;
 
 				if (result.successful && result.successful.length > 0) {
 					const file = result.successful[0];
+					const releaseId = file.meta['releaseId'] as string | undefined;
+
+					if (releaseId) {
+						await fetch('/api/releases/complete', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ release_id: releaseId, size: file.size ?? 0 })
+						}).catch(() => undefined);
+					}
+
 					options.onComplete?.({
 						key: (file.meta['r2Key'] as string) || '',
 						name: this.options.filename,

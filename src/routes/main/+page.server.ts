@@ -30,7 +30,8 @@ export const load: PageServerLoad = async (event) => {
 			currentFolderId: null,
 			fileNextCursor: files.next_cursor,
 			role,
-			storageKind: 'main' as const
+			storageKind: 'main' as const,
+			folderPath: []
 		};
 	} catch (error: any) {
 		logger.error('Error fetching main storage items:', error);

@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { UppyState, type UploadResult } from '$lib/modules/upload.svelte';
+	import { SelectionState } from '$lib/modules/selection.svelte';
 	import UppyZone from '$lib/components/upload/UppyZone.svelte';
+	import UploadSplitButton from '$lib/components/upload/UploadSplitButton.svelte';
 	import FileBrowser from '$lib/components/files/FileBrowser.svelte';
 	import CreateFolderDialog from '$lib/components/files/CreateFolderDialog.svelte';
 	import StorageWidget from '$lib/components/files/StorageWidget.svelte';
+	import SelectionBar from '$lib/components/files/SelectionBar.svelte';
+	import { FolderPlus, CaretRight } from 'phosphor-svelte';
 	import { toast } from 'svelte-sonner';
 
 	interface StorageData {
@@ -17,6 +21,7 @@
 		fileNextCursor?: string | null;
 		folderNextCursor?: string | null;
 		storageKind?: 'user' | 'main';
+		folderPath?: Array<{ id: string; name: string }>;
 		[key: string]: any;
 	}
 
@@ -27,20 +32,86 @@
 	}>();
 
 	let showCreateFolder = $state(false);
+	let pendingDestination = $state<'r2' | 'appwrite' | 'auto'>('auto');
+	let isDragOver = $state(false);
+	let dragCounter = $state(0);
+
+	type SortBy = 'name' | 'date' | 'size';
+	type SortDir = 'asc' | 'desc';
+	let sortBy = $state<SortBy>('name');
+	let sortDir = $state<SortDir>('asc');
+
+	const selection = new SelectionState();
 
 	const uppyState = new UppyState({
 		getFolderId: () => data.currentFolderId,
 		isMainStorage: () => data.storageKind === 'main',
+		destination: () => pendingDestination,
 		onComplete: handleUploadComplete,
 		onError: (err) => toast.error(`Upload error: ${err.message}`)
 	});
 
 	async function handleUploadComplete(results: UploadResult[]) {
-		for (const result of results) {
-			toast.success(`Uploaded: ${result.name}`);
-		}
+		for (const result of results) toast.success(`Uploaded: ${result.name}`);
 		invalidateAll();
 	}
+
+	function startUpload(destination: 'r2' | 'appwrite' | 'auto') {
+		pendingDestination = destination;
+		document.getElementById('file-input')?.click();
+	}
+
+	function onPageDragEnter(e: DragEvent) {
+		if (!e.dataTransfer?.types.includes('Files')) return;
+		e.preventDefault();
+		dragCounter++;
+		isDragOver = true;
+	}
+
+	function onPageDragLeave() {
+		dragCounter--;
+		if (dragCounter <= 0) {
+			dragCounter = 0;
+			isDragOver = false;
+		}
+	}
+
+	function onPageDragOver(e: DragEvent) {
+		if (!e.dataTransfer?.types.includes('Files')) return;
+		e.preventDefault();
+		e.dataTransfer.dropEffect = 'copy';
+	}
+
+	function onPageDrop(e: DragEvent) {
+		e.preventDefault();
+		dragCounter = 0;
+		isDragOver = false;
+		if (!e.dataTransfer?.files.length) return;
+		Array.from(e.dataTransfer.files).forEach((file) => uppyState.addFile(file));
+	}
+
+	function setSort(by: SortBy) {
+		if (sortBy === by) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+		else {
+			sortBy = by;
+			sortDir = 'asc';
+		}
+	}
+
+	function sortItems<T extends { name: string; $createdAt: string; size?: number }>(
+		items: T[]
+	): T[] {
+		return [...items].sort((a, b) => {
+			let cmp = 0;
+			if (sortBy === 'name') cmp = a.name.localeCompare(b.name, 'pl');
+			else if (sortBy === 'date') cmp = a.$createdAt.localeCompare(b.$createdAt);
+			else if (sortBy === 'size') cmp = (a.size ?? 0) - (b.size ?? 0);
+			return sortDir === 'asc' ? cmp : -cmp;
+		});
+	}
+
+	const sortedFolders = $derived(sortItems(data.folders));
+	const sortedFiles = $derived(sortItems(data.files));
 
 	const showStorageWidget = $derived(
 		typeof data.usage === 'number' && typeof data.limit === 'number'
@@ -58,35 +129,79 @@
 	}
 </script>
 
-<div class="space-y-6">
-	<div class="flex flex-col gap-4 border-b border-border-line pb-4">
-		<div class="flex items-center gap-2">
-			<h1 class="text-xl font-bold tracking-tight text-text-main lg:text-2xl">
-				{data.currentFolderId ? 'Folder View' : titleRoot}
-			</h1>
-			{#if data.currentFolderId}
-				<span class="text-text-muted">/</span>
-				<a href={rootHref} class="text-sm text-primary hover:underline">Root</a>
-			{/if}
-		</div>
+<svelte:window
+	ondragenter={onPageDragEnter}
+	ondragleave={onPageDragLeave}
+	ondragover={onPageDragOver}
+	ondrop={onPageDrop}
+/>
 
-		<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-			<p class="font-mono text-xs text-text-muted lg:text-sm">
-				{data.files.length} Files, {data.folders.length} Folders
+<!-- Page-level drop overlay -->
+{#if isDragOver}
+	<div
+		class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-primary/10 backdrop-blur-sm"
+		aria-hidden="true"
+	>
+		<div
+			class="rounded-2xl border-2 border-dashed border-primary bg-bg-panel/90 px-12 py-8 text-center shadow-xl"
+		>
+			<p class="text-lg font-semibold text-primary">Upuść pliki aby przesłać</p>
+		</div>
+	</div>
+{/if}
+
+<div class="space-y-4">
+	<!-- Header + toolbar -->
+	<div class="flex flex-col gap-3 border-b border-border-line pb-4">
+		<!-- Breadcrumb -->
+		<nav class="flex items-center gap-1 text-sm" aria-label="Breadcrumb">
+			<a href={rootHref} class="font-semibold text-text-main hover:underline">{titleRoot}</a>
+			{#each data.folderPath ?? [] as crumb (crumb.id)}
+				<CaretRight class="h-3.5 w-3.5 shrink-0 text-text-muted" />
+				<a
+					href="{rootHref}?folder={crumb.id}"
+					class="max-w-[120px] truncate text-text-muted hover:text-text-main hover:underline"
+				>
+					{crumb.name}
+				</a>
+			{/each}
+		</nav>
+
+		<!-- Toolbar -->
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<p class="font-mono text-xs text-text-muted">
+				{data.files.length} plików, {data.folders.length} folderów
 			</p>
 
-			{#if showStorageWidget}
-				<StorageWidget usage={data.usage ?? 0} limit={data.limit ?? null} role={data.role} />
-			{/if}
+			<div class="flex flex-wrap items-center gap-2">
+				{#if showStorageWidget}
+					<StorageWidget usage={data.usage ?? 0} limit={data.limit ?? null} role={data.role} />
+				{/if}
+
+				<button
+					type="button"
+					onclick={() => (showCreateFolder = true)}
+					class="flex items-center gap-1.5 rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm font-medium text-text-main transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800"
+				>
+					<FolderPlus class="h-4 w-4" />
+					<span class="hidden sm:inline">Nowy folder</span>
+				</button>
+
+				<UploadSplitButton onUpload={startUpload} />
+			</div>
 		</div>
 	</div>
 
-	<UppyZone
-		{uppyState}
-		onNewFolder={data.storageKind === 'main' ? undefined : () => (showCreateFolder = true)}
-	/>
+	<UppyZone {uppyState} />
 
-	<FileBrowser files={data.files} folders={data.folders} />
+	<FileBrowser
+		files={sortedFiles}
+		folders={sortedFolders}
+		{selection}
+		{sortBy}
+		{sortDir}
+		onSort={setSort}
+	/>
 
 	{#if data.fileNextCursor || data.folderNextCursor}
 		<div class="flex flex-wrap gap-2 border-t border-border-line pt-4">
@@ -95,7 +210,7 @@
 					href={pageHref('files', data.fileNextCursor)}
 					class="rounded-md border border-border-line px-3 py-2 text-sm font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"
 				>
-					Load more files
+					Więcej plików
 				</a>
 			{/if}
 			{#if data.folderNextCursor}
@@ -103,12 +218,16 @@
 					href={pageHref('folders', data.folderNextCursor)}
 					class="rounded-md border border-border-line px-3 py-2 text-sm font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"
 				>
-					Load more folders
+					Więcej folderów
 				</a>
 			{/if}
 		</div>
 	{/if}
 </div>
+
+{#if selection.isSelectionMode}
+	<SelectionBar {selection} files={data.files} folders={data.folders} />
+{/if}
 
 {#if showCreateFolder}
 	<CreateFolderDialog

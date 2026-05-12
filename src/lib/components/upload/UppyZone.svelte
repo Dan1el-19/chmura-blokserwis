@@ -4,14 +4,12 @@
 	import UploadProgressList from '$lib/components/upload/UploadProgressList.svelte';
 	import MobileStartUploadFAB from '$lib/components/upload/MobileStartUploadFAB.svelte';
 
-	let { uppyState, onNewFolder } = $props<{ uppyState: UppyState; onNewFolder?: () => void }>();
+	let { uppyState } = $props<{ uppyState: UppyState }>();
 
 	function onFileSelect(e: Event) {
 		const input = e.target as HTMLInputElement;
 		if (input.files) {
-			Array.from(input.files).forEach((file) => {
-				uppyState.addFile(file);
-			});
+			Array.from(input.files).forEach((file) => uppyState.addFile(file));
 			input.value = '';
 		}
 	}
@@ -24,12 +22,8 @@
 <input type="file" multiple class="hidden" id="file-input" onchange={onFileSelect} />
 
 <div class="space-y-4">
-	<!-- Drop Zone - Desktop only -->
-	<DropZone {uppyState} {openFilePicker} {onNewFolder} />
-
-	<!-- File List & Progress -->
+	<DropZone {openFilePicker} />
 	<UploadProgressList {uppyState} />
 </div>
 
-<!-- FAB Menu - Mobile only -->
-<MobileStartUploadFAB {onNewFolder} {openFilePicker} />
+<MobileStartUploadFAB {openFilePicker} />

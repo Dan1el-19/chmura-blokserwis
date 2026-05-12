@@ -117,10 +117,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 		const response = await resolve(event);
 		response.headers.set('Cache-Control', 'private');
+		response.headers.set('X-Content-Type-Options', 'nosniff');
+		response.headers.set('X-Frame-Options', 'DENY');
+		response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+		response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+		if (event.url.protocol === 'https:') {
+			response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+		}
 		return response;
 	} catch (e: any) {
 		if (e?.status === 303) throw e;
 		logger.error('Hooks Error:', e);
-		return new Response(`Internal Error: ${e.message} \nStack: ${e.stack}`, { status: 500 });
+		return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+			status: 500,
+			headers: { 'Content-Type': 'application/json' }
+		});
 	}
 };

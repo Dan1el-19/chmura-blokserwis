@@ -24,7 +24,8 @@ export async function getDownloadUrl(key: string, filename: string): Promise<str
 	if (cached) return cached;
 
 	const url = await getSignedUrl(
-		R2,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		R2 as any,
 		new GetObjectCommand({
 			Bucket: ENV.R2_BUCKET_NAME,
 			Key: key,

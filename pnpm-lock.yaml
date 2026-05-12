@@ -18,14 +18,17 @@ importers:
         specifier: ^3.12.1
         version: 3.12.1
       '@unisource/sdk':
-        specifier: ^0.3.1
-        version: 0.3.1
+        specifier: link:../UniSource/packages/unisource-sdk
+        version: link:../UniSource/packages/unisource-sdk
       '@uppy/aws-s3':
         specifier: ^5.1.0
         version: 5.1.0(@uppy/core@5.2.0)
       '@uppy/core':
         specifier: ^5.2.0
         version: 5.2.0
+      '@uppy/golden-retriever':
+        specifier: ^5.0.0
+        version: 5.2.1(@uppy/core@5.2.0)
       '@upstash/ratelimit':
         specifier: ^2.0.8
         version: 2.0.8(@upstash/redis@1.38.0)
@@ -1716,9 +1719,6 @@ packages:
     resolution: {integrity: sha512-NwjLUnGy8/Zfx23fl50tRC8rYaYnM52xNRYFAXvmiil9yh1+K6aRVQMnzW6gQB/1DLgWt977lYQn7C+wtgXZiA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@unisource/sdk@0.3.1':
-    resolution: {integrity: sha512-lcvAipoPxNTFinuE2tuZhY+2FPm3pvCgyZ3loZUwWP5Ym8AspyBEIXF7IYEda+5uR8wQOW8MhqN3EAagfJjf4g==}
-
   '@uppy/aws-s3@5.1.0':
     resolution: {integrity: sha512-UBz+shrtDbnOf11AboDrkc9Fq2Cdf8HbFftE+gqfxig6fkv5rHpHhBCLkl8wCGAq+X/CxdqvvNhm/OM23Uzw2w==}
     peerDependencies:
@@ -1731,6 +1731,11 @@ packages:
 
   '@uppy/core@5.2.0':
     resolution: {integrity: sha512-uvfNyz4cnaplt7LYJmEZHuqOuav0tKp4a9WKJIaH6iIj7XiqYvS2J5SEByexAlUFlzefOAyjzj4Ja2dd/8aMrw==}
+
+  '@uppy/golden-retriever@5.2.1':
+    resolution: {integrity: sha512-R+Lzesfmgu35ViSOxqYxwOVo4ylkIS9xP2ClnhD8k2VTbqdc6RRimaPRqxxI3Vf42qWiRBm4WaG3uHls+wOCqQ==}
+    peerDependencies:
+      '@uppy/core': ^5.2.0
 
   '@uppy/store-default@5.0.0':
     resolution: {integrity: sha512-hQtCSQ1yGiaval/wVYUWquYGDJ+bpQ7e4FhUUAsRQz1x1K+o7NBtjfp63O9I4Ks1WRoKunpkarZ+as09l02cPw==}
@@ -5653,10 +5658,6 @@ snapshots:
       '@typescript-eslint/types': 8.59.2
       eslint-visitor-keys: 5.0.1
 
-  '@unisource/sdk@0.3.1':
-    dependencies:
-      zod: 4.4.3
-
   '@uppy/aws-s3@5.1.0(@uppy/core@5.2.0)':
     dependencies:
       '@uppy/companion-client': 5.1.1(@uppy/core@5.2.0)
@@ -5680,6 +5681,12 @@ snapshots:
       namespace-emitter: 2.0.1
       nanoid: 5.1.11
       preact: 10.29.1
+
+  '@uppy/golden-retriever@5.2.1(@uppy/core@5.2.0)':
+    dependencies:
+      '@uppy/core': 5.2.0
+      '@uppy/utils': 7.2.0
+      lodash: 4.18.1
 
   '@uppy/store-default@5.0.0': {}
 

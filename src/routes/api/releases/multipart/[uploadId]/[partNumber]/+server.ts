@@ -31,7 +31,8 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		PartNumber: partNumber
 	});
 
-	const signedUrl = await getSignedUrl(R2, command, { expiresIn: EXPIRES_IN });
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const signedUrl = await getSignedUrl(R2 as any, command, { expiresIn: EXPIRES_IN });
 
 	return json({
 		url: signedUrl,

@@ -1,67 +1,61 @@
-import { ENV } from '$lib/server/env';
-import { R2 } from '$lib/clients/r2';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { releaseUploadSchema } from '$lib/schemas';
-import { UPLOAD } from '$lib/constants';
+import { createAdminUnisourceClient } from '$lib/server/unisource';
 import { getReleaseByName } from '$lib/server/storage/releases';
+import { z } from 'zod';
+import { releaseTagSchema } from '$lib/schemas';
+import { requireRuntimeEnv } from '$lib/server/runtime-env';
+import { assertPresignedUrlMatchesR2Config } from '$lib/server/storage/r2-url';
 
-const EXPIRES_IN = UPLOAD.SIGNED_URL_EXPIRES_IN;
+const signSchema = releaseUploadSchema.extend({
+	tags: z.array(releaseTagSchema).max(10).optional(),
+	notes: z.string().max(2048).nullable().optional(),
+	force_update: z.boolean().optional()
+});
 
-export const POST: RequestHandler = async ({ request, locals }) => {
-	const user = locals.user;
-	if (!user) {
+export const POST: RequestHandler = async (event) => {
+	if (!event.locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	const body = await request.json();
-	const validated = releaseUploadSchema.safeParse(body);
+	const body = await event.request.json();
+	const validated = signSchema.safeParse(body);
 
 	if (!validated.success) {
 		return json({ error: 'Validation error', details: validated.error.issues }, { status: 400 });
 	}
 
-	const { filename, type, overwrite } = validated.data;
+	const { filename, type, overwrite, tags, notes, force_update } = validated.data;
 
-	// Check for existing release with same name
-	const existing = await getReleaseByName(filename);
+	const existing = await getReleaseByName(filename, event);
 	if (existing && !overwrite) {
 		return json(
-			{
-				error: 'conflict',
-				message: 'Release with this name already exists',
-				existing
-			},
+			{ error: 'conflict', message: 'Release with this name already exists', existing },
 			{ status: 409 }
 		);
 	}
 
-	// Key format: releases/{filename} (no UUID!)
-	const key = `releases/${filename}`;
-
-	const url = await getSignedUrl(
-		R2,
-		new PutObjectCommand({
-			Bucket: ENV.R2_BUCKET_NAME,
-			Key: key,
-			ContentType: type,
-			Metadata: {
-				uploadedBy: user.$id,
-				originalName: filename
-			}
-		}),
-		{ expiresIn: EXPIRES_IN }
+	const client = createAdminUnisourceClient(event);
+	const init = await client.releases.upload.init({
+		name: filename,
+		filename,
+		tags: tags ?? [],
+		notes: notes ?? null,
+		force_update: force_update ?? false
+	});
+	assertPresignedUrlMatchesR2Config(
+		init.presigned_url,
+		requireRuntimeEnv(event, 'R2_ENDPOINT'),
+		requireRuntimeEnv(event, 'R2_BUCKET_NAME')
 	);
 
 	return json({
-		url,
+		url: init.presigned_url,
 		method: 'PUT',
-		headers: {
-			'content-type': type
-		},
-		key,
+		headers: { 'content-type': type },
+		key: init.r2_key,
+		release_id: init.release_id,
 		existingRelease: existing
 	});
 };

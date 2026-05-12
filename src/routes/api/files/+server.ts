@@ -4,6 +4,7 @@ import type { RequestHandler } from './$types';
 import { createUserUnisourceClient } from '$lib/server/unisource';
 import { mapFileFromUnisource } from '$lib/server/unisource-mappers';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
+import { getUserRole } from '$lib/server/roles';
 
 const DEFAULT_LIMIT = 50;
 
@@ -12,7 +13,11 @@ export const GET: RequestHandler = async (event) => {
 
 	const folderId = event.url.searchParams.get('folderId') || null;
 	const cursor = event.url.searchParams.get('cursor') || undefined;
-	const targetUserId = event.url.searchParams.get('targetUserId') || undefined;
+	const rawTargetUserId = event.url.searchParams.get('targetUserId') || undefined;
+	if (rawTargetUserId && getUserRole(event.locals.user) !== 'admin') {
+		return json({ error: 'Forbidden' }, { status: 403 });
+	}
+	const targetUserId = rawTargetUserId;
 	const trash = event.url.searchParams.get('trash') === 'true';
 	const limit = Number(event.url.searchParams.get('limit') || DEFAULT_LIMIT);
 

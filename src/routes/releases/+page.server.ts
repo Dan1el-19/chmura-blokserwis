@@ -1,10 +1,12 @@
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
-import { mapReleaseFromUnisource } from '$lib/server/unisource-mappers';
+import { listReleases } from '$lib/server/storage/releases';
+import { getUserRole } from '$lib/server/roles';
 
 export const load: PageServerLoad = async (event) => {
-	const admin = createAdminUnisourceClient(event);
-	const response = await admin.releases.list({ limit: 100 });
-	const releases = response.items.map(mapReleaseFromUnisource);
+	if (!event.locals.user || getUserRole(event.locals.user) !== 'admin') {
+		throw redirect(303, '/');
+	}
+	const releases = await listReleases(event);
 	return { releases };
 };

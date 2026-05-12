@@ -8,6 +8,9 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { createSessionClient } from './appwrite';
 import { requireRuntimeEnv } from './runtime-env';
 
+const DEFAULT_UNISOURCE_SERVICE_ID = 'usrc';
+const ensuredServiceUsers = new Map<string, Promise<void>>();
+
 function getConfig(event: Pick<RequestEvent, 'platform'> | undefined) {
 	return {
 		baseUrl: requireRuntimeEnv(event, 'UNISOURCE_URL'),
@@ -15,10 +18,33 @@ function getConfig(event: Pick<RequestEvent, 'platform'> | undefined) {
 	};
 }
 
+async function ensureServiceUserAccess(event: RequestEvent, userId: string, serviceId: string) {
+	if (serviceId === DEFAULT_UNISOURCE_SERVICE_ID) return;
+
+	const cacheKey = `${serviceId}:${userId}`;
+	let pending = ensuredServiceUsers.get(cacheKey);
+	if (!pending) {
+		pending = createAdminUnisourceClient(event)
+			.admin.updateUser(userId, {})
+			.then(() => undefined)
+			.catch((error) => {
+				ensuredServiceUsers.delete(cacheKey);
+				throw error;
+			});
+		ensuredServiceUsers.set(cacheKey, pending);
+	}
+
+	await pending;
+}
+
 export async function createUserUnisourceClient(event: RequestEvent): Promise<UnisourceClient> {
 	const { account } = createSessionClient(event);
-	const token = await account.createJWT({ duration: 900 });
 	const { baseUrl, serviceId } = getConfig(event);
+	const userId = event.locals.user?.$id ?? (await account.get()).$id;
+
+	await ensureServiceUserAccess(event, userId, serviceId);
+
+	const token = await account.createJWT({ duration: 900 });
 
 	return new UnisourceClient({
 		baseUrl,
