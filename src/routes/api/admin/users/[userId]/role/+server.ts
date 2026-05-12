@@ -18,7 +18,7 @@ export const PUT: RequestHandler = async (event) => {
 
 	try {
 		const admin = createAdminUnisourceClient(event);
-		await admin.admin.updateUser(event.params.userId, { role: mapRoleToUnisource(role) });
+		await admin.admin.updateUserRole(event.params.userId, { role: mapRoleToUnisource(role) });
 		return json({ success: true });
 	} catch (e) {
 		return unisourceErrorResponse(e, 'Failed to update user role');

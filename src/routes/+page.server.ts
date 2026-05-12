@@ -33,6 +33,20 @@ export const load: PageServerLoad = async (event) => {
 			})
 		]);
 
+		// Build breadcrumb path by walking parent chain (max 20 levels)
+		const folderPath: Array<{ id: string; name: string }> = [];
+		if (parentFolderId) {
+			let currentId: string | null = parentFolderId;
+			let depth = 0;
+			const visited = new Set<string>();
+			while (currentId && depth++ < 20 && !visited.has(currentId)) {
+				visited.add(currentId);
+				const folder = await client.folders.get(currentId);
+				folderPath.unshift({ id: folder.id, name: folder.name });
+				currentId = folder.parent_id ?? null;
+			}
+		}
+
 		return {
 			files: files.items.map(mapFileFromUnisource),
 			folders: folders.items.map(mapFolderFromUnisource),
@@ -40,7 +54,8 @@ export const load: PageServerLoad = async (event) => {
 			fileNextCursor: files.next_cursor,
 			folderNextCursor: folders.next_cursor,
 			role: getUserRole(locals.user),
-			storageKind: 'user' as const
+			storageKind: 'user' as const,
+			folderPath
 		};
 	} catch (error: unknown) {
 		logger.error('Error fetching storage items:', error);

@@ -39,12 +39,8 @@
 	async function fetchExternalConfig() {
 		configLoading = true;
 		try {
-			const [resStable, resBeta] = await Promise.all([
-				fetch('/api/releases/sync?channel=stable'),
-				fetch('/api/releases/sync?channel=beta')
-			]);
-			if (resStable.ok) externalConfigStable = (await resStable.json()).config;
-			if (resBeta.ok) externalConfigBeta = (await resBeta.json()).config;
+			const res = await fetch('/api/releases/sync');
+			if (res.ok) externalConfigStable = (await res.json()).config;
 		} catch (error) {
 			console.error('Fetch external config failed:', error);
 		} finally {
@@ -68,9 +64,17 @@
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				releaseId: syncReleaseInfo.$id,
-				forceUpdate: data.forceUpdate,
-				channel: data.channel
+				releases: [
+					{
+						id: syncReleaseInfo.$id,
+						name: syncReleaseInfo.name,
+						r2_key: syncReleaseInfo.r2_key,
+						size: syncReleaseInfo.size,
+						tags: syncReleaseInfo.tags,
+						notes: syncReleaseInfo.notes,
+						force_update: data.forceUpdate
+					}
+				]
 			})
 		});
 
@@ -83,21 +87,10 @@
 	}
 
 	async function handleFileSelect(file: File) {
-		// Check if release with same name exists
-		const res = await fetch('/api/releases/sign', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ filename: file.name, type: file.type })
-		});
-
+		const res = await fetch('/api/releases');
 		const json = await res.json();
-
-		if (json.error === 'conflict') {
-			existingRelease = json.existing;
-		} else {
-			existingRelease = null;
-		}
-
+		const found = (json.releases as ParsedRelease[])?.find((r) => r.name === file.name) ?? null;
+		existingRelease = found;
 		pendingFile = file;
 	}
 
@@ -116,38 +109,15 @@
 		uploader = new ReleaseUploader({
 			filename: uploadData.name,
 			overwrite: uploadData.overwrite,
+			tags: uploadData.tags,
+			notes: uploadData.notes || null,
+			force_update: uploadData.forceUpdate,
 			onProgress: (p) => {
 				uploadProgress = p;
 			},
-			onComplete: async (result) => {
-				const response = await fetch('/api/releases', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						name: uploadData.name,
-						size: result.size,
-						r2Key: result.key,
-						tags: uploadData.tags,
-						notes: uploadData.notes,
-						overwrite: uploadData.overwrite,
-						forceUpdate: uploadData.forceUpdate,
-						channel: uploadData.channel
-					})
-				});
-
-				if (!response.ok) {
-					const payload = await response.json().catch(() => ({}));
-					const errorMessage =
-						payload?.error || payload?.message || 'Failed to register release in DB';
-					throw new Error(errorMessage);
-				}
-
-				const payload = await response.json().catch(() => ({}));
-				if (payload?.warning) {
-					console.warn('Release created with warning:', payload.warning);
-				}
-
-				// Reset state and refresh
+			onComplete: async (_result) => {
+				// Release was already registered in Unisource via /api/releases/complete
+				// called automatically by ReleaseUploader after upload finishes.
 				pendingFile = null;
 				existingRelease = null;
 				isUploading = false;
@@ -156,7 +126,6 @@
 				uploader = null;
 
 				await invalidateAll();
-				await fetchExternalConfig();
 			},
 			onError: (err) => {
 				console.error('Upload error:', err);
@@ -176,14 +145,6 @@
 		uploader?.destroy();
 		uploader = null;
 		isUploading = false;
-	}
-
-	async function handleDownload(release: ParsedRelease) {
-		const res = await fetch(`/api/releases/${release.$id}`);
-		const json = await res.json();
-		if (json.downloadUrl) {
-			window.open(json.downloadUrl, '_blank');
-		}
 	}
 
 	function handleEdit(release: ParsedRelease) {
@@ -254,16 +215,11 @@
 					<p class="mb-1.5 text-xs font-semibold tracking-wide uppercase {accent}">{label}</p>
 					{#if !configLoading && cfg}
 						<p class="text-sm text-text-muted">
-							Wersja: <strong class="text-text-main">{cfg.latestVersion}</strong>
+							Wersja: <strong class="text-text-main">{cfg.name}</strong>
 							<span class="mx-1.5">•</span>
-							{(cfg.apkSizeBytes / (1024 * 1024)).toFixed(2)} MB
+							{(cfg.size / (1024 * 1024)).toFixed(2)} MB
 						</p>
-						{#if cfg.apkStoragePath}
-							<p class="mt-0.5 truncate text-xs text-text-muted" title={cfg.apkStoragePath}>
-								{cfg.apkStoragePath}
-							</p>
-						{/if}
-						{#if cfg.forceUpdate}
+						{#if cfg.force_update}
 							<span
 								class="mt-1.5 inline-flex rounded-sm bg-rose-500/10 px-1.5 py-0.5 text-xs font-semibold text-rose-500"
 								>Force Update ON</span
@@ -301,7 +257,6 @@
 
 	<ReleasesList
 		releases={data.releases}
-		onDownload={handleDownload}
 		onEdit={handleEdit}
 		onDelete={handleDelete}
 		onForceSync={handleForceSyncInit}

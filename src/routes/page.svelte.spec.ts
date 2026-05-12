@@ -9,6 +9,7 @@ describe('/+page.svelte', () => {
 			props: {
 				data: {
 					user: null,
+					recommendedUploadDestination: 'r2' as const,
 					files: [],
 					folders: [],
 					currentFolderId: null,

@@ -14,8 +14,8 @@ export const PUT: RequestHandler = async (event) => {
 
 	try {
 		const admin = createAdminUnisourceClient(event);
-		await admin.admin.updateUser(event.params.userId, {
-			max_storage_bytes: limit === null || limit === undefined ? null : Number(limit)
+		await admin.admin.updateUserStorageLimit(event.params.userId, {
+			limit_bytes: limit === null || limit === undefined ? null : Number(limit)
 		});
 		return json({ success: true });
 	} catch (e) {

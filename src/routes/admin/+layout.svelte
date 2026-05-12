@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { SquaresFour, Users } from 'phosphor-svelte';
+	import { SquaresFour, Users, GearSix } from 'phosphor-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	let { children } = $props();
 
 	const tabs = [
 		{ href: '/admin', label: 'Dashboard', icon: SquaresFour, exact: true },
-		{ href: '/admin/users', label: 'Users', icon: Users, exact: false }
+		{ href: '/admin/users', label: 'Users', icon: Users, exact: false },
+		{ href: '/admin/settings', label: 'Settings', icon: GearSix, exact: false }
 	];
 
 	let currentPath = $derived(page.url.pathname);

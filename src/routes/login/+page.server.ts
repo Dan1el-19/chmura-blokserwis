@@ -33,8 +33,8 @@ export const actions: Actions = {
 				sameSite: 'lax',
 				expires: new Date(session.expire)
 			});
-		} catch (e: any) {
-			return { email, error: e.message };
+		} catch {
+			return { email, error: 'Nieprawidłowy email lub hasło' };
 		}
 
 		throw redirect(303, '/');

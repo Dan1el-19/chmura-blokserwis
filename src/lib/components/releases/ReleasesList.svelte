@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
 	import {
-		DownloadSimple,
 		PencilSimple,
 		Trash,
 		AndroidLogo,
@@ -13,11 +12,10 @@
 		releases: ParsedRelease[];
 		onEdit: (release: ParsedRelease) => void;
 		onDelete: (release: ParsedRelease) => void;
-		onDownload: (release: ParsedRelease) => void;
 		onForceSync: (release: ParsedRelease) => void;
 	};
 
-	let { releases, onEdit, onDelete, onDownload, onForceSync }: Props = $props();
+	let { releases, onEdit, onDelete, onForceSync }: Props = $props();
 
 	function formatSize(bytes: number): string {
 		if (bytes >= 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
@@ -97,14 +95,6 @@
 									title="Force Sync"
 								>
 									<ArrowsClockwise class="h-4 w-4" />
-								</Button>
-								<Button
-									variant="ghost"
-									size="icon"
-									onclick={() => onDownload(release)}
-									title="Download"
-								>
-									<DownloadSimple class="h-4 w-4" />
 								</Button>
 								<Button variant="ghost" size="icon" onclick={() => onEdit(release)} title="Edit">
 									<PencilSimple class="h-4 w-4" />
