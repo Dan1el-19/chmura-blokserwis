@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const getReleaseByName = vi.hoisted(() => vi.fn());
-const uploadInit = vi.hoisted(() => vi.fn());
-const uploadFail = vi.hoisted(() => vi.fn());
-const r2Send = vi.hoisted(() => vi.fn());
+const multipartCreate = vi.hoisted(() => vi.fn());
 
 vi.mock('$lib/server/storage/releases', () => ({
 	getReleaseByName
@@ -13,71 +11,101 @@ vi.mock('$lib/server/unisource', () => ({
 	createAdminUnisourceClient: () => ({
 		releases: {
 			upload: {
-				init: uploadInit,
-				fail: uploadFail
+				multipart: {
+					create: multipartCreate
+				}
 			}
 		}
 	})
 }));
 
-vi.mock('$lib/clients/r2', () => ({
-	R2: {
-		send: r2Send
-	}
-}));
-
-vi.mock('$lib/server/env', () => ({
-	ENV: {
-		R2_BUCKET_NAME: 'releases'
-	}
-}));
-
-vi.mock('@aws-sdk/client-s3', () => ({
-	CreateMultipartUploadCommand: class {
-		input: unknown;
-
-		constructor(input: unknown) {
-			this.input = input;
-		}
-	}
-}));
-
 import { POST } from './+server';
+
+function makeRequest(body: unknown) {
+	return {
+		locals: { user: { $id: 'user-1' } },
+		request: new Request('http://localhost/api/releases/multipart', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(body)
+		}),
+		platform: undefined
+	} as never;
+}
 
 describe('/api/releases/multipart POST', () => {
 	beforeEach(() => {
 		getReleaseByName.mockReset();
-		uploadInit.mockReset();
-		uploadFail.mockReset();
-		r2Send.mockReset();
+		multipartCreate.mockReset();
 	});
 
-	it('marks the release upload as failed when R2 multipart creation fails', async () => {
+	it('returns Uppy-compatible payload when SDK multipart create succeeds', async () => {
 		getReleaseByName.mockResolvedValue(null);
-		uploadInit.mockResolvedValue({
-			release_id: 'release-1',
-			r2_key: 'releases/blokserwis-1.11.0.apk'
+		multipartCreate.mockResolvedValue({
+			upload_id: 'release-1',
+			r2_upload_id: 'r2-multipart-id',
+			key: 'releases/blokserwis-1.11.0.apk',
+			bucket: 'chmura-blokserwis',
+			expires_at: 1_700_000_000
 		});
-		r2Send.mockRejectedValue(new Error('R2 rejected checksum headers'));
 
-		const response = await POST({
-			locals: { user: { $id: 'user-1' } },
-			request: new Request('http://localhost/api/releases/multipart', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					filename: 'blokserwis-1.11.0.apk',
-					type: 'application/vnd.android.package-archive',
-					overwrite: false
-				})
-			}),
-			platform: undefined
-		} as never);
+		const response = await POST(
+			makeRequest({
+				filename: 'blokserwis-1.11.0.apk',
+				type: 'application/vnd.android.package-archive',
+				overwrite: false
+			})
+		);
+
+		const body = await response.json();
+
+		expect(response.status).toBe(200);
+		expect(body).toEqual({
+			key: 'releases/blokserwis-1.11.0.apk',
+			uploadId: 'release-1',
+			release_id: 'release-1',
+			existingRelease: null
+		});
+		expect(multipartCreate).toHaveBeenCalledWith({
+			name: 'blokserwis-1.11.0.apk',
+			filename: 'blokserwis-1.11.0.apk',
+			mime_type: 'application/vnd.android.package-archive',
+			tags: [],
+			notes: null,
+			force_update: false
+		});
+	});
+
+	it('returns 409 conflict when a release already exists and overwrite is false', async () => {
+		getReleaseByName.mockResolvedValue({ id: 'existing', name: 'blokserwis-1.11.0.apk' });
+
+		const response = await POST(
+			makeRequest({
+				filename: 'blokserwis-1.11.0.apk',
+				type: 'application/vnd.android.package-archive',
+				overwrite: false
+			})
+		);
+
+		expect(response.status).toBe(409);
+		expect(multipartCreate).not.toHaveBeenCalled();
+	});
+
+	it('surfaces SDK errors from multipart create', async () => {
+		getReleaseByName.mockResolvedValue(null);
+		multipartCreate.mockRejectedValue(new Error('UniSource backend rejected the request'));
+
+		const response = await POST(
+			makeRequest({
+				filename: 'blokserwis-1.11.0.apk',
+				type: 'application/vnd.android.package-archive',
+				overwrite: false
+			})
+		);
 
 		const body = await response.json();
 
 		expect(response.status).toBe(500);
-		expect(body).toEqual({ error: 'R2 rejected checksum headers' });
-		expect(uploadFail).toHaveBeenCalledWith('release-1');
+		expect(body).toEqual({ error: 'UniSource backend rejected the request' });
 	});
 });

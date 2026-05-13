@@ -1,67 +1,52 @@
-import { ENV } from '$lib/server/env';
-import { R2 } from '$lib/clients/r2';
-import { ListPartsCommand, AbortMultipartUploadCommand } from '@aws-sdk/client-s3';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 
-export const GET: RequestHandler = async ({ params, url }) => {
-	const { uploadId } = params;
-	const key = url.searchParams.get('key');
-
-	if (!key) {
-		return json({ error: 'key query parameter is required' }, { status: 400 });
+/**
+ * Proxy → UniSource `GET /releases/upload/multipart/list-parts`.
+ * Returns the list of parts already uploaded so Uppy's Golden Retriever can
+ * resume after a tab close. The response shape `[{ PartNumber, Size, ETag }]`
+ * matches what `@uppy/aws-s3` expects.
+ */
+export const GET: RequestHandler = async (event) => {
+	if (!event.locals.user) {
+		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	const parts: { PartNumber: number; Size: number; ETag: string }[] = [];
-	let partNumberMarker: string | undefined;
+	const { uploadId } = event.params;
+	if (!uploadId) {
+		return json({ error: 'uploadId path param is required' }, { status: 400 });
+	}
 
-	do {
-		const command = new ListPartsCommand({
-			Bucket: ENV.R2_BUCKET_NAME,
-			Key: key,
-			UploadId: uploadId,
-			PartNumberMarker: partNumberMarker
-		});
-
-		const response = await R2.send(command);
-
-		if (response.Parts) {
-			for (const part of response.Parts) {
-				if (part.PartNumber && part.Size && part.ETag) {
-					parts.push({
-						PartNumber: part.PartNumber,
-						Size: part.Size,
-						ETag: part.ETag
-					});
-				}
-			}
-		}
-
-		if (response.IsTruncated) {
-			partNumberMarker = String(response.NextPartNumberMarker);
-		} else {
-			break;
-		}
-	} while (true);
-
-	return json(parts);
+	try {
+		const client = createAdminUnisourceClient(event);
+		const result = await client.releases.upload.multipart.listParts(uploadId);
+		return json(result.parts);
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to list uploaded parts');
+	}
 };
 
-export const DELETE: RequestHandler = async ({ params, url }) => {
-	const { uploadId } = params;
-	const key = url.searchParams.get('key');
-
-	if (!key) {
-		return json({ error: 'key query parameter is required' }, { status: 400 });
+/**
+ * Proxy → UniSource `DELETE /releases/upload/multipart/abort`.
+ * Aborts an in-flight multipart upload and marks the release as failed.
+ */
+export const DELETE: RequestHandler = async (event) => {
+	if (!event.locals.user) {
+		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	const command = new AbortMultipartUploadCommand({
-		Bucket: ENV.R2_BUCKET_NAME,
-		Key: key,
-		UploadId: uploadId
-	});
+	const { uploadId } = event.params;
+	if (!uploadId) {
+		return json({ error: 'uploadId path param is required' }, { status: 400 });
+	}
 
-	await R2.send(command);
-
-	return json({});
+	try {
+		const client = createAdminUnisourceClient(event);
+		await client.releases.upload.multipart.abort(uploadId);
+		return json({});
+	} catch (error) {
+		return unisourceErrorResponse(error, 'Failed to abort multipart upload');
+	}
 };

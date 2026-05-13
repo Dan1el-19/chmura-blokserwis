@@ -1,14 +1,11 @@
-import { ENV } from '$lib/server/env';
-import { R2 } from '$lib/clients/r2';
-import { CreateMultipartUploadCommand } from '@aws-sdk/client-s3';
 import { json } from '@sveltejs/kit';
+import { z } from 'zod';
 import type { RequestHandler } from './$types';
 import { releaseUploadSchema, releaseTagSchema } from '$lib/schemas';
 import { getReleaseByName } from '$lib/server/storage/releases';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { logger } from '$lib/server/logger';
-import { z } from 'zod';
 
 const multipartSchema = releaseUploadSchema.extend({
 	tags: z.array(releaseTagSchema).max(10).optional(),
@@ -16,6 +13,11 @@ const multipartSchema = releaseUploadSchema.extend({
 	force_update: z.boolean().optional()
 });
 
+/**
+ * Proxy → UniSource `POST /releases/upload/multipart/create`.
+ * Reserves a release_id, starts the R2 multipart upload via UniSource and
+ * returns the Uppy AwsS3-compatible payload `{ key, uploadId, release_id }`.
+ */
 export const POST: RequestHandler = async (event) => {
 	if (!event.locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,9 +32,6 @@ export const POST: RequestHandler = async (event) => {
 
 	const { filename, type, overwrite, tags, notes, force_update } = validated.data;
 
-	const client = createAdminUnisourceClient(event);
-	let releaseId: string | undefined;
-
 	try {
 		const existing = await getReleaseByName(filename, event);
 		if (existing && !overwrite) {
@@ -42,37 +41,23 @@ export const POST: RequestHandler = async (event) => {
 			);
 		}
 
-		const init = await client.releases.upload.init({
+		const client = createAdminUnisourceClient(event);
+		const init = await client.releases.upload.multipart.create({
 			name: filename,
 			filename,
+			mime_type: type,
 			tags: tags ?? [],
 			notes: notes ?? null,
 			force_update: force_update ?? false
 		});
-		releaseId = init.release_id;
-
-		const command = new CreateMultipartUploadCommand({
-			Bucket: ENV.R2_BUCKET_NAME,
-			Key: init.r2_key,
-			ContentType: type,
-			Metadata: { uploadedBy: event.locals.user.$id, originalName: filename }
-		});
-
-		const response = await R2.send(command);
 
 		return json({
-			key: response.Key,
-			uploadId: response.UploadId,
-			release_id: init.release_id,
+			key: init.key,
+			uploadId: init.upload_id,
+			release_id: init.upload_id,
 			existingRelease: existing
 		});
 	} catch (error) {
-		if (releaseId) {
-			await Promise.resolve(client.releases.upload.fail(releaseId)).catch((failError: unknown) => {
-				logger.error('Failed to mark release upload as failed:', failError);
-			});
-		}
-
 		logger.error('Failed to create release multipart upload:', error);
 		return unisourceErrorResponse(error, 'Failed to create multipart upload');
 	}
