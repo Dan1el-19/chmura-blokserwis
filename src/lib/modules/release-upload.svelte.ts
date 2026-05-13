@@ -1,24 +1,3 @@
-import Uppy from '@uppy/core';
-import AwsS3 from '@uppy/aws-s3';
-
-const MB = 1024 * 1024;
-const MIN_CHUNK_SIZE = 25 * MB;
-const MAX_CHUNK_SIZE = 500 * MB;
-const MAX_PARTS = 8000;
-const MULTIPART_THRESHOLD = 50 * MB;
-const CONCURRENT_PARTS = 10;
-
-function getChunkSize(file: { size: number }): number {
-	const fileSize = file.size ?? 0;
-	const safetySize = Math.ceil(fileSize / MAX_PARTS);
-	let tieredSize: number;
-	if (fileSize > 5 * 1024 * MB) tieredSize = 100 * MB;
-	else if (fileSize > 1024 * MB) tieredSize = 50 * MB;
-	else if (fileSize > 500 * MB) tieredSize = 32 * MB;
-	else tieredSize = MIN_CHUNK_SIZE;
-	return Math.min(MAX_CHUNK_SIZE, Math.max(MIN_CHUNK_SIZE, Math.max(safetySize, tieredSize)));
-}
-
 export type ReleaseUploadResult = {
 	key: string;
 	name: string;
@@ -37,163 +16,100 @@ export type ReleaseUploadOptions = {
 };
 
 export class ReleaseUploader {
-	private uppy: Uppy;
-	private options: ReleaseUploadOptions;
-
 	progress = $state(0);
 	isUploading = $state(false);
 	error = $state<string | null>(null);
 
+	private xhr: XMLHttpRequest | null = null;
+	private options: ReleaseUploadOptions;
+
 	constructor(options: ReleaseUploadOptions) {
 		this.options = options;
+	}
 
-		this.uppy = new Uppy({
-			restrictions: {
-				maxNumberOfFiles: 1,
-				allowedFileTypes: ['.apk', 'application/vnd.android.package-archive']
-			},
-			autoProceed: true
-		});
+	async upload(file: File) {
+		this.isUploading = true;
+		this.error = null;
+		this.progress = 0;
 
-		if (typeof window !== 'undefined') {
-			const self = this;
-			this.uppy.use(AwsS3, {
-				shouldUseMultipart: (file) => (file.size ?? 0) > MULTIPART_THRESHOLD,
-				getChunkSize,
-				limit: CONCURRENT_PARTS,
-				async getUploadParameters(file) {
-					const res = await fetch('/api/releases/sign', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							filename: self.options.filename,
-							type: file.type || 'application/vnd.android.package-archive',
-							overwrite: self.options.overwrite,
-							tags: self.options.tags,
-							notes: self.options.notes,
-							force_update: self.options.force_update
-						})
-					});
-					if (!res.ok) {
-						const err = await res.json();
-						throw new Error(err.message || 'Failed to get upload parameters');
+		try {
+			// 1. Get presigned PUT URL from our backend
+			const signRes = await fetch('/api/releases/sign', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					filename: this.options.filename,
+					type: file.type || 'application/vnd.android.package-archive',
+					overwrite: this.options.overwrite,
+					tags: this.options.tags,
+					notes: this.options.notes,
+					force_update: this.options.force_update
+				})
+			});
+
+			if (!signRes.ok) {
+				const err = await signRes.json();
+				throw new Error(err.message || 'Failed to get upload URL');
+			}
+
+			const { url, headers, key, release_id } = await signRes.json();
+
+			// 2. PUT directly to R2 via presigned URL with progress tracking
+			await new Promise<void>((resolve, reject) => {
+				this.xhr = new XMLHttpRequest();
+				this.xhr.open('PUT', url);
+
+				if (headers) {
+					for (const [k, v] of Object.entries(headers)) {
+						this.xhr.setRequestHeader(k, v as string);
 					}
-					const json = await res.json();
-					file.meta['r2Key'] = json.key;
-					file.meta['releaseId'] = json.release_id;
-					return json;
-				},
-				async createMultipartUpload(file) {
-					const res = await fetch('/api/releases/multipart', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							filename: self.options.filename,
-							type: file.type || 'application/vnd.android.package-archive',
-							overwrite: self.options.overwrite,
-							tags: self.options.tags,
-							notes: self.options.notes,
-							force_update: self.options.force_update
-						})
-					});
-					if (!res.ok) {
-						const err = await res.json();
-						throw new Error(err.message || 'Failed to create multipart upload');
-					}
-					const json = await res.json();
-					file.meta['r2Key'] = json.key;
-					file.meta['releaseId'] = json.release_id;
-					return json;
-				},
-				async listParts(file, { uploadId, key }) {
-					const res = await fetch(
-						`/api/releases/multipart/${uploadId}?key=${encodeURIComponent(key)}`
-					);
-					if (!res.ok) throw new Error('Failed to list parts');
-					return res.json();
-				},
-				async signPart(file, { uploadId, key, partNumber }) {
-					const res = await fetch(
-						`/api/releases/multipart/${uploadId}/${partNumber}?key=${encodeURIComponent(key)}`
-					);
-					if (!res.ok) throw new Error('Failed to sign part');
-					return res.json();
-				},
-				async abortMultipartUpload(file, { uploadId, key }) {
-					await fetch(`/api/releases/multipart/${uploadId}?key=${encodeURIComponent(key)}`, {
-						method: 'DELETE'
-					});
-				},
-				async completeMultipartUpload(file, { uploadId, key, parts }) {
-					const res = await fetch(
-						`/api/releases/multipart/${uploadId}/complete?key=${encodeURIComponent(key)}`,
-						{
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify({ parts })
-						}
-					);
-					if (!res.ok) throw new Error('Failed to complete multipart upload');
-					return res.json();
 				}
-			});
 
-			this.uppy.on('upload', () => {
-				this.isUploading = true;
-				this.error = null;
-			});
-
-			this.uppy.on('upload-progress', () => {
-				this.progress = this.uppy.getState().totalProgress;
-				options.onProgress?.(this.progress);
-			});
-
-			this.uppy.on('complete', async (result) => {
-				this.isUploading = false;
-				this.progress = 100;
-
-				if (result.successful && result.successful.length > 0) {
-					const file = result.successful[0];
-					const releaseId = file.meta['releaseId'] as string | undefined;
-
-					if (releaseId) {
-						await fetch('/api/releases/complete', {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify({ release_id: releaseId, size: file.size ?? 0 })
-						}).catch(() => undefined);
+				this.xhr.upload.onprogress = (e) => {
+					if (e.lengthComputable) {
+						this.progress = Math.round((e.loaded / e.total) * 100);
+						this.options.onProgress?.(this.progress);
 					}
+				};
 
-					options.onComplete?.({
-						key: (file.meta['r2Key'] as string) || '',
-						name: this.options.filename,
-						size: file.size ?? 0
-					});
-				}
+				this.xhr.onload = () => {
+					if (this.xhr!.status >= 200 && this.xhr!.status < 300) {
+						resolve();
+					} else {
+						reject(new Error(`Upload failed: ${this.xhr!.status}`));
+					}
+				};
+
+				this.xhr.onerror = () => reject(new Error('Network error during upload'));
+				this.xhr.onabort = () => reject(new Error('Upload cancelled'));
+
+				this.xhr.send(file);
 			});
 
-			this.uppy.on('error', (err) => {
-				this.isUploading = false;
-				this.error = err.message;
-				options.onError?.(err);
+			// 3. Confirm upload complete
+			await fetch('/api/releases/complete', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ release_id, size: file.size })
 			});
+
+			this.progress = 100;
+			this.isUploading = false;
+			this.options.onComplete?.({ key, name: this.options.filename, size: file.size });
+		} catch (err) {
+			this.isUploading = false;
+			const message = err instanceof Error ? err.message : 'Upload failed';
+			this.error = message;
+			this.options.onError?.(err instanceof Error ? err : new Error(message));
 		}
 	}
 
-	upload(file: File) {
-		this.uppy.addFile({
-			name: this.options.filename,
-			type: file.type || 'application/vnd.android.package-archive',
-			data: file
-		});
-	}
-
 	cancel() {
-		this.uppy.cancelAll();
+		this.xhr?.abort();
 		this.isUploading = false;
 	}
 
 	destroy() {
-		this.uppy.destroy();
+		this.cancel();
 	}
 }
