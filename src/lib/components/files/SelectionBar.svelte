@@ -10,29 +10,59 @@
 		folders: Array<{ $id: string; name: string }>;
 	}>();
 
+	type RowItem = { $id: string; name: string };
+
 	async function deleteSelected() {
 		if (!confirm(`Usunąć ${selection.count} element(ów)?`)) return;
 		const ids = [...selection.selected];
-		const fileIds = new Set(files.map((f) => f.$id));
-		await Promise.all(
-			ids.map((id) =>
-				fetch(fileIds.has(id) ? `/api/files/${id}` : `/api/folders/${id}`, { method: 'DELETE' })
-			)
+		const fileIds = new Set(files.map((f: RowItem) => f.$id));
+
+		// F2: track each item separately so a single failure doesn't mask the
+		// rest. We surface failures with a granular toast and only invalidate
+		// once at the end so the UI reflects whatever did succeed.
+		const results = await Promise.allSettled(
+			ids.map(async (id) => {
+				const isFile = fileIds.has(id);
+				const url = isFile ? `/api/files/${id}` : `/api/folders/${id}`;
+				const res = await fetch(url, { method: 'DELETE' });
+				if (!res.ok) {
+					const body = await res.json().catch(() => ({}));
+					throw new Error(body.error || `${res.status} ${res.statusText}`);
+				}
+				return id;
+			})
 		);
-		toast.success(`Usunięto ${ids.length} element(ów)`);
+
+		const failed = results.filter(
+			(r): r is PromiseRejectedResult => r.status === 'rejected'
+		);
+		const succeededCount = ids.length - failed.length;
+
+		if (succeededCount > 0) {
+			toast.success(`Usunięto ${succeededCount} element(ów)`);
+		}
+		if (failed.length > 0) {
+			const sample = String((failed[0].reason as Error)?.message ?? 'błąd');
+			toast.error(
+				failed.length === 1
+					? `Nie udało się usunąć: ${sample}`
+					: `Nie udało się usunąć ${failed.length} z ${ids.length} elementów (${sample})`
+			);
+		}
+
 		selection.clear();
 		invalidateAll();
 	}
 
 	async function downloadSelected() {
-		const fileIds = new Set(files.map((f) => f.$id));
+		const fileIds = new Set(files.map((f: RowItem) => f.$id));
 		const selectedFiles = [...selection.selected].filter((id) => fileIds.has(id));
 		if (selectedFiles.length === 0) {
 			toast.info('Brak plików do pobrania (foldery są pomijane)');
 			return;
 		}
 		for (const id of selectedFiles) {
-			const file = files.find((f) => f.$id === id);
+			const file = files.find((f: RowItem) => f.$id === id);
 			if (!file) continue;
 			const res = await fetch(`/api/files/${id}?download=true`);
 			const data = await res.json();

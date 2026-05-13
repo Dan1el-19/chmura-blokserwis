@@ -4,6 +4,8 @@ import type { Actions, PageServerLoad } from './$types';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
 import { UnisourceError, UnisourceNetworkError } from '@unisource/sdk';
 
+type RecommendedDestination = 'r2' | 'appwrite' | 'hybrid';
+
 export const load: PageServerLoad = async (event) => {
 	if (!event.locals.user) {
 		throw redirect(303, '/login');
@@ -11,12 +13,17 @@ export const load: PageServerLoad = async (event) => {
 
 	const client = createAdminUnisourceClient(event);
 	const { service } = await client.admin.serviceDetail();
+	const dest: RecommendedDestination =
+		service.recommended_upload_destination === 'appwrite' ||
+		service.recommended_upload_destination === 'hybrid'
+			? service.recommended_upload_destination
+			: 'r2';
 
 	return {
 		service: {
 			id: service.id,
 			name: service.name,
-			recommended_upload_destination: service.recommended_upload_destination ?? 'r2'
+			recommended_upload_destination: dest
 		}
 	};
 };
@@ -30,7 +37,7 @@ export const actions: Actions = {
 		const formData = await event.request.formData();
 		const destination = formData.get('recommended_upload_destination');
 
-		if (destination !== 'r2' && destination !== 'appwrite') {
+		if (destination !== 'r2' && destination !== 'appwrite' && destination !== 'hybrid') {
 			return fail(400, { error: 'Invalid destination' });
 		}
 

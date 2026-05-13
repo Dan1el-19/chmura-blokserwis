@@ -6,6 +6,7 @@
 		AndroidLogo,
 		ArrowsClockwise
 	} from 'phosphor-svelte';
+	import { formatFileSize } from '$lib/utils/format';
 	import type { ParsedRelease } from '$lib/types/releases';
 
 	type Props = {
@@ -16,13 +17,6 @@
 	};
 
 	let { releases, onEdit, onDelete, onForceSync }: Props = $props();
-
-	function formatSize(bytes: number): string {
-		if (bytes >= 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-		if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-		if (bytes >= 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-		return `${bytes} B`;
-	}
 
 	function formatDate(dateStr: string): string {
 		return new Date(dateStr).toLocaleDateString('en-US', {
@@ -63,12 +57,12 @@
 								<AndroidLogo class="h-5 w-5 shrink-0 text-green-500" weight="fill" />
 								<div>
 									<p class="font-medium text-text-main">{release.name}</p>
-									<p class="text-xs text-text-muted sm:hidden">{formatSize(release.size)}</p>
+									<p class="text-xs text-text-muted sm:hidden">{formatFileSize(release.size)}</p>
 								</div>
 							</div>
 						</td>
 						<td class="hidden px-4 py-3 text-text-muted sm:table-cell">
-							{formatSize(release.size)}
+							{formatFileSize(release.size)}
 						</td>
 						<td class="hidden px-4 py-3 md:table-cell">
 							<div class="flex flex-wrap gap-1">

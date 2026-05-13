@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
 	import ReleaseDropZone from '$lib/components/releases/ReleaseDropZone.svelte';
 	import ReleaseUploadModal from '$lib/components/releases/ReleaseUploadModal.svelte';
 	import ReleasesList from '$lib/components/releases/ReleasesList.svelte';
@@ -155,15 +156,25 @@
 		if (!editingRelease) return;
 
 		editLoading = true;
-		await fetch(`/api/releases/${editingRelease.$id}`, {
-			method: 'PATCH',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(editData)
-		});
+		try {
+			const res = await fetch(`/api/releases/${editingRelease.$id}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(editData)
+			});
 
-		editLoading = false;
-		editingRelease = null;
-		await invalidateAll();
+			if (!res.ok) {
+				const body = await res.json().catch(() => ({}));
+				toast.error(body.error || 'Nie udało się zapisać zmian');
+				return;
+			}
+
+			toast.success('Zmiany zapisane');
+			editingRelease = null;
+			await invalidateAll();
+		} finally {
+			editLoading = false;
+		}
 	}
 
 	function handleDelete(release: ParsedRelease) {
@@ -174,14 +185,24 @@
 		if (!deletingRelease) return;
 
 		deleteLoading = true;
-		await fetch(`/api/releases/${deletingRelease.$id}`, {
-			method: 'DELETE'
-		});
+		try {
+			const res = await fetch(`/api/releases/${deletingRelease.$id}`, {
+				method: 'DELETE'
+			});
 
-		deleteLoading = false;
-		deletingRelease = null;
-		await invalidateAll();
-		await fetchExternalConfig();
+			if (!res.ok) {
+				const body = await res.json().catch(() => ({}));
+				toast.error(body.error || 'Nie udało się usunąć release');
+				return;
+			}
+
+			toast.success('Release usunięty');
+			deletingRelease = null;
+			await invalidateAll();
+			await fetchExternalConfig();
+		} finally {
+			deleteLoading = false;
+		}
 	}
 </script>
 

@@ -8,17 +8,36 @@
  * Upload strategy:
  *   - R2, file ≤ 100 MiB → single presigned PUT via `/api/upload/r2/init`
  *   - R2, file > 100 MiB → Uppy + @uppy/aws-s3 multipart + @uppy/golden-retriever
- *   - Appwrite          → direct browser → Appwrite Storage.createFile
+ *   - Appwrite          → direct browser → Appwrite Storage REST via XHR
+ *                          (yields real upload progress for files of any size)
  */
 
-import { Client as AppwriteClient, Storage as AppwriteStorage } from 'appwrite';
-
 export type UploadDestination = 'r2' | 'appwrite';
+export type RecommendedUploadDestination = 'r2' | 'appwrite' | 'hybrid';
 
-/** Pliki > 5 GiB trafiają do R2, mniejsze do Appwrite. */
+/**
+ * Hybrid threshold — files at or below the threshold go to Appwrite (which is
+ * better at serving small files via CDN-edge caching), files larger than the
+ * threshold go to R2 multipart for unbounded scale + zero egress.
+ */
 const AUTO_THRESHOLD_BYTES = 5 * 1024 * 1024 * 1024;
 
-function resolveAutoDestination(sizeBytes: number): UploadDestination {
+/**
+ * Resolves the actual destination for an `auto` upload using the admin's
+ * service-wide setting:
+ *   - 'r2'       → always R2
+ *   - 'appwrite' → always Appwrite
+ *   - 'hybrid'   → Appwrite for files ≤ 5 GiB, R2 above
+ *
+ * The legacy size-only behaviour is preserved as the `hybrid` branch so
+ * existing callers keep working when no admin preference is provided.
+ */
+function resolveAutoDestination(
+	sizeBytes: number,
+	recommended: RecommendedUploadDestination = 'hybrid'
+): UploadDestination {
+	if (recommended === 'r2') return 'r2';
+	if (recommended === 'appwrite') return 'appwrite';
 	return sizeBytes > AUTO_THRESHOLD_BYTES ? 'r2' : 'appwrite';
 }
 
@@ -56,6 +75,13 @@ type UploadOptions = {
 	isMainStorage?: boolean | (() => boolean);
 	/** Default destination when `addFile` is called without an explicit one. */
 	destination?: UploadDestination | 'auto' | (() => UploadDestination | 'auto');
+	/**
+	 * Service-wide preference for the auto/hybrid destination resolver. Comes
+	 * from the admin settings UI. Defaults to 'hybrid'.
+	 */
+	recommendedDestination?:
+		| RecommendedUploadDestination
+		| (() => RecommendedUploadDestination);
 	onComplete?: (results: UploadResult[]) => void;
 	onError?: (error: Error) => void;
 };
@@ -89,6 +115,12 @@ function ensureServiceWorker() {
 // ─── Validation ───────────────────────────────────────────────────────────────
 
 function isAllowedFile(file: File, options: UploadOptions) {
+	// F14: reject zero-byte files at the boundary instead of letting the upload
+	// race the backend size validation.
+	if (file.size === 0) {
+		throw new Error(`${file.name} is empty (0 B) — uploadu pliku zerowego nie można wykonać`);
+	}
+
 	if (options.maxFileSize && file.size > options.maxFileSize) {
 		throw new Error(`${file.name} exceeds the maximum file size`);
 	}
@@ -128,11 +160,17 @@ export class UploadManager {
 		return typeof v === 'function' ? v() : v === true;
 	}
 
+	private getRecommended(): RecommendedUploadDestination {
+		const v = this.options.recommendedDestination;
+		const resolved = typeof v === 'function' ? v() : v;
+		return resolved ?? 'hybrid';
+	}
+
 	private getDefaultDestination(sizeBytes?: number): UploadDestination {
 		const v = this.options.destination;
 		const resolved = typeof v === 'function' ? v() : v;
 		if (resolved === 'auto' || resolved === undefined) {
-			return resolveAutoDestination(sizeBytes ?? 0);
+			return resolveAutoDestination(sizeBytes ?? 0, this.getRecommended());
 		}
 		return resolved === 'appwrite' ? 'appwrite' : 'r2';
 	}
@@ -153,6 +191,9 @@ export class UploadManager {
 	}
 
 	private async markFailed(file: UploadFileState, error: Error) {
+		const isCancellation =
+			error.name === 'AbortError' || /cancelled/i.test(error.message);
+
 		file.error = error.message;
 		this.updateProgress(file, file.progress.percentage, false);
 
@@ -167,7 +208,12 @@ export class UploadManager {
 			}).catch(() => undefined);
 		}
 
-		this.options.onError?.(error);
+		// F6: cancellations are intentional, not errors. Surface them in the
+		// per-file state so the UI can render "cancelled" but never invoke the
+		// global onError toast.
+		if (!isCancellation) {
+			this.options.onError?.(error);
+		}
 	}
 
 	// ─── R2: single PUT (≤ 100 MiB) ───────────────────────────────────────────
@@ -440,7 +486,7 @@ export class UploadManager {
 		} satisfies UploadResult;
 	}
 
-	// ─── Appwrite: direct SDK call ────────────────────────────────────────────
+	// ─── Appwrite: direct browser → Storage REST upload via XHR ───────────────
 
 	private async uploadAppwrite(file: UploadFileState): Promise<UploadResult> {
 		const folderId = this.options.getFolderId?.();
@@ -474,38 +520,74 @@ export class UploadManager {
 			jwt: string;
 		};
 		file.uploadId = init.upload_id;
-		this.updateProgress(file, 15);
+		this.updateProgress(file, 10);
 
 		if (!init.jwt) {
 			throw new Error('Appwrite upload requires JWT authentication');
 		}
 
-		// JWT wygenerowany server-side (gdzie mamy dostęp do cookie __session).
-		const client = new AppwriteClient()
-			.setEndpoint(init.appwrite_endpoint)
-			.setProject(init.appwrite_project_id)
-			.setJWT(init.jwt);
-		const storage = new AppwriteStorage(client);
+		// Use XMLHttpRequest against Appwrite's `POST /storage/buckets/:id/files`
+		// REST endpoint so we get xhr.upload.onprogress for files of any size —
+		// the SDK's chunked-upload progress only fires above 5 MB which leaves
+		// the progress bar frozen on small files (audit issue #4).
+		const endpoint = init.appwrite_endpoint.endsWith('/')
+			? init.appwrite_endpoint.slice(0, -1)
+			: init.appwrite_endpoint;
+		const apiBase = endpoint.endsWith('/v1') ? endpoint : `${endpoint}/v1`;
+		const uploadUrl = `${apiBase}/storage/buckets/${encodeURIComponent(init.appwrite_bucket_id)}/files`;
 
-		try {
-			await storage.createFile({
-				bucketId: init.appwrite_bucket_id,
-				fileId: init.file_id,
-				file: file.source,
-				onProgress: (progress) => {
-					// onProgress is only called for files > 5 MB (chunked uploads).
-					const pct = progress.progress ?? 0;
-					this.updateProgress(file, Math.max(15, Math.min(95, Math.round(pct * 0.8 + 15))));
+		await new Promise<void>((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+
+			const onAbort = () => xhr.abort();
+			file.controller.signal.addEventListener('abort', onAbort);
+
+			xhr.upload.onprogress = (event) => {
+				if (event.lengthComputable) {
+					// Map bytes progress to 10–90% range so we leave headroom for
+					// the /upload/complete round-trip below.
+					const pct = Math.round((event.loaded / event.total) * 80) + 10;
+					this.updateProgress(file, pct);
 				}
-			});
-		} catch (err) {
-			const message =
-				err instanceof Error ? err.message : 'Failed to upload file to Appwrite Storage';
-			throw new Error(message);
-		}
+			};
 
-		// For files ≤ 5 MB the SDK skips chunking and never calls onProgress.
-		// Jump straight to 95% here so the bar doesn't stay frozen at 15%.
+			xhr.onload = () => {
+				file.controller.signal.removeEventListener('abort', onAbort);
+				if (xhr.status >= 200 && xhr.status < 300) {
+					resolve();
+				} else {
+					let message = `Appwrite upload failed (${xhr.status})`;
+					try {
+						const body = JSON.parse(xhr.responseText) as { message?: string };
+						if (body.message) message = body.message;
+					} catch {
+						// Non-JSON body; use the default message.
+					}
+					reject(new Error(message));
+				}
+			};
+
+			xhr.onerror = () => {
+				file.controller.signal.removeEventListener('abort', onAbort);
+				reject(new Error('Network error during Appwrite upload'));
+			};
+
+			xhr.onabort = () => {
+				file.controller.signal.removeEventListener('abort', onAbort);
+				reject(new DOMException('Upload cancelled', 'AbortError'));
+			};
+
+			xhr.open('POST', uploadUrl);
+			xhr.setRequestHeader('X-Appwrite-Project', init.appwrite_project_id);
+			xhr.setRequestHeader('X-Appwrite-JWT', init.jwt);
+			xhr.setRequestHeader('X-Appwrite-Response-Format', '1.8.0');
+
+			const formData = new FormData();
+			formData.append('fileId', init.file_id);
+			formData.append('file', file.source, file.name);
+			xhr.send(formData);
+		});
+
 		this.updateProgress(file, 95);
 
 		const completeResponse = await fetch('/api/upload/complete', {
@@ -564,7 +646,7 @@ export class UploadManager {
 			isAllowedFile(source, this.options);
 
 			const dest = destination === 'auto' || destination === undefined
-				? resolveAutoDestination(source.size)
+				? resolveAutoDestination(source.size, this.getRecommended())
 				: destination;
 
 			const resolvedDestination = dest ?? this.getDefaultDestination(source.size);

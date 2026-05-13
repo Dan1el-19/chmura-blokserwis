@@ -9,6 +9,7 @@
 		ArrowUp,
 		ArrowDown
 	} from 'phosphor-svelte';
+	import { toast } from 'svelte-sonner';
 	import { formatFileSize } from '$lib/utils/format';
 	import type { SelectionState } from '$lib/modules/selection.svelte';
 
@@ -50,7 +51,10 @@
 			day: '2-digit'
 		});
 
-	const allIds = $derived([...folders.map((f) => f.$id), ...files.map((f) => f.$id)]);
+	const allIds = $derived([
+		...folders.map((f: FolderType) => f.$id),
+		...files.map((f: FileType) => f.$id)
+	]);
 
 	let lastClickedId = $state<string | null>(null);
 
@@ -92,15 +96,32 @@
 		dragOverFolderId = null;
 		const raw = e.dataTransfer?.getData('text/plain');
 		if (!raw) return;
-		const { id, isFolder } = JSON.parse(raw) as { id: string; name: string; isFolder: boolean };
+		let payload: { id: string; name: string; isFolder: boolean };
+		try {
+			payload = JSON.parse(raw) as { id: string; name: string; isFolder: boolean };
+		} catch {
+			return;
+		}
+		const { id, name, isFolder } = payload;
 		if (isFolder && id === targetFolderId) return;
+
 		const endpoint = isFolder ? `/api/folders/${id}` : `/api/files/${id}`;
-		await fetch(endpoint, {
-			method: 'PATCH',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ parentFolderId: targetFolderId })
-		});
-		window.dispatchEvent(new CustomEvent('file-moved'));
+		try {
+			const res = await fetch(endpoint, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ parentFolderId: targetFolderId })
+			});
+			if (!res.ok) {
+				const body = await res.json().catch(() => ({}));
+				toast.error(body.error || `Nie udało się przenieść "${name}"`);
+				return;
+			}
+			toast.success(`Przeniesiono "${name}"`);
+			window.dispatchEvent(new CustomEvent('file-moved'));
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Błąd sieci podczas przenoszenia');
+		}
 	}
 </script>
 
@@ -174,15 +195,26 @@
 
 			{#each folders as folder (folder.$id)}
 				<tr
-					class="group cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/50
+					class="group cursor-pointer transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary dark:hover:bg-zinc-800/50
 						{selection.has(folder.$id) ? 'bg-primary/5' : ''}
 						{dragOverFolderId === folder.$id ? 'ring-2 ring-inset ring-primary' : ''}"
+					tabindex="0"
+					aria-label={`Folder ${folder.name}`}
 					draggable="true"
 					ondragstart={(e) => onDragStart(e, folder.$id, folder.name, true)}
 					ondragover={(e) => onFolderDragOver(e, folder.$id)}
 					ondragleave={onFolderDragLeave}
 					ondrop={(e) => onFolderDrop(e, folder.$id)}
 					onclick={(e) => handleRowClick(e, folder.$id)}
+					onkeydown={(e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							onNavigate(folder.$id);
+						} else if (e.key === ' ') {
+							e.preventDefault();
+							handleCheckbox(folder.$id);
+						}
+					}}
 				>
 					<td
 						class="px-4 py-3"
@@ -245,11 +277,22 @@
 
 			{#each files as file (file.$id)}
 				<tr
-					class="group cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/50
+					class="group cursor-pointer transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary dark:hover:bg-zinc-800/50
 						{selection.has(file.$id) ? 'bg-primary/5' : ''}"
+					tabindex="0"
+					aria-label={`Plik ${file.name}`}
 					draggable="true"
 					ondragstart={(e) => onDragStart(e, file.$id, file.name, false)}
 					onclick={(e) => handleRowClick(e, file.$id)}
+					onkeydown={(e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							onDownload(file.$id, file.name, false);
+						} else if (e.key === ' ') {
+							e.preventDefault();
+							handleCheckbox(file.$id);
+						}
+					}}
 				>
 					<td
 						class="px-4 py-3"

@@ -8,7 +8,12 @@
 	let loading = $state(false);
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/80 p-4 backdrop-blur-sm">
+<div
+	class="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/80 p-4 backdrop-blur-sm"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="create-folder-title"
+>
 	<Card class="w-full max-w-sm border-border-line bg-bg-panel shadow-lg" title="New Folder">
 		<form
 			method="POST"
@@ -23,6 +28,7 @@
 			}}
 			class="space-y-4"
 		>
+			<h2 id="create-folder-title" class="sr-only">Utwórz nowy folder</h2>
 			<input type="hidden" name="parentFolderId" value={parentFolderId || ''} />
 			<Input name="folderName" label="Name" placeholder="Folder name" required autofocus />
 

@@ -4,18 +4,10 @@
 	import Icon from '$lib/assets/favicon.svg';
 	import { File, DownloadSimple, ClockCountdown, Lock, Warning } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
+	import { formatFileSize } from '$lib/utils/format';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let loading = $state(false);
-
-	function formatBytes(bytes: number, decimals = 2) {
-		if (bytes === 0) return '0 Bytes';
-		const k = 1024;
-		const dm = decimals < 0 ? 0 : decimals;
-		const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-	}
 
 	const downloadUrl = $derived(form?.downloadUrl || data.downloadUrl);
 	const remainingDownloads = $derived(form?.remainingDownloads ?? data.remainingDownloads);
@@ -78,7 +70,7 @@
 
 				<div class="space-y-1">
 					<h1 class="px-4 text-xl font-semibold break-all text-text-main">{data.fileName}</h1>
-					<p class="text-sm text-text-muted">{formatBytes(data.fileSize ?? 0)}</p>
+					<p class="text-sm text-text-muted">{formatFileSize(data.fileSize ?? 0)}</p>
 					<p class="mt-2 text-sm text-amber-600 dark:text-amber-400">
 						Ten plik jest chroniony hasłem
 					</p>
@@ -138,7 +130,7 @@
 
 				<div class="space-y-1">
 					<h1 class="px-4 text-xl font-semibold break-all text-text-main">{data.fileName}</h1>
-					<p class="text-sm text-text-muted">{formatBytes(data.fileSize ?? 0)}</p>
+					<p class="text-sm text-text-muted">{formatFileSize(data.fileSize ?? 0)}</p>
 					{#if data.expiresAt}
 						<p class="mt-2 text-xs text-orange-500">
 							Wygasa: {new Date(data.expiresAt).toLocaleString('pl-PL')}

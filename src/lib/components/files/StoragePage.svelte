@@ -31,6 +31,8 @@
 		rootHref: string;
 	}>();
 
+	import { page } from '$app/state';
+
 	let showCreateFolder = $state(false);
 	let pendingDestination = $state<'r2' | 'appwrite' | 'auto'>('auto');
 	let isDragOver = $state(false);
@@ -47,14 +49,41 @@
 		getFolderId: () => data.currentFolderId,
 		isMainStorage: () => data.storageKind === 'main',
 		destination: () => pendingDestination,
+		recommendedDestination: () =>
+			(page.data.recommendedUploadDestination as 'r2' | 'appwrite' | 'hybrid') ?? 'hybrid',
 		onComplete: handleUploadComplete,
-		onError: (err) => toast.error(`Upload error: ${err.message}`)
+		onError: (err) => {
+			// F6: cancellations are intentional, not errors.
+			if (err.name === 'AbortError' || /cancelled/i.test(err.message)) return;
+			toast.error(`Upload error: ${err.message}`);
+		}
 	});
 
 	async function handleUploadComplete(results: UploadResult[]) {
-		for (const result of results) toast.success(`Uploaded: ${result.name}`);
-		invalidateAll();
+		// F7: avoid flooding the user with one toast per file. The upload manager
+		// invokes onComplete once per file; we coalesce notifications into a
+		// short rolling window and show a single summary toast.
+		uploadCompletionBuffer.push(...results);
+		if (uploadToastTimer !== null) {
+			clearTimeout(uploadToastTimer);
+		}
+		uploadToastTimer = setTimeout(() => {
+			const count = uploadCompletionBuffer.length;
+			if (count > 0) {
+				if (count === 1) {
+					toast.success(`Uploaded: ${uploadCompletionBuffer[0].name}`);
+				} else {
+					toast.success(`Uploaded ${count} files`);
+				}
+			}
+			uploadCompletionBuffer = [];
+			uploadToastTimer = null;
+			invalidateAll();
+		}, 400);
 	}
+
+	let uploadCompletionBuffer = $state<UploadResult[]>([]);
+	let uploadToastTimer: ReturnType<typeof setTimeout> | null = $state(null);
 
 	function startUpload(destination: 'r2' | 'appwrite' | 'auto') {
 		pendingDestination = destination;
