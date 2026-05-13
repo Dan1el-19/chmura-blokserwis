@@ -1,3 +1,9 @@
+## [2.2.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.2.0...v2.2.1) (2026-05-13)
+
+### Bug Fixes
+
+* upload proxy endpoints for releases to bypass R2 SDK limitations ([ff047db](https://github.com/Dan1el-19/chmura-blokserwis/commit/ff047db5ce18901452beb677be3c6f827888ef0b))
+
 ## [2.2.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.1.1...v2.2.0) (2026-05-13)
 
 ### Features
