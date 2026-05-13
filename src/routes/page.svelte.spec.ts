@@ -16,7 +16,8 @@ describe('/+page.svelte', () => {
 					fileNextCursor: null,
 					folderNextCursor: null,
 					role: 'basic',
-					storageKind: 'user' as const
+					storageKind: 'user' as const,
+					folderPath: []
 				}
 			}
 		});

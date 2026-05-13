@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CloudArrowUp, CaretDown } from 'phosphor-svelte';
+	import { CloudArrowUp, CaretDown, ArrowsLeftRight, Database } from 'phosphor-svelte';
 	import { onMount } from 'svelte';
 
 	type Destination = 'r2' | 'appwrite' | 'auto';
@@ -16,6 +16,9 @@
 
 	function handlePrimaryClick() {
 		if (disabled) return;
+		// Primary action defers to admin's recommended_upload_destination.
+		// 'auto' tells the upload manager to honour the service-wide setting
+		// (r2 / appwrite / hybrid) instead of hard-picking a backend client side.
 		onUpload('auto');
 	}
 
@@ -77,17 +80,26 @@
 
 	{#if dropdownOpen}
 		<div
-			class="absolute top-full right-0 z-50 mt-1 min-w-[220px] rounded-md border border-border-line bg-bg-panel shadow-lg"
+			class="absolute top-full right-0 z-50 mt-1 min-w-[260px] rounded-md border border-border-line bg-bg-panel shadow-lg"
 			role="menu"
 		>
 			<button
 				type="button"
 				role="menuitem"
-				onclick={() => handleOptionClick('r2')}
+				onclick={() => handleOptionClick('auto')}
 				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-main transition-colors first:rounded-t-md hover:bg-gray-50 dark:hover:bg-zinc-800"
 			>
+				<ArrowsLeftRight class="h-4 w-4 text-text-muted" />
+				<span>Auto (zalecane przez admina)</span>
+			</button>
+			<button
+				type="button"
+				role="menuitem"
+				onclick={() => handleOptionClick('r2')}
+				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-main transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800"
+			>
 				<CloudArrowUp class="h-4 w-4 text-text-muted" />
-				<span>Upload do Cloudflare R2</span>
+				<span>Wymuś Cloudflare R2</span>
 			</button>
 			<button
 				type="button"
@@ -95,8 +107,8 @@
 				onclick={() => handleOptionClick('appwrite')}
 				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-main transition-colors last:rounded-b-md hover:bg-gray-50 dark:hover:bg-zinc-800"
 			>
-				<CloudArrowUp class="h-4 w-4 text-text-muted" />
-				<span>Upload do Appwrite Storage</span>
+				<Database class="h-4 w-4 text-text-muted" />
+				<span>Wymuś Appwrite Storage</span>
 			</button>
 		</div>
 	{/if}

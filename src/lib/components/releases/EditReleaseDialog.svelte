@@ -23,8 +23,14 @@
 	}
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/80 p-4 backdrop-blur-sm">
+<div
+	class="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/80 p-4 backdrop-blur-sm"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="edit-release-title"
+>
 	<Card class="w-full max-w-md border-border-line bg-bg-panel shadow-lg" title="Edit Release">
+		<h2 id="edit-release-title" class="sr-only">Edit Release</h2>
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<div class="rounded-md bg-gray-50 p-3 dark:bg-zinc-800/50">
 				<p class="text-sm font-medium text-text-main">{release.name}</p>

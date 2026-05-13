@@ -3,7 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { Toaster } from 'svelte-sonner';
 	import { page } from '$app/state';
-	import { Folder, GearSix, Shield, RocketLaunch } from 'phosphor-svelte';
+	import { Folder, GearSix, Shield, RocketLaunch, Trash } from 'phosphor-svelte';
 	import DesktopSidebar from '$lib/components/layout/DesktopSidebar.svelte';
 	import MobileHeader from '$lib/components/layout/MobileHeader.svelte';
 	import MobileDrawer from '$lib/components/layout/MobileDrawer.svelte';
@@ -17,6 +17,13 @@
 			label: 'Files',
 			icon: Folder,
 			color: 'bg-blue-500',
+			roles: ['basic', 'plus', 'admin']
+		},
+		{
+			href: '/trash',
+			label: 'Kosz',
+			icon: Trash,
+			color: 'bg-red-500',
 			roles: ['basic', 'plus', 'admin']
 		},
 		{

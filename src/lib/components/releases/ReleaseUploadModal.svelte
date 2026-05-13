@@ -4,6 +4,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import TagsInput from './TagsInput.svelte';
 	import { Warning, Check } from 'phosphor-svelte';
+	import { formatFileSize } from '$lib/utils/format';
 	import type { ParsedRelease } from '$lib/types/releases';
 	import { untrack } from 'svelte';
 
@@ -50,17 +51,16 @@
 		e.preventDefault();
 		onConfirm({ name, tags, notes, overwrite, forceUpdate, channel });
 	}
-
-	function formatSize(bytes: number): string {
-		if (bytes >= 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-		if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-		if (bytes >= 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-		return `${bytes} B`;
-	}
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/80 p-4 backdrop-blur-sm">
+<div
+	class="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/80 p-4 backdrop-blur-sm"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="release-upload-title"
+>
 	<Card class="w-full max-w-md border-border-line bg-bg-panel shadow-lg" title="Upload Release">
+		<h2 id="release-upload-title" class="sr-only">Upload Release</h2>
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<div
 				class="rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-zinc-700/50 dark:bg-zinc-800/50"
@@ -75,7 +75,7 @@
 							: file.name}</span
 					>
 					<span class="mx-1">•</span>
-					Size: {formatSize(file.size)}
+					Size: {formatFileSize(file.size)}
 				</p>
 			</div>
 
@@ -92,7 +92,7 @@
 							Existing version uploaded on {new Date(
 								existingRelease.$createdAt
 							).toLocaleDateString()}
-							({formatSize(existingRelease.size)})
+							({formatFileSize(existingRelease.size)})
 						</p>
 						<label class="flex items-center gap-2">
 							<input

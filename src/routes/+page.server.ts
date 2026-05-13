@@ -41,7 +41,7 @@ export const load: PageServerLoad = async (event) => {
 			const visited = new Set<string>();
 			while (currentId && depth++ < 20 && !visited.has(currentId)) {
 				visited.add(currentId);
-				const folder = await client.folders.get(currentId);
+				const { folder } = await client.folders.get(currentId);
 				folderPath.unshift({ id: folder.id, name: folder.name });
 				currentId = folder.parent_id ?? null;
 			}

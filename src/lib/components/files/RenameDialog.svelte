@@ -59,8 +59,14 @@
 	}
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/80 p-4 backdrop-blur-sm">
+<div
+	class="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/80 p-4 backdrop-blur-sm"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="rename-dialog-title"
+>
 	<Card class="w-full max-w-sm border-border-line bg-bg-panel shadow-lg" title="Rename">
+		<h2 id="rename-dialog-title" class="sr-only">Zmień nazwę</h2>
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<Input
 				name="name"

@@ -125,13 +125,21 @@
 	}
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/80 p-4 backdrop-blur-sm">
+<div
+	class="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/80 p-4 backdrop-blur-sm"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="share-dialog-title"
+>
 	<div
 		class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-border-line bg-bg-panel shadow-lg"
 	>
 		<!-- Header -->
 		<div class="flex items-center justify-between border-b border-border-line/50 px-6 py-4">
-			<h3 class="text-sm leading-none font-semibold tracking-tight text-text-main">
+			<h3
+				id="share-dialog-title"
+				class="text-sm leading-none font-semibold tracking-tight text-text-main"
+			>
 				Udostępnij plik
 			</h3>
 			<button
@@ -201,7 +209,7 @@
 					</div>
 
 					<div class="flex flex-col items-start gap-4 md:flex-row md:items-end">
-						<DateTimePicker label="Wygasa" bind:value={expiresAt} enableFutureDates={true} />
+						<DateTimePicker label="Wygasa" bind:value={expiresAt} onlyFutureDates={true} />
 
 						<Button type="submit" loading={creating} size="sm">Utwórz link</Button>
 					</div>

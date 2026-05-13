@@ -10,15 +10,34 @@
 		value: string;
 		placeholder?: string;
 		label?: string;
+		/**
+		 * @deprecated Use `onlyFutureDates` instead — the legacy name had
+		 * inverted semantics (`true` actually allowed past dates).
+		 */
 		enableFutureDates?: boolean;
+		/**
+		 * When true, only today and future dates are selectable. Used by the
+		 * share-link expiry picker so users cannot expire a share in the past.
+		 */
+		onlyFutureDates?: boolean;
 	};
 
 	let {
 		value = $bindable(''),
 		placeholder = 'Wybierz datę i godzinę',
 		label,
-		enableFutureDates = true
+		enableFutureDates,
+		onlyFutureDates = false
 	}: Props = $props();
+
+	// Resolve the effective restriction. New `onlyFutureDates=true` blocks past
+	// dates. The legacy `enableFutureDates` prop was misnamed: passing `true`
+	// historically meant "no minValue" (past allowed). Treat any explicit value
+	// as the inverse of the new prop so older call sites keep their effective
+	// behaviour while we migrate.
+	const restrictToFuture = $derived(
+		onlyFutureDates || (enableFutureDates === false)
+	);
 
 	let isOpen = $state(false);
 	let hour = $state('12');
@@ -112,7 +131,7 @@
 						type="single"
 						value={calendarValue}
 						onValueChange={handleDateSelect}
-						minValue={enableFutureDates ? undefined : today(TIMEZONE)}
+						minValue={restrictToFuture ? today(TIMEZONE) : undefined}
 					>
 						{#snippet children({ months, weekdays })}
 							<Calendar.Header class="mb-4 flex items-center justify-between">
