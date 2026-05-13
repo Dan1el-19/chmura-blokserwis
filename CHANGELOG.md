@@ -1,3 +1,9 @@
+## [2.3.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.2.1...v2.3.0) (2026-05-13)
+
+### Features
+
+* implement comprehensive file management system including sharing, secure downloads, admin settings, and release orchestration ([bc9c056](https://github.com/Dan1el-19/chmura-blokserwis/commit/bc9c056c3fe2b577f3a6c61f27b6c3cacf6a0ebf))
+
 ## [2.2.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.2.0...v2.2.1) (2026-05-13)
 
 ### Bug Fixes
