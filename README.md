@@ -5,10 +5,15 @@
 Cloudflare Workers builds install dependencies with `pnpm install --frozen-lockfile`, so
 `@unisource/sdk` must stay pinned to the npm package in `package.json` and `pnpm-lock.yaml`.
 
-For local SDK development, link the neighboring checkout only in `node_modules`:
+For local SDK development, `pnpm dev` links the neighboring checkout before starting Vite:
 
 ```bash
-pnpm sdk:link
+pnpm dev
+```
+
+Run the SDK watcher separately when editing the package:
+
+```bash
 pnpm sdk:dev
 ```
 
