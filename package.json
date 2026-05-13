@@ -5,7 +5,7 @@
 	"packageManager": "pnpm@11.0.9",
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev --host",
+		"dev": "pnpm sdk:link && vite dev --host",
 		"db:init": "npx vite-node scripts/init-db.ts",
 		"build": "vite build",
 		"preview": "vite preview",
@@ -19,7 +19,7 @@
 		"test:e2e": "playwright test",
 		"sdk:build": "pnpm --dir ../UniSource/packages/unisource-sdk build",
 		"sdk:dev": "pnpm --dir ../UniSource/packages/unisource-sdk dev",
-		"sdk:link": "pnpm link ../UniSource/packages/unisource-sdk",
+		"sdk:link": "node scripts/link-unisource-sdk.mjs",
 		"sdk:unlink": "pnpm install --frozen-lockfile",
 		"deploy": "pnpm run build && wrangler deploy"
 	},

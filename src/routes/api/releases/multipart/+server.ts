@@ -6,6 +6,8 @@ import type { RequestHandler } from './$types';
 import { releaseUploadSchema, releaseTagSchema } from '$lib/schemas';
 import { getReleaseByName } from '$lib/server/storage/releases';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { unisourceErrorResponse } from '$lib/server/unisource-errors';
+import { logger } from '$lib/server/logger';
 import { z } from 'zod';
 
 const multipartSchema = releaseUploadSchema.extend({
@@ -28,36 +30,50 @@ export const POST: RequestHandler = async (event) => {
 
 	const { filename, type, overwrite, tags, notes, force_update } = validated.data;
 
-	const existing = await getReleaseByName(filename, event);
-	if (existing && !overwrite) {
-		return json(
-			{ error: 'conflict', message: 'Release with this name already exists', existing },
-			{ status: 409 }
-		);
-	}
-
 	const client = createAdminUnisourceClient(event);
-	const init = await client.releases.upload.init({
-		name: filename,
-		filename,
-		tags: tags ?? [],
-		notes: notes ?? null,
-		force_update: force_update ?? false
-	});
+	let releaseId: string | undefined;
 
-	const command = new CreateMultipartUploadCommand({
-		Bucket: ENV.R2_BUCKET_NAME,
-		Key: init.r2_key,
-		ContentType: type,
-		Metadata: { uploadedBy: event.locals.user.$id, originalName: filename }
-	});
+	try {
+		const existing = await getReleaseByName(filename, event);
+		if (existing && !overwrite) {
+			return json(
+				{ error: 'conflict', message: 'Release with this name already exists', existing },
+				{ status: 409 }
+			);
+		}
 
-	const response = await R2.send(command);
+		const init = await client.releases.upload.init({
+			name: filename,
+			filename,
+			tags: tags ?? [],
+			notes: notes ?? null,
+			force_update: force_update ?? false
+		});
+		releaseId = init.release_id;
 
-	return json({
-		key: response.Key,
-		uploadId: response.UploadId,
-		release_id: init.release_id,
-		existingRelease: existing
-	});
+		const command = new CreateMultipartUploadCommand({
+			Bucket: ENV.R2_BUCKET_NAME,
+			Key: init.r2_key,
+			ContentType: type,
+			Metadata: { uploadedBy: event.locals.user.$id, originalName: filename }
+		});
+
+		const response = await R2.send(command);
+
+		return json({
+			key: response.Key,
+			uploadId: response.UploadId,
+			release_id: init.release_id,
+			existingRelease: existing
+		});
+	} catch (error) {
+		if (releaseId) {
+			await Promise.resolve(client.releases.upload.fail(releaseId)).catch((failError: unknown) => {
+				logger.error('Failed to mark release upload as failed:', failError);
+			});
+		}
+
+		logger.error('Failed to create release multipart upload:', error);
+		return unisourceErrorResponse(error, 'Failed to create multipart upload');
+	}
 };
