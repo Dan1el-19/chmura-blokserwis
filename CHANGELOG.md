@@ -1,3 +1,9 @@
+## [2.1.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.1.0...v2.1.1) (2026-05-13)
+
+### Bug Fixes
+
+* update unisource-sdk to version 0.4.0 and add local development scripts for SDK integration ([06af17c](https://github.com/Dan1el-19/chmura-blokserwis/commit/06af17ccf80d13df349383b0bf3894e552f2f087))
+
 ## [2.1.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.0.0...v2.1.0) (2026-05-12)
 
 ### Features
