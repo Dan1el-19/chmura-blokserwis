@@ -1,3 +1,9 @@
+## [2.2.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.1.1...v2.2.0) (2026-05-13)
+
+### Features
+
+* add R2 multipart upload endpoint and integrate local SDK linking into dev workflow ([ba9c6ba](https://github.com/Dan1el-19/chmura-blokserwis/commit/ba9c6ba6e94c7b123341b71a742e0f732961ff03))
+
 ## [2.1.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.1.0...v2.1.1) (2026-05-13)
 
 ### Bug Fixes
