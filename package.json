@@ -17,6 +17,10 @@
 		"test:unit": "vitest",
 		"test": "pnpm test:unit -- --run && pnpm test:e2e",
 		"test:e2e": "playwright test",
+		"sdk:build": "pnpm --dir ../UniSource/packages/unisource-sdk build",
+		"sdk:dev": "pnpm --dir ../UniSource/packages/unisource-sdk dev",
+		"sdk:link": "pnpm link ../UniSource/packages/unisource-sdk",
+		"sdk:unlink": "pnpm install --frozen-lockfile",
 		"deploy": "pnpm run build && wrangler deploy"
 	},
 	"pnpm": {
@@ -68,7 +72,7 @@
 		"@aws-sdk/client-s3": "^3.1045.0",
 		"@aws-sdk/s3-request-presigner": "^3.1045.0",
 		"@internationalized/date": "^3.12.1",
-		"@unisource/sdk": "link:../UniSource/packages/unisource-sdk",
+		"@unisource/sdk": "^0.4.0",
 		"@uppy/aws-s3": "^5.1.0",
 		"@uppy/core": "^5.2.0",
 		"@uppy/golden-retriever": "^5.0.0",
