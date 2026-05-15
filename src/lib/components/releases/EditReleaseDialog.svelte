@@ -29,29 +29,29 @@
 	aria-modal="true"
 	aria-labelledby="edit-release-title"
 >
-	<Card class="w-full max-w-md border-border-line bg-bg-panel shadow-lg" title="Edit Release">
-		<h2 id="edit-release-title" class="sr-only">Edit Release</h2>
+	<Card class="w-full max-w-md border-border-line bg-bg-panel shadow-lg" title="Edytuj wydanie">
+		<h2 id="edit-release-title" class="sr-only">Edytuj wydanie</h2>
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<div class="rounded-md bg-gray-50 p-3 dark:bg-zinc-800/50">
 				<p class="text-sm font-medium text-text-main">{release.name}</p>
 			</div>
 
-			<TagsInput bind:value={tags} label="Tags" placeholder="Add version tags..." />
+			<TagsInput bind:value={tags} label="Tagi" placeholder="Dodaj tagi wersji..." />
 
 			<div class="space-y-1.5">
-				<label for="notes" class="block text-sm font-medium text-text-muted">Notes</label>
+				<label for="notes" class="block text-sm font-medium text-text-muted">Notatki</label>
 				<textarea
 					id="notes"
 					bind:value={notes}
-					placeholder="Release notes, changelog..."
+					placeholder="Notatki wydania, lista zmian..."
 					rows="4"
 					class="w-full rounded-md border border-border-line bg-transparent px-3 py-2 text-sm placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
 				></textarea>
 			</div>
 
 			<div class="flex justify-end gap-2 pt-2">
-				<Button variant="ghost" onclick={onCancel} type="button">Cancel</Button>
-				<Button type="submit" {loading}>Save Changes</Button>
+				<Button variant="ghost" onclick={onCancel} type="button">Anuluj</Button>
+				<Button type="submit" {loading}>Zapisz zmiany</Button>
 			</div>
 		</form>
 	</Card>

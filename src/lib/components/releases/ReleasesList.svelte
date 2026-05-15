@@ -1,11 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
-	import {
-		PencilSimple,
-		Trash,
-		AndroidLogo,
-		ArrowsClockwise
-	} from 'phosphor-svelte';
+	import { PencilSimple, Trash, AndroidLogo, ArrowsClockwise } from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 	import type { ParsedRelease } from '$lib/types/releases';
 
@@ -19,7 +14,7 @@
 	let { releases, onEdit, onDelete, onForceSync }: Props = $props();
 
 	function formatDate(dateStr: string): string {
-		return new Date(dateStr).toLocaleDateString('en-US', {
+		return new Date(dateStr).toLocaleDateString('pl-PL', {
 			year: 'numeric',
 			month: 'short',
 			day: 'numeric',
@@ -32,21 +27,23 @@
 {#if releases.length === 0}
 	<div class="flex flex-col items-center justify-center py-12 text-center">
 		<AndroidLogo class="mb-4 h-12 w-12 text-text-muted/50" />
-		<p class="text-text-muted">No releases yet</p>
-		<p class="mt-1 text-sm text-text-muted/70">Upload your first APK to get started</p>
+		<p class="text-text-muted">Brak wydań</p>
+		<p class="mt-1 text-sm text-text-muted/70">Prześlij pierwszy plik APK, aby rozpocząć</p>
 	</div>
 {:else}
 	<div class="overflow-hidden rounded-md border border-border-line">
 		<table class="w-full text-sm">
 			<thead class="border-b border-border-line bg-gray-50 dark:bg-zinc-800/50">
 				<tr>
-					<th class="px-4 py-3 text-left font-medium text-text-muted">Name</th>
-					<th class="hidden px-4 py-3 text-left font-medium text-text-muted sm:table-cell">Size</th>
-					<th class="hidden px-4 py-3 text-left font-medium text-text-muted md:table-cell">Tags</th>
-					<th class="hidden px-4 py-3 text-left font-medium text-text-muted lg:table-cell"
-						>Uploaded</th
+					<th class="px-4 py-3 text-left font-medium text-text-muted">Nazwa</th>
+					<th class="hidden px-4 py-3 text-left font-medium text-text-muted sm:table-cell"
+						>Rozmiar</th
 					>
-					<th class="px-4 py-3 text-right font-medium text-text-muted">Actions</th>
+					<th class="hidden px-4 py-3 text-left font-medium text-text-muted md:table-cell">Tagi</th>
+					<th class="hidden px-4 py-3 text-left font-medium text-text-muted lg:table-cell"
+						>Przesłano</th
+					>
+					<th class="px-4 py-3 text-right font-medium text-text-muted">Akcje</th>
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-border-line">
@@ -86,19 +83,14 @@
 									variant="ghost"
 									size="icon"
 									onclick={() => onForceSync(release)}
-									title="Force Sync"
+									title="Wymuś synchronizację"
 								>
 									<ArrowsClockwise class="h-4 w-4" />
 								</Button>
-								<Button variant="ghost" size="icon" onclick={() => onEdit(release)} title="Edit">
+								<Button variant="ghost" size="icon" onclick={() => onEdit(release)} title="Edytuj">
 									<PencilSimple class="h-4 w-4" />
 								</Button>
-								<Button
-									variant="ghost"
-									size="icon"
-									onclick={() => onDelete(release)}
-									title="Delete"
-								>
+								<Button variant="ghost" size="icon" onclick={() => onDelete(release)} title="Usuń">
 									<Trash class="h-4 w-4 text-red-500" />
 								</Button>
 							</div>

@@ -28,12 +28,15 @@
 	aria-modal="true"
 	aria-labelledby="force-sync-title"
 >
-	<Card class="w-full max-w-md border-border-line bg-bg-panel shadow-lg" title="Manual Sync">
-		<h2 id="force-sync-title" class="sr-only">Manual Sync</h2>
+	<Card
+		class="w-full max-w-md border-border-line bg-bg-panel shadow-lg"
+		title="Ręczna synchronizacja"
+	>
+		<h2 id="force-sync-title" class="sr-only">Ręczna synchronizacja</h2>
 		<form onsubmit={handleSubmit} class="space-y-6">
 			<div class="rounded-md bg-gray-50 p-3 dark:bg-zinc-800/50">
 				<p class="text-sm font-medium text-text-main">
-					Sync target: <span class="font-bold text-primary">{release.name}</span>
+					Cel synchronizacji: <span class="font-bold text-primary">{release.name}</span>
 				</p>
 			</div>
 
@@ -84,7 +87,7 @@
 			</div>
 
 			<div class="flex justify-end gap-2 pt-2">
-				<Button variant="ghost" onclick={onCancel} type="button">Cancel</Button>
+				<Button variant="ghost" onclick={onCancel} type="button">Anuluj</Button>
 				<Button type="submit" {loading}>
 					<ArrowsClockwise class="mr-2 h-4 w-4" />
 					Synchronizuj
