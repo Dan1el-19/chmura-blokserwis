@@ -79,9 +79,7 @@ type UploadOptions = {
 	 * Service-wide preference for the auto/hybrid destination resolver. Comes
 	 * from the admin settings UI. Defaults to 'hybrid'.
 	 */
-	recommendedDestination?:
-		| RecommendedUploadDestination
-		| (() => RecommendedUploadDestination);
+	recommendedDestination?: RecommendedUploadDestination | (() => RecommendedUploadDestination);
 	onComplete?: (results: UploadResult[]) => void;
 	onError?: (error: Error) => void;
 };
@@ -118,11 +116,11 @@ function isAllowedFile(file: File, options: UploadOptions) {
 	// F14: reject zero-byte files at the boundary instead of letting the upload
 	// race the backend size validation.
 	if (file.size === 0) {
-		throw new Error(`${file.name} is empty (0 B) — uploadu pliku zerowego nie można wykonać`);
+		throw new Error(`${file.name} jest pusty (0 B) — uploadu pliku zerowego nie można wykonać`);
 	}
 
 	if (options.maxFileSize && file.size > options.maxFileSize) {
-		throw new Error(`${file.name} exceeds the maximum file size`);
+		throw new Error(`${file.name} przekracza maksymalny rozmiar pliku`);
 	}
 
 	if (options.allowedFileTypes?.length) {
@@ -132,7 +130,7 @@ function isAllowedFile(file: File, options: UploadOptions) {
 		});
 
 		if (!accepted) {
-			throw new Error(`${file.name} is not an allowed file type`);
+			throw new Error(`${file.name} ma niedozwolony typ pliku`);
 		}
 	}
 }
@@ -175,8 +173,16 @@ export class UploadManager {
 		return resolved === 'appwrite' ? 'appwrite' : 'r2';
 	}
 
+	private getTrackedFile(file: UploadFileState) {
+		return this.files.find((item) => item.id === file.id) ?? file;
+	}
+
 	private updateProgress(file: UploadFileState, percentage: number, uploadComplete = false) {
-		file.progress = { percentage, uploadComplete };
+		const trackedFile = this.getTrackedFile(file);
+		trackedFile.progress = { percentage, uploadComplete };
+		if (trackedFile !== file) {
+			file.progress = trackedFile.progress;
+		}
 		this.recomputeTotals();
 	}
 
@@ -191,8 +197,7 @@ export class UploadManager {
 	}
 
 	private async markFailed(file: UploadFileState, error: Error) {
-		const isCancellation =
-			error.name === 'AbortError' || /cancelled/i.test(error.message);
+		const isCancellation = error.name === 'AbortError' || /cancelled/i.test(error.message);
 
 		file.error = error.message;
 		this.updateProgress(file, file.progress.percentage, false);
@@ -237,7 +242,7 @@ export class UploadManager {
 
 		if (!initResponse.ok) {
 			const err = await initResponse.json().catch(() => ({}));
-			throw new Error(err.error || 'Failed to initialize upload');
+			throw new Error(err.error || 'Nie udało się zainicjalizować przesyłania');
 		}
 
 		const init = await initResponse.json();
@@ -271,12 +276,12 @@ export class UploadManager {
 
 			xhr.onerror = () => {
 				file.controller.signal.removeEventListener('abort', onAbort);
-				reject(new Error('Network error during upload'));
+				reject(new Error('Błąd sieci podczas przesyłania'));
 			};
 
 			xhr.onabort = () => {
 				file.controller.signal.removeEventListener('abort', onAbort);
-				reject(new DOMException('Upload cancelled', 'AbortError'));
+				reject(new DOMException('Przesyłanie anulowane', 'AbortError'));
 			};
 
 			xhr.open('PUT', init.presigned_url);
@@ -298,7 +303,7 @@ export class UploadManager {
 
 		if (!completeResponse.ok) {
 			const err = await completeResponse.json().catch(() => ({}));
-			throw new Error(err.error || 'Failed to complete upload');
+			throw new Error(err.error || 'Nie udało się zakończyć przesyłania');
 		}
 
 		this.updateProgress(file, 100, true);
@@ -336,7 +341,7 @@ export class UploadManager {
 
 		if (!createRes.ok) {
 			const err = await createRes.json().catch(() => ({}));
-			throw new Error(err.error || 'Failed to create multipart upload');
+			throw new Error(err.error || 'Nie udało się utworzyć uploadu multipart');
 		}
 
 		const created = (await createRes.json()) as {
@@ -390,7 +395,7 @@ export class UploadManager {
 					});
 					if (!res.ok) {
 						const err = await res.json().catch(() => ({}));
-						throw new Error(err.error || 'Failed to sign part');
+						throw new Error(err.error || 'Nie udało się podpisać części uploadu');
 					}
 					const data = (await res.json()) as { url: string };
 					return { method: 'PUT', url: data.url };
@@ -420,7 +425,7 @@ export class UploadManager {
 					});
 					if (!res.ok) {
 						const err = await res.json().catch(() => ({}));
-						throw new Error(err.error || 'Failed to complete multipart upload');
+						throw new Error(err.error || 'Nie udało się zakończyć uploadu multipart');
 					}
 					return {};
 				},
@@ -507,7 +512,7 @@ export class UploadManager {
 
 		if (!initResponse.ok) {
 			const err = await initResponse.json().catch(() => ({}));
-			throw new Error(err.error || 'Failed to initialize Appwrite upload');
+			throw new Error(err.error || 'Nie udało się zainicjalizować uploadu Appwrite');
 		}
 
 		const init = (await initResponse.json()) as {
@@ -569,12 +574,12 @@ export class UploadManager {
 
 			xhr.onerror = () => {
 				file.controller.signal.removeEventListener('abort', onAbort);
-				reject(new Error('Network error during Appwrite upload'));
+				reject(new Error('Błąd sieci podczas uploadu Appwrite'));
 			};
 
 			xhr.onabort = () => {
 				file.controller.signal.removeEventListener('abort', onAbort);
-				reject(new DOMException('Upload cancelled', 'AbortError'));
+				reject(new DOMException('Przesyłanie anulowane', 'AbortError'));
 			};
 
 			xhr.open('POST', uploadUrl);
@@ -602,7 +607,7 @@ export class UploadManager {
 
 		if (!completeResponse.ok) {
 			const err = await completeResponse.json().catch(() => ({}));
-			throw new Error(err.error || 'Failed to complete Appwrite upload');
+			throw new Error(err.error || 'Nie udało się zakończyć uploadu Appwrite');
 		}
 
 		this.updateProgress(file, 100, true);
@@ -632,10 +637,13 @@ export class UploadManager {
 			setTimeout(() => this.removeFile(file.id), 3000);
 		} catch (error) {
 			if (error instanceof DOMException && error.name === 'AbortError') {
-				await this.markFailed(file, new Error('Upload cancelled'));
+				await this.markFailed(file, new Error('Przesyłanie anulowane'));
 				return;
 			}
-			await this.markFailed(file, error instanceof Error ? error : new Error('Upload failed'));
+			await this.markFailed(
+				file,
+				error instanceof Error ? error : new Error('Przesyłanie nie powiodło się')
+			);
 		}
 	}
 
@@ -645,9 +653,10 @@ export class UploadManager {
 		try {
 			isAllowedFile(source, this.options);
 
-			const dest = destination === 'auto' || destination === undefined
-				? resolveAutoDestination(source.size, this.getRecommended())
-				: destination;
+			const dest =
+				destination === 'auto' || destination === undefined
+					? resolveAutoDestination(source.size, this.getRecommended())
+					: destination;
 
 			const resolvedDestination = dest ?? this.getDefaultDestination(source.size);
 			const file: UploadFileState = {
@@ -665,7 +674,9 @@ export class UploadManager {
 			this.isUploading = true;
 			this.uploadFile(file);
 		} catch (error) {
-			this.options.onError?.(error instanceof Error ? error : new Error('Upload failed'));
+			this.options.onError?.(
+				error instanceof Error ? error : new Error('Przesyłanie nie powiodło się')
+			);
 		}
 	}
 

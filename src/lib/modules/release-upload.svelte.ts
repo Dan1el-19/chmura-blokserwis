@@ -7,6 +7,7 @@ export type ReleaseUploadResult = {
 export type ReleaseUploadOptions = {
 	filename: string;
 	overwrite: boolean;
+	channel?: 'stable' | 'beta';
 	tags?: string[];
 	notes?: string | null;
 	force_update?: boolean;
@@ -41,6 +42,7 @@ export class ReleaseUploader {
 					filename: this.options.filename,
 					type: file.type || 'application/vnd.android.package-archive',
 					overwrite: this.options.overwrite,
+					channel: this.options.channel ?? 'stable',
 					tags: this.options.tags,
 					notes: this.options.notes,
 					force_update: this.options.force_update
@@ -49,7 +51,7 @@ export class ReleaseUploader {
 
 			if (!signRes.ok) {
 				const err = await signRes.json();
-				throw new Error(err.message || 'Failed to get upload URL');
+				throw new Error(err.message || 'Nie udało się pobrać URL-a uploadu');
 			}
 
 			const { url, headers, key, release_id } = await signRes.json();
@@ -76,12 +78,12 @@ export class ReleaseUploader {
 					if (this.xhr!.status >= 200 && this.xhr!.status < 300) {
 						resolve();
 					} else {
-						reject(new Error(`Upload failed: ${this.xhr!.status}`));
+						reject(new Error(`Upload nie powiódł się: ${this.xhr!.status}`));
 					}
 				};
 
-				this.xhr.onerror = () => reject(new Error('Network error during upload'));
-				this.xhr.onabort = () => reject(new Error('Upload cancelled'));
+				this.xhr.onerror = () => reject(new Error('Błąd sieci podczas uploadu'));
+				this.xhr.onabort = () => reject(new Error('Upload anulowany'));
 
 				this.xhr.send(file);
 			});
@@ -90,7 +92,11 @@ export class ReleaseUploader {
 			await fetch('/api/releases/complete', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ release_id, size: file.size })
+				body: JSON.stringify({
+					release_id,
+					size: file.size,
+					channel: this.options.channel ?? 'stable'
+				})
 			});
 
 			this.progress = 100;
@@ -98,7 +104,7 @@ export class ReleaseUploader {
 			this.options.onComplete?.({ key, name: this.options.filename, size: file.size });
 		} catch (err) {
 			this.isUploading = false;
-			const message = err instanceof Error ? err.message : 'Upload failed';
+			const message = err instanceof Error ? err.message : 'Upload nie powiódł się';
 			this.error = message;
 			this.options.onError?.(err instanceof Error ? err : new Error(message));
 		}
