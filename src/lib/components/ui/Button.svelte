@@ -37,9 +37,9 @@
 	};
 
 	const sizes = {
-		default: 'h-10 px-4 py-2 sm:h-9',
-		sm: 'h-9 px-3 text-xs',
-		icon: 'h-10 w-10 sm:h-9 sm:w-9'
+		default: 'h-11 px-4 py-2 sm:h-10',
+		sm: 'h-9 px-3 text-xs sm:h-8',
+		icon: 'h-11 w-11 sm:h-9 sm:w-9'
 	};
 </script>
 
