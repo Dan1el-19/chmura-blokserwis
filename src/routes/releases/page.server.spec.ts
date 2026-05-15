@@ -39,7 +39,14 @@ describe('/releases load', () => {
 			next_cursor: null
 		});
 
-		const result = (await load({ platform: undefined } as any)) as {
+		const result = (await load({
+			locals: {
+				user: {
+					labels: ['admin']
+				}
+			},
+			platform: undefined
+		} as any)) as {
 			releases: Array<{ $id: string; name: string; r2Key: string; tags: string[] }>;
 		};
 
