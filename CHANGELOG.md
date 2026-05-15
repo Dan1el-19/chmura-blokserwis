@@ -1,3 +1,17 @@
+## [2.4.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.3.0...v2.4.0) (2026-05-15)
+
+### Features
+
+* add admin settings UX test, login error handling, and multipart client ([ab84c09](https://github.com/Dan1el-19/chmura-blokserwis/commit/ab84c09b9dbf331552bc787a7320f270c3b39fbb))
+* BottomSheet component — reusable modal for mobile and desktop ([8b18a98](https://github.com/Dan1el-19/chmura-blokserwis/commit/8b18a98a6497644a0230a2b5c59370c74649761e))
+* FileList — click row to navigate/open details + disable swipe in selection mode ([7874ec1](https://github.com/Dan1el-19/chmura-blokserwis/commit/7874ec181962b179c17b227c115cf82afe7ad0b7))
+* improve swipe gesture — 40% max offset + disabled state ([a90627f](https://github.com/Dan1el-19/chmura-blokserwis/commit/a90627fbdafce478da0ee76fb56cbfabe45e7c99))
+* multipart upload API for releases — support large file uploads ([24c1658](https://github.com/Dan1el-19/chmura-blokserwis/commit/24c1658fa3d6bddfd15e52e769cfc5390e64aa4f))
+
+### Bug Fixes
+
+* guard against undefined file in move/update operations ([621fcab](https://github.com/Dan1el-19/chmura-blokserwis/commit/621fcab821401bc322d3c9efc80ef22c41a26a3d))
+
 ## [2.3.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.2.1...v2.3.0) (2026-05-13)
 
 ### Features
