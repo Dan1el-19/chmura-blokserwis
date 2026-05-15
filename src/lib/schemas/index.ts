@@ -5,9 +5,9 @@ export const filenameSchema = z
 	.string()
 	.min(1, 'Filename cannot be empty')
 	.max(STORAGE.MAX_FILENAME_LENGTH, 'Filename too long')
-	.regex(/^[^\\/\\:*?"<>|]+$/, 'Invalid characters in filename');
+	.regex(/^[^\\/\\:*?"<>|]+$/, 'Nieprawidłowe znaki w nazwie pliku');
 
-export const mimeTypeSchema = z.string().regex(/^[\w\-]+\/[\w\-+.]+$/, 'Invalid MIME type');
+export const mimeTypeSchema = z.string().regex(/^[\w\-]+\/[\w\-+.]+$/, 'Nieprawidłowy typ MIME');
 
 export const uploadRequestSchema = z.object({
 	filename: filenameSchema,
@@ -15,9 +15,9 @@ export const uploadRequestSchema = z.object({
 	metadata: z.record(z.string(), z.string()).optional()
 });
 
-export const fileIdSchema = z.string().min(1, 'File ID is required');
-export const folderIdSchema = z.string().min(1, 'Folder ID is required');
-export const userIdSchema = z.string().min(1, 'User ID is required');
+export const fileIdSchema = z.string().min(1, 'ID pliku jest wymagane');
+export const folderIdSchema = z.string().min(1, 'ID folderu jest wymagane');
+export const userIdSchema = z.string().min(1, 'ID użytkownika jest wymagane');
 
 export const paginationSchema = z.object({
 	limit: z.coerce.number().int().min(1).max(100).default(25),
@@ -25,21 +25,21 @@ export const paginationSchema = z.object({
 });
 
 export const renameSchema = z.object({
-	name: z.string().min(1, 'Name is required').max(255, 'Name too long')
+	name: z.string().min(1, 'Nazwa jest wymagana').max(255, 'Nazwa jest za długa')
 });
 
 export const updateFileSchema = z.object({
-	name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional(),
+	name: z.string().min(1, 'Nazwa jest wymagana').max(255, 'Nazwa jest za długa').optional(),
 	parentFolderId: z.string().nullable().optional()
 });
 
 export const createFolderSchema = z.object({
-	name: z.string().min(1, 'Folder name is required').max(255, 'Folder name too long'),
+	name: z.string().min(1, 'Nazwa folderu jest wymagana').max(255, 'Nazwa folderu jest za długa'),
 	parentFolderId: z.string().nullable().optional()
 });
 
 export const updateFolderSchema = z.object({
-	name: z.string().min(1, 'Name is required').max(255, 'Name too long').optional(),
+	name: z.string().min(1, 'Nazwa jest wymagana').max(255, 'Nazwa jest za długa').optional(),
 	parentFolderId: z.string().nullable().optional()
 });
 
@@ -59,7 +59,7 @@ export const releaseTagSchema = z
 	.string()
 	.min(1)
 	.max(50)
-	.regex(/^[a-zA-Z0-9._-]+$/, 'Invalid tag format');
+	.regex(/^[a-zA-Z0-9._-]+$/, 'Nieprawidłowy format tagu');
 
 export const releaseFilenameSchema = z
 	.string()
