@@ -125,7 +125,7 @@
 	}
 </script>
 
-<div class="hidden overflow-hidden rounded-lg border border-border-line bg-bg-panel lg:block">
+<div class="hidden rounded-lg border border-border-line bg-bg-panel lg:block">
 	<table class="w-full text-left text-sm">
 		<thead
 			class="border-b border-border-line bg-gray-50/50 font-medium text-text-muted dark:bg-zinc-900/50"
@@ -183,7 +183,7 @@
 						{/if}
 					</button>
 				</th>
-				<th class="w-32 px-4 py-3 text-right font-medium">Akcje</th>
+				<th class="w-44 px-4 py-3 text-right font-medium">Akcje</th>
 			</tr>
 		</thead>
 		<tbody class="divide-y divide-border-line">
@@ -197,7 +197,7 @@
 				<tr
 					class="group cursor-pointer transition-colors hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary dark:hover:bg-zinc-800/50
 						{selection.has(folder.$id) ? 'bg-primary/5' : ''}
-						{dragOverFolderId === folder.$id ? 'ring-2 ring-inset ring-primary' : ''}"
+						{dragOverFolderId === folder.$id ? 'ring-2 ring-primary ring-inset' : ''}"
 					tabindex="0"
 					aria-label={`Folder ${folder.name}`}
 					draggable="true"
@@ -251,21 +251,22 @@
 						>{formatDate(folder.$createdAt)}</td
 					>
 					<td class="px-4 py-3 font-mono text-xs text-text-muted">—</td>
-					<td
-						class="px-4 py-3 text-right"
-						onclick={(e) => e.stopPropagation()}
-					>
+					<td class="px-4 py-3" onclick={(e) => e.stopPropagation()}>
 						<div class="flex justify-end gap-1">
 							<button
+								type="button"
 								onclick={() => onRename(folder.$id, folder.name, true)}
-								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700"
+								class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700"
+								aria-label="Zmień nazwę {folder.name}"
 								title="Zmień nazwę"
 							>
 								<Pencil class="h-4 w-4" />
 							</button>
 							<button
+								type="button"
 								onclick={() => onDelete(folder.$id, folder.name, true)}
-								class="rounded-md p-1.5 text-text-muted hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+								class="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+								aria-label="Usuń {folder.name}"
 								title="Usuń"
 							>
 								<Trash class="h-4 w-4" />
@@ -317,35 +318,40 @@
 					</td>
 					<td class="px-4 py-3 font-mono text-xs text-text-muted">{formatDate(file.$createdAt)}</td>
 					<td class="px-4 py-3 font-mono text-xs text-text-muted">{formatFileSize(file.size)}</td>
-					<td
-						class="px-4 py-3 text-right"
-						onclick={(e) => e.stopPropagation()}
-					>
+					<td class="px-4 py-3" onclick={(e) => e.stopPropagation()}>
 						<div class="flex justify-end gap-1">
 							<button
+								type="button"
 								onclick={() => onShare(file.$id, false)}
-								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-blue-500 dark:hover:bg-zinc-700"
+								class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700"
+								aria-label="Udostępnij {file.name}"
 								title="Udostępnij"
 							>
 								<Share class="h-4 w-4" />
 							</button>
 							<button
+								type="button"
 								onclick={() => onDownload(file.$id, file.name, false)}
-								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-primary dark:hover:bg-zinc-700"
+								class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700"
+								aria-label="Pobierz {file.name}"
 								title="Pobierz"
 							>
 								<DownloadSimple class="h-4 w-4" />
 							</button>
 							<button
+								type="button"
 								onclick={() => onRename(file.$id, file.name, false)}
-								class="rounded-md p-1.5 text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700"
+								class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700"
+								aria-label="Zmień nazwę {file.name}"
 								title="Zmień nazwę"
 							>
 								<Pencil class="h-4 w-4" />
 							</button>
 							<button
+								type="button"
 								onclick={() => onDelete(file.$id, file.name, false)}
-								class="rounded-md p-1.5 text-text-muted hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20"
+								class="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+								aria-label="Usuń {file.name}"
 								title="Usuń"
 							>
 								<Trash class="h-4 w-4" />

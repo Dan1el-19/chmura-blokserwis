@@ -14,7 +14,7 @@
 	aria-modal="true"
 	aria-labelledby="create-folder-title"
 >
-	<Card class="w-full max-w-sm border-border-line bg-bg-panel shadow-lg" title="New Folder">
+	<Card class="w-full max-w-sm border-border-line bg-bg-panel shadow-lg" title="Nowy folder">
 		<form
 			method="POST"
 			action="?/createFolder"
@@ -30,11 +30,11 @@
 		>
 			<h2 id="create-folder-title" class="sr-only">Utwórz nowy folder</h2>
 			<input type="hidden" name="parentFolderId" value={parentFolderId || ''} />
-			<Input name="folderName" label="Name" placeholder="Folder name" required autofocus />
+			<Input name="folderName" label="Nazwa" placeholder="Nazwa folderu" required autofocus />
 
 			<div class="flex justify-end gap-2 pt-2">
-				<Button variant="ghost" onclick={onCancel} type="button">Cancel</Button>
-				<Button type="submit" {loading}>Create</Button>
+				<Button variant="ghost" onclick={onCancel} type="button">Anuluj</Button>
+				<Button type="submit" {loading}>Utwórz</Button>
 			</div>
 		</form>
 	</Card>
