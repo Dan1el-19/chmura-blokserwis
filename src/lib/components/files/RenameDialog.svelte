@@ -33,15 +33,15 @@
 			});
 
 			if (res.ok) {
-				toast.success(`Renamed to "${nameToSubmit}"`);
+				toast.success(`Zmieniono nazwę na "${nameToSubmit}"`);
 				onSuccess();
 			} else {
 				const data = await res.json();
 				if (res.status === 409 && data.suggestion) {
-					conflictError = 'File already exists.';
+					conflictError = 'Plik już istnieje.';
 					suggestion = data.suggestion;
 				} else {
-					toast.error(data.error || 'Failed to rename');
+					toast.error(data.error || 'Nie udało się zmienić nazwy');
 				}
 			}
 		} catch (e: any) {
@@ -65,17 +65,17 @@
 	aria-modal="true"
 	aria-labelledby="rename-dialog-title"
 >
-	<Card class="w-full max-w-sm border-border-line bg-bg-panel shadow-lg" title="Rename">
+	<Card class="w-full max-w-sm border-border-line bg-bg-panel shadow-lg" title="Zmień nazwę">
 		<h2 id="rename-dialog-title" class="sr-only">Zmień nazwę</h2>
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<Input
 				name="name"
-				label="Name"
+				label="Nazwa"
 				value={displayName}
 				oninput={(e: Event) => {
 					draftName = (e.currentTarget as HTMLInputElement).value;
 				}}
-				placeholder="New name"
+				placeholder="Nowa nazwa"
 				required
 				autofocus
 			/>
@@ -85,18 +85,18 @@
 					<p class="font-bold">{conflictError}</p>
 					{#if suggestion}
 						<p class="mt-1">
-							Suggestion: <span class="font-mono font-bold">{suggestion}</span>
+							Sugestia: <span class="font-mono font-bold">{suggestion}</span>
 						</p>
 						<button type="button" class="mt-2 text-primary hover:underline" onclick={useSuggestion}>
-							Use suggestion
+							Użyj sugestii
 						</button>
 					{/if}
 				</div>
 			{/if}
 
 			<div class="flex justify-end gap-2 pt-2">
-				<Button variant="ghost" onclick={onCancel} type="button">Cancel</Button>
-				<Button type="submit" {loading}>Save</Button>
+				<Button variant="ghost" onclick={onCancel} type="button">Anuluj</Button>
+				<Button type="submit" {loading}>Zapisz</Button>
 			</div>
 		</form>
 	</Card>

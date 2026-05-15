@@ -55,7 +55,7 @@
 		onError: (err) => {
 			// F6: cancellations are intentional, not errors.
 			if (err.name === 'AbortError' || /cancelled/i.test(err.message)) return;
-			toast.error(`Upload error: ${err.message}`);
+			toast.error(`Błąd przesyłania: ${err.message}`);
 		}
 	});
 
@@ -71,9 +71,9 @@
 			const count = uploadCompletionBuffer.length;
 			if (count > 0) {
 				if (count === 1) {
-					toast.success(`Uploaded: ${uploadCompletionBuffer[0].name}`);
+					toast.success(`Przesłano: ${uploadCompletionBuffer[0].name}`);
 				} else {
-					toast.success(`Uploaded ${count} files`);
+					toast.success(`Przesłano ${count} plików`);
 				}
 			}
 			uploadCompletionBuffer = [];
@@ -156,6 +156,11 @@
 		if (rootHref === '?') return `?${query}`;
 		return `${rootHref}${rootHref.includes('?') ? '&' : '?'}${query}`;
 	}
+
+	function folderHref(folderId: string) {
+		if (rootHref === '?') return `?folder=${folderId}`;
+		return `${rootHref}${rootHref.includes('?') ? '&' : '?'}folder=${folderId}`;
+	}
 </script>
 
 <svelte:window
@@ -183,13 +188,22 @@
 	<!-- Header + toolbar -->
 	<div class="flex flex-col gap-3 border-b border-border-line pb-4">
 		<!-- Breadcrumb -->
-		<nav class="flex items-center gap-1 text-sm" aria-label="Breadcrumb">
-			<a href={rootHref} class="font-semibold text-text-main hover:underline">{titleRoot}</a>
+		<nav
+			class="-mx-1 flex min-w-0 items-center gap-1 overflow-x-auto px-1 text-sm leading-none whitespace-nowrap"
+			aria-label="Ścieżka"
+		>
+			<a
+				href={rootHref}
+				class="inline-flex h-5 shrink-0 items-center font-semibold text-text-main hover:underline"
+				>{titleRoot}</a
+			>
 			{#each data.folderPath ?? [] as crumb (crumb.id)}
-				<CaretRight class="h-3.5 w-3.5 shrink-0 text-text-muted" />
+				<span class="inline-flex h-5 shrink-0 items-center text-text-muted" aria-hidden="true">
+					<CaretRight class="h-3.5 w-3.5" />
+				</span>
 				<a
-					href="{rootHref}?folder={crumb.id}"
-					class="max-w-[120px] truncate text-text-muted hover:text-text-main hover:underline"
+					href={folderHref(crumb.id)}
+					class="inline-flex h-5 max-w-[45vw] shrink-0 items-center truncate text-text-muted hover:text-text-main hover:underline sm:max-w-[160px]"
 				>
 					{crumb.name}
 				</a>
@@ -207,21 +221,27 @@
 					<StorageWidget usage={data.usage ?? 0} limit={data.limit ?? null} role={data.role} />
 				{/if}
 
-				<button
-					type="button"
-					onclick={() => (showCreateFolder = true)}
-					class="flex items-center gap-1.5 rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm font-medium text-text-main transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800"
-				>
-					<FolderPlus class="h-4 w-4" />
-					<span class="hidden sm:inline">Nowy folder</span>
-				</button>
+				<div class="hidden flex-wrap items-center gap-2 lg:flex">
+					<button
+						type="button"
+						onclick={() => (showCreateFolder = true)}
+						class="flex items-center gap-1.5 rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm font-medium text-text-main transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800"
+					>
+						<FolderPlus class="h-4 w-4" />
+						<span>Nowy folder</span>
+					</button>
 
-				<UploadSplitButton onUpload={startUpload} />
+					<UploadSplitButton onUpload={startUpload} />
+				</div>
 			</div>
 		</div>
 	</div>
 
-	<UppyZone {uppyState} />
+	<UppyZone
+		{uppyState}
+		onMobileUpload={startUpload}
+		onMobileNewFolder={() => (showCreateFolder = true)}
+	/>
 
 	<FileBrowser
 		files={sortedFiles}
