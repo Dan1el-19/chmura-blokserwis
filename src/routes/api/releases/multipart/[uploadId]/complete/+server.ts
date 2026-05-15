@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { releaseMultipart } from '$lib/server/release-multipart-client';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 
 interface Part {
@@ -48,7 +49,7 @@ export const POST: RequestHandler = async (event) => {
 
 	try {
 		const client = createAdminUnisourceClient(event);
-		const result = await client.releases.upload.multipart.complete({
+		const result = await releaseMultipart(client).complete({
 			upload_id: uploadId,
 			parts
 		});

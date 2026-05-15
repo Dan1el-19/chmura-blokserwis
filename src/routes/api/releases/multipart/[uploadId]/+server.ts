@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { releaseMultipart } from '$lib/server/release-multipart-client';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 
 /**
@@ -21,7 +22,7 @@ export const GET: RequestHandler = async (event) => {
 
 	try {
 		const client = createAdminUnisourceClient(event);
-		const result = await client.releases.upload.multipart.listParts(uploadId);
+		const result = await releaseMultipart(client).listParts(uploadId);
 		return json(result.parts);
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to list uploaded parts');
@@ -44,7 +45,7 @@ export const DELETE: RequestHandler = async (event) => {
 
 	try {
 		const client = createAdminUnisourceClient(event);
-		await client.releases.upload.multipart.abort(uploadId);
+		await releaseMultipart(client).abort(uploadId);
 		return json({});
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to abort multipart upload');

@@ -4,6 +4,7 @@ import type { RequestHandler } from './$types';
 import { releaseUploadSchema, releaseTagSchema } from '$lib/schemas';
 import { getReleaseByName } from '$lib/server/storage/releases';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { releaseMultipart } from '$lib/server/release-multipart-client';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { logger } from '$lib/server/logger';
 
@@ -42,7 +43,7 @@ export const POST: RequestHandler = async (event) => {
 		}
 
 		const client = createAdminUnisourceClient(event);
-		const init = await client.releases.upload.multipart.create({
+		const init = await releaseMultipart(client).create({
 			name: filename,
 			filename,
 			mime_type: type,
