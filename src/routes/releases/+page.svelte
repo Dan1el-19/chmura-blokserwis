@@ -110,6 +110,7 @@
 		uploader = new ReleaseUploader({
 			filename: uploadData.name,
 			overwrite: uploadData.overwrite,
+			channel: uploadData.channel,
 			tags: uploadData.tags,
 			notes: uploadData.notes || null,
 			force_update: uploadData.forceUpdate,
@@ -192,11 +193,11 @@
 
 			if (!res.ok) {
 				const body = await res.json().catch(() => ({}));
-				toast.error(body.error || 'Nie udało się usunąć release');
+				toast.error(body.error || 'Nie udało się usunąć wydania');
 				return;
 			}
 
-			toast.success('Release usunięty');
+			toast.success('Wydanie usunięte');
 			deletingRelease = null;
 			await invalidateAll();
 			await fetchExternalConfig();
@@ -213,7 +214,7 @@
 <div class="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
 	<header>
 		<h1 class="text-2xl font-bold tracking-tight text-text-main">Releases</h1>
-		<p class="mt-1 text-sm text-text-muted">Manage APK releases for the mobile application</p>
+		<p class="mt-1 text-sm text-text-muted">Zarządzaj wydaniami APK aplikacji mobilnej</p>
 	</header>
 
 	<!-- External config box -->
@@ -243,7 +244,7 @@
 						{#if cfg.force_update}
 							<span
 								class="mt-1.5 inline-flex rounded-sm bg-rose-500/10 px-1.5 py-0.5 text-xs font-semibold text-rose-500"
-								>Force Update ON</span
+								>Wymuszona aktualizacja włączona</span
 							>
 						{/if}
 					{:else if !configLoading}
@@ -259,7 +260,7 @@
 	{#if isUploading}
 		<div class="rounded-lg border border-border-line bg-bg-panel p-6">
 			<div class="space-y-3">
-				<p class="text-sm font-medium text-text-main">Uploading...</p>
+				<p class="text-sm font-medium text-text-main">Przesyłanie...</p>
 				<div class="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-zinc-700">
 					<div
 						class="h-full bg-primary transition-all duration-300"
@@ -268,7 +269,7 @@
 				</div>
 				<div class="flex items-center justify-between text-xs text-text-muted">
 					<span>{uploadProgress.toFixed(0)}%</span>
-					<Button variant="ghost" size="sm" onclick={handleUploadCancel}>Cancel</Button>
+					<Button variant="ghost" size="sm" onclick={handleUploadCancel}>Anuluj</Button>
 				</div>
 			</div>
 		</div>
@@ -317,18 +318,18 @@
 					<Warning class="h-5 w-5 text-red-600" weight="fill" />
 				</div>
 				<div class="flex-1">
-					<h3 class="font-semibold text-text-main">Delete Release</h3>
+					<h3 class="font-semibold text-text-main">Usuń wydanie</h3>
 					<p class="mt-1 text-sm text-text-muted">
-						Are you sure you want to delete <strong>{deletingRelease.name}</strong>? This action
-						cannot be undone.
+						Czy na pewno chcesz usunąć <strong>{deletingRelease.name}</strong>? Tej akcji nie można
+						cofnąć.
 					</p>
 				</div>
 			</div>
 			<div class="mt-6 flex justify-end gap-2">
-				<Button variant="ghost" onclick={() => (deletingRelease = null)}>Cancel</Button>
+				<Button variant="ghost" onclick={() => (deletingRelease = null)}>Anuluj</Button>
 				<Button variant="destructive" loading={deleteLoading} onclick={confirmDelete}>
 					<Trash class="mr-2 h-4 w-4" />
-					Delete
+					Usuń
 				</Button>
 			</div>
 		</div>

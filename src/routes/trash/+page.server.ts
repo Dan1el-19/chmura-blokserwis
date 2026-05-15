@@ -38,7 +38,7 @@ export const load: PageServerLoad = async (event) => {
 			folders: [],
 			fileNextCursor: null,
 			folderNextCursor: null,
-			error: 'Failed to load trash items'
+			error: 'Nie udało się załadować elementów kosza'
 		};
 	}
 };

@@ -41,17 +41,19 @@ export const load: PageServerLoad = async (event) => {
 			currentFolderId: null,
 			role,
 			storageKind: 'main' as const,
-			error: 'Failed to load storage items'
+			error: 'Nie udało się załadować elementów magazynu'
 		};
 	}
 };
 
 export const actions: Actions = {
 	createFolder: async () => {
-		return fail(410, { error: 'Main storage folders are postponed in UniSource migration' });
+		return fail(410, { error: 'Foldery w magazynie głównym są odłożone do migracji UniSource' });
 	},
 
 	createFile: async () => {
-		return fail(410, { error: 'Upload metadata is handled by UniSource upload.complete()' });
+		return fail(410, {
+			error: 'Metadane uploadu są obsługiwane przez UniSource upload.complete()'
+		});
 	}
 };

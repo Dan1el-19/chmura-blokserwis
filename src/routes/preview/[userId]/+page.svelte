@@ -17,18 +17,18 @@
 	let { data } = $props();
 
 	async function deleteFile(fileId: string, fileName: string) {
-		if (!confirm(`Delete "${fileName}"?`)) return;
+		if (!confirm(`Usunąć "${fileName}"?`)) return;
 
 		try {
 			const res = await fetch(`/api/files/${fileId}?targetUserId=${data.targetUser.$id}`, {
 				method: 'DELETE'
 			});
 			if (res.ok) {
-				toast.success(`Deleted: ${fileName}`);
+				toast.success(`Usunięto: ${fileName}`);
 				invalidateAll();
 			} else {
 				const result = await res.json();
-				toast.error(result.error || 'Delete failed');
+				toast.error(result.error || 'Nie udało się usunąć');
 			}
 		} catch (e: any) {
 			toast.error(e.message);
@@ -42,7 +42,7 @@
 			);
 			const result = await res.json();
 			if (result.downloadUrl) {
-				toast.info(`Downloading: ${fileName}`);
+				toast.info(`Pobieranie: ${fileName}`);
 				window.location.href = `/api/proxy-download?url=${encodeURIComponent(result.downloadUrl)}&name=${encodeURIComponent(fileName)}`;
 			}
 		} catch (e: any) {
@@ -51,18 +51,18 @@
 	}
 
 	async function deleteFolder(folderId: string, folderName: string) {
-		if (!confirm(`Delete folder "${folderName}" and all contents?`)) return;
+		if (!confirm(`Usunąć folder "${folderName}" wraz z całą zawartością?`)) return;
 
 		try {
 			const res = await fetch(`/api/folders/${folderId}?targetUserId=${data.targetUser.$id}`, {
 				method: 'DELETE'
 			});
 			if (res.ok) {
-				toast.success(`Deleted: ${folderName}`);
+				toast.success(`Usunięto: ${folderName}`);
 				invalidateAll();
 			} else {
 				const result = await res.json();
-				toast.error(result.error || 'Delete failed');
+				toast.error(result.error || 'Nie udało się usunąć');
 			}
 		} catch (e: any) {
 			toast.error(e.message);
@@ -70,7 +70,7 @@
 	}
 
 	function downloadFolder(folderId: string, folderName: string) {
-		toast.info(`Archiving: ${folderName}.zip`);
+		toast.info(`Archiwizowanie: ${folderName}.zip`);
 		window.location.href = `/api/folders/${folderId}/download?targetUserId=${data.targetUser.$id}`;
 	}
 </script>
@@ -87,7 +87,7 @@
 			<h1 class="text-xl font-bold tracking-tight text-text-main lg:text-2xl">
 				{data.targetUser.email}
 			</h1>
-			<p class="text-sm text-text-muted">Storage Preview Mode</p>
+			<p class="text-sm text-text-muted">Tryb podglądu magazynu</p>
 		</div>
 	</div>
 
@@ -103,7 +103,7 @@
 					class="flex items-center gap-1 hover:text-primary hover:underline"
 				>
 					<House class="h-4 w-4" />
-					<span class="sr-only">Root</span>
+					<span class="sr-only">Katalog główny</span>
 				</a>
 			{:else}
 				<a
@@ -123,7 +123,7 @@
 				<div class="mb-4 rounded-full bg-bg-app p-4">
 					<Cloud class="h-8 w-8 opacity-20" />
 				</div>
-				<p>This folder is empty</p>
+				<p>Ten folder jest pusty</p>
 			</div>
 		{:else}
 			<!-- Table Layout -->
@@ -132,10 +132,10 @@
 					class="hidden border-b border-border-line bg-bg-app px-4 py-3 text-xs font-medium text-text-muted uppercase lg:grid lg:grid-cols-[auto_1fr_auto_auto_auto] lg:gap-4"
 				>
 					<div class="w-6"></div>
-					<div>Name</div>
-					<div class="w-32">Date</div>
-					<div class="w-24">Size</div>
-					<div class="w-24 text-right">Actions</div>
+					<div>Nazwa</div>
+					<div class="w-32">Data</div>
+					<div class="w-24">Rozmiar</div>
+					<div class="w-24 text-right">Akcje</div>
 				</div>
 
 				<div class="divide-y divide-border-line">
@@ -168,7 +168,7 @@
 									size="icon"
 									class="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700"
 									onclick={() => downloadFolder(folder.$id, folder.name)}
-									title="Download ZIP"
+									title="Pobierz ZIP"
 								>
 									<DownloadSimple class="h-4 w-4" />
 								</Button>
@@ -177,7 +177,7 @@
 									size="icon"
 									class="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
 									onclick={() => deleteFolder(folder.$id, folder.name)}
-									title="Delete"
+									title="Usuń"
 								>
 									<Trash class="h-4 w-4" />
 								</Button>
@@ -211,7 +211,7 @@
 									size="icon"
 									class="h-8 w-8 text-green-600 hover:bg-green-50 hover:text-green-700"
 									onclick={() => downloadFile(file.$id, file.name)}
-									title="Download"
+									title="Pobierz"
 								>
 									<DownloadSimple class="h-4 w-4" />
 								</Button>
@@ -220,7 +220,7 @@
 									size="icon"
 									class="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
 									onclick={() => deleteFile(file.$id, file.name)}
-									title="Delete"
+									title="Usuń"
 								>
 									<Trash class="h-4 w-4" />
 								</Button>
