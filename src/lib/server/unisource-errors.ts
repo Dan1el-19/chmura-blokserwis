@@ -10,7 +10,7 @@ export function unisourceErrorResponse(error: unknown, fallback = 'UniSource req
 	}
 
 	if (error instanceof UnisourceNetworkError) {
-		return json({ error: 'UniSource network request failed' }, { status: 502 });
+		return json({ error: 'Żądanie sieciowe do UniSource nie powiodło się' }, { status: 502 });
 	}
 
 	return json({ error: error instanceof Error ? error.message : fallback }, { status: 500 });
