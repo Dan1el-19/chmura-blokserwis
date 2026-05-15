@@ -11,8 +11,8 @@
 {#if uppyState.files.length > 0}
 	<div class="space-y-2" in:fly={{ y: 20, duration: 300, easing: quintOut }}>
 		<div class="flex items-center justify-between">
-			<h3 class="text-xs font-medium tracking-wider text-text-muted uppercase">Uploads</h3>
-			<span class="font-mono text-xs text-text-muted">{uppyState.files.length} Item(s)</span>
+			<h3 class="text-xs font-medium tracking-wider text-text-muted uppercase">Przesyłanie</h3>
+			<span class="font-mono text-xs text-text-muted">{uppyState.files.length} element(ów)</span>
 		</div>
 		{#each uppyState.files as file (file.id)}
 			<div
@@ -40,9 +40,9 @@
 					<div class="mt-1 flex justify-between">
 						<span class="text-[10px] text-text-muted uppercase">
 							{#if file.error}
-								<span class="text-red-500">Error</span>
+								<span class="text-red-500">Błąd</span>
 							{:else if file.progress?.uploadComplete}
-								<span class="text-green-600">Complete</span>
+								<span class="text-green-600">Gotowe</span>
 							{:else}
 								{Math.round(file.progress?.percentage ?? 0)}%
 							{/if}
