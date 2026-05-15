@@ -36,11 +36,11 @@
 				body: JSON.stringify({ role: selectedRole })
 			});
 			if (res.ok) {
-				toast.success('Role updated successfully');
+				toast.success('Rola została zaktualizowana');
 				invalidateAll();
 			} else {
 				const err = await res.json();
-				toast.error(err.error || 'Failed to save role');
+				toast.error(err.error || 'Nie udało się zapisać roli');
 			}
 		} catch (e: any) {
 			toast.error(e.message);
@@ -58,11 +58,11 @@
 				body: JSON.stringify({ limit: limitBytes })
 			});
 			if (res.ok) {
-				toast.success('Storage limit updated');
+				toast.success('Limit magazynu został zaktualizowany');
 				invalidateAll();
 			} else {
 				const err = await res.json();
-				toast.error(err.error || 'Failed to save limit');
+				toast.error(err.error || 'Nie udało się zapisać limitu');
 			}
 		} catch (e: any) {
 			toast.error(e.message);
@@ -79,10 +79,10 @@
 				body: JSON.stringify({ password })
 			});
 			if (res.ok) {
-				toast.success('Password updated');
+				toast.success('Hasło zostało zaktualizowane');
 			} else {
 				const err = await res.json();
-				toast.error(err.error || 'Failed to save password');
+				toast.error(err.error || 'Nie udało się zapisać hasła');
 			}
 		} catch (e: any) {
 			toast.error(e.message);
@@ -104,7 +104,7 @@
 				{data.targetUser.email}
 			</h1>
 			<p class="text-sm text-text-muted">
-				User ID: <span class="font-mono text-xs">{data.targetUser.$id}</span> • Joined: {new Date(
+				ID użytkownika: <span class="font-mono text-xs">{data.targetUser.$id}</span> • Dołączył: {new Date(
 					data.targetUser.$createdAt
 				).toLocaleDateString('pl-PL')}
 			</p>
@@ -133,16 +133,21 @@
 		<UserPasswordCard {saving} onSave={savePassword} />
 
 		<!-- User Files -->
-		<Card title="User Files" description="View and manage files owned by this user.">
+		<Card
+			title="Pliki użytkownika"
+			description="Przeglądaj pliki należące do tego użytkownika i zarządzaj nimi."
+		>
 			<div class="flex flex-col items-center justify-center py-6 text-center">
 				<div class="mb-3 rounded-full bg-emerald-500/10 p-3 text-emerald-600">
 					<FolderOpen class="h-6 w-6" />
 				</div>
-				<p class="mb-4 text-sm text-text-muted">Browse user's personal file storage directly.</p>
+				<p class="mb-4 text-sm text-text-muted">
+					Przejdź bezpośrednio do osobistego magazynu plików użytkownika.
+				</p>
 				<a href="/preview/{data.targetUser.$id}" class="w-full">
 					<Button class="w-full" variant="secondary">
 						<FolderOpen class="mr-2 h-4 w-4" />
-						Open File Browser
+						Otwórz przeglądarkę plików
 					</Button>
 				</a>
 			</div>

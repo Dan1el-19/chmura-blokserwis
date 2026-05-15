@@ -15,7 +15,7 @@
 
 	const roleConfig = {
 		basic: {
-			label: 'Basic',
+			label: 'Podstawowy',
 			icon: UserIcon,
 			class: 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300'
 		},
@@ -25,7 +25,7 @@
 			class: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
 		},
 		admin: {
-			label: 'Admin',
+			label: 'Administrator',
 			icon: Crown,
 			class: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
 		}
@@ -53,11 +53,11 @@
 				class="border-b border-border-line bg-gray-50/50 font-medium text-text-muted dark:bg-zinc-900/50"
 			>
 				<tr>
-					<th class="px-6 py-3 font-medium">User</th>
-					<th class="px-6 py-3 font-medium">Joined</th>
-					<th class="px-6 py-3 font-medium">Role</th>
-					<th class="px-6 py-3 font-medium">Storage</th>
-					<th class="px-6 py-3 text-right font-medium">Actions</th>
+					<th class="px-6 py-3 font-medium">Użytkownik</th>
+					<th class="px-6 py-3 font-medium">Dołączył</th>
+					<th class="px-6 py-3 font-medium">Rola</th>
+					<th class="px-6 py-3 font-medium">Magazyn</th>
+					<th class="px-6 py-3 text-right font-medium">Akcje</th>
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-border-line">
@@ -92,7 +92,7 @@
 								href="/admin/users/{user.$id}"
 								class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
 							>
-								Details
+								Szczegóły
 								<ArrowSquareOut class="h-3.5 w-3.5" />
 							</a>
 						</td>
@@ -134,7 +134,7 @@
 				<div class="mt-3 flex justify-end">
 					<a href="/admin/users/{user.$id}">
 						<Button size="sm" variant="ghost" class="h-7 gap-1 text-xs">
-							Details <ArrowSquareOut class="h-3 w-3" />
+							Szczegóły <ArrowSquareOut class="h-3 w-3" />
 						</Button>
 					</a>
 				</div>

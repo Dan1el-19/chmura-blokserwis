@@ -6,9 +6,9 @@
 	let { children } = $props();
 
 	const tabs = [
-		{ href: '/admin', label: 'Dashboard', icon: SquaresFour, exact: true },
-		{ href: '/admin/users', label: 'Users', icon: Users, exact: false },
-		{ href: '/admin/settings', label: 'Settings', icon: GearSix, exact: false }
+		{ href: '/admin', label: 'Pulpit', icon: SquaresFour, exact: true },
+		{ href: '/admin/users', label: 'Użytkownicy', icon: Users, exact: false },
+		{ href: '/admin/settings', label: 'Ustawienia', icon: GearSix, exact: false }
 	];
 
 	let currentPath = $derived(page.url.pathname);
@@ -21,7 +21,7 @@
 
 <div class="space-y-6">
 	<header class="border-b border-border-line pb-4">
-		<h1 class="text-2xl font-bold tracking-tight text-text-main">Admin Panel</h1>
+		<h1 class="text-2xl font-bold tracking-tight text-text-main">Admin</h1>
 
 		<nav class="mt-4 flex gap-1">
 			{#each tabs as tab}
