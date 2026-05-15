@@ -25,6 +25,9 @@ export const GET: RequestHandler = async (event) => {
 		}
 
 		const result = await client.myFiles.get(fileId, undefined, { asUser: targetUserId });
+		if (!result?.file) {
+			return json({ error: 'Get failed: no file returned' }, { status: 500 });
+		}
 		return json(mapFileFromUnisource(result.file));
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to get file');
@@ -72,6 +75,9 @@ export const PATCH: RequestHandler = async (event) => {
 			const result = await client.myFiles.update(fileId, { filename: name }, undefined, {
 				asUser: targetUserId
 			});
+			if (!result?.file) {
+				return json({ error: 'Update failed: no file returned' }, { status: 500 });
+			}
 			return json(mapFileFromUnisource(result.file));
 		}
 
@@ -79,6 +85,9 @@ export const PATCH: RequestHandler = async (event) => {
 			const result = await client.myFiles.move(fileId, { folder_id: parentFolderId }, undefined, {
 				asUser: targetUserId
 			});
+			if (!result?.file) {
+				return json({ error: 'Move failed: no file returned' }, { status: 500 });
+			}
 			return json(mapFileFromUnisource(result.file));
 		}
 
