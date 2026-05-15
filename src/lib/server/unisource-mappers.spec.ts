@@ -138,7 +138,7 @@ describe('UniSource mappers', () => {
 			fileSize: 100,
 			mimeType: 'application/pdf',
 			downloadUrl: 'https://example.com/download',
-			expiresAt: '2023-11-15T01:00:00.000Z',
+			expiresAt: '2023-11-14T22:15:00.000Z',
 			requiresPassword: false,
 			limitReached: false,
 			remainingDownloads: null
