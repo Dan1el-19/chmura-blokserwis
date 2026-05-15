@@ -59,23 +59,23 @@
 	aria-modal="true"
 	aria-labelledby="release-upload-title"
 >
-	<Card class="w-full max-w-md border-border-line bg-bg-panel shadow-lg" title="Upload Release">
-		<h2 id="release-upload-title" class="sr-only">Upload Release</h2>
+	<Card class="w-full max-w-md border-border-line bg-bg-panel shadow-lg" title="Prześlij wydanie">
+		<h2 id="release-upload-title" class="sr-only">Prześlij wydanie</h2>
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<div
 				class="rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-zinc-700/50 dark:bg-zinc-800/50"
 			>
 				<p class="text-sm text-text-muted">
-					Selected file: <span class="font-medium text-text-main">{name}</span>
+					Wybrany plik: <span class="font-medium text-text-main">{name}</span>
 				</p>
 				<p class="mt-1 text-xs text-text-muted">
 					<span title={file.name}
-						>Original file: {file.name.length > 25
+						>Oryginalny plik: {file.name.length > 25
 							? file.name.substring(0, 25) + '...'
 							: file.name}</span
 					>
 					<span class="mx-1">•</span>
-					Size: {formatFileSize(file.size)}
+					Rozmiar: {formatFileSize(file.size)}
 				</p>
 			</div>
 
@@ -86,10 +86,10 @@
 					<Warning class="h-5 w-5 shrink-0 text-yellow-500" weight="fill" />
 					<div class="space-y-2 text-sm">
 						<p class="font-medium text-yellow-600 dark:text-yellow-400">
-							A release with this name already exists
+							Wydanie o tej nazwie już istnieje
 						</p>
 						<p class="text-text-muted">
-							Existing version uploaded on {new Date(
+							Istniejąca wersja przesłana: {new Date(
 								existingRelease.$createdAt
 							).toLocaleDateString()}
 							({formatFileSize(existingRelease.size)})
@@ -100,20 +100,20 @@
 								bind:checked={overwrite}
 								class="h-4 w-4 rounded border-border-line text-primary focus:ring-primary"
 							/>
-							<span class="text-text-main">Overwrite existing release</span>
+							<span class="text-text-main">Nadpisz istniejące wydanie</span>
 						</label>
 					</div>
 				</div>
 			{/if}
 
 			<div class="space-y-1">
-				<Input bind:value={name} label="Filename" placeholder="blokserwis-1.4.0.apk" required />
+				<Input bind:value={name} label="Nazwa pliku" placeholder="blokserwis-1.4.0.apk" required />
 				<div class="flex flex-wrap items-center gap-2 pt-1 pb-2">
 					{#if extractedVersion}
 						<span
 							class="inline-flex items-center rounded-md border border-green-500/20 bg-green-500/10 px-2 py-0.5 text-[0.7rem] font-semibold text-green-600 dark:text-green-400"
 						>
-							Version: v{extractedVersion}
+							Wersja: v{extractedVersion}
 						</span>
 					{:else}
 						<span
@@ -170,14 +170,14 @@
 				{/if}
 			</div>
 
-			<TagsInput bind:value={tags} label="Tags" placeholder="Add version tags..." />
+			<TagsInput bind:value={tags} label="Tagi" placeholder="Dodaj tagi wersji..." />
 
 			<div class="space-y-1.5">
-				<label for="notes" class="block text-sm font-medium text-text-muted">Notes</label>
+				<label for="notes" class="block text-sm font-medium text-text-muted">Notatki</label>
 				<textarea
 					id="notes"
 					bind:value={notes}
-					placeholder="Release notes, changelog..."
+					placeholder="Notatki wydania, lista zmian..."
 					rows="3"
 					class="w-full rounded-md border border-border-line bg-transparent px-3 py-2 text-sm placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
 				></textarea>
@@ -196,7 +196,7 @@
 				/>
 				<div>
 					<p class="text-sm font-medium {forceUpdate ? 'text-rose-500' : 'text-text-main'}">
-						Force Update
+						Wymuszona aktualizacja
 					</p>
 					<p class="mt-0.5 text-xs text-text-muted">
 						Aplikacja mobilna wymusi aktualizację — użytkownicy nie będą mogli pominąć.
@@ -205,9 +205,9 @@
 			</label>
 
 			<div class="flex justify-end gap-2 pt-2">
-				<Button variant="ghost" onclick={onCancel} type="button">Cancel</Button>
+				<Button variant="ghost" onclick={onCancel} type="button">Anuluj</Button>
 				<Button type="submit" disabled={(!!existingRelease && !overwrite) || !isValidFormat}
-					>Upload</Button
+					>Prześlij</Button
 				>
 			</div>
 		</form>
