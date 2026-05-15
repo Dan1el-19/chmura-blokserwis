@@ -2,7 +2,7 @@ import { ENV } from '$lib/server/env';
 import { R2 } from '$lib/clients/r2';
 import { DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import contentDisposition from 'content-disposition';
+import { create as contentDisposition } from 'content-disposition';
 import { getCached, setCache } from '../cache';
 import { CacheKeys } from '../cache/keys';
 import { UPLOAD } from '$lib/constants';
