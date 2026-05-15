@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { CloudArrowUp, Database, FloppyDisk, CheckCircle } from 'phosphor-svelte';
+	import { CloudArrowUp, Database, FloppyDisk, CheckCircle, Shuffle } from 'phosphor-svelte';
 	import { toast } from 'svelte-sonner';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
-	type Destination = 'r2' | 'appwrite';
+	type Destination = 'r2' | 'appwrite' | 'hybrid';
 
 	let { data, form } = $props();
 
@@ -44,7 +44,7 @@
 			}}
 			class="space-y-4"
 		>
-			<div class="grid gap-3 sm:grid-cols-2">
+			<div class="grid gap-3 sm:grid-cols-3">
 				<label
 					class="relative flex cursor-pointer flex-col gap-2 rounded-lg border p-4 transition-all {selected ===
 					'r2'
@@ -102,6 +102,37 @@
 							</div>
 							<p class="mt-0.5 text-xs text-text-muted">
 								Bezpośredni upload przez Appwrite SDK, max 5 GB na plik.
+							</p>
+						</div>
+					</div>
+				</label>
+
+				<label
+					class="relative flex cursor-pointer flex-col gap-2 rounded-lg border p-4 transition-all {selected ===
+					'hybrid'
+						? 'border-primary bg-primary/5'
+						: 'border-border-line bg-bg-panel hover:border-gray-400 dark:hover:border-zinc-600'}"
+				>
+					<input
+						type="radio"
+						name="recommended_upload_destination"
+						value="hybrid"
+						class="sr-only"
+						bind:group={selected}
+					/>
+					<div class="flex items-center gap-3">
+						<div class="rounded-full bg-violet-100/50 p-2 dark:bg-violet-900/20">
+							<Shuffle class="h-5 w-5 text-violet-600 dark:text-violet-400" />
+						</div>
+						<div class="flex-1">
+							<div class="flex items-center gap-2">
+								<span class="font-medium text-text-main">Hybrid</span>
+								{#if selected === 'hybrid'}
+									<CheckCircle class="h-4 w-4 text-primary" weight="fill" />
+								{/if}
+							</div>
+							<p class="mt-0.5 text-xs text-text-muted">
+								Pliki ≤ 5 GiB → Appwrite, większe → R2.
 							</p>
 						</div>
 					</div>

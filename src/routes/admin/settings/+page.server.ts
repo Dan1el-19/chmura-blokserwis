@@ -2,12 +2,12 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 import { createAdminUnisourceClient } from '$lib/server/unisource';
-import { UnisourceError, UnisourceNetworkError, type UploadDestination } from '@unisource/sdk';
+import { UnisourceError, UnisourceNetworkError, type RecommendedUploadDestination } from '@unisource/sdk';
 
-type RecommendedDestination = UploadDestination;
+type RecommendedDestination = RecommendedUploadDestination;
 
 function isRecommendedDestination(value: unknown): value is RecommendedDestination {
-	return value === 'r2' || value === 'appwrite';
+	return value === 'r2' || value === 'appwrite' || value === 'hybrid';
 }
 
 export const load: PageServerLoad = async (event) => {
