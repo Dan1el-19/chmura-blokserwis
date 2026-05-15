@@ -4,4 +4,4 @@
 	let { data } = $props();
 </script>
 
-<StoragePage {data} titleRoot="Shared Storage" rootHref="/main" />
+<StoragePage {data} titleRoot="Main" rootHref="/main" />
