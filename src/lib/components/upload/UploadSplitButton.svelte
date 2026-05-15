@@ -62,7 +62,7 @@
 			class="flex items-center gap-2 bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus:outline-none disabled:cursor-not-allowed"
 		>
 			<CloudArrowUp class="h-4 w-4" weight="bold" />
-			<span>Upload</span>
+			<span>Prześlij</span>
 		</button>
 
 		<button
@@ -86,20 +86,11 @@
 			<button
 				type="button"
 				role="menuitem"
-				onclick={() => handleOptionClick('auto')}
-				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-main transition-colors first:rounded-t-md hover:bg-gray-50 dark:hover:bg-zinc-800"
-			>
-				<ArrowsLeftRight class="h-4 w-4 text-text-muted" />
-				<span>Auto (zalecane przez admina)</span>
-			</button>
-			<button
-				type="button"
-				role="menuitem"
 				onclick={() => handleOptionClick('r2')}
 				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-main transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800"
 			>
 				<CloudArrowUp class="h-4 w-4 text-text-muted" />
-				<span>Wymuś Cloudflare R2</span>
+				<span>Cloudflare R2</span>
 			</button>
 			<button
 				type="button"
@@ -108,7 +99,7 @@
 				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-main transition-colors last:rounded-b-md hover:bg-gray-50 dark:hover:bg-zinc-800"
 			>
 				<Database class="h-4 w-4 text-text-muted" />
-				<span>Wymuś Appwrite Storage</span>
+				<span>Appwrite Storage</span>
 			</button>
 		</div>
 	{/if}

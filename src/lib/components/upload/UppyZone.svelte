@@ -4,7 +4,11 @@
 	import UploadProgressList from '$lib/components/upload/UploadProgressList.svelte';
 	import MobileStartUploadFAB from '$lib/components/upload/MobileStartUploadFAB.svelte';
 
-	let { uppyState } = $props<{ uppyState: UppyState }>();
+	let { uppyState, onMobileUpload, onMobileNewFolder } = $props<{
+		uppyState: UppyState;
+		onMobileUpload?: (destination: 'r2' | 'appwrite' | 'auto') => void;
+		onMobileNewFolder?: () => void;
+	}>();
 
 	function onFileSelect(e: Event) {
 		const input = e.target as HTMLInputElement;
@@ -17,6 +21,15 @@
 	function openFilePicker() {
 		document.getElementById('file-input')?.click();
 	}
+
+	function handleMobileUpload() {
+		if (onMobileUpload) {
+			onMobileUpload('auto');
+			return;
+		}
+
+		openFilePicker();
+	}
 </script>
 
 <input type="file" multiple class="hidden" id="file-input" onchange={onFileSelect} />
@@ -26,4 +39,4 @@
 	<UploadProgressList {uppyState} />
 </div>
 
-<MobileStartUploadFAB {openFilePicker} />
+<MobileStartUploadFAB onUpload={handleMobileUpload} onNewFolder={onMobileNewFolder} />
