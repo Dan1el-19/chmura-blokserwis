@@ -14,7 +14,7 @@
 	const allNavItems = [
 		{
 			href: '/',
-			label: 'Files',
+			label: 'Pliki',
 			icon: Folder,
 			color: 'bg-blue-500',
 			roles: ['basic', 'plus', 'admin']
@@ -28,7 +28,7 @@
 		},
 		{
 			href: '/main',
-			label: 'Main Storage',
+			label: 'Main',
 			icon: Shield,
 			color: 'bg-emerald-500',
 			roles: ['plus', 'admin']
@@ -58,12 +58,12 @@
 		const path = currentPath;
 		const navItem = allNavItems.find((item) => item.href === path);
 		if (navItem) return `${navItem.label} | Chmura Blokserwis`;
-		if (path.startsWith('/login')) return 'Login | Chmura Blokserwis';
+		if (path.startsWith('/login')) return 'Logowanie | Chmura Blokserwis';
 		if (path.startsWith('/admin/users')) {
-			if (path.split('/').length > 3) return 'User Details | Chmura Blokserwis';
-			return 'Users | Chmura Blokserwis';
+			if (path.split('/').length > 3) return 'Szczegóły użytkownika | Chmura Blokserwis';
+			return 'Użytkownicy | Chmura Blokserwis';
 		}
-		if (path.startsWith('/preview')) return 'Preview | Chmura Blokserwis';
+		if (path.startsWith('/preview')) return 'Podgląd | Chmura Blokserwis';
 		return 'Chmura Blokserwis';
 	});
 </script>

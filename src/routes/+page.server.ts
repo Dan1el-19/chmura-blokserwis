@@ -65,7 +65,7 @@ export const load: PageServerLoad = async (event) => {
 			currentFolderId: parentFolderId,
 			role: '',
 			storageKind: 'user' as const,
-			error: 'Failed to load storage items'
+			error: 'Nie udało się załadować elementów magazynu'
 		};
 	}
 };
@@ -74,7 +74,7 @@ export const actions: Actions = {
 	createFolder: async (event) => {
 		const { request, locals } = event;
 		if (!locals.user) {
-			return fail(401, { error: 'Unauthorized' });
+			return fail(401, { error: 'Brak autoryzacji' });
 		}
 
 		const data = await request.formData();
@@ -82,7 +82,7 @@ export const actions: Actions = {
 		const parentId = (data.get('parentFolderId') as string) || null;
 
 		if (!name) {
-			return fail(400, { error: 'Folder name is required' });
+			return fail(400, { error: 'Nazwa folderu jest wymagana' });
 		}
 
 		try {
@@ -95,7 +95,7 @@ export const actions: Actions = {
 		} catch (error: unknown) {
 			logger.error('Error creating folder:', error);
 			return fail(500, {
-				error: error instanceof Error ? error.message : 'Failed to create folder'
+				error: error instanceof Error ? error.message : 'Nie udało się utworzyć folderu'
 			});
 		}
 	}

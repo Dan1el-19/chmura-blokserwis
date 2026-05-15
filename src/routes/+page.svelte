@@ -4,4 +4,4 @@
 	let { data } = $props();
 </script>
 
-<StoragePage {data} titleRoot="My Files" rootHref="?" />
+<StoragePage {data} titleRoot="Moje pliki" rootHref="?" />
