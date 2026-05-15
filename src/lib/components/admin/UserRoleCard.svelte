@@ -16,7 +16,10 @@
 	}>();
 </script>
 
-<Card title="User Role" description="Manage user permissions and access levels.">
+<Card
+	title="Rola użytkownika"
+	description="Zarządzaj uprawnieniami i poziomem dostępu użytkownika."
+>
 	<div class="space-y-3">
 		{#each ['basic', 'plus', 'admin'] as role (role)}
 			{@const icons: Record<string, typeof UserIcon> = {
@@ -39,7 +42,9 @@
 							? 'text-purple-500'
 							: 'text-text-muted'}"
 				/>
-				<span class="font-medium text-text-main capitalize">{role}</span>
+				<span class="font-medium text-text-main">
+					{role === 'basic' ? 'Podstawowy' : role === 'plus' ? 'Plus' : 'Administrator'}
+				</span>
 			</label>
 		{/each}
 	</div>
@@ -47,7 +52,7 @@
 	{#snippet footer()}
 		<Button onclick={onSave} disabled={saving || selectedRole === initialRole} class="w-full">
 			<FloppyDisk class="mr-2 h-4 w-4" />
-			Save Role
+			Zapisz rolę
 		</Button>
 	{/snippet}
 </Card>
