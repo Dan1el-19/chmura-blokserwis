@@ -1,21 +1,15 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { CloudArrowUp, Database, FloppyDisk, CheckCircle, ArrowsLeftRight } from 'phosphor-svelte';
+	import { CloudArrowUp, Database, FloppyDisk, CheckCircle } from 'phosphor-svelte';
 	import { toast } from 'svelte-sonner';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
-	type Destination = 'r2' | 'appwrite' | 'hybrid';
+	type Destination = 'r2' | 'appwrite';
 
 	let { data, form } = $props();
 
-	// Seeded from loader data; kept in sync via $effect so after a successful
-	// save the UI reflects the persisted value without manual reload.
-	let selected = $state<Destination>('r2');
-
-	$effect(() => {
-		selected = data.service.recommended_upload_destination;
-	});
+	let selected: Destination = $derived(data.service.recommended_upload_destination);
 
 	let isSubmitting = $state(false);
 
@@ -24,10 +18,9 @@
 
 <div class="space-y-6">
 	<header class="border-b border-border-line pb-4">
-		<h2 class="text-lg font-semibold text-text-main">Upload Settings</h2>
+		<h2 class="text-lg font-semibold text-text-main">Ustawienia przesyłania</h2>
 		<p class="mt-1 text-sm text-text-muted">
-			Wybierz domyślne miejsce, do którego użytkownicy będą uploadować pliki. W trybie hybrydowym
-			małe pliki trafiają do Appwrite, a duże do R2 (próg 5 GiB).
+			Wybierz domyślne miejsce, do którego użytkownicy będą uploadować pliki.
 		</p>
 	</header>
 
@@ -51,7 +44,7 @@
 			}}
 			class="space-y-4"
 		>
-			<div class="grid gap-3 sm:grid-cols-3">
+			<div class="grid gap-3 sm:grid-cols-2">
 				<label
 					class="relative flex cursor-pointer flex-col gap-2 rounded-lg border p-4 transition-all {selected ===
 					'r2'
@@ -77,7 +70,7 @@
 								{/if}
 							</div>
 							<p class="mt-0.5 text-xs text-text-muted">
-								Presigned URLs, multipart, max 5 TiB. Zero egress fees.
+								Podpisane URL-e, multipart, maks. 5 TiB. Bez opłat za transfer wychodzący.
 							</p>
 						</div>
 					</div>
@@ -102,44 +95,13 @@
 						</div>
 						<div class="flex-1">
 							<div class="flex items-center gap-2">
-								<span class="font-medium text-text-main">Appwrite Storage</span>
+								<span class="font-medium text-text-main">Magazyn Appwrite</span>
 								{#if selected === 'appwrite'}
 									<CheckCircle class="h-4 w-4 text-primary" weight="fill" />
 								{/if}
 							</div>
 							<p class="mt-0.5 text-xs text-text-muted">
 								Bezpośredni upload przez Appwrite SDK, max 5 GB na plik.
-							</p>
-						</div>
-					</div>
-				</label>
-
-				<label
-					class="relative flex cursor-pointer flex-col gap-2 rounded-lg border p-4 transition-all {selected ===
-					'hybrid'
-						? 'border-primary bg-primary/5'
-						: 'border-border-line bg-bg-panel hover:border-gray-400 dark:hover:border-zinc-600'}"
-				>
-					<input
-						type="radio"
-						name="recommended_upload_destination"
-						value="hybrid"
-						class="sr-only"
-						bind:group={selected}
-					/>
-					<div class="flex items-center gap-3">
-						<div class="rounded-full bg-emerald-100/50 p-2 dark:bg-emerald-900/20">
-							<ArrowsLeftRight class="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-						</div>
-						<div class="flex-1">
-							<div class="flex items-center gap-2">
-								<span class="font-medium text-text-main">Hybrid (auto)</span>
-								{#if selected === 'hybrid'}
-									<CheckCircle class="h-4 w-4 text-primary" weight="fill" />
-								{/if}
-							</div>
-							<p class="mt-0.5 text-xs text-text-muted">
-								Automatyczny wybór: ≤ 5 GiB → Appwrite, &gt; 5 GiB → R2.
 							</p>
 						</div>
 					</div>

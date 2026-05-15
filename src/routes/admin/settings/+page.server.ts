@@ -2,9 +2,13 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 import { createAdminUnisourceClient } from '$lib/server/unisource';
-import { UnisourceError, UnisourceNetworkError } from '@unisource/sdk';
+import { UnisourceError, UnisourceNetworkError, type UploadDestination } from '@unisource/sdk';
 
-type RecommendedDestination = 'r2' | 'appwrite' | 'hybrid';
+type RecommendedDestination = UploadDestination;
+
+function isRecommendedDestination(value: unknown): value is RecommendedDestination {
+	return value === 'r2' || value === 'appwrite';
+}
 
 export const load: PageServerLoad = async (event) => {
 	if (!event.locals.user) {
@@ -13,11 +17,11 @@ export const load: PageServerLoad = async (event) => {
 
 	const client = createAdminUnisourceClient(event);
 	const { service } = await client.admin.serviceDetail();
-	const dest: RecommendedDestination =
-		service.recommended_upload_destination === 'appwrite' ||
-		service.recommended_upload_destination === 'hybrid'
-			? service.recommended_upload_destination
-			: 'r2';
+	const dest: RecommendedDestination = isRecommendedDestination(
+		service.recommended_upload_destination
+	)
+		? service.recommended_upload_destination
+		: 'r2';
 
 	return {
 		service: {
@@ -31,14 +35,14 @@ export const load: PageServerLoad = async (event) => {
 export const actions: Actions = {
 	updateSettings: async (event) => {
 		if (!event.locals.user) {
-			return fail(401, { error: 'Unauthorized' });
+			return fail(401, { error: 'Brak autoryzacji' });
 		}
 
 		const formData = await event.request.formData();
 		const destination = formData.get('recommended_upload_destination');
 
-		if (destination !== 'r2' && destination !== 'appwrite' && destination !== 'hybrid') {
-			return fail(400, { error: 'Invalid destination' });
+		if (!isRecommendedDestination(destination)) {
+			return fail(400, { error: 'Nieprawidłowe miejsce docelowe' });
 		}
 
 		try {
@@ -49,10 +53,10 @@ export const actions: Actions = {
 			return { success: true, destination };
 		} catch (error) {
 			if (error instanceof UnisourceError) {
-				return fail(error.status, { error: error.body?.message || 'Failed to save' });
+				return fail(error.status, { error: error.body?.message || 'Nie udało się zapisać' });
 			}
 			if (error instanceof UnisourceNetworkError) {
-				return fail(502, { error: 'UniSource network request failed' });
+				return fail(502, { error: 'Żądanie sieciowe do UniSource nie powiodło się' });
 			}
 			return fail(500, {
 				error: error instanceof Error ? error.message : 'Failed to update service settings'

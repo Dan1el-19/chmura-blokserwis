@@ -17,7 +17,7 @@
 				</div>
 				<div class="flex flex-col">
 					<span class="text-xs font-medium tracking-wider text-text-muted uppercase"
-						>Total Users</span
+						>Użytkownicy</span
 					>
 					<span class="font-mono text-2xl font-bold text-text-main">{data.stats.totalUsers}</span>
 				</div>
@@ -30,7 +30,9 @@
 					<User class="h-5 w-5 text-gray-600 dark:text-gray-400" />
 				</div>
 				<div class="flex flex-col">
-					<span class="text-xs font-medium tracking-wider text-text-muted uppercase">Basic</span>
+					<span class="text-xs font-medium tracking-wider text-text-muted uppercase"
+						>Podstawowy</span
+					>
 					<span class="font-mono text-2xl font-bold text-text-main"
 						>{data.stats.usersByRole.basic}</span
 					>
@@ -58,7 +60,9 @@
 					<Crown class="h-5 w-5 text-amber-600 dark:text-amber-500" />
 				</div>
 				<div class="flex flex-col">
-					<span class="text-xs font-medium tracking-wider text-text-muted uppercase">Admin</span>
+					<span class="text-xs font-medium tracking-wider text-text-muted uppercase"
+						>Administrator</span
+					>
 					<span class="font-mono text-2xl font-bold text-text-main"
 						>{data.stats.usersByRole.admin}</span
 					>
@@ -67,7 +71,7 @@
 		</Card>
 	</div>
 
-	<Card title="System Storage">
+	<Card title="Magazyn systemowy">
 		<div class="flex items-center gap-4">
 			<div class="rounded-full bg-green-100/50 p-3 dark:bg-green-900/20">
 				<Database class="h-6 w-6 text-green-600 dark:text-green-500" />
@@ -76,7 +80,7 @@
 				<p class="font-mono text-3xl font-bold text-text-main">
 					{formatFileSize(data.stats.totalStorage)}
 				</p>
-				<p class="text-sm text-text-muted">Total allocated size across all buckets</p>
+				<p class="text-sm text-text-muted">Łączny rozmiar przydzielony we wszystkich bucketach</p>
 			</div>
 		</div>
 	</Card>
