@@ -4,17 +4,26 @@
 	import Input from '$lib/components/ui/Input.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { GithubLogo } from 'phosphor-svelte';
+	import { onMount } from 'svelte';
+	import { toast } from 'svelte-sonner';
+	import { page } from '$app/state';
+	import { getLoginFailureToastMessage } from './login-error';
 
 	let { form } = $props();
 	let loading = $state(false);
+
+	onMount(() => {
+		const message = getLoginFailureToastMessage(page.url.searchParams);
+		if (message) toast.error(message);
+	});
 </script>
 
 <div class="flex min-h-dvh items-center justify-center bg-bg-app px-4 py-12">
 	<Card class="w-full max-w-md border-border-line/60 shadow-none">
 		<!-- Header -->
 		<div class="mb-8 text-center">
-			<h1 class="text-2xl font-bold tracking-tight text-text-main">Welcome back</h1>
-			<p class="mt-2 text-sm text-text-muted">Sign in to your account</p>
+			<h1 class="text-2xl font-bold tracking-tight text-text-main">Witaj ponownie</h1>
+			<p class="mt-2 text-sm text-text-muted">Zaloguj się na swoje konto</p>
 		</div>
 
 		<div class="space-y-6">
@@ -43,7 +52,7 @@
 					<span class="w-full border-t border-border-line"></span>
 				</div>
 				<div class="relative flex justify-center text-xs uppercase">
-					<span class="bg-bg-panel px-2 text-text-muted">Or continue with</span>
+					<span class="bg-bg-panel px-2 text-text-muted">Albo kontynuuj przez</span>
 				</div>
 			</div>
 
@@ -64,14 +73,14 @@
 					name="email"
 					type="email"
 					label="Email"
-					placeholder="name@example.com"
+					placeholder="email@example.com"
 					required
 					autocomplete="email"
 				/>
 				<Input
 					name="password"
 					type="password"
-					label="Password"
+					label="Hasło"
 					required
 					autocomplete="current-password"
 				/>
@@ -82,7 +91,7 @@
 					</div>
 				{/if}
 
-				<Button type="submit" class="w-full" {loading}>Sign In</Button>
+				<Button type="submit" class="w-full" {loading}>Zaloguj</Button>
 			</form>
 		</div>
 	</Card>

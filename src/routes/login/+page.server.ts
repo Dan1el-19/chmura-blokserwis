@@ -16,7 +16,7 @@ export const actions: Actions = {
 		const password = data.get('password') as string;
 
 		if (!email || !password) {
-			return { error: 'Email and password are required' };
+			return { error: 'Email i hasło są wymagane' };
 		}
 
 		const { account } = createAdminClient(event);
