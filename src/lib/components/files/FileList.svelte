@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { Folder, File as FileIcon, DownloadSimple, Pencil, Trash, Share, DotsThreeVertical } from 'phosphor-svelte';
+	import {
+		Folder,
+		File as FileIcon,
+		DownloadSimple,
+		Pencil,
+		Trash,
+		Share,
+		DotsThreeVertical
+	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 	import { swipeAction } from '$lib/actions/gestures';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
@@ -26,7 +34,7 @@
 		} else if (isFolder) {
 			onNavigate(id);
 		} else {
-			const file = files.find(f => f.$id === id);
+			const file = files.find((f: FileType) => f.$id === id);
 			if (file) openSheet({ kind: 'file', id: file.$id, name: file.name });
 		}
 	}
@@ -136,7 +144,9 @@
 						aria-label="Zaznacz {folder.name}"
 					/>
 				{/if}
-				<Folder class="h-8 w-8 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400" />
+				<Folder
+					class="h-8 w-8 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400"
+				/>
 				<div class="min-w-0 flex-1">
 					<p class="truncate text-sm font-medium text-text-main">{folder.name}</p>
 					<p class="font-mono text-xs text-text-muted">Folder</p>
@@ -225,7 +235,9 @@
 				onShare(target.id, false);
 			}}
 		>
-			<span class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/40">
+			<span
+				class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/40"
+			>
 				<Share class="h-4 w-4" />
 			</span>
 			Udostępnij
@@ -238,7 +250,9 @@
 				onDownload(target.id, target.name, false);
 			}}
 		>
-			<span class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-primary dark:bg-zinc-700">
+			<span
+				class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-primary dark:bg-zinc-700"
+			>
 				<DownloadSimple class="h-4 w-4" />
 			</span>
 			Pobierz
@@ -251,12 +265,14 @@
 				onRename(target.id, target.name, false);
 			}}
 		>
-			<span class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-text-main dark:bg-zinc-700">
+			<span
+				class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-text-main dark:bg-zinc-700"
+			>
 				<Pencil class="h-4 w-4" />
 			</span>
 			Zmień nazwę
 		</button>
-		<div class="my-1 mx-4 border-t border-border-line"></div>
+		<div class="mx-4 my-1 border-t border-border-line"></div>
 		<button
 			type="button"
 			class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
@@ -265,7 +281,9 @@
 				onDelete(target.id, target.name, false);
 			}}
 		>
-			<span class="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40">
+			<span
+				class="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40"
+			>
 				<Trash class="h-4 w-4" />
 			</span>
 			Usuń
@@ -280,12 +298,14 @@
 				onRename(target.id, target.name, true);
 			}}
 		>
-			<span class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-text-main dark:bg-zinc-700">
+			<span
+				class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-text-main dark:bg-zinc-700"
+			>
 				<Pencil class="h-4 w-4" />
 			</span>
 			Zmień nazwę
 		</button>
-		<div class="my-1 mx-4 border-t border-border-line"></div>
+		<div class="mx-4 my-1 border-t border-border-line"></div>
 		<button
 			type="button"
 			class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
@@ -294,7 +314,9 @@
 				onDelete(target.id, target.name, true);
 			}}
 		>
-			<span class="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40">
+			<span
+				class="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40"
+			>
 				<Trash class="h-4 w-4" />
 			</span>
 			Usuń
