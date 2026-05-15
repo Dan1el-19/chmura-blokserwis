@@ -23,7 +23,7 @@
 
 	async function handleSave() {
 		if (newPassword.length < 8) {
-			toast.error('Password must be at least 8 characters');
+			toast.error('Hasło musi mieć co najmniej 8 znaków');
 			return;
 		}
 		await onSave(newPassword);
@@ -31,18 +31,18 @@
 	}
 </script>
 
-<Card title="Reset Password" description="Manually set a new password for this user.">
+<Card title="Reset hasła" description="Ustaw ręcznie nowe hasło dla tego użytkownika.">
 	<div class="flex items-end gap-2">
 		<div class="flex-1">
 			<Input
 				type="text"
-				label="New Password"
+				label="Nowe hasło"
 				bind:value={newPassword}
-				placeholder="Enter or generate..."
+				placeholder="Wpisz lub wygeneruj..."
 				class="font-mono"
 			/>
 		</div>
-		<Button variant="secondary" size="icon" onclick={generatePassword} title="Generate">
+		<Button variant="secondary" size="icon" onclick={generatePassword} title="Wygeneruj">
 			<ArrowsClockwise class="h-4 w-4" />
 		</Button>
 	</div>
@@ -55,7 +55,7 @@
 			variant="secondary"
 		>
 			<Key class="mr-2 h-4 w-4" />
-			Update Password
+			Zaktualizuj hasło
 		</Button>
 	{/snippet}
 </Card>

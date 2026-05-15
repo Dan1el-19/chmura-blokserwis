@@ -22,17 +22,17 @@
 	}>();
 </script>
 
-<Card title="Storage Limit" description="Set a custom storage quota for this user.">
+<Card title="Limit magazynu" description="Ustaw indywidualny limit miejsca dla tego użytkownika.">
 	<div class="space-y-4">
 		<div class="rounded-md bg-bg-app p-3">
-			<p class="text-sm text-text-muted">Current Usage</p>
+			<p class="text-sm text-text-muted">Obecne użycie</p>
 			<div class="flex items-baseline gap-2">
 				<span class="text-lg font-bold text-text-main">
 					{formatFileSize(usage)}
 				</span>
 				<span class="text-text-muted">/</span>
 				<span class="text-sm text-text-muted">
-					{limit === Infinity ? 'Unlimited' : formatFileSize(limit)}
+					{limit === Infinity ? 'Bez limitu' : formatFileSize(limit)}
 				</span>
 			</div>
 		</div>
@@ -40,21 +40,21 @@
 		<div class="flex items-end gap-2">
 			<Input
 				type="number"
-				label="Custom Limit (GB)"
+				label="Limit indywidualny (GB)"
 				bind:value={customLimit}
-				placeholder="Default"
+				placeholder="Domyślny"
 				class="flex-1"
 			/>
 		</div>
 		<p class="text-xs text-text-muted">
-			Current Role Limit: {formatFileSize(roleLimitBytes)}
+			Obecny limit roli: {formatFileSize(roleLimitBytes)}
 		</p>
 	</div>
 
 	{#snippet footer()}
 		<Button onclick={onSave} disabled={saving} class="w-full">
 			<FloppyDisk class="mr-2 h-4 w-4" />
-			Save Limit
+			Zapisz limit
 		</Button>
 	{/snippet}
 </Card>
