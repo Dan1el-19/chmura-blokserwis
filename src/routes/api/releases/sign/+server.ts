@@ -11,7 +11,8 @@ import { assertPresignedUrlMatchesR2Config } from '$lib/server/storage/r2-url';
 const signSchema = releaseUploadSchema.extend({
 	tags: z.array(releaseTagSchema).max(10).optional(),
 	notes: z.string().max(2048).nullable().optional(),
-	force_update: z.boolean().optional()
+	force_update: z.boolean().optional(),
+	channel: z.enum(['stable', 'beta']).optional()
 });
 
 export const POST: RequestHandler = async (event) => {
@@ -26,7 +27,7 @@ export const POST: RequestHandler = async (event) => {
 		return json({ error: 'Validation error', details: validated.error.issues }, { status: 400 });
 	}
 
-	const { filename, type, overwrite, tags, notes, force_update } = validated.data;
+	const { filename, type, overwrite, tags, notes, force_update, channel } = validated.data;
 
 	const existing = await getReleaseByName(filename, event);
 	if (existing && !overwrite) {
@@ -36,11 +37,15 @@ export const POST: RequestHandler = async (event) => {
 		);
 	}
 
+	// Build tags: user-provided tags + channel tag (stable|beta), deduped
+	const channelTag = channel ?? 'stable';
+	const finalTags = Array.from(new Set([...(tags ?? []), channelTag]));
+
 	const client = createAdminUnisourceClient(event);
 	const init = await client.releases.upload.init({
 		name: filename,
 		filename,
-		tags: tags ?? [],
+		tags: finalTags,
 		notes: notes ?? null,
 		force_update: force_update ?? false
 	});
@@ -56,6 +61,7 @@ export const POST: RequestHandler = async (event) => {
 		headers: { 'content-type': type },
 		key: init.r2_key,
 		release_id: init.release_id,
+		channel: channelTag,
 		existingRelease: existing
 	});
 };
