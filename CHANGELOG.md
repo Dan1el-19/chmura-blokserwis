@@ -1,3 +1,9 @@
+## [2.5.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.4.0...v2.5.0) (2026-05-15)
+
+### Features
+
+* add hybrid upload destination option to admin settings ([5105753](https://github.com/Dan1el-19/chmura-blokserwis/commit/51057534ebf91aa30ab8c1e813e3ad6bbb29e8e9))
+
 ## [2.4.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.3.0...v2.4.0) (2026-05-15)
 
 ### Features
