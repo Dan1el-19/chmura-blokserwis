@@ -6,7 +6,8 @@
 		Pencil,
 		Trash,
 		Share,
-		DotsThreeVertical
+		DotsThreeVertical,
+		ArrowUp
 	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 	import { swipeAction } from '$lib/actions/gestures';
@@ -17,7 +18,7 @@
 	type FileType = { $id: string; name: string; size: number; $createdAt: string };
 	type FolderType = { $id: string; name: string; $createdAt: string; size?: number };
 
-	let { files, folders, selection, onDownload, onRename, onDelete, onNavigate, onShare } = $props<{
+	let { files, folders, selection, onDownload, onRename, onDelete, onNavigate, onShare, currentFolderId = null, parentFolderName = '', onNavigateUp = () => {} } = $props<{
 		files: FileType[];
 		folders: FolderType[];
 		selection: SelectionState;
@@ -26,6 +27,9 @@
 		onDelete: (id: string, name: string, isFolder: boolean) => void;
 		onNavigate: (id: string) => void;
 		onShare: (id: string, isFolder: boolean) => void;
+		currentFolderId?: string | null;
+		parentFolderName?: string;
+		onNavigateUp?: () => void;
 	}>();
 
 	function handleTap(id: string, isFolder: boolean) {
@@ -105,6 +109,22 @@
 </script>
 
 <div class="space-y-2 select-none lg:hidden">
+	{#if currentFolderId}
+		<div
+			class="relative overflow-hidden rounded-md border border-border-line bg-bg-panel"
+			role="button"
+			tabindex="0"
+			onclick={onNavigateUp}
+			onkeydown={(e) => e.key === 'Enter' && onNavigateUp()}
+		>
+			<div class="flex items-center gap-3 p-3">
+				<ArrowUp class="h-8 w-8 shrink-0 text-text-muted" />
+				<div class="min-w-0 flex-1">
+					<p class="truncate text-sm font-medium text-text-muted">{parentFolderName}</p>
+				</div>
+			</div>
+		</div>
+	{/if}
 	{#if folders.length === 0 && files.length === 0}
 		<div class="py-12 text-center text-text-muted">Folder jest pusty</div>
 	{/if}
