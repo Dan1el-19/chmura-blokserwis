@@ -10,6 +10,7 @@
 		Cloud
 	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
+	import { triggerDownload } from '$lib/utils/download';
 	import { toast } from 'svelte-sonner';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -43,7 +44,7 @@
 			const result = await res.json();
 			if (result.downloadUrl) {
 				toast.info(`Pobieranie: ${fileName}`);
-				window.location.href = `/api/proxy-download?url=${encodeURIComponent(result.downloadUrl)}&name=${encodeURIComponent(fileName)}`;
+				triggerDownload(result.downloadUrl, fileName);
 			}
 		} catch (e: any) {
 			toast.error(e.message);
