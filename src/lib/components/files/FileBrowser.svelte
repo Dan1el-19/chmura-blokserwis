@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
+	import { triggerDownload } from '$lib/utils/download';
 	import FileList from './FileList.svelte';
 	import FileTable from './FileTable.svelte';
 	import RenameDialog from './RenameDialog.svelte';
@@ -44,7 +45,7 @@
 				const data = await res.json();
 				if (data.downloadUrl) {
 					toast.info(`Pobieranie: ${name}`);
-					window.location.href = `/api/proxy-download?url=${encodeURIComponent(data.downloadUrl)}&name=${encodeURIComponent(name)}`;
+					triggerDownload(data.downloadUrl, name);
 				}
 			}
 		} catch (e: any) {
