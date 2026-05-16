@@ -86,7 +86,8 @@ export const PATCH: RequestHandler = async (event) => {
 				asUser: targetUserId
 			});
 			if (!result?.file) {
-				return json({ error: 'Move failed: no file returned' }, { status: 500 });
+				// UniSource move() does not return the file object — treat null as success
+				return json({ success: true });
 			}
 			return json(mapFileFromUnisource(result.file));
 		}
