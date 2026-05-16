@@ -7,6 +7,7 @@
 	"scripts": {
 		"dev": "pnpm sdk:link && vite dev --host",
 		"db:init": "npx vite-node scripts/init-db.ts",
+		"r2:abort": "tsx scripts/abort-multipart-uploads.ts",
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
