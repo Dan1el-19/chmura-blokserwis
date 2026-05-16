@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
-	import { PencilSimple, Trash, AndroidLogo, ArrowsClockwise } from 'phosphor-svelte';
+	import { PencilSimple, Trash, AndroidLogo, ArrowsClockwise, DownloadSimple } from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 	import type { ParsedRelease } from '$lib/types/releases';
 
@@ -9,9 +9,10 @@
 		onEdit: (release: ParsedRelease) => void;
 		onDelete: (release: ParsedRelease) => void;
 		onForceSync: (release: ParsedRelease) => void;
+		onDownload: (release: ParsedRelease) => void;
 	};
 
-	let { releases, onEdit, onDelete, onForceSync }: Props = $props();
+	let { releases, onEdit, onDelete, onForceSync, onDownload }: Props = $props();
 
 	function formatDate(dateStr: string): string {
 		return new Date(dateStr).toLocaleDateString('pl-PL', {
@@ -79,6 +80,14 @@
 						</td>
 						<td class="px-4 py-3">
 							<div class="flex justify-end gap-1">
+								<Button
+									variant="ghost"
+									size="icon"
+									onclick={() => onDownload(release)}
+									title="Pobierz"
+								>
+									<DownloadSimple class="h-4 w-4" />
+								</Button>
 								<Button
 									variant="ghost"
 									size="icon"
