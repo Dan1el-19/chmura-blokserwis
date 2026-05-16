@@ -4,7 +4,7 @@ import { getUserRole } from '$lib/server/roles';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
 import { createAdminClient } from '$lib/server/appwrite';
 import { mapFileFromUnisource, mapFolderFromUnisource } from '$lib/server/unisource-mappers';
-import type { FileDocument, FolderDocument } from '$lib/types/storage';
+import { logger } from '$lib/server/logger';
 
 const PAGE_LIMIT = 50;
 
@@ -23,19 +23,19 @@ export const load: PageServerLoad = async (event) => {
 	const { userId } = params;
 	const folderId = url.searchParams.get('folder') || null;
 
-	// Fetch user from Appwrite
 	const { users } = createAdminClient(event);
-	let targetUser;
+	let targetUser: { $id: string; name: string; email: string };
 	try {
-		targetUser = await users.get(userId);
+		const u = await users.get(userId);
+		targetUser = { $id: u.$id, name: u.name, email: u.email };
 	} catch {
 		throw error(404, 'Użytkownik nie został znaleziony');
 	}
 
 	const admin = createAdminUnisourceClient(event);
 
-	let files: (FileDocument & { isTrashed: boolean })[] = [];
-	let folders: (FolderDocument & { isTrashed: boolean })[] = [];
+	let files: ReturnType<typeof mapFileFromUnisource>[] = [];
+	let folders: ReturnType<typeof mapFolderFromUnisource>[] = [];
 	let breadcrumbs: { id: string | null; name: string }[] = [{ id: null, name: 'Root' }];
 	let errorMsg: string | undefined;
 
@@ -61,19 +61,16 @@ export const load: PageServerLoad = async (event) => {
 			breadcrumbs = [{ id: null, name: 'Root' }, ...trail];
 		}
 	} catch (e) {
+		logger.error('Preview UniSource error:', e);
 		errorMsg = 'Nie udało się załadować plików użytkownika';
 	}
 
 	return {
-		targetUser: {
-			$id: userId,
-			name: targetUser.name || userId,
-			email: targetUser.email
-		},
+		targetUser,
 		files,
 		folders,
 		currentFolder: folderId,
 		breadcrumbs,
-		error: errorMsg
+		...(errorMsg ? { error: errorMsg } : {})
 	};
 };

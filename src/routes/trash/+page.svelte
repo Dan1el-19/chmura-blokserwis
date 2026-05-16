@@ -10,8 +10,8 @@
 	let { data } = $props();
 
 	let busyId = $state<string | null>(null);
-	let sheetOpen = $state(false);
 	let sheetTarget = $state<{ id: string; name: string; isFolder: boolean } | null>(null);
+	let sheetOpen = $state(false);
 
 	function formatDate(date: string) {
 		return new Date(date).toLocaleString('pl-PL', {
@@ -56,7 +56,9 @@
 		}
 		busyId = id;
 		try {
-			const url = isFolder ? `/api/folders/${id}?permanent=true` : `/api/files/${id}?permanent=true`;
+			const url = isFolder
+				? `/api/folders/${id}?permanent=true`
+				: `/api/files/${id}?permanent=true`;
 			const res = await fetch(url, { method: 'DELETE' });
 			if (res.ok) {
 				toast.success(`Trwale usunięto "${name}"`);
@@ -70,16 +72,6 @@
 		} finally {
 			busyId = null;
 		}
-	}
-
-	function openSheet(id: string, name: string, isFolder: boolean) {
-		sheetTarget = { id, name, isFolder };
-		sheetOpen = true;
-	}
-
-	function closeSheet() {
-		sheetOpen = false;
-		sheetTarget = null;
 	}
 </script>
 
@@ -112,63 +104,50 @@
 		</div>
 	{:else}
 		<!-- Mobile view -->
-		<div class="space-y-2 select-none lg:hidden">
+		<div class="space-y-2 lg:hidden">
 			{#each data.folders as folder (folder.$id)}
 				<div class="relative overflow-hidden rounded-md border border-border-line bg-bg-panel">
 					<div
-						data-row-id={folder.$id}
 						class="relative z-10 flex items-center gap-3 bg-bg-panel p-3"
 						use:swipeAction={{
 							threshold: 80,
-							leftLabel: 'Usuń trwale',
+							leftLabel: 'Usuń',
 							rightLabel: 'Przywróć',
 							leftColor: '#dc2626',
 							rightColor: '#16a34a',
 							onSwipeLeft: () => deletePermanent(folder.$id, folder.name, true),
 							onSwipeRight: () => restore(folder.$id, folder.name, true)
 						}}
-						role="button"
-						tabindex="0"
 					>
-						<Folder
-							class="h-8 w-8 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400"
-						/>
+						<Folder class="h-8 w-8 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400" />
 						<div class="min-w-0 flex-1">
 							<p class="truncate text-sm font-medium text-text-main">{folder.name}</p>
 							<p class="font-mono text-xs text-text-muted">{formatDate(folder.$updatedAt)}</p>
 						</div>
 						<button
 							type="button"
-							class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-800"
-							aria-label="Akcje dla {folder.name}"
+							class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"
 							onpointerdown={(e) => e.stopPropagation()}
-							onclick={(e) => {
-								e.stopPropagation();
-								openSheet(folder.$id, folder.name, true);
-							}}
+							onclick={(e) => { e.stopPropagation(); sheetTarget = { id: folder.$id, name: folder.name, isFolder: true }; sheetOpen = true; }}
 						>
 							<DotsThreeVertical class="h-5 w-5" weight="bold" />
 						</button>
 					</div>
 				</div>
 			{/each}
-
 			{#each data.files as file (file.$id)}
 				<div class="relative overflow-hidden rounded-md border border-border-line bg-bg-panel">
 					<div
-						data-row-id={file.$id}
 						class="relative z-10 flex items-center gap-3 bg-bg-panel p-3"
 						use:swipeAction={{
 							threshold: 80,
-							leftLabel: 'Usuń trwale',
+							leftLabel: 'Usuń',
 							rightLabel: 'Przywróć',
 							leftColor: '#dc2626',
 							rightColor: '#16a34a',
 							onSwipeLeft: () => deletePermanent(file.$id, file.name, false),
 							onSwipeRight: () => restore(file.$id, file.name, false)
 						}}
-						role="button"
-						tabindex="0"
 					>
 						<FileIcon class="h-8 w-8 shrink-0 text-blue-500 dark:text-blue-400" />
 						<div class="min-w-0 flex-1">
@@ -177,13 +156,9 @@
 						</div>
 						<button
 							type="button"
-							class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-800"
-							aria-label="Akcje dla {file.name}"
+							class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"
 							onpointerdown={(e) => e.stopPropagation()}
-							onclick={(e) => {
-								e.stopPropagation();
-								openSheet(file.$id, file.name, false);
-							}}
+							onclick={(e) => { e.stopPropagation(); sheetTarget = { id: file.$id, name: file.name, isFolder: false }; sheetOpen = true; }}
 						>
 							<DotsThreeVertical class="h-5 w-5" weight="bold" />
 						</button>
@@ -193,7 +168,7 @@
 		</div>
 
 		<!-- Desktop view -->
-		<div class="overflow-hidden rounded-lg border border-border-line bg-bg-panel hidden lg:block">
+		<div class="hidden overflow-hidden rounded-lg border border-border-line bg-bg-panel lg:block">
 			<table class="w-full text-left text-sm">
 				<thead
 					class="border-b border-border-line bg-gray-50/50 font-medium text-text-muted dark:bg-zinc-900/50"
@@ -288,44 +263,34 @@
 		</div>
 	{/if}
 
-	<BottomSheet bind:open={sheetOpen} title={sheetTarget?.name}>
-		{#if sheetTarget}
-			{@const target = sheetTarget}
-			<button
-				type="button"
-				class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-				onclick={() => {
-					closeSheet();
-					restore(target.id, target.name, target.isFolder);
-				}}
-			>
-				<span
-					class="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/40"
-				>
-					<ArrowCounterClockwise class="h-4 w-4" />
-				</span>
-				Przywróć
-			</button>
-			<div class="mx-4 my-1 border-t border-border-line"></div>
-			<button
-				type="button"
-				class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-				onclick={() => {
-					closeSheet();
-					deletePermanent(target.id, target.name, target.isFolder);
-				}}
-			>
-				<span
-					class="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40"
-				>
-					<Trash class="h-4 w-4" />
-				</span>
-				Usuń trwale
-			</button>
-		{/if}
-	</BottomSheet>
-
 	{#if data.error}
 		<p class="text-sm text-red-500">{data.error}</p>
 	{/if}
 </div>
+
+<BottomSheet bind:open={sheetOpen} title={sheetTarget?.name}>
+	{#if sheetTarget}
+		{@const target = sheetTarget}
+		<button
+			type="button"
+			class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"
+			onclick={() => { sheetOpen = false; restore(target.id, target.name, target.isFolder); }}
+		>
+			<span class="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/40">
+				<ArrowCounterClockwise class="h-4 w-4" />
+			</span>
+			Przywróć
+		</button>
+		<div class="mx-4 my-1 border-t border-border-line"></div>
+		<button
+			type="button"
+			class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+			onclick={() => { sheetOpen = false; deletePermanent(target.id, target.name, target.isFolder); }}
+		>
+			<span class="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40">
+				<Trash class="h-4 w-4" />
+			</span>
+			Usuń trwale
+		</button>
+	{/if}
+</BottomSheet>

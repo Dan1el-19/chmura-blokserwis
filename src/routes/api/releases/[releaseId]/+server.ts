@@ -1,6 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getRelease, updateRelease, deleteRelease, listReleases } from '$lib/server/storage/releases';
+import {
+	getRelease,
+	updateRelease,
+	deleteRelease,
+	listReleases
+} from '$lib/server/storage/releases';
 import { updateReleaseSchema } from '$lib/schemas';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
 
@@ -55,11 +60,7 @@ export const DELETE: RequestHandler = async (event) => {
 
 		const all = await listReleases(event);
 		const next = all
-			.filter(
-				(r) =>
-					r.$id !== releaseId &&
-					r.tags.includes(channel)
-			)
+			.filter((r) => r.$id !== releaseId && r.tags.includes(channel))
 			.sort((a, b) => new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime())[0];
 
 		if (next) {

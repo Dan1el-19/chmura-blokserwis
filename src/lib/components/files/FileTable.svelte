@@ -99,7 +99,7 @@
 		dragOverFolderId = null;
 	}
 
-	async function onFolderDrop(e: DragEvent, targetFolderId: string | null) {
+	async function onFolderDrop(e: DragEvent, targetFolderId: string) {
 		e.preventDefault();
 		dragOverFolderId = null;
 		const raw = e.dataTransfer?.getData('text/plain');
@@ -118,7 +118,7 @@
 			const res = await fetch(endpoint, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ parentFolderId: targetFolderId })
+				body: JSON.stringify({ parentFolderId: targetFolderId || null })
 			});
 			if (!res.ok) {
 				const body = await res.json().catch(() => ({}));
@@ -142,7 +142,7 @@
 				<th class="w-10 px-4 py-3">
 					<input
 						type="checkbox"
-						class="rounded border-zinc-600 bg-zinc-700 checked:bg-primary checked:border-primary dark:border-zinc-600 dark:bg-zinc-700 dark:checked:bg-primary"
+						class="rounded accent-primary dark:bg-zinc-700"
 						checked={selection.count > 0 && selection.count === allIds.length}
 						indeterminate={selection.count > 0 && selection.count < allIds.length}
 						onchange={() => {
@@ -202,7 +202,7 @@
 					onclick={onNavigateUp}
 					ondragover={(e) => onFolderDragOver(e, '__parent__')}
 					ondragleave={onFolderDragLeave}
-					ondrop={(e) => onFolderDrop(e, parentFolderId)}
+					ondrop={(e) => onFolderDrop(e, parentFolderId ?? '')}
 					aria-label="Przejdź do folderu nadrzędnego"
 				>
 					<td class="px-4 py-3"><div class="w-10"></div></td>
@@ -255,7 +255,7 @@
 					>
 						<input
 							type="checkbox"
-							class="rounded border-zinc-600 bg-zinc-700 checked:bg-primary checked:border-primary dark:border-zinc-600 dark:bg-zinc-700 dark:checked:bg-primary"
+							class="rounded accent-primary dark:bg-zinc-700"
 							checked={selection.has(folder.$id)}
 							onchange={() => handleCheckbox(folder.$id)}
 							aria-label="Zaznacz {folder.name}"
@@ -334,7 +334,7 @@
 					>
 						<input
 							type="checkbox"
-							class="rounded border-zinc-600 bg-zinc-700 checked:bg-primary checked:border-primary dark:border-zinc-600 dark:bg-zinc-700 dark:checked:bg-primary"
+							class="rounded accent-primary dark:bg-zinc-700"
 							checked={selection.has(file.$id)}
 							onchange={() => handleCheckbox(file.$id)}
 							aria-label="Zaznacz {file.name}"
