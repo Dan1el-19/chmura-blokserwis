@@ -64,7 +64,7 @@ export const swipeAction: Action<HTMLElement, SwipeActionParams> = (node, params
 		if (currentDx > 0) {
 			bg.style.background = params.rightColor ?? '#3b82f6';
 			rightSide.innerHTML = past
-				? `<span style="display:inline-flex;align-items:center;gap:6px;"><svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M214,72H142a8,8,0,0,1,0-16h82.69a8,8,0,0,1,5.65,2.34l32,32a8,8,0,0,1,0,11.32l-32,32A8,8,0,0,1,224,136a8,8,0,0,1-5.66-13.66L237.66,103.34Z"/></svg>${params.rightLabel ?? 'Udostępnij'}</span>`
+				? `<span style="display:inline-flex;align-items:center;gap:6px;"><svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M192 32a96 96 0 1 0 96 96A96.11 96.11 0 0 0 192 32zm0 160a64 64 0 1 1 64-64 64.07 64.07 0 0 1-64 64zm160 64a96 96 0 1 0 96 96A96.11 96.11 0 0 0 352 256zm0 160a64 64 0 1 1 64-64 64.07 64.07 0 0 1-64 64zM32 256a96 96 0 1 0 96-96 96.11 96.11 0 0 0-96 96zm160 0a64 64 0 1 1-64-64 64.07 64.07 0 0 1 64 64z"/></svg>${params.rightLabel ?? 'Udostępnij'}</span>`
 				: `<span style="opacity:0.7">${params.rightLabel ?? 'Udostępnij'}</span>`;
 			leftSide.innerHTML = '';
 		} else if (currentDx < 0) {
