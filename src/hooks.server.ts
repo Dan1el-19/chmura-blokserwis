@@ -26,28 +26,41 @@ function isUnauthorizedSessionError(error: unknown): boolean {
 export const handle: Handle = async ({ event, resolve }) => {
 	try {
 		if (RATE_LIMIT_ENABLED && event.url.pathname.startsWith('/api/')) {
-			let identifier: string;
-			try {
-				identifier = event.getClientAddress();
-			} catch {
-				identifier = 'unknown';
-			}
+			// Multipart upload hot path: sign-part and list-parts are called
+			// once per chunk (potentially hundreds per file). The UniSource
+			// backend already rate-limits these per user (1000/60s), so a
+			// per-IP cap here adds no defence and breaks legitimate uploads
+			// of large files.
+			const isMultipartHotPath =
+				event.url.pathname === '/api/upload/r2/multipart/sign-part' ||
+				event.url.pathname === '/api/upload/r2/multipart/list-parts' ||
+				event.url.pathname === '/api/releases/multipart/sign-part' ||
+				event.url.pathname === '/api/releases/multipart/list-parts';
 
-			const isStrictEndpoint =
-				event.url.pathname.includes('/api/files') ||
-				event.url.pathname.includes('/api/folders');
+			if (!isMultipartHotPath) {
+				let identifier: string;
+				try {
+					identifier = event.getClientAddress();
+				} catch {
+					identifier = 'unknown';
+				}
 
-			const limiter = isStrictEndpoint ? strictRatelimit : ratelimit;
-			const result = await checkRateLimit(identifier, limiter);
+				const isStrictEndpoint =
+					event.url.pathname.includes('/api/files') ||
+					event.url.pathname.includes('/api/folders');
 
-			if (!result.success) {
-				return new Response(JSON.stringify({ error: 'Too many requests' }), {
-					status: 429,
-					headers: {
-						'Content-Type': 'application/json',
-						...rateLimitHeaders(result)
-					}
-				});
+				const limiter = isStrictEndpoint ? strictRatelimit : ratelimit;
+				const result = await checkRateLimit(identifier, limiter);
+
+				if (!result.success) {
+					return new Response(JSON.stringify({ error: 'Too many requests' }), {
+						status: 429,
+						headers: {
+							'Content-Type': 'application/json',
+							...rateLimitHeaders(result)
+						}
+					});
+				}
 			}
 		}
 
