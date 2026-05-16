@@ -8,6 +8,7 @@
 	import ForceSyncModal from '$lib/components/releases/ForceSyncModal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ReleaseUploader } from '$lib/modules/release-upload.svelte';
+	import { triggerDownload } from '$lib/utils/download';
 	import type { ParsedRelease } from '$lib/types/releases';
 	import { Trash, Warning, ArrowsClockwise, CloudCheck, AndroidLogo } from 'phosphor-svelte';
 	import { onMount } from 'svelte';
@@ -178,6 +179,20 @@
 		}
 	}
 
+	async function handleDownload(release: ParsedRelease) {
+		try {
+			const res = await fetch(`/api/releases/${release.$id}/download`);
+			const data = await res.json();
+			if (data.downloadUrl) {
+				triggerDownload(data.downloadUrl, release.name);
+			} else {
+				toast.error(data.error || 'Nie udało się pobrać linku do pobrania');
+			}
+		} catch (e: any) {
+			toast.error(e.message || 'Błąd podczas pobierania');
+		}
+	}
+
 	function handleDelete(release: ParsedRelease) {
 		deletingRelease = release;
 	}
@@ -282,6 +297,7 @@
 		onEdit={handleEdit}
 		onDelete={handleDelete}
 		onForceSync={handleForceSyncInit}
+		onDownload={handleDownload}
 	/>
 </div>
 
