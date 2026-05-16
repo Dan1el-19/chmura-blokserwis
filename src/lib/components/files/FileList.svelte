@@ -137,7 +137,7 @@
 				{#if selection.isSelectionMode}
 					<input
 						type="checkbox"
-						class="h-6 w-6 shrink-0 rounded"
+						class="h-6 w-6 shrink-0 rounded border-zinc-600 bg-zinc-700 checked:bg-primary checked:border-primary dark:border-zinc-600 dark:bg-zinc-700 dark:checked:bg-primary"
 						checked={selection.has(folder.$id)}
 						onchange={() => selection.toggle(folder.$id)}
 						onclick={(e) => e.stopPropagation()}
@@ -195,7 +195,7 @@
 				{#if selection.isSelectionMode}
 					<input
 						type="checkbox"
-						class="h-6 w-6 shrink-0 rounded"
+						class="h-6 w-6 shrink-0 rounded border-zinc-600 bg-zinc-700 checked:bg-primary checked:border-primary dark:border-zinc-600 dark:bg-zinc-700 dark:checked:bg-primary"
 						checked={selection.has(file.$id)}
 						onchange={() => selection.toggle(file.$id)}
 						onclick={(e) => e.stopPropagation()}
