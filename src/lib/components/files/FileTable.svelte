@@ -29,7 +29,11 @@
 		onRename,
 		onDelete,
 		onNavigate,
-		onShare
+		onShare,
+		currentFolderId = null,
+		parentFolderName = '',
+		parentFolderId = null,
+		onNavigateUp = () => {}
 	} = $props<{
 		files: FileType[];
 		folders: FolderType[];
@@ -42,6 +46,10 @@
 		onDelete: (id: string, name: string, isFolder: boolean) => void;
 		onNavigate: (id: string) => void;
 		onShare: (id: string, isFolder: boolean) => void;
+		currentFolderId?: string | null;
+		parentFolderName?: string;
+		parentFolderId?: string | null;
+		onNavigateUp?: () => void;
 	}>();
 
 	const formatDate = (date: string) =>
@@ -91,7 +99,7 @@
 		dragOverFolderId = null;
 	}
 
-	async function onFolderDrop(e: DragEvent, targetFolderId: string) {
+	async function onFolderDrop(e: DragEvent, targetFolderId: string | null) {
 		e.preventDefault();
 		dragOverFolderId = null;
 		const raw = e.dataTransfer?.getData('text/plain');
@@ -187,6 +195,28 @@
 			</tr>
 		</thead>
 		<tbody class="divide-y divide-border-line">
+			{#if currentFolderId}
+				<tr
+					class="group cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/50
+						{dragOverFolderId === '__parent__' ? 'ring-2 ring-primary ring-inset' : ''}"
+					onclick={onNavigateUp}
+					ondragover={(e) => onFolderDragOver(e, '__parent__')}
+					ondragleave={onFolderDragLeave}
+					ondrop={(e) => onFolderDrop(e, parentFolderId)}
+					aria-label="Przejdź do folderu nadrzędnego"
+				>
+					<td class="px-4 py-3"><div class="w-10"></div></td>
+					<td class="px-4 py-3">
+						<div class="flex items-center gap-2">
+							<ArrowUp class="h-5 w-5 shrink-0 text-text-muted" />
+							<span class="text-text-muted">{parentFolderName}</span>
+						</div>
+					</td>
+					<td class="px-4 py-3"></td>
+					<td class="px-4 py-3"></td>
+					<td class="px-4 py-3"></td>
+				</tr>
+			{/if}
 			{#if folders.length === 0 && files.length === 0}
 				<tr>
 					<td colspan="5" class="px-4 py-12 text-center text-text-muted">Folder jest pusty</td>
