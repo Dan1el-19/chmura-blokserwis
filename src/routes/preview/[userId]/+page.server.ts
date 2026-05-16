@@ -1,7 +1,7 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getUserRole } from '$lib/server/roles';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createUserUnisourceClient } from '$lib/server/unisource';
 import { createAdminClient } from '$lib/server/appwrite';
 import { mapFileFromUnisource, mapFolderFromUnisource } from '$lib/server/unisource-mappers';
 import { logger } from '$lib/server/logger';
@@ -32,7 +32,7 @@ export const load: PageServerLoad = async (event) => {
 		throw error(404, 'Użytkownik nie został znaleziony');
 	}
 
-	const admin = createAdminUnisourceClient(event);
+	const admin = await createUserUnisourceClient(event);
 
 	let files: ReturnType<typeof mapFileFromUnisource>[] = [];
 	let folders: ReturnType<typeof mapFolderFromUnisource>[] = [];

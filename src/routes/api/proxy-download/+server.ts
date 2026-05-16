@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, isHttpError } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 const BLOCKED_HOSTS = [
@@ -26,15 +26,9 @@ const BLOCKED_HOSTS = [
  */
 const MAX_PROXY_BYTES = 5 * 1024 * 1024 * 1024;
 const PROXY_TIMEOUT_MS = 60_000;
+const MAX_REDIRECTS = 5;
 
-export const GET: RequestHandler = async ({ url, locals }) => {
-	if (!locals.user) throw error(401, 'Unauthorized');
-
-	const targetUrl = url.searchParams.get('url');
-	const filename = url.searchParams.get('name');
-
-	if (!targetUrl || !filename) throw error(400, 'Brak wymaganego parametru url lub name');
-
+function assertSafeTargetUrl(targetUrl: string): URL {
 	let parsedUrl: URL;
 	try {
 		parsedUrl = new URL(targetUrl);
@@ -47,17 +41,51 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const hostname = parsedUrl.hostname;
 	if (BLOCKED_HOSTS.some((re) => re.test(hostname))) throw error(400, 'Niedozwolony host URL');
 
+	return parsedUrl;
+}
+
+async function fetchWithSafeRedirects(targetUrl: string, signal: AbortSignal): Promise<Response> {
+	let currentUrl = assertSafeTargetUrl(targetUrl);
+
+	for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
+		const response = await fetch(currentUrl.toString(), {
+			redirect: 'manual',
+			signal
+		});
+
+		if (response.status >= 300 && response.status < 400) {
+			const location = response.headers.get('Location');
+			response.body?.cancel().catch(() => undefined);
+			if (!location) throw error(502, 'Przekierowanie pobrania nie zawiera adresu docelowego');
+			currentUrl = assertSafeTargetUrl(new URL(location, currentUrl).toString());
+			continue;
+		}
+
+		return response;
+	}
+
+	throw error(508, 'Przekroczono limit przekierowań pobierania');
+}
+
+export const GET: RequestHandler = async ({ url, locals }) => {
+	if (!locals.user) throw error(401, 'Unauthorized');
+
+	const targetUrl = url.searchParams.get('url');
+	const filename = url.searchParams.get('name');
+
+	if (!targetUrl || !filename) throw error(400, 'Brak wymaganego parametru url lub name');
+
+	assertSafeTargetUrl(targetUrl);
+
 	const abortController = new AbortController();
 	const timeoutId = setTimeout(() => abortController.abort(), PROXY_TIMEOUT_MS);
 
 	let response: Response;
 	try {
-		response = await fetch(targetUrl, {
-			redirect: 'error',
-			signal: abortController.signal
-		});
+		response = await fetchWithSafeRedirects(targetUrl, abortController.signal);
 	} catch (err) {
 		clearTimeout(timeoutId);
+		if (isHttpError(err)) throw err;
 		console.error('Proxy download fetch error:', err);
 		if (err instanceof Error && err.name === 'AbortError') {
 			throw error(504, 'Upłynął limit czasu pobrania pliku');

@@ -8,9 +8,9 @@ const source = readFileSync(
 );
 
 describe('admin settings upload destination UX', () => {
-	it('only exposes upload destinations supported by the SDK', () => {
+	it('exposes all upload destinations supported by the SDK', () => {
 		expect(source).toContain('value="r2"');
 		expect(source).toContain('value="appwrite"');
-		expect(source).not.toContain('value="hybrid"');
+		expect(source).toContain('value="hybrid"');
 	});
 });

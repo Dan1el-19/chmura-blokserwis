@@ -653,12 +653,12 @@ export class UploadManager {
 		try {
 			isAllowedFile(source, this.options);
 
-			const dest =
-				destination === 'auto' || destination === undefined
-					? resolveAutoDestination(source.size, this.getRecommended())
-					: destination;
-
-			const resolvedDestination = dest ?? this.getDefaultDestination(source.size);
+			const resolvedDestination =
+				destination === undefined
+					? this.getDefaultDestination(source.size)
+					: destination === 'auto'
+						? resolveAutoDestination(source.size, this.getRecommended())
+						: destination;
 			const file: UploadFileState = {
 				id: crypto.randomUUID(),
 				name: source.name,

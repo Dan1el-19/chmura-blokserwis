@@ -7,7 +7,7 @@ import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 
 /**
  * Proxy → UniSource `PATCH /admin/service/settings`
- * Toggles the recommended upload destination (R2 / Appwrite) for the split-button UI.
+ * Toggles the recommended upload destination (R2 / Appwrite / hybrid) for the split-button UI.
  * Admin-only.
  */
 export const PATCH: RequestHandler = async (event) => {
@@ -23,9 +23,9 @@ export const PATCH: RequestHandler = async (event) => {
 	}
 
 	const destination = body.recommended_upload_destination;
-	if (destination !== 'r2' && destination !== 'appwrite') {
+	if (destination !== 'r2' && destination !== 'appwrite' && destination !== 'hybrid') {
 		return json(
-			{ error: 'recommended_upload_destination must be r2 or appwrite' },
+			{ error: 'recommended_upload_destination must be r2, appwrite, or hybrid' },
 			{ status: 400 }
 		);
 	}
