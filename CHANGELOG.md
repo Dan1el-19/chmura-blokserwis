@@ -1,3 +1,9 @@
+## [2.6.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.0...v2.6.1) (2026-05-16)
+
+### Bug Fixes
+
+* remove duplicate handleDownload function in releases page ([c75662e](https://github.com/Dan1el-19/chmura-blokserwis/commit/c75662ed894b090a60ac19ee6170ea065af3bc67))
+
 ## [2.6.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.5.1...v2.6.0) (2026-05-16)
 
 ### Features
