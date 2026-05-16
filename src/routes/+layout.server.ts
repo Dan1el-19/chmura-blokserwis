@@ -3,9 +3,11 @@ import { getUserRole } from '$lib/server/roles';
 import { toPublicUser } from '$lib/server/public-user';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
 import { logger } from '$lib/server/logger';
-import type { UploadDestination } from '@unisource/sdk';
+import type { RecommendedUploadDestination } from '@unisource/sdk';
 
-export type RecommendedUploadDestination = UploadDestination;
+function isRecommendedUploadDestination(value: unknown): value is RecommendedUploadDestination {
+	return value === 'r2' || value === 'appwrite' || value === 'hybrid';
+}
 
 export const load: LayoutServerLoad = async (event) => {
 	const role = event.locals.user ? getUserRole(event.locals.user) : null;
@@ -19,7 +21,7 @@ export const load: LayoutServerLoad = async (event) => {
 			const client = createAdminUnisourceClient(event);
 			const { service } = await client.admin.serviceDetail();
 			const v = service.recommended_upload_destination;
-			if (v === 'appwrite') {
+			if (isRecommendedUploadDestination(v)) {
 				recommendedUploadDestination = v;
 			}
 		} catch (error) {

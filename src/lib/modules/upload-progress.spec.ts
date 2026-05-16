@@ -3,6 +3,8 @@ import { UploadManager } from './upload.svelte';
 
 describe('UploadManager progress state', () => {
 	it('updates the tracked file state when upload code holds the original file reference', () => {
+		expect.assertions(2);
+
 		const manager = new UploadManager();
 		const trackedFile = {
 			id: 'file-1',
@@ -35,5 +37,33 @@ describe('UploadManager progress state', () => {
 
 		expect(manager.files[0].progress).toEqual({ percentage: 65, uploadComplete: false });
 		expect(manager.totalProgress).toBe(65);
+	});
+
+	it('uses the configured default destination when file picker adds a file without an explicit destination', () => {
+		expect.assertions(1);
+
+		const manager = new UploadManager({
+			destination: () => 'appwrite',
+			recommendedDestination: () => 'r2'
+		});
+		(manager as unknown as { uploadFile: () => Promise<void> }).uploadFile = async () => undefined;
+
+		manager.addFile(new File(['contents'], 'small.txt', { type: 'text/plain' }));
+
+		expect(manager.files[0].destination).toBe('appwrite');
+	});
+
+	it('resolves auto uploads in hybrid mode to Appwrite for small files', () => {
+		expect.assertions(1);
+
+		const manager = new UploadManager({
+			destination: () => 'auto',
+			recommendedDestination: () => 'hybrid'
+		});
+		(manager as unknown as { uploadFile: () => Promise<void> }).uploadFile = async () => undefined;
+
+		manager.addFile(new File(['contents'], 'small.txt', { type: 'text/plain' }));
+
+		expect(manager.files[0].destination).toBe('appwrite');
 	});
 });
