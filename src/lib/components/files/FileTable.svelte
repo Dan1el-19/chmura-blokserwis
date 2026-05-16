@@ -142,7 +142,7 @@
 				<th class="w-10 px-4 py-3">
 					<input
 						type="checkbox"
-						class="rounded"
+						class="rounded accent-primary dark:bg-zinc-700"
 						checked={selection.count > 0 && selection.count === allIds.length}
 						indeterminate={selection.count > 0 && selection.count < allIds.length}
 						onchange={() => {
@@ -255,7 +255,7 @@
 					>
 						<input
 							type="checkbox"
-							class="rounded"
+							class="rounded accent-primary dark:bg-zinc-700"
 							checked={selection.has(folder.$id)}
 							onchange={() => handleCheckbox(folder.$id)}
 							aria-label="Zaznacz {folder.name}"
@@ -334,7 +334,7 @@
 					>
 						<input
 							type="checkbox"
-							class="rounded"
+							class="rounded accent-primary dark:bg-zinc-700"
 							checked={selection.has(file.$id)}
 							onchange={() => handleCheckbox(file.$id)}
 							aria-label="Zaznacz {file.name}"

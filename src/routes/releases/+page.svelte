@@ -182,6 +182,20 @@
 		deletingRelease = release;
 	}
 
+	async function handleDownload(release: ParsedRelease) {
+		try {
+			const res = await fetch(`/api/releases/${release.$id}/download`);
+			const body = await res.json();
+			if (body.downloadUrl) {
+				window.location.href = body.downloadUrl;
+			} else {
+				toast.error(body.error || 'Nie udało się pobrać');
+			}
+		} catch {
+			toast.error('Błąd pobierania');
+		}
+	}
+
 	async function confirmDelete() {
 		if (!deletingRelease) return;
 
@@ -282,6 +296,7 @@
 		onEdit={handleEdit}
 		onDelete={handleDelete}
 		onForceSync={handleForceSyncInit}
+		onDownload={handleDownload}
 	/>
 </div>
 
