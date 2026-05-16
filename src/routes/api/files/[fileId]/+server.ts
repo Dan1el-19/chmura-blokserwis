@@ -85,10 +85,10 @@ export const PATCH: RequestHandler = async (event) => {
 			const result = await client.myFiles.move(fileId, { folder_id: parentFolderId }, undefined, {
 				asUser: targetUserId
 			});
-			if (!result?.file) {
-				return json({ error: 'Move failed: no file returned' }, { status: 500 });
+			if (result?.file) {
+				return json(mapFileFromUnisource(result.file));
 			}
-			return json(mapFileFromUnisource(result.file));
+			return json({ success: true });
 		}
 
 		return json({ error: 'No valid operation specified' }, { status: 400 });
