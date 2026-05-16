@@ -2,74 +2,73 @@
 
 ### Bug Fixes
 
-* bypass rate limit for multipart upload sign-part/list-parts hot path ([1e39a7a](https://github.com/Dan1el-19/chmura-blokserwis/commit/1e39a7a48486b624466b6392369e0a56226f61f4))
+- bypass rate limit for multipart upload sign-part/list-parts hot path ([1e39a7a](https://github.com/Dan1el-19/chmura-blokserwis/commit/1e39a7a48486b624466b6392369e0a56226f61f4))
 
 ## [2.5.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.4.0...v2.5.0) (2026-05-15)
 
 ### Features
 
-* add hybrid upload destination option to admin settings ([5105753](https://github.com/Dan1el-19/chmura-blokserwis/commit/51057534ebf91aa30ab8c1e813e3ad6bbb29e8e9))
+- add hybrid upload destination option to admin settings ([5105753](https://github.com/Dan1el-19/chmura-blokserwis/commit/51057534ebf91aa30ab8c1e813e3ad6bbb29e8e9))
 
 ## [2.4.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.3.0...v2.4.0) (2026-05-15)
 
 ### Features
 
-* add admin settings UX test, login error handling, and multipart client ([ab84c09](https://github.com/Dan1el-19/chmura-blokserwis/commit/ab84c09b9dbf331552bc787a7320f270c3b39fbb))
-* BottomSheet component — reusable modal for mobile and desktop ([8b18a98](https://github.com/Dan1el-19/chmura-blokserwis/commit/8b18a98a6497644a0230a2b5c59370c74649761e))
-* FileList — click row to navigate/open details + disable swipe in selection mode ([7874ec1](https://github.com/Dan1el-19/chmura-blokserwis/commit/7874ec181962b179c17b227c115cf82afe7ad0b7))
-* improve swipe gesture — 40% max offset + disabled state ([a90627f](https://github.com/Dan1el-19/chmura-blokserwis/commit/a90627fbdafce478da0ee76fb56cbfabe45e7c99))
-* multipart upload API for releases — support large file uploads ([24c1658](https://github.com/Dan1el-19/chmura-blokserwis/commit/24c1658fa3d6bddfd15e52e769cfc5390e64aa4f))
+- add admin settings UX test, login error handling, and multipart client ([ab84c09](https://github.com/Dan1el-19/chmura-blokserwis/commit/ab84c09b9dbf331552bc787a7320f270c3b39fbb))
+- BottomSheet component — reusable modal for mobile and desktop ([8b18a98](https://github.com/Dan1el-19/chmura-blokserwis/commit/8b18a98a6497644a0230a2b5c59370c74649761e))
+- FileList — click row to navigate/open details + disable swipe in selection mode ([7874ec1](https://github.com/Dan1el-19/chmura-blokserwis/commit/7874ec181962b179c17b227c115cf82afe7ad0b7))
+- improve swipe gesture — 40% max offset + disabled state ([a90627f](https://github.com/Dan1el-19/chmura-blokserwis/commit/a90627fbdafce478da0ee76fb56cbfabe45e7c99))
+- multipart upload API for releases — support large file uploads ([24c1658](https://github.com/Dan1el-19/chmura-blokserwis/commit/24c1658fa3d6bddfd15e52e769cfc5390e64aa4f))
 
 ### Bug Fixes
 
-* guard against undefined file in move/update operations ([621fcab](https://github.com/Dan1el-19/chmura-blokserwis/commit/621fcab821401bc322d3c9efc80ef22c41a26a3d))
+- guard against undefined file in move/update operations ([621fcab](https://github.com/Dan1el-19/chmura-blokserwis/commit/621fcab821401bc322d3c9efc80ef22c41a26a3d))
 
 ## [2.3.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.2.1...v2.3.0) (2026-05-13)
 
 ### Features
 
-* implement comprehensive file management system including sharing, secure downloads, admin settings, and release orchestration ([bc9c056](https://github.com/Dan1el-19/chmura-blokserwis/commit/bc9c056c3fe2b577f3a6c61f27b6c3cacf6a0ebf))
+- implement comprehensive file management system including sharing, secure downloads, admin settings, and release orchestration ([bc9c056](https://github.com/Dan1el-19/chmura-blokserwis/commit/bc9c056c3fe2b577f3a6c61f27b6c3cacf6a0ebf))
 
 ## [2.2.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.2.0...v2.2.1) (2026-05-13)
 
 ### Bug Fixes
 
-* upload proxy endpoints for releases to bypass R2 SDK limitations ([ff047db](https://github.com/Dan1el-19/chmura-blokserwis/commit/ff047db5ce18901452beb677be3c6f827888ef0b))
+- upload proxy endpoints for releases to bypass R2 SDK limitations ([ff047db](https://github.com/Dan1el-19/chmura-blokserwis/commit/ff047db5ce18901452beb677be3c6f827888ef0b))
 
 ## [2.2.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.1.1...v2.2.0) (2026-05-13)
 
 ### Features
 
-* add R2 multipart upload endpoint and integrate local SDK linking into dev workflow ([ba9c6ba](https://github.com/Dan1el-19/chmura-blokserwis/commit/ba9c6ba6e94c7b123341b71a742e0f732961ff03))
+- add R2 multipart upload endpoint and integrate local SDK linking into dev workflow ([ba9c6ba](https://github.com/Dan1el-19/chmura-blokserwis/commit/ba9c6ba6e94c7b123341b71a742e0f732961ff03))
 
 ## [2.1.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.1.0...v2.1.1) (2026-05-13)
 
 ### Bug Fixes
 
-* update unisource-sdk to version 0.4.0 and add local development scripts for SDK integration ([06af17c](https://github.com/Dan1el-19/chmura-blokserwis/commit/06af17ccf80d13df349383b0bf3894e552f2f087))
+- update unisource-sdk to version 0.4.0 and add local development scripts for SDK integration ([06af17c](https://github.com/Dan1el-19/chmura-blokserwis/commit/06af17ccf80d13df349383b0bf3894e552f2f087))
 
 ## [2.1.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.0.0...v2.1.0) (2026-05-12)
 
 ### Features
 
-* implement multipart upload system for R2 with selection management and API infrastructure ([18662ce](https://github.com/Dan1el-19/chmura-blokserwis/commit/18662ceedbacc26c6a618d8627caa69a4be6092a))
+- implement multipart upload system for R2 with selection management and API infrastructure ([18662ce](https://github.com/Dan1el-19/chmura-blokserwis/commit/18662ceedbacc26c6a618d8627caa69a4be6092a))
 
 ## [2.0.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v1.15.0...v2.0.0) (2026-05-11)
 
 ### ⚠ BREAKING CHANGES
 
-* migrated service identity and public product naming.
+- migrated service identity and public product naming.
 
 ### Features
 
-* migrate from effinity-cloud to chmura-blokserwis v2 ([7564a7f](https://github.com/Dan1el-19/chmura-blokserwis/commit/7564a7f45ff2d74ba744f22f1d12a13ce61fb9b2))
+- migrate from effinity-cloud to chmura-blokserwis v2 ([7564a7f](https://github.com/Dan1el-19/chmura-blokserwis/commit/7564a7f45ff2d74ba744f22f1d12a13ce61fb9b2))
 
 # [1.16.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v1.15.0...v1.16.0) (2026-05-11)
 
-
 ### Features
 
-* **sdk:** migrate storage to UniSource SDK and deploy on Cloudflare Workers ([8480376](https://github.com/Dan1el-19/chmura-blokserwis/commit/8480376c3ec3584c71c16ea8f31cfdaa3147bc1b))
+- **sdk:** migrate storage to UniSource SDK and deploy on Cloudflare Workers ([8480376](https://github.com/Dan1el-19/chmura-blokserwis/commit/8480376c3ec3584c71c16ea8f31cfdaa3147bc1b))
 
 # [1.15.0](https://github.com/Dan1el-19/effinity-cloud/compare/v1.14.2...v1.15.0) (2026-05-07)
 

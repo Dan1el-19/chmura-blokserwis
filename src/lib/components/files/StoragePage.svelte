@@ -142,6 +142,22 @@
 	const sortedFolders = $derived(sortItems(data.folders));
 	const sortedFiles = $derived(sortItems(data.files));
 
+	const parentFolderName = $derived(
+		!data.currentFolderId
+			? ''
+			: (data.folderPath ?? []).length <= 1
+				? titleRoot
+				: (data.folderPath ?? [])[data.folderPath!.length - 2].name
+	);
+
+	const parentFolderId = $derived(
+		!data.currentFolderId
+			? null
+			: (data.folderPath ?? []).length <= 1
+				? null
+				: (data.folderPath ?? [])[data.folderPath!.length - 2].id
+	);
+
 	const showStorageWidget = $derived(
 		typeof data.usage === 'number' && typeof data.limit === 'number'
 	);
@@ -160,6 +176,14 @@
 	function folderHref(folderId: string) {
 		if (rootHref === '?') return `?folder=${folderId}`;
 		return `${rootHref}${rootHref.includes('?') ? '&' : '?'}folder=${folderId}`;
+	}
+
+	function onNavigateUp() {
+		if (parentFolderId === null) {
+			window.location.href = rootHref;
+		} else {
+			window.location.href = folderHref(parentFolderId);
+		}
 	}
 </script>
 
@@ -250,6 +274,10 @@
 		{sortBy}
 		{sortDir}
 		onSort={setSort}
+		currentFolderId={data.currentFolderId}
+		{parentFolderName}
+		{parentFolderId}
+		{onNavigateUp}
 	/>
 
 	{#if data.fileNextCursor || data.folderNextCursor}

@@ -52,7 +52,9 @@
 		}
 		busyId = id;
 		try {
-			const url = isFolder ? `/api/folders/${id}?permanent=true` : `/api/files/${id}?permanent=true`;
+			const url = isFolder
+				? `/api/folders/${id}?permanent=true`
+				: `/api/files/${id}?permanent=true`;
 			const res = await fetch(url, { method: 'DELETE' });
 			if (res.ok) {
 				toast.success(`Trwale usunięto "${name}"`);

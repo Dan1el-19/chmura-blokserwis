@@ -11,13 +11,17 @@
 	type SortBy = 'name' | 'date' | 'size';
 	type SortDir = 'asc' | 'desc';
 
-	let { files, folders, selection, sortBy, sortDir, onSort } = $props<{
+	let { files, folders, selection, sortBy, sortDir, onSort, currentFolderId = null, parentFolderName = '', parentFolderId = null, onNavigateUp = () => {} } = $props<{
 		files: any[];
 		folders: any[];
 		selection: SelectionState;
 		sortBy: SortBy;
 		sortDir: SortDir;
 		onSort: (by: SortBy) => void;
+		currentFolderId?: string | null;
+		parentFolderName?: string;
+		parentFolderId?: string | null;
+		onNavigateUp?: () => void;
 	}>();
 
 	let renamingItem = $state<{ id: string; name: string; isFolder: boolean } | null>(null);
@@ -95,6 +99,10 @@
 		{onRename}
 		{onNavigate}
 		{onShare}
+		{currentFolderId}
+		{parentFolderName}
+		{parentFolderId}
+		{onNavigateUp}
 	/>
 	<FileList
 		{files}
@@ -105,6 +113,9 @@
 		{onRename}
 		{onNavigate}
 		{onShare}
+		{currentFolderId}
+		{parentFolderName}
+		{onNavigateUp}
 	/>
 </div>
 

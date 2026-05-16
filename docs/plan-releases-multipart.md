@@ -83,16 +83,16 @@ Dodać typy i metody do SDK:
 ```ts
 // releases.ts — nowe typy
 export const releaseMultipartCreateResponseSchema = z.object({
-  upload_id: nonEmptyString,   // = release_id
-  r2_upload_id: nonEmptyString,
-  key: nonEmptyString,
-  bucket: nonEmptyString,
-  expires_at: positiveInt,
+	upload_id: nonEmptyString, // = release_id
+	r2_upload_id: nonEmptyString,
+	key: nonEmptyString,
+	bucket: nonEmptyString,
+	expires_at: positiveInt
 });
 
 export const releaseMultipartSignPartResponseSchema = z.object({
-  url: z.string().url(),
-  expires_at: positiveInt,
+	url: z.string().url(),
+	expires_at: positiveInt
 });
 
 // ... list-parts, complete, abort analogicznie do uploads.ts
@@ -116,6 +116,7 @@ Zbuildować SDK: `pnpm --filter @unisource/sdk build`
 Zastąpić zawartość wszystkich 5 plików w `src/routes/api/releases/multipart/`:
 
 **`+server.ts` (POST — create):**
+
 ```ts
 // Zamiast CreateMultipartUploadCommand:
 const init = await client.releases.upload.multipart.create({ ... });
@@ -123,17 +124,20 @@ return json({ key: init.key, uploadId: init.r2_upload_id, release_id: init.uploa
 ```
 
 **`[uploadId]/+server.ts` (GET list-parts, DELETE abort):**
+
 ```ts
 // GET: client.releases.upload.multipart.listParts(uploadId)
 // DELETE: client.releases.upload.multipart.abort(uploadId)
 ```
 
 **`[uploadId]/[partNumber]/+server.ts` (GET sign-part):**
+
 ```ts
 // client.releases.upload.multipart.signPart(uploadId, partNumber)
 ```
 
 **`[uploadId]/complete/+server.ts` (POST complete):**
+
 ```ts
 // client.releases.upload.multipart.complete({ upload_id, parts })
 // Nie trzeba już osobno wywoływać /api/releases/complete — unisource robi to wewnętrznie
@@ -149,6 +153,7 @@ pnpm install --frozen-lockfile
 ```
 
 Lub jeśli SDK jest linkowane lokalnie:
+
 ```bash
 pnpm sdk:link
 pnpm dev
