@@ -14,7 +14,7 @@ describe('mobile file actions', () => {
 
 		expect(source).toContain('onUpload: () => void');
 		expect(source).toContain('onNewFolder?: () => void');
-		expect(source).toContain("let isMenuOpen = $state(false)");
+		expect(source).toContain('let isMenuOpen = $state(false)');
 		expect(source).toContain('Nowy folder');
 		expect(source).toContain('Prześlij pliki');
 		expect(source).not.toContain("'root' | 'upload'");

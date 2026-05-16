@@ -131,9 +131,7 @@
 									<CheckCircle class="h-4 w-4 text-primary" weight="fill" />
 								{/if}
 							</div>
-							<p class="mt-0.5 text-xs text-text-muted">
-								Pliki ≤ 5 GiB → Appwrite, większe → R2.
-							</p>
+							<p class="mt-0.5 text-xs text-text-muted">Pliki ≤ 5 GiB → Appwrite, większe → R2.</p>
 						</div>
 					</div>
 				</label>

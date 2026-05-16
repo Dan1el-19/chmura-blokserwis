@@ -33,9 +33,7 @@
 			})
 		);
 
-		const failed = results.filter(
-			(r): r is PromiseRejectedResult => r.status === 'rejected'
-		);
+		const failed = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
 		const succeededCount = ids.length - failed.length;
 
 		if (succeededCount > 0) {

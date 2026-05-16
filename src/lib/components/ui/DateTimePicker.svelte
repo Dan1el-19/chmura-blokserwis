@@ -35,9 +35,7 @@
 	// historically meant "no minValue" (past allowed). Treat any explicit value
 	// as the inverse of the new prop so older call sites keep their effective
 	// behaviour while we migrate.
-	const restrictToFuture = $derived(
-		onlyFutureDates || (enableFutureDates === false)
-	);
+	const restrictToFuture = $derived(onlyFutureDates || enableFutureDates === false);
 
 	let isOpen = $state(false);
 	let hour = $state('12');

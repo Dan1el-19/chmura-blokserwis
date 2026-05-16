@@ -46,8 +46,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				}
 
 				const isStrictEndpoint =
-					event.url.pathname.includes('/api/files') ||
-					event.url.pathname.includes('/api/folders');
+					event.url.pathname.includes('/api/files') || event.url.pathname.includes('/api/folders');
 
 				const limiter = isStrictEndpoint ? strictRatelimit : ratelimit;
 				const result = await checkRateLimit(identifier, limiter);
