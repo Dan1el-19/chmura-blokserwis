@@ -119,7 +119,14 @@
 
 	<!-- Content -->
 	<Card class="min-h-100">
-		{#if data.files.length === 0 && data.folders.length === 0}
+		{#if data.error}
+			<div class="flex h-64 flex-col items-center justify-center text-text-muted">
+				<div class="mb-4 rounded-full bg-bg-app p-4">
+					<Cloud class="h-8 w-8 opacity-20" />
+				</div>
+				<p>{data.error}</p>
+			</div>
+		{:else if data.files.length === 0 && data.folders.length === 0}
 			<div class="flex h-64 flex-col items-center justify-center text-text-muted">
 				<div class="mb-4 rounded-full bg-bg-app p-4">
 					<Cloud class="h-8 w-8 opacity-20" />
