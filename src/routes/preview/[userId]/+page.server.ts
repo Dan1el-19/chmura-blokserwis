@@ -2,7 +2,9 @@ import { redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getUserRole } from '$lib/server/roles';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createAdminClient } from '$lib/server/appwrite';
 import { mapFileFromUnisource, mapFolderFromUnisource } from '$lib/server/unisource-mappers';
+import { logger } from '$lib/server/logger';
 
 const PAGE_LIMIT = 50;
 
@@ -21,16 +23,30 @@ export const load: PageServerLoad = async (event) => {
 	const { userId } = params;
 	const folderId = url.searchParams.get('folder') || null;
 
+	const { users } = createAdminClient(event);
+	let targetUser: { $id: string; name: string; email: string };
+	try {
+		const u = await users.get(userId);
+		targetUser = { $id: u.$id, name: u.name, email: u.email };
+	} catch {
+		throw error(404, 'Użytkownik nie został znaleziony');
+	}
+
 	const admin = createAdminUnisourceClient(event);
 
+	let files: ReturnType<typeof mapFileFromUnisource>[] = [];
+	let folders: ReturnType<typeof mapFolderFromUnisource>[] = [];
+	let breadcrumbs: { id: string | null; name: string }[] = [{ id: null, name: 'Root' }];
+	let errorMsg: string | undefined;
+
 	try {
-		const [filesResult, foldersResult, userInfo] = await Promise.all([
+		const [filesResult, foldersResult] = await Promise.all([
 			admin.myFiles.list({ folder_id: folderId, limit: PAGE_LIMIT }, undefined, { asUser: userId }),
-			admin.folders.list({ parent_id: folderId, limit: PAGE_LIMIT }, undefined, { asUser: userId }),
-			admin.admin.listUsers({ limit: 1, offset: 0 }).catch(() => null)
+			admin.folders.list({ parent_id: folderId, limit: PAGE_LIMIT }, undefined, { asUser: userId })
 		]);
 
-		let breadcrumbs: { id: string | null; name: string }[] = [{ id: null, name: 'Root' }];
+		files = filesResult.items.map(mapFileFromUnisource);
+		folders = foldersResult.items.map(mapFolderFromUnisource);
 
 		if (folderId) {
 			const trail: { id: string; name: string }[] = [];
@@ -44,19 +60,17 @@ export const load: PageServerLoad = async (event) => {
 
 			breadcrumbs = [{ id: null, name: 'Root' }, ...trail];
 		}
-
-		return {
-			targetUser: {
-				$id: userId,
-				name: userId,
-				email: ''
-			},
-			files: filesResult.items.map(mapFileFromUnisource),
-			folders: foldersResult.items.map(mapFolderFromUnisource),
-			currentFolder: folderId,
-			breadcrumbs
-		};
 	} catch (e) {
-		throw error(404, 'Użytkownik nie został znaleziony');
+		logger.error('Preview UniSource error:', e);
+		errorMsg = 'Nie udało się załadować plików użytkownika';
 	}
+
+	return {
+		targetUser,
+		files,
+		folders,
+		currentFolder: folderId,
+		breadcrumbs,
+		...(errorMsg ? { error: errorMsg } : {})
+	};
 };
