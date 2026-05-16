@@ -1,3 +1,9 @@
+## [2.5.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.5.0...v2.5.1) (2026-05-16)
+
+### Bug Fixes
+
+* bypass rate limit for multipart upload sign-part/list-parts hot path ([1e39a7a](https://github.com/Dan1el-19/chmura-blokserwis/commit/1e39a7a48486b624466b6392369e0a56226f61f4))
+
 ## [2.5.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.4.0...v2.5.0) (2026-05-15)
 
 ### Features
