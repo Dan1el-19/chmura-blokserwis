@@ -1,3 +1,9 @@
+## [2.6.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.1...v2.6.2) (2026-05-16)
+
+### Bug Fixes
+
+* **frontend:** honor appwrite upload and download ([920fe30](https://github.com/Dan1el-19/chmura-blokserwis/commit/920fe303056087f523383582129ce2ca50200e59))
+
 ## [2.6.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.0...v2.6.1) (2026-05-16)
 
 ### Bug Fixes
