@@ -58,6 +58,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		});
 	} catch (err) {
 		clearTimeout(timeoutId);
+		console.error(`[proxy-download] Fetch failed for ${targetUrl}:`, err);
 		if (err instanceof Error && err.name === 'AbortError') {
 			throw error(504, 'Upłynął limit czasu pobrania pliku');
 		}
@@ -66,6 +67,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	if (!response.ok) {
 		clearTimeout(timeoutId);
+		console.error(`[proxy-download] Bad response status ${response.status} for ${targetUrl}`);
 		throw error(response.status, 'Nie udało się pobrać pliku');
 	}
 
