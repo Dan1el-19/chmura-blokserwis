@@ -28,7 +28,7 @@
 			<button
 				type="button"
 				role="menuitem"
-				class="flex items-center gap-3 rounded-full bg-bg-panel py-2.5 pr-4 pl-3 shadow-lg transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+				class="flex items-center gap-3 rounded-full bg-bg-panel py-2.5 pr-4 pl-3 shadow-lg transition-transform focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none active:scale-95"
 				onclick={() => {
 					isMenuOpen = false;
 					onNewFolder?.();
@@ -36,7 +36,9 @@
 				in:fly={{ y: 20, x: 10, duration: 250, delay: 50, easing: backOut }}
 				out:scale={{ duration: 150, start: 0.9 }}
 			>
-				<div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500 text-white">
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500 text-white"
+				>
 					<FolderPlus class="h-5 w-5" weight="bold" />
 				</div>
 				<span class="text-sm font-medium text-text-main">Nowy folder</span>
@@ -45,7 +47,7 @@
 			<button
 				type="button"
 				role="menuitem"
-				class="flex items-center gap-3 rounded-full bg-bg-panel py-2.5 pr-4 pl-3 shadow-lg transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+				class="flex items-center gap-3 rounded-full bg-bg-panel py-2.5 pr-4 pl-3 shadow-lg transition-transform focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none active:scale-95"
 				onclick={() => {
 					isMenuOpen = false;
 					onUpload();
@@ -63,14 +65,18 @@
 
 	<button
 		type="button"
-		class="relative z-50 flex h-14 w-14 items-center justify-center rounded-xl shadow-lg transition-all duration-300 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60
+		class="relative z-50 flex h-14 w-14 items-center justify-center rounded-xl shadow-lg transition-all duration-300 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none active:scale-95
 		       {isMenuOpen ? 'bg-zinc-700 shadow-xl dark:bg-zinc-600' : 'bg-primary'}"
 		onclick={toggleMenu}
 		aria-label={isMenuOpen ? 'Zamknij menu' : 'Otwórz menu'}
 		aria-haspopup="menu"
 		aria-expanded={isMenuOpen}
 	>
-		<div class="transform-gpu transition-transform duration-300 {isMenuOpen ? 'rotate-45' : 'rotate-0'}">
+		<div
+			class="transform-gpu transition-transform duration-300 {isMenuOpen
+				? 'rotate-45'
+				: 'rotate-0'}"
+		>
 			<Plus class="h-6 w-6 text-white" weight="bold" />
 		</div>
 	</button>

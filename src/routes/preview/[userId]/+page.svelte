@@ -117,6 +117,10 @@
 		{/each}
 	</div>
 
+	{#if data.error}
+		<p class="mt-2 text-sm text-red-500">{data.error}</p>
+	{/if}
+
 	<!-- Content -->
 	<Card class="min-h-100">
 		{#if data.error}

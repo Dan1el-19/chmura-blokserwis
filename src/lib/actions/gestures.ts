@@ -1,10 +1,10 @@
 import type { Action } from 'svelte/action';
 
 // Click outside action — fires callback when a pointer lands outside the node.
-export const clickOutside: Action<
-	HTMLElement,
-	{ enabled: boolean; callback: () => void }
-> = (node, params) => {
+export const clickOutside: Action<HTMLElement, { enabled: boolean; callback: () => void }> = (
+	node,
+	params
+) => {
 	function handler(e: PointerEvent) {
 		if (!params.enabled) return;
 		if (node.contains(e.target as Node)) return;
@@ -64,7 +64,7 @@ export const swipeAction: Action<HTMLElement, SwipeActionParams> = (node, params
 		if (currentDx > 0) {
 			bg.style.background = params.rightColor ?? '#3b82f6';
 			rightSide.innerHTML = past
-				? `<span style="display:inline-flex;align-items:center;gap:6px;"><svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M192 32a96 96 0 1 0 96 96A96.11 96.11 0 0 0 192 32zm0 160a64 64 0 1 1 64-64 64.07 64.07 0 0 1-64 64zm160 64a96 96 0 1 0 96 96A96.11 96.11 0 0 0 352 256zm0 160a64 64 0 1 1 64-64 64.07 64.07 0 0 1-64 64zM32 256a96 96 0 1 0 96-96 96.11 96.11 0 0 0-96 96zm160 0a64 64 0 1 1-64-64 64.07 64.07 0 0 1 64 64z"/></svg>${params.rightLabel ?? 'Udostępnij'}</span>`
+				? `<span style="display:inline-flex;align-items:center;gap:6px;"><svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M232.49,112.49l-48,48a12,12,0,0,1-17-17L195,116H165a84,84,0,0,0-81.36,63,12,12,0,1,1-23.24-6A107.94,107.94,0,0,1,165,92H195L167.51,64.48a12,12,0,0,1,17-17l48,48A12,12,0,0,1,232.49,112.49ZM192,204H44V88a12,12,0,0,0-24,0V216a12,12,0,0,0,12,12H192a12,12,0,0,0,0-24Z"/></svg>${params.rightLabel ?? 'Udostępnij'}</span>`
 				: `<span style="opacity:0.7">${params.rightLabel ?? 'Udostępnij'}</span>`;
 			leftSide.innerHTML = '';
 		} else if (currentDx < 0) {

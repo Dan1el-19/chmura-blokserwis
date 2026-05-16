@@ -2,7 +2,11 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 import { createAdminUnisourceClient } from '$lib/server/unisource';
-import { UnisourceError, UnisourceNetworkError, type RecommendedUploadDestination } from '@unisource/sdk';
+import {
+	UnisourceError,
+	UnisourceNetworkError,
+	type RecommendedUploadDestination
+} from '@unisource/sdk';
 
 type RecommendedDestination = RecommendedUploadDestination;
 

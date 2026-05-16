@@ -86,7 +86,7 @@
 									onclick={() => onDownload(release)}
 									title="Pobierz"
 								>
-									<DownloadSimple class="h-4 w-4" />
+									<DownloadSimple class="h-4 w-4 text-green-600" />
 								</Button>
 								<Button
 									variant="ghost"

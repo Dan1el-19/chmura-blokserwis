@@ -78,7 +78,7 @@
 			}
 			uploadCompletionBuffer = [];
 			uploadToastTimer = null;
-			invalidate(window.location.pathname);
+			invalidate(page.url.pathname);
 		}, 400);
 	}
 
@@ -142,19 +142,21 @@
 	const sortedFolders = $derived(sortItems(data.folders));
 	const sortedFiles = $derived(sortItems(data.files));
 
-	const parentFolderName = $derived.by(() => {
-		if (!data.currentFolderId) return '';
-		const path = data.folderPath ?? [];
-		if (path.length <= 1) return titleRoot;
-		return path[path.length - 2].name;
-	});
+	const parentFolderName = $derived(
+		!data.currentFolderId
+			? ''
+			: (data.folderPath ?? []).length <= 1
+				? titleRoot
+				: (data.folderPath ?? [])[data.folderPath!.length - 2].name
+	);
 
-	const parentFolderId = $derived.by(() => {
-		if (!data.currentFolderId) return null;
-		const path = data.folderPath ?? [];
-		if (path.length <= 1) return null;
-		return path[path.length - 2].id;
-	});
+	const parentFolderId = $derived(
+		!data.currentFolderId
+			? null
+			: (data.folderPath ?? []).length <= 1
+				? null
+				: (data.folderPath ?? [])[data.folderPath!.length - 2].id
+	);
 
 	const showStorageWidget = $derived(
 		typeof data.usage === 'number' && typeof data.limit === 'number'
