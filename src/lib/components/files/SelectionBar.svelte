@@ -2,6 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { DownloadSimple, Trash, X } from 'phosphor-svelte';
 	import { toast } from 'svelte-sonner';
+	import { triggerDownload } from '$lib/utils/download';
 	import type { SelectionState } from '$lib/modules/selection.svelte';
 
 	let { selection, files, folders } = $props<{
@@ -65,10 +66,7 @@
 			const res = await fetch(`/api/files/${id}?download=true`);
 			const data = await res.json();
 			if (data.downloadUrl) {
-				const a = document.createElement('a');
-				a.href = `/api/proxy-download?url=${encodeURIComponent(data.downloadUrl)}&name=${encodeURIComponent(file.name)}`;
-				a.download = file.name;
-				a.click();
+				triggerDownload(data.downloadUrl, file.name);
 			}
 		}
 	}

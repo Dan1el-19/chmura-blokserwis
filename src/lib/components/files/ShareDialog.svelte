@@ -2,7 +2,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import { toast } from 'svelte-sonner';
-	import { Copy, Trash, Plus, Globe, Clock, X, Lock, Hash } from 'phosphor-svelte';
+	import { Copy, Trash, Plus, Globe, Clock, X, Lock, Hash, PencilSimple } from 'phosphor-svelte';
 	import DateTimePicker from '$lib/components/ui/DateTimePicker.svelte';
 	import type { FileShare } from '$lib/types/storage';
 	import { onMount } from 'svelte';
@@ -17,6 +17,8 @@
 	let shares = $state<FileShare[]>([]);
 	let loading = $state(false);
 	let creating = $state(false);
+	let updatingShareId = $state<string | null>(null);
+	let editingShareId = $state<string | null>(null);
 
 	// Form State
 	let label = $state('');
@@ -25,6 +27,11 @@
 	let slugError = $state('');
 	let password = $state('');
 	let maxDownloads = $state<number | null>(null);
+	let editLabel = $state('');
+	let editExpiresAt = $state('');
+	let editPassword = $state('');
+	let editRemovePassword = $state(false);
+	let editMaxDownloads = $state<number | null>(null);
 
 	async function loadShares() {
 		loading = true;
@@ -106,6 +113,61 @@
 		}
 	}
 
+	function handleEditStart(share: FileShare) {
+		editingShareId = share.$id;
+		editLabel = share.label ?? '';
+		editExpiresAt = share.expiresAt ?? '';
+		editPassword = '';
+		editRemovePassword = false;
+		editMaxDownloads = share.maxDownloads;
+	}
+
+	function handleEditCancel() {
+		editingShareId = null;
+		editLabel = '';
+		editExpiresAt = '';
+		editPassword = '';
+		editRemovePassword = false;
+		editMaxDownloads = null;
+	}
+
+	async function handleUpdate(e: Event, shareId: string) {
+		e.preventDefault();
+		updatingShareId = shareId;
+
+		try {
+			const passwordUpdate = editRemovePassword
+				? { password: null }
+				: editPassword
+					? { password: editPassword }
+					: {};
+			const res = await fetch(`/api/shares/${shareId}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					label: editLabel,
+					expiresAt: editExpiresAt ? new Date(editExpiresAt).toISOString() : null,
+					maxDownloads: editMaxDownloads || null,
+					...passwordUpdate
+				})
+			});
+
+			if (res.ok) {
+				const updated = await res.json();
+				shares = shares.map((share) => (share.$id === shareId ? updated : share));
+				toast.success('Ustawienia linku zapisane');
+				handleEditCancel();
+			} else {
+				const err = await res.json();
+				toast.error(err.error || 'Nie udało się zapisać linku');
+			}
+		} catch (e) {
+			toast.error('Nie udało się zapisać linku');
+		} finally {
+			updatingShareId = null;
+		}
+	}
+
 	function getFullUrl(token: string) {
 		return `${window.location.origin}/file/${token}`;
 	}
@@ -160,12 +222,14 @@
 					<Plus size={16} /> Utwórz nowy link
 				</h4>
 
-				<form onsubmit={handleCreate} class="space-y-4">
+				<form onsubmit={handleCreate} class="space-y-4" autocomplete="off">
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<Input
 							label="Etykieta (opcjonalne)"
 							placeholder="np. Dla klienta X"
 							bind:value={label}
+							autocomplete="off"
+							name="share_label"
 						/>
 						<div>
 							<Input
@@ -173,6 +237,8 @@
 								placeholder="moj-link-do-pliku"
 								bind:value={customSlug}
 								oninput={() => validateSlug(customSlug)}
+								autocomplete="off"
+								name="share_slug"
 							/>
 							{#if slugError}
 								<p class="mt-1 text-xs text-red-500">{slugError}</p>
@@ -190,6 +256,8 @@
 								id="password"
 								placeholder="Zostaw puste = bez hasła"
 								bind:value={password}
+								autocomplete="new-password"
+								name="share_password"
 								class="w-full rounded-md border border-border-line bg-white px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none dark:bg-zinc-900"
 							/>
 						</div>
@@ -203,6 +271,9 @@
 								min="1"
 								placeholder="np. 5"
 								bind:value={maxDownloads}
+								autocomplete="off"
+								name="share_max_downloads"
+								inputmode="numeric"
 								class="w-full rounded-md border border-border-line bg-white px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none dark:bg-zinc-900"
 							/>
 						</div>
@@ -233,7 +304,7 @@
 						{#each shares as share (share.$id)}
 							{@const badge = getShareTypeBadge()}
 							<div
-								class="flex flex-col items-start justify-between gap-4 rounded-lg border border-border-line bg-white p-3 md:flex-row md:items-center dark:bg-zinc-950/50"
+								class="flex flex-col items-start justify-between gap-4 rounded-lg border border-border-line bg-white p-3 md:flex-row md:flex-wrap md:items-center dark:bg-zinc-950/50"
 							>
 								<div class="min-w-0 space-y-1">
 									<div class="flex flex-wrap items-center gap-2">
@@ -273,6 +344,14 @@
 									<Button
 										variant="secondary"
 										size="icon"
+										onclick={() => handleEditStart(share)}
+										title="Edytuj ustawienia linku"
+									>
+										<PencilSimple size={16} />
+									</Button>
+									<Button
+										variant="secondary"
+										size="icon"
 										onclick={() => copyLink(share.token)}
 										title="Kopiuj link"
 									>
@@ -287,6 +366,89 @@
 										<Trash size={16} />
 									</Button>
 								</div>
+								{#if editingShareId === share.$id}
+									<form
+										onsubmit={(event) => handleUpdate(event, share.$id)}
+										class="w-full basis-full space-y-4 border-t border-border-line pt-4"
+										autocomplete="off"
+									>
+										<h5 class="text-sm font-medium text-text-main">Edytuj ustawienia linku</h5>
+										<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+											<Input
+												label="Etykieta"
+												placeholder="np. Dla klienta X"
+												bind:value={editLabel}
+												autocomplete="off"
+												name="edit_share_label"
+											/>
+											<div>
+												<label
+													for="editMaxDownloads-{share.$id}"
+													class="mb-1.5 block text-sm font-medium text-text-main"
+												>
+													<Hash size={14} class="mr-1 inline" />Limit pobrań
+												</label>
+												<input
+													type="number"
+													id="editMaxDownloads-{share.$id}"
+													min="1"
+													placeholder="Puste = bez limitu"
+													bind:value={editMaxDownloads}
+													autocomplete="off"
+													name="edit_share_max_downloads"
+													inputmode="numeric"
+													class="w-full rounded-md border border-border-line bg-white px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none dark:bg-zinc-900"
+												/>
+											</div>
+										</div>
+
+										<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+											<DateTimePicker
+												label="Wygasa"
+												bind:value={editExpiresAt}
+												onlyFutureDates={true}
+											/>
+											<div>
+												<label
+													for="editPassword-{share.$id}"
+													class="mb-1.5 block text-sm font-medium text-text-main"
+												>
+													<Lock size={14} class="mr-1 inline" />Nowe hasło
+												</label>
+												<input
+													type="password"
+													id="editPassword-{share.$id}"
+													placeholder="Puste = bez zmian"
+													bind:value={editPassword}
+													disabled={editRemovePassword}
+													autocomplete="new-password"
+													name="edit_share_password"
+													class="w-full rounded-md border border-border-line bg-white px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none disabled:opacity-60 dark:bg-zinc-900"
+												/>
+											</div>
+										</div>
+
+										{#if share.passwordHash}
+											<label class="flex items-center gap-2 text-sm text-text-muted">
+												<input
+													type="checkbox"
+													bind:checked={editRemovePassword}
+													class="size-4 rounded border-border-line"
+												/>
+												Usuń hasło z linku
+											</label>
+										{/if}
+
+										<div class="flex flex-wrap justify-end gap-2">
+											<Button type="button" variant="ghost" size="sm" onclick={handleEditCancel}>
+												Anuluj
+											</Button>
+											<Button type="submit" loading={updatingShareId === share.$id} size="sm">
+												Zapisz
+											</Button>
+										</div>
+									</form>
+								{/if}
 							</div>
 						{/each}
 					</div>

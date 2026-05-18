@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidate } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { UppyState, type UploadResult } from '$lib/modules/upload.svelte';
 	import { SelectionState } from '$lib/modules/selection.svelte';
 	import UppyZone from '$lib/components/upload/UppyZone.svelte';
@@ -78,7 +78,7 @@
 			}
 			uploadCompletionBuffer = [];
 			uploadToastTimer = null;
-			invalidate(page.url.pathname);
+			invalidateAll();
 		}, 400);
 	}
 

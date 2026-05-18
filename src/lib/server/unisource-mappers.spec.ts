@@ -119,7 +119,7 @@ describe('UniSource mappers', () => {
 		expect(mapRoleToUnisource('admin')).toBe('admin');
 	});
 
-	it('maps public file responses without leaking internal token fields', () => {
+	it('maps public file responses using the share link expiry, not the short-lived download URL expiry', () => {
 		const publicFile = mapPublicFileFromUnisource({
 			file_id: 'file-1',
 			filename: 'terms.pdf',
@@ -138,10 +138,26 @@ describe('UniSource mappers', () => {
 			fileSize: 100,
 			mimeType: 'application/pdf',
 			downloadUrl: 'https://example.com/download',
-			expiresAt: '2023-11-14T22:15:00.000Z',
+			expiresAt: '2023-11-15T01:00:00.000Z',
 			requiresPassword: false,
 			limitReached: false,
 			remainingDownloads: null
 		});
+	});
+
+	it('keeps public file responses without a share expiry indefinite even when the download URL expires', () => {
+		const publicFile = mapPublicFileFromUnisource({
+			file_id: 'file-1',
+			filename: 'terms.pdf',
+			size: 100,
+			mime_type: 'application/pdf',
+			requires_password: false,
+			download_url: 'https://example.com/download',
+			url_expires_at: 1_700_000_100,
+			link_name: 'Terms',
+			link_expires_at: null
+		});
+
+		expect(publicFile.expiresAt).toBe(null);
 	});
 });
