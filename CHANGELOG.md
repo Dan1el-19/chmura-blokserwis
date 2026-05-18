@@ -1,3 +1,9 @@
+## [2.6.3](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.2...v2.6.3) (2026-05-18)
+
+### Bug Fixes
+
+* **frontend:** popraw udostepnianie plikow ([70dd8a3](https://github.com/Dan1el-19/chmura-blokserwis/commit/70dd8a3e088b17513cbd466d396dd6d17d2252a0))
+
 ## [2.6.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.1...v2.6.2) (2026-05-16)
 
 ### Bug Fixes
