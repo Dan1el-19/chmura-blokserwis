@@ -145,7 +145,7 @@
 
 				<div class="w-full px-8">
 					<a
-						href={`/api/proxy-download?url=${encodeURIComponent(downloadUrl ?? '')}&name=${encodeURIComponent(data.fileName ?? '')}`}
+						href={downloadUrl ?? '#'}
 						download={data.fileName}
 						class="group flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none active:scale-[0.98]"
 					>

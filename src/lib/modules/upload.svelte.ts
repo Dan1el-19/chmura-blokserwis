@@ -179,10 +179,9 @@ export class UploadManager {
 
 	private updateProgress(file: UploadFileState, percentage: number, uploadComplete = false) {
 		const trackedFile = this.getTrackedFile(file);
-		trackedFile.progress = { percentage, uploadComplete };
-		if (trackedFile !== file) {
-			file.progress = trackedFile.progress;
-		}
+		const progress = { percentage, uploadComplete };
+		trackedFile.progress = progress;
+		file.progress = progress;
 		this.recomputeTotals();
 	}
 
@@ -199,6 +198,8 @@ export class UploadManager {
 	private async markFailed(file: UploadFileState, error: Error) {
 		const isCancellation = error.name === 'AbortError' || /cancelled/i.test(error.message);
 
+		const trackedFile = this.getTrackedFile(file);
+		trackedFile.error = error.message;
 		file.error = error.message;
 		this.updateProgress(file, file.progress.percentage, false);
 

@@ -124,6 +124,6 @@ export function mapPublicFileFromUnisource(
 	return {
 		...base,
 		downloadUrl: response.download_url,
-		expiresAt: toIso(response.url_expires_at)
+		expiresAt: toIso(response.link_expires_at)
 	};
 }
