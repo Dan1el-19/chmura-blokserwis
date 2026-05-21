@@ -1,3 +1,9 @@
+## [2.7.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.0...v2.7.1) (2026-05-21)
+
+### Bug Fixes
+
+* **frontend:** chunked upload dla Appwrite (ERR_HTTP2_PROTOCOL_ERROR) ([125e7e3](https://github.com/Dan1el-19/chmura-blokserwis/commit/125e7e3efa543c399eef2d17e0653b92f4219a19))
+
 ## [2.7.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.3...v2.7.0) (2026-05-21)
 
 ### Features
