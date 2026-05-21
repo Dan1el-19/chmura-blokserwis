@@ -1,3 +1,9 @@
+## [2.7.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.3...v2.7.0) (2026-05-21)
+
+### Features
+
+* **frontend:** layout-level skeleton-loading dla cross-route navigation ([4841d6b](https://github.com/Dan1el-19/chmura-blokserwis/commit/4841d6ba61f0b09439216505876508e85b0154d4))
+
 ## [2.6.3](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.2...v2.6.3) (2026-05-18)
 
 ### Bug Fixes
