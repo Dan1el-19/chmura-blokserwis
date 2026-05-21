@@ -20,14 +20,14 @@ export type RecommendedUploadDestination = 'r2' | 'appwrite' | 'hybrid';
  * better at serving small files via CDN-edge caching), files larger than the
  * threshold go to R2 multipart for unbounded scale + zero egress.
  */
-const AUTO_THRESHOLD_BYTES = 100 * 1024 * 1024;
+const AUTO_THRESHOLD_BYTES = 3 * 1024 * 1024 * 1024;
 
 /**
  * Resolves the actual destination for an `auto` upload using the admin's
  * service-wide setting:
  *   - 'r2'       → always R2
  *   - 'appwrite' → always Appwrite
- *   - 'hybrid'   → Appwrite for files ≤ 5 GiB, R2 above
+ *   - 'hybrid'   → Appwrite for files ≤ 3 GiB, R2 above
  *
  * The legacy size-only behaviour is preserved as the `hybrid` branch so
  * existing callers keep working when no admin preference is provided.

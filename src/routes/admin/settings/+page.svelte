@@ -101,7 +101,7 @@
 								{/if}
 							</div>
 							<p class="mt-0.5 text-xs text-text-muted">
-								Bezpośredni upload przez Appwrite SDK, max 5 GB na plik.
+								Bezpośredni upload przez Appwrite SDK, max 3 GB na plik.
 							</p>
 						</div>
 					</div>
@@ -131,7 +131,7 @@
 									<CheckCircle class="h-4 w-4 text-primary" weight="fill" />
 								{/if}
 							</div>
-							<p class="mt-0.5 text-xs text-text-muted">Pliki ≤ 5 GiB → Appwrite, większe → R2.</p>
+							<p class="mt-0.5 text-xs text-text-muted">Pliki ≤ 3 GiB → Appwrite, większe → R2.</p>
 						</div>
 					</div>
 				</label>
