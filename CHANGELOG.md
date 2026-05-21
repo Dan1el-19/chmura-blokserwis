@@ -1,3 +1,9 @@
+## [2.8.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.3...v2.8.0) (2026-05-21)
+
+### Features
+
+* **upload:** appwrite — równoległe chunki (8x concurrency) ([3871b5d](https://github.com/Dan1el-19/chmura-blokserwis/commit/3871b5d25320b0547951682ce4bcc34e6a62305e))
+
 ## [2.7.3](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.2...v2.7.3) (2026-05-21)
 
 ### Bug Fixes
