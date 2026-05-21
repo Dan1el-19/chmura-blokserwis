@@ -542,15 +542,26 @@ export class UploadManager {
 		const apiBase = endpoint.endsWith('/v1') ? endpoint : `${endpoint}/v1`;
 		const uploadUrl = `${apiBase}/storage/buckets/${encodeURIComponent(init.appwrite_bucket_id)}/files`;
 
-		// Appwrite requires chunked upload (Content-Range) for files > 5 MiB.
-		// Sending the entire file as one request causes the server to RST_STREAM
-		// the HTTP/2 connection, which Chrome reports as ERR_HTTP2_PROTOCOL_ERROR.
-		const APPWRITE_CHUNK = 5 * 1024 * 1024;
+		// Split into 200 MiB chunks sent sequentially.
+		// - Content-Range is required by Appwrite for files > 5 MiB (avoids RST_STREAM).
+		// - Chunking lets us refresh the JWT (15 min TTL) between chunks, preventing
+		//   expiry on large/slow uploads.
+		const APPWRITE_CHUNK = 200 * 1024 * 1024;
 		const chunks = Math.ceil(file.size / APPWRITE_CHUNK);
+		let jwt = init.jwt;
 
 		for (let i = 0; i < chunks; i++) {
 			if (file.controller.signal.aborted)
 				throw new DOMException('Przesyłanie anulowane', 'AbortError');
+
+			// Refresh JWT before every chunk after the first.
+			if (i > 0) {
+				const jwtRes = await fetch('/api/upload/appwrite/jwt', {
+					signal: file.controller.signal
+				});
+				if (!jwtRes.ok) throw new Error('Nie udało się odświeżyć JWT');
+				({ jwt } = (await jwtRes.json()) as { jwt: string });
+			}
 
 			const start = i * APPWRITE_CHUNK;
 			const end = Math.min(start + APPWRITE_CHUNK - 1, file.size - 1);
@@ -578,7 +589,7 @@ export class UploadManager {
 							const body = JSON.parse(xhr.responseText) as { message?: string };
 							if (body.message) message = body.message;
 						} catch {
-							// Non-JSON body; use the default message.
+							// ignore
 						}
 						reject(new Error(message));
 					}
@@ -596,9 +607,9 @@ export class UploadManager {
 
 				xhr.open('POST', uploadUrl);
 				xhr.setRequestHeader('X-Appwrite-Project', init.appwrite_project_id);
-				xhr.setRequestHeader('X-Appwrite-JWT', init.jwt);
+				xhr.setRequestHeader('X-Appwrite-JWT', jwt);
 				xhr.setRequestHeader('X-Appwrite-Response-Format', '1.8.0');
-				if (chunks > 1)
+				if (chunks > 1 || file.size > 5 * 1024 * 1024)
 					xhr.setRequestHeader('Content-Range', `bytes ${start}-${end}/${file.size}`);
 
 				const formData = new FormData();
