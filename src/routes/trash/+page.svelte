@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { Trash, ArrowCounterClockwise, File as FileIcon, Folder, DotsThreeVertical } from 'phosphor-svelte';
+	import {
+		Trash,
+		ArrowCounterClockwise,
+		File as FileIcon,
+		Folder,
+		DotsThreeVertical
+	} from 'phosphor-svelte';
 	import { toast } from 'svelte-sonner';
 	import { formatFileSize } from '$lib/utils/format';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -119,7 +125,9 @@
 							onSwipeRight: () => restore(folder.$id, folder.name, true)
 						}}
 					>
-						<Folder class="h-8 w-8 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400" />
+						<Folder
+							class="h-8 w-8 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400"
+						/>
 						<div class="min-w-0 flex-1">
 							<p class="truncate text-sm font-medium text-text-main">{folder.name}</p>
 							<p class="font-mono text-xs text-text-muted">{formatDate(folder.$updatedAt)}</p>
@@ -128,7 +136,11 @@
 							type="button"
 							class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"
 							onpointerdown={(e) => e.stopPropagation()}
-							onclick={(e) => { e.stopPropagation(); sheetTarget = { id: folder.$id, name: folder.name, isFolder: true }; sheetOpen = true; }}
+							onclick={(e) => {
+								e.stopPropagation();
+								sheetTarget = { id: folder.$id, name: folder.name, isFolder: true };
+								sheetOpen = true;
+							}}
 						>
 							<DotsThreeVertical class="h-5 w-5" weight="bold" />
 						</button>
@@ -158,7 +170,11 @@
 							type="button"
 							class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"
 							onpointerdown={(e) => e.stopPropagation()}
-							onclick={(e) => { e.stopPropagation(); sheetTarget = { id: file.$id, name: file.name, isFolder: false }; sheetOpen = true; }}
+							onclick={(e) => {
+								e.stopPropagation();
+								sheetTarget = { id: file.$id, name: file.name, isFolder: false };
+								sheetOpen = true;
+							}}
 						>
 							<DotsThreeVertical class="h-5 w-5" weight="bold" />
 						</button>
@@ -274,9 +290,14 @@
 		<button
 			type="button"
 			class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"
-			onclick={() => { sheetOpen = false; restore(target.id, target.name, target.isFolder); }}
+			onclick={() => {
+				sheetOpen = false;
+				restore(target.id, target.name, target.isFolder);
+			}}
 		>
-			<span class="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/40">
+			<span
+				class="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/40"
+			>
 				<ArrowCounterClockwise class="h-4 w-4" />
 			</span>
 			Przywróć
@@ -285,9 +306,14 @@
 		<button
 			type="button"
 			class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-			onclick={() => { sheetOpen = false; deletePermanent(target.id, target.name, target.isFolder); }}
+			onclick={() => {
+				sheetOpen = false;
+				deletePermanent(target.id, target.name, target.isFolder);
+			}}
 		>
-			<span class="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40">
+			<span
+				class="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/40"
+			>
 				<Trash class="h-4 w-4" />
 			</span>
 			Usuń trwale

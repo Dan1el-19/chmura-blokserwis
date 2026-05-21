@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
+	import Skeleton from '$lib/components/ui/Skeleton.svelte';
 	import { toast } from 'svelte-sonner';
 	import { Copy, Trash, Plus, Globe, Clock, X, Lock, Hash, PencilSimple } from 'phosphor-svelte';
 	import DateTimePicker from '$lib/components/ui/DateTimePicker.svelte';
@@ -15,7 +16,7 @@
 	let { fileId, onClose }: Props = $props();
 
 	let shares = $state<FileShare[]>([]);
-	let loading = $state(false);
+	let loading = $state(true);
 	let creating = $state(false);
 	let updatingShareId = $state<string | null>(null);
 	let editingShareId = $state<string | null>(null);
@@ -292,7 +293,11 @@
 				<h4 class="text-sm font-medium text-text-muted">Aktywne linki ({shares.length})</h4>
 
 				{#if loading}
-					<div class="py-4 text-center text-sm text-text-muted">Ładowanie...</div>
+					<div class="space-y-2" role="status" aria-label="Ładowanie linków">
+						<Skeleton class="h-14 w-full" />
+						<Skeleton class="h-14 w-full" />
+						<Skeleton class="h-14 w-full" />
+					</div>
 				{:else if shares.length === 0}
 					<div
 						class="rounded-lg border border-dashed border-border-line py-8 text-center text-sm text-text-muted italic"

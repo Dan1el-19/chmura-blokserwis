@@ -12,6 +12,7 @@
 	import type { ParsedRelease } from '$lib/types/releases';
 	import { Trash, Warning, ArrowsClockwise, CloudCheck, AndroidLogo } from 'phosphor-svelte';
 	import { onMount } from 'svelte';
+	import Skeleton from '$lib/components/ui/Skeleton.svelte';
 
 	let { data } = $props();
 
@@ -250,7 +251,10 @@
 			{#snippet configCard(label: string, cfg: any, accent: string)}
 				<div class="rounded-lg border border-border-line bg-bg-panel px-4 py-3">
 					<p class="mb-1.5 text-xs font-semibold tracking-wide uppercase {accent}">{label}</p>
-					{#if !configLoading && cfg}
+					{#if configLoading && !cfg}
+						<Skeleton class="h-3.5 w-40" />
+						<Skeleton class="mt-2 h-3 w-24" />
+					{:else if cfg}
 						<p class="text-sm text-text-muted">
 							Wersja: <strong class="text-text-main">{cfg.name}</strong>
 							<span class="mx-1.5">•</span>
@@ -262,7 +266,7 @@
 								>Wymuszona aktualizacja włączona</span
 							>
 						{/if}
-					{:else if !configLoading}
+					{:else}
 						<p class="text-sm text-text-muted">Brak danych</p>
 					{/if}
 				</div>

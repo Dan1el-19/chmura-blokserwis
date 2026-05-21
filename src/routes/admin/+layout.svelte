@@ -1,9 +1,17 @@
 <script lang="ts">
-	import { page } from '$app/state';
+	import { page, navigating } from '$app/state';
 	import { SquaresFour, Users, GearSix } from 'phosphor-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { createCrossRouteNavigationLoading } from '$lib/modules/navigation-loading.svelte';
+	import RouteSkeleton from '$lib/components/ui/RouteSkeleton.svelte';
 
 	let { children } = $props();
+
+	const reloading = createCrossRouteNavigationLoading((from, to) => {
+		const fromIsAdmin = from?.startsWith('/admin') ?? false;
+		const toIsAdmin = to?.startsWith('/admin') ?? false;
+		return fromIsAdmin && toIsAdmin;
+	});
 
 	const tabs = [
 		{ href: '/admin', label: 'Pulpit', icon: SquaresFour, exact: true },
@@ -36,6 +44,10 @@
 	</header>
 
 	<main>
-		{@render children()}
+		{#if reloading.current}
+			<RouteSkeleton routeId={navigating.to?.route?.id ?? null} />
+		{:else}
+			{@render children()}
+		{/if}
 	</main>
 </div>

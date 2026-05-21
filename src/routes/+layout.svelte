@@ -2,14 +2,22 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { Toaster } from 'svelte-sonner';
-	import { page } from '$app/state';
+	import { page, navigating } from '$app/state';
 	import { Folder, GearSix, Shield, RocketLaunch, Trash } from 'phosphor-svelte';
 	import DesktopSidebar from '$lib/components/layout/DesktopSidebar.svelte';
 	import MobileHeader from '$lib/components/layout/MobileHeader.svelte';
 	import MobileDrawer from '$lib/components/layout/MobileDrawer.svelte';
+	import { createCrossRouteNavigationLoading } from '$lib/modules/navigation-loading.svelte';
+	import RouteSkeleton from '$lib/components/ui/RouteSkeleton.svelte';
 
 	let { children, data } = $props();
 	let isDrawerOpen = $state(false);
+
+	const reloading = createCrossRouteNavigationLoading((from, to) => {
+		const fromIsAdmin = from?.startsWith('/admin') ?? false;
+		const toIsAdmin = to?.startsWith('/admin') ?? false;
+		return !(fromIsAdmin && toIsAdmin);
+	});
 
 	const allNavItems = [
 		{
@@ -92,7 +100,11 @@
 			<MobileDrawer {navItems} {currentPath} bind:isDrawerOpen />
 
 			<main class="flex-1 overflow-y-auto overscroll-none p-4 lg:p-10">
-				{@render children()}
+				{#if reloading.current}
+					<RouteSkeleton routeId={navigating.to?.route?.id ?? null} />
+				{:else}
+					{@render children()}
+				{/if}
 			</main>
 		</div>
 	</div>
