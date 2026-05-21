@@ -542,57 +542,71 @@ export class UploadManager {
 		const apiBase = endpoint.endsWith('/v1') ? endpoint : `${endpoint}/v1`;
 		const uploadUrl = `${apiBase}/storage/buckets/${encodeURIComponent(init.appwrite_bucket_id)}/files`;
 
-		await new Promise<void>((resolve, reject) => {
-			const xhr = new XMLHttpRequest();
+		// Appwrite requires chunked upload (Content-Range) for files > 5 MiB.
+		// Sending the entire file as one request causes the server to RST_STREAM
+		// the HTTP/2 connection, which Chrome reports as ERR_HTTP2_PROTOCOL_ERROR.
+		const APPWRITE_CHUNK = 5 * 1024 * 1024;
+		const chunks = Math.ceil(file.size / APPWRITE_CHUNK);
 
-			const onAbort = () => xhr.abort();
-			file.controller.signal.addEventListener('abort', onAbort);
+		for (let i = 0; i < chunks; i++) {
+			if (file.controller.signal.aborted)
+				throw new DOMException('Przesyłanie anulowane', 'AbortError');
 
-			xhr.upload.onprogress = (event) => {
-				if (event.lengthComputable) {
-					// Map bytes progress to 10–90% range so we leave headroom for
-					// the /upload/complete round-trip below.
-					const pct = Math.round((event.loaded / event.total) * 80) + 10;
-					this.updateProgress(file, pct);
-				}
-			};
+			const start = i * APPWRITE_CHUNK;
+			const end = Math.min(start + APPWRITE_CHUNK - 1, file.size - 1);
+			const blob = chunks === 1 ? file.source : file.source.slice(start, end + 1);
 
-			xhr.onload = () => {
-				file.controller.signal.removeEventListener('abort', onAbort);
-				if (xhr.status >= 200 && xhr.status < 300) {
-					resolve();
-				} else {
-					let message = `Appwrite upload failed (${xhr.status})`;
-					try {
-						const body = JSON.parse(xhr.responseText) as { message?: string };
-						if (body.message) message = body.message;
-					} catch {
-						// Non-JSON body; use the default message.
+			await new Promise<void>((resolve, reject) => {
+				const xhr = new XMLHttpRequest();
+				const onAbort = () => xhr.abort();
+				file.controller.signal.addEventListener('abort', onAbort);
+
+				xhr.upload.onprogress = (event) => {
+					if (event.lengthComputable) {
+						const pct = Math.round(((start + event.loaded) / file.size) * 80) + 10;
+						this.updateProgress(file, pct);
 					}
-					reject(new Error(message));
-				}
-			};
+				};
 
-			xhr.onerror = () => {
-				file.controller.signal.removeEventListener('abort', onAbort);
-				reject(new Error('Błąd sieci podczas uploadu Appwrite'));
-			};
+				xhr.onload = () => {
+					file.controller.signal.removeEventListener('abort', onAbort);
+					if (xhr.status >= 200 && xhr.status < 300) {
+						resolve();
+					} else {
+						let message = `Appwrite upload failed (${xhr.status})`;
+						try {
+							const body = JSON.parse(xhr.responseText) as { message?: string };
+							if (body.message) message = body.message;
+						} catch {
+							// Non-JSON body; use the default message.
+						}
+						reject(new Error(message));
+					}
+				};
 
-			xhr.onabort = () => {
-				file.controller.signal.removeEventListener('abort', onAbort);
-				reject(new DOMException('Przesyłanie anulowane', 'AbortError'));
-			};
+				xhr.onerror = () => {
+					file.controller.signal.removeEventListener('abort', onAbort);
+					reject(new Error('Błąd sieci podczas uploadu Appwrite'));
+				};
 
-			xhr.open('POST', uploadUrl);
-			xhr.setRequestHeader('X-Appwrite-Project', init.appwrite_project_id);
-			xhr.setRequestHeader('X-Appwrite-JWT', init.jwt);
-			xhr.setRequestHeader('X-Appwrite-Response-Format', '1.8.0');
+				xhr.onabort = () => {
+					file.controller.signal.removeEventListener('abort', onAbort);
+					reject(new DOMException('Przesyłanie anulowane', 'AbortError'));
+				};
 
-			const formData = new FormData();
-			formData.append('fileId', init.file_id);
-			formData.append('file', file.source, file.name);
-			xhr.send(formData);
-		});
+				xhr.open('POST', uploadUrl);
+				xhr.setRequestHeader('X-Appwrite-Project', init.appwrite_project_id);
+				xhr.setRequestHeader('X-Appwrite-JWT', init.jwt);
+				xhr.setRequestHeader('X-Appwrite-Response-Format', '1.8.0');
+				if (chunks > 1)
+					xhr.setRequestHeader('Content-Range', `bytes ${start}-${end}/${file.size}`);
+
+				const formData = new FormData();
+				formData.append('fileId', init.file_id);
+				formData.append('file', blob, file.name);
+				xhr.send(formData);
+			});
+		}
 
 		this.updateProgress(file, 95);
 
