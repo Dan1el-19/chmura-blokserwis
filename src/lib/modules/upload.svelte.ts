@@ -542,32 +542,23 @@ export class UploadManager {
 		const apiBase = endpoint.endsWith('/v1') ? endpoint : `${endpoint}/v1`;
 		const uploadUrl = `${apiBase}/storage/buckets/${encodeURIComponent(init.appwrite_bucket_id)}/files`;
 
-		// Appwrite requires 5 MiB chunks with Content-Range (their SDK hard limit).
-		// JWT TTL is 15 min — refresh every 10 min to avoid expiry on slow/large uploads.
+		// Appwrite parallel chunk upload (announced 2026-05-22):
+		// - First chunk sent alone to establish the upload session on the server.
+		// - Remaining chunks sent 8 at a time in parallel (mirrors Appwrite SDK behaviour).
+		// - JWT (15 min TTL) is refreshed once per parallel batch to cover slow connections.
 		const APPWRITE_CHUNK = 5 * 1024 * 1024;
+		const APPWRITE_CONCURRENCY = 8;
 		const JWT_REFRESH_MS = 10 * 60 * 1000;
-		const chunks = Math.ceil(file.size / APPWRITE_CHUNK);
+		const totalChunks = Math.ceil(file.size / APPWRITE_CHUNK);
 		let jwt = init.jwt;
 		let jwtFetchedAt = Date.now();
 
-		for (let i = 0; i < chunks; i++) {
-			if (file.controller.signal.aborted)
-				throw new DOMException('Przesyłanie anulowane', 'AbortError');
-
-			if (i > 0 && Date.now() - jwtFetchedAt > JWT_REFRESH_MS) {
-				const jwtRes = await fetch('/api/upload/appwrite/jwt', {
-					signal: file.controller.signal
-				});
-				if (!jwtRes.ok) throw new Error('Nie udało się odświeżyć JWT');
-				({ jwt } = (await jwtRes.json()) as { jwt: string });
-				jwtFetchedAt = Date.now();
-			}
-
+		const sendChunk = (i: number, currentJwt: string): Promise<void> => {
 			const start = i * APPWRITE_CHUNK;
 			const end = Math.min(start + APPWRITE_CHUNK - 1, file.size - 1);
-			const blob = chunks === 1 ? file.source : file.source.slice(start, end + 1);
+			const blob = totalChunks === 1 ? file.source : file.source.slice(start, end + 1);
 
-			await new Promise<void>((resolve, reject) => {
+			return new Promise<void>((resolve, reject) => {
 				const xhr = new XMLHttpRequest();
 				const onAbort = () => xhr.abort();
 				file.controller.signal.addEventListener('abort', onAbort);
@@ -607,9 +598,9 @@ export class UploadManager {
 
 				xhr.open('POST', uploadUrl);
 				xhr.setRequestHeader('X-Appwrite-Project', init.appwrite_project_id);
-				xhr.setRequestHeader('X-Appwrite-JWT', jwt);
+				xhr.setRequestHeader('X-Appwrite-JWT', currentJwt);
 				xhr.setRequestHeader('X-Appwrite-Response-Format', '1.8.0');
-				if (chunks > 1 || file.size > 5 * 1024 * 1024)
+				if (totalChunks > 1 || file.size > 5 * 1024 * 1024)
 					xhr.setRequestHeader('Content-Range', `bytes ${start}-${end}/${file.size}`);
 
 				const formData = new FormData();
@@ -617,6 +608,32 @@ export class UploadManager {
 				formData.append('file', blob, file.name);
 				xhr.send(formData);
 			});
+		};
+
+		// First chunk establishes the upload session — must complete before others start.
+		if (file.controller.signal.aborted)
+			throw new DOMException('Przesyłanie anulowane', 'AbortError');
+		await sendChunk(0, jwt);
+
+		// Remaining chunks in parallel batches of APPWRITE_CONCURRENCY.
+		for (let i = 1; i < totalChunks; i += APPWRITE_CONCURRENCY) {
+			if (file.controller.signal.aborted)
+				throw new DOMException('Przesyłanie anulowane', 'AbortError');
+
+			if (Date.now() - jwtFetchedAt > JWT_REFRESH_MS) {
+				const jwtRes = await fetch('/api/upload/appwrite/jwt', {
+					signal: file.controller.signal
+				});
+				if (!jwtRes.ok) throw new Error('Nie udało się odświeżyć JWT');
+				({ jwt } = (await jwtRes.json()) as { jwt: string });
+				jwtFetchedAt = Date.now();
+			}
+
+			const batch = Array.from(
+				{ length: Math.min(APPWRITE_CONCURRENCY, totalChunks - i) },
+				(_, k) => sendChunk(i + k, jwt)
+			);
+			await Promise.all(batch);
 		}
 
 		this.updateProgress(file, 95);
