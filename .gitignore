@@ -26,4 +26,7 @@ vite.config.ts.timestamp-*
 # Scripts
 scripts/setup-cors.ts
 
+# Logs
+wrangler-tail-*.jsonl
+
 
