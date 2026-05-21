@@ -20,7 +20,7 @@ export type RecommendedUploadDestination = 'r2' | 'appwrite' | 'hybrid';
  * better at serving small files via CDN-edge caching), files larger than the
  * threshold go to R2 multipart for unbounded scale + zero egress.
  */
-const AUTO_THRESHOLD_BYTES = 5 * 1024 * 1024 * 1024;
+const AUTO_THRESHOLD_BYTES = 100 * 1024 * 1024;
 
 /**
  * Resolves the actual destination for an `auto` upload using the admin's
@@ -542,25 +542,25 @@ export class UploadManager {
 		const apiBase = endpoint.endsWith('/v1') ? endpoint : `${endpoint}/v1`;
 		const uploadUrl = `${apiBase}/storage/buckets/${encodeURIComponent(init.appwrite_bucket_id)}/files`;
 
-		// Split into 200 MiB chunks sent sequentially.
-		// - Content-Range is required by Appwrite for files > 5 MiB (avoids RST_STREAM).
-		// - Chunking lets us refresh the JWT (15 min TTL) between chunks, preventing
-		//   expiry on large/slow uploads.
-		const APPWRITE_CHUNK = 200 * 1024 * 1024;
+		// Appwrite requires 5 MiB chunks with Content-Range (their SDK hard limit).
+		// JWT TTL is 15 min — refresh every 10 min to avoid expiry on slow/large uploads.
+		const APPWRITE_CHUNK = 5 * 1024 * 1024;
+		const JWT_REFRESH_MS = 10 * 60 * 1000;
 		const chunks = Math.ceil(file.size / APPWRITE_CHUNK);
 		let jwt = init.jwt;
+		let jwtFetchedAt = Date.now();
 
 		for (let i = 0; i < chunks; i++) {
 			if (file.controller.signal.aborted)
 				throw new DOMException('Przesyłanie anulowane', 'AbortError');
 
-			// Refresh JWT before every chunk after the first.
-			if (i > 0) {
+			if (i > 0 && Date.now() - jwtFetchedAt > JWT_REFRESH_MS) {
 				const jwtRes = await fetch('/api/upload/appwrite/jwt', {
 					signal: file.controller.signal
 				});
 				if (!jwtRes.ok) throw new Error('Nie udało się odświeżyć JWT');
 				({ jwt } = (await jwtRes.json()) as { jwt: string });
+				jwtFetchedAt = Date.now();
 			}
 
 			const start = i * APPWRITE_CHUNK;
