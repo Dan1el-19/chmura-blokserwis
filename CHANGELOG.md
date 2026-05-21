@@ -1,3 +1,9 @@
+## [2.7.3](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.2...v2.7.3) (2026-05-21)
+
+### Bug Fixes
+
+* **upload:** appwrite — odświeżanie JWT co 10 min, próg auto→R2 obniżony do 100 MiB ([1b9cf09](https://github.com/Dan1el-19/chmura-blokserwis/commit/1b9cf09125152a0b0a8598d6a225da3124e5fc64))
+
 ## [2.7.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.1...v2.7.2) (2026-05-21)
 
 ### Bug Fixes
