@@ -1,3 +1,9 @@
+## [2.7.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.1...v2.7.2) (2026-05-21)
+
+### Bug Fixes
+
+* **upload:** implement chunked upload with JWT refresh for large files ([0cd565c](https://github.com/Dan1el-19/chmura-blokserwis/commit/0cd565c7e991d2d37b4ad487587580462ddd89b9))
+
 ## [2.7.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.0...v2.7.1) (2026-05-21)
 
 ### Bug Fixes
