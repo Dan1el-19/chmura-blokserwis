@@ -1,3 +1,9 @@
+## [2.8.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.8.0...v2.8.1) (2026-06-10)
+
+### Bug Fixes
+
+* **frontend:** popraw checkboxy na stronie plikow ([6a40efa](https://github.com/Dan1el-19/chmura-blokserwis/commit/6a40efa1b44d9f545802674945701ed844db1e31))
+
 ## [2.8.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.3...v2.8.0) (2026-05-21)
 
 ### Features
