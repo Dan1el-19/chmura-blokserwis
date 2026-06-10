@@ -17,4 +17,7 @@ describe('mobile file list UX', () => {
 	it('prevents mobile long press selection from selecting file name text', () => {
 		expect(source).toContain('select-none');
 	});
+	it('uses the themed file selection checkbox style', () => {
+		expect(source.match(/file-selection-checkbox/g)).toHaveLength(2);
+	});
 });

@@ -142,9 +142,10 @@
 				<th class="w-10 px-4 py-3">
 					<input
 						type="checkbox"
-						class="rounded accent-primary dark:bg-zinc-700"
+						class="file-selection-checkbox"
 						checked={selection.count > 0 && selection.count === allIds.length}
 						indeterminate={selection.count > 0 && selection.count < allIds.length}
+						onclick={(e) => e.stopPropagation()}
 						onchange={() => {
 							if (selection.count === allIds.length) selection.clear();
 							else allIds.forEach((id) => selection.add(id));
@@ -255,8 +256,9 @@
 					>
 						<input
 							type="checkbox"
-							class="rounded accent-primary dark:bg-zinc-700"
+							class="file-selection-checkbox"
 							checked={selection.has(folder.$id)}
+							onclick={(e) => e.stopPropagation()}
 							onchange={() => handleCheckbox(folder.$id)}
 							aria-label="Zaznacz {folder.name}"
 						/>
@@ -334,8 +336,9 @@
 					>
 						<input
 							type="checkbox"
-							class="rounded accent-primary dark:bg-zinc-700"
+							class="file-selection-checkbox"
 							checked={selection.has(file.$id)}
+							onclick={(e) => e.stopPropagation()}
 							onchange={() => handleCheckbox(file.$id)}
 							aria-label="Zaznacz {file.name}"
 						/>
