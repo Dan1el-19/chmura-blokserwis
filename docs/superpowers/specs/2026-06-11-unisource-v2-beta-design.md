@@ -49,8 +49,8 @@ wersji backendu zapisującej bezpośrednio do produkcyjnej bazy i bucketów.
 3. Beta ma inną nazwę Workera i inną trasę DNS.
 4. Beta używa tego samego `UNISOURCE_SERVICE_ID`; inny service ID utworzyłby
    inny zakres danych.
-5. SDK jest przypięte dokładnie do zatwierdzonego prerelease zawierającego
-   pełny kontrakt wymagany przez aplikację, planowanego jako `1.1.1-beta.1`.
+5. SDK jest przypięte dokładnie do zatwierdzonej wersji stable zawierającej
+   pełny kontrakt wymagany przez aplikację.
    Nie używamy zakresu `^`, aby beta nie zmieniła kontraktów bez przeglądu.
 6. Testy mutujące wspólne dane używają dedykowanego użytkownika beta oraz
    nazw z prefiksem `beta-e2e-`.
@@ -60,6 +60,9 @@ wersji backendu zapisującej bezpośrednio do produkcyjnej bazy i bucketów.
 9. Beta używa tego samego projektu i kont Appwrite, ale zachowuje osobny,
    host-only cookie sesji. Użytkownik może wymagać osobnego logowania na beta;
    nie rozszerzamy cookie stable na `.blokserwis.pl`.
+10. Wykonawca migracji chmury traktuje `A:\Projects\UniSource` jako read-only.
+    Każda zmiana, commit, push, publikacja lub deployment UniSource wymaga
+    osobnego zadania i jednoznacznej zgody użytkownika.
 
 ## Źródło Prawdy Kontraktów
 
@@ -111,36 +114,36 @@ Warstwa `src/lib/server/unisource-v2-contract.ts` zapewnia:
 
 ## Macierz Migracji SDK
 
-| Legacy                                               | V2                                                         | Istotna zmiana                        |
-| ---------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------- |
-| `UnisourceClient`                                    | `UnisourceV2Client`                                        | import z `@unisource/sdk/v2`          |
-| `getToken: () => apiKey`                             | `apiKey`                                                   | tryby auth są wzajemnie wykluczające  |
-| `admin.serviceDetail()`                              | `admin.getService()`                                       | nazwa metody                          |
-| `admin.usage()`                                      | `admin.getServiceUsage()`                                  | nazwa metody                          |
-| `myFiles.trash()`                                    | `myFiles.listTrash()`                                      | nazwa metody                          |
-| `myFiles.get/update/delete/restore/downloadUrl`      | `userFiles.*`                                              | nowy namespace                        |
-| `myFiles.move()`                                     | `myFiles.move()`                                           | odpowiedź akcji, bez pełnego pliku    |
-| `folders.list(...).next_cursor`                      | `folders.list(...).page.next_cursor`                       | koperta listy                         |
-| `folders.list({ is_trashed })`                       | `folders.list({ trash })`                                  | `active/trashed/all`                  |
-| ręczne breadcrumbs przez `folders.get()`             | `folders.breadcrumbs()`                                    | jeden request                         |
-| `folders.delete(id, { permanent }, signal, options)` | `folders.delete(id, signal, { permanent, asUser })`        | kolejność argumentów                  |
-| `shareLinks.list(fileId)`                            | `shareLinks.listForFile(fileId)`                           | nazwa metody                          |
-| `upload.multipart.*`                                 | `upload.multipartCreate/SignPart/ListParts/Complete/Abort` | spłaszczony namespace                 |
-| `upload.complete(body)`                              | `upload.complete(uploadId, signal, options)`               | nowa sygnatura                        |
-| `upload.fail()`                                      | brak metody w SDK, endpoint API istnieje                   | dodać metodę do SDK V2 przed migracją |
-| `mainStorage.upload.*`                               | `upload.*` z `is_main_storage`                             | wspólny namespace upload              |
-| `releases.upload.*`                                  | `releases.uploadInit/Complete/Fail`                        | spłaszczony namespace                 |
-| `releases.upload.multipart.*`                        | `releases.multipart*`                                      | spłaszczony namespace                 |
-| `UnisourceError`                                     | `UnisourceV2Error`                                         | `code`, `requestId`, `details`        |
-| helpery publiczne z root exportu                     | `client.public.*`                                          | publiczny namespace V2                |
+| Legacy                                               | V2                                                         | Istotna zmiana                       |
+| ---------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------ |
+| `UnisourceClient`                                    | `UnisourceV2Client`                                        | import z `@unisource/sdk/v2`         |
+| `getToken: () => apiKey`                             | `apiKey`                                                   | tryby auth są wzajemnie wykluczające |
+| `admin.serviceDetail()`                              | `admin.getService()`                                       | nazwa metody                         |
+| `admin.usage()`                                      | `admin.getServiceUsage()`                                  | nazwa metody                         |
+| `myFiles.trash()`                                    | `myFiles.listTrash()`                                      | nazwa metody                         |
+| `myFiles.get/update/delete/restore/downloadUrl`      | `userFiles.*`                                              | nowy namespace                       |
+| `myFiles.move()`                                     | `myFiles.move()`                                           | odpowiedź akcji, bez pełnego pliku   |
+| `folders.list(...).next_cursor`                      | `folders.list(...).page.next_cursor`                       | koperta listy                        |
+| `folders.list({ is_trashed })`                       | `folders.list({ trash })`                                  | `active/trashed/all`                 |
+| ręczne breadcrumbs przez `folders.get()`             | `folders.breadcrumbs()`                                    | jeden request                        |
+| `folders.delete(id, { permanent }, signal, options)` | `folders.delete(id, signal, { permanent, asUser })`        | kolejność argumentów                 |
+| `shareLinks.list(fileId)`                            | `shareLinks.listForFile(fileId)`                           | nazwa metody                         |
+| `upload.multipart.*`                                 | `upload.multipartCreate/SignPart/ListParts/Complete/Abort` | spłaszczony namespace                |
+| `upload.complete(body)`                              | `upload.complete(uploadId, signal, options)`               | nowa sygnatura                       |
+| `upload.fail()`                                      | `upload.uploadFail(uploadId)`                              | dostępne po wydaniu UniSource PR #23 |
+| `mainStorage.upload.*`                               | `upload.*` z `is_main_storage`                             | wspólny namespace upload             |
+| `releases.upload.*`                                  | `releases.uploadInit/Complete/Fail`                        | spłaszczony namespace                |
+| `releases.upload.multipart.*`                        | `releases.multipart*`                                      | spłaszczony namespace                |
+| `UnisourceError`                                     | `UnisourceV2Error`                                         | `code`, `requestId`, `details`       |
+| helpery publiczne z root exportu                     | `client.public.*`                                          | publiczny namespace V2               |
 
 ## Braki I Blokery Kontraktowe
 
 Przed migracją mutacji trzeba rozstrzygnąć następujące różnice:
 
-1. API V2 udostępnia `POST /v2/upload/fail`, ale SDK V2 nie udostępnia metody
-   `uploadFail`. Przed migracją aplikacji należy dodać metodę i testy do SDK,
-   opublikować prerelease oraz przypiąć jego dokładną wersję w beta.
+1. API V2 udostępnia `POST /v2/upload/fail`. Metoda SDK `uploadFail` jest
+   przygotowana poza zakresem migracji chmury w UniSource PR #23. Wykonawca
+   chmury czeka na opublikowaną wersję stable i nie modyfikuje UniSource.
 2. `mainStorage` w SDK V2 nie ma namespace `upload`. Wszystkie uploady main
    muszą przejść przez `client.upload.*` z `is_main_storage: true`.
 3. V2 `myFiles.move()` zwraca wynik akcji, nie pełny rekord pliku. Endpoint
@@ -179,7 +182,7 @@ Wymagane działania infrastrukturalne:
 
 ## Rollout
 
-1. Zamrozić wersję SDK/API i przejść testy UniSource.
+1. Zamrozić opublikowaną wersję stable SDK/API i wykonać read-only preflight.
 2. Zmigrować aplikację na osobnej gałęzi.
 3. Uruchomić lokalne testy i build.
 4. Wykonać `wrangler deploy --dry-run --env beta`.

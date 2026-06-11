@@ -16,14 +16,29 @@ Cloudflare Workers/Wrangler 4, Appwrite, UniSource SDK V2.
 
 ---
 
+## Twarde Granice Repozytoriów
+
+- Zakres implementacji tego planu obejmuje wyłącznie
+  `A:\Projects\chmura-blokserwis`.
+- `A:\Projects\UniSource` jest źródłem kontraktów **read-only**. Wolno czytać
+  kod, dokumentację i historię oraz uruchamiać polecenia diagnostyczne bez
+  zapisu.
+- Bez osobnej, jednoznacznej zgody użytkownika nie wolno w UniSource:
+  edytować plików, tworzyć gałęzi lub commitów, wykonywać push/merge/reset,
+  uruchamiać workflow, publikować npm ani wdrażać backendu.
+- Brak kontraktu SDK należy zgłosić jako bloker z nazwą endpointu i miejscem
+  użycia w chmurze. Nie wolno samodzielnie naprawiać go w UniSource.
+- Poprawka `client.upload.uploadFail()` jest obsługiwana poza tym planem przez
+  UniSource PR #23. Agent chmury ma jedynie przypiąć opublikowaną wersję stable,
+  która zawiera tę poprawkę.
+
 ## Założenia Wykonawcze
 
 - Gałąź implementacyjna: `codex/unisource-v2-beta`.
-- Rewizja odniesienia UniSource:
-  `271606becdb9e6429684480f857d094a4e2de850`.
+- UniSource jest read-only dla wykonawcy tego planu.
 - Obecny stabilny SDK: `@unisource/sdk@1.1.0`.
-- Beta przypina dokładny prerelease zawierający brakujące `uploadFail`,
-  planowany jako `@unisource/sdk@1.1.1-beta.1`.
+- Beta przypina dokładną wersję stable SDK zawierającą `uploadFail`; oczekiwana
+  pierwsza wersja to `@unisource/sdk@1.1.1` po wydaniu PR #23.
 - Worker stable: `chmura-blokserwis`.
 - Worker beta: `chmura-blokserwis-beta`.
 - Stable URL: `https://chmura.blokserwis.pl`.
@@ -58,77 +73,37 @@ Cloudflare Workers/Wrangler 4, Appwrite, UniSource SDK V2.
 - istniejące testy tras i mapperów.
 - `README.md`, `.env.example` — workflow beta i wymagane zmienne.
 
-## Task 1: Uzupełnienie Brakującego Kontraktu SDK V2
+## Task 1: Potwierdzenie Zakresu I Dostępności SDK
 
-- [ ] **Step 1: Dodaj failing test SDK dla `uploadFail`**
-
-W `A:\Projects\UniSource\packages\unisource-sdk` dodaj test zasobu upload,
-który oczekuje:
-
-```ts
-await client.upload.uploadFail('upload-1');
-```
-
-Request musi używać:
-
-```text
-POST /v2/upload/fail
-body: { "upload_id": "upload-1" }
-```
-
-oraz parsera `v2UploadLifecycleResponseSchema`.
+- [ ] **Step 1: Potwierdź repozytorium robocze**
 
 Run:
 
 ```powershell
-pnpm --dir A:\Projects\UniSource --filter @unisource/sdk test -- --run
+git rev-parse --show-toplevel
+git status --short --branch
 ```
 
-Expected: FAIL, `uploadFail` nie istnieje.
+Expected: repozytorium robocze to `A:\Projects\chmura-blokserwis`, a gałąź to
+`codex/unisource-v2-beta`.
 
-- [ ] **Step 2: Zaimplementuj i wyeksportuj metodę**
-
-Modify:
-
-- `A:\Projects\UniSource\packages\unisource-sdk\src\v2\resources\upload.ts`
-- test zasobu upload V2
-- `A:\Projects\UniSource\docs\sdk\v2\resources\upload.md`
-- changeset SDK
-
-Sygnatura:
-
-```ts
-uploadFail: (uploadId: string, signal?: AbortSignal, options?: { asUser?: string }) =>
-	Promise<V2UploadLifecycleResponse>;
-```
-
-- [ ] **Step 3: Zweryfikuj SDK i backend**
+- [ ] **Step 2: Potwierdź wersję SDK bez modyfikowania UniSource**
 
 Run:
 
 ```powershell
-pnpm --dir A:\Projects\UniSource --filter @unisource/sdk test -- --run
-pnpm --dir A:\Projects\UniSource --filter backend test -- --run
+pnpm view @unisource/sdk version dist-tags --json
 ```
 
-Expected: PASS.
+Expected: npm udostępnia zatwierdzoną wersję stable zawierającą
+`client.upload.uploadFail()`. Jeśli jeszcze jej nie ma, kontynuuj zadania
+niezależne od Task 8 i zgłoś wyłącznie bloker publikacji PR #23.
 
-- [ ] **Step 4: Opublikuj prerelease beta SDK**
+- [ ] **Step 3: Sprawdź zakaz zapisu**
 
-Uruchom `sdk-beta-release.yml` z patch bump. Oczekiwany pakiet:
-
-```text
-@unisource/sdk@1.1.1-beta.1
-```
-
-Nie wdrażaj nowego backendu: endpoint API V2 już istnieje.
-
-- [ ] **Step 5: Commit w UniSource**
-
-```powershell
-git -C A:\Projects\UniSource add packages/unisource-sdk docs/sdk/v2 .changeset
-git -C A:\Projects\UniSource commit -m "fix(sdk): dodaj uploadFail do klienta v2"
-```
+Przed przejściem dalej potwierdź, że plan wykonania nie zawiera żadnego polecenia
+zapisu, commitowania, pushowania, publikacji ani wdrożenia w
+`A:\Projects\UniSource`.
 
 ## Task 2: Utworzenie Izolowanej Gałęzi I Zamrożenie Kontraktu
 
@@ -146,34 +121,31 @@ git switch -c codex/unisource-v2-beta
 Expected: `git status --short --branch` pokazuje
 `codex/unisource-v2-beta` i czyste drzewo.
 
-- [ ] **Step 2: Potwierdź stan UniSource**
+- [ ] **Step 2: Potwierdź kontrakt z publicznych, read-only źródeł**
 
 Run:
 
 ```powershell
 git -C A:\Projects\UniSource rev-parse HEAD
-pnpm --dir A:\Projects\UniSource --filter @unisource/sdk test -- --run
-pnpm --dir A:\Projects\UniSource --filter backend test -- --run
 pnpm view @unisource/sdk version dist-tags --json
 ```
 
 Expected:
 
 - rewizja jest zatwierdzona przez osobę wdrażającą;
-- SDK: wszystkie testy przechodzą;
-- backend: wszystkie testy przechodzą;
-- npm `latest` wskazuje zatwierdzoną wersję, początkowo `1.1.0`.
+- npm `latest` wskazuje zatwierdzoną wersję stable;
+- w UniSource nie powstały żadne zmiany.
 
-- [ ] **Step 3: Przypnij SDK beta dokładnie**
+- [ ] **Step 3: Przypnij SDK stable dokładnie**
 
 Run:
 
 ```powershell
-pnpm add @unisource/sdk@1.1.1-beta.1 --save-exact
+pnpm add @unisource/sdk@1.1.1 --save-exact
 ```
 
 Expected: `package.json` i `pnpm-lock.yaml` wskazują dokładnie
-`1.1.1-beta.1`.
+zatwierdzoną wersję stable zawierającą `uploadFail`.
 
 - [ ] **Step 4: Zweryfikuj eksport V2 z pakietu npm**
 
@@ -489,7 +461,7 @@ git commit -m "feat(sdk): zmigruj operacje plików i folderów na v2"
 
 ## Task 8: Migracja Uploadów
 
-- [ ] **Step 1: Potwierdź dostępność `uploadFail`**
+- [ ] **Step 1: Potwierdź dostępność opublikowanego `uploadFail`**
 
 Run:
 
@@ -498,6 +470,10 @@ node -e "import('@unisource/sdk/v2').then(m => { const c = new m.UnisourceV2Clie
 ```
 
 Expected: exit code 0.
+
+Jeśli metoda nie jest dostępna, zatrzymaj wyłącznie Task 8. Nie używaj
+`pnpm sdk:link`, nie instaluj paczki z lokalnej ścieżki i nie modyfikuj
+UniSource.
 
 - [ ] **Step 2: Dodaj testy zwykłego uploadu**
 
@@ -788,7 +764,7 @@ pnpm sdk:unlink
 pnpm install --frozen-lockfile
 ```
 
-Expected: `node_modules/@unisource/sdk` jest przypiętym prerelease npm, nie
+Expected: `node_modules/@unisource/sdk` jest przypiętą wersją stable npm, nie
 symlinkiem.
 
 - [ ] **Step 2: Uruchom pełną weryfikację**
