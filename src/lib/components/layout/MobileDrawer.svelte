@@ -57,12 +57,10 @@
 		out:fly={{ y: -10, duration: 150 }}
 	>
 		{#each primaryNavItems as item, i}
-			{@const isActive = currentPath === item.href}
-			{@const activeBg = activeBgFor(item)}
 			<a
 				href={item.href}
 				class="flex items-center gap-4 rounded-full py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]
-								   {isActive ? activeBg : 'bg-bg-panel'}"
+								   {currentPath === item.href ? activeBgFor(item) : 'bg-bg-panel'}"
 				in:fly={{ y: -24, duration: 280, delay: itemDelay(i), easing: backOut }}
 				out:scale={{ duration: 100, start: 0.95 }}
 			>
@@ -76,11 +74,10 @@
 		{/each}
 
 		{#if trashNavItem}
-			{@const isActive = currentPath === trashNavItem.href}
 			<a
 				href={trashNavItem.href}
 				class="mt-2 flex items-center gap-4 rounded-full py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]
-								   {isActive ? activeBgFor(trashNavItem) : 'bg-bg-panel'}"
+								   {currentPath === trashNavItem.href ? activeBgFor(trashNavItem) : 'bg-bg-panel'}"
 				in:fly={{
 					y: -24,
 					duration: 280,

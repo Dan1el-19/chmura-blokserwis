@@ -14,6 +14,12 @@
 		saving: boolean;
 		onSave: () => void;
 	}>();
+
+	const roleIcons: Record<string, typeof UserIcon> = {
+		basic: UserIcon,
+		plus: Sparkle,
+		admin: Crown
+	};
 </script>
 
 <Card
@@ -22,12 +28,6 @@
 >
 	<div class="space-y-3">
 		{#each ['basic', 'plus', 'admin'] as role (role)}
-			{@const icons: Record<string, typeof UserIcon> = {
-				basic: UserIcon,
-				plus: Sparkle,
-				admin: Crown
-			}}
-			{@const Icon = icons[role]}
 			<label
 				class="flex cursor-pointer items-center gap-3 rounded-md border p-3 transition-colors
 						{selectedRole === role
@@ -35,7 +35,8 @@
 					: 'hover:bg-bg-msg-hover border-border-line'}"
 			>
 				<input type="radio" name="role" value={role} bind:group={selectedRole} class="sr-only" />
-				<Icon
+				<svelte:component
+					this={roleIcons[role]}
 					class="h-5 w-5 {role === 'admin'
 						? 'text-amber-500'
 						: role === 'plus'

@@ -307,7 +307,6 @@
 				{:else}
 					<div class="space-y-2">
 						{#each shares as share (share.$id)}
-							{@const badge = getShareTypeBadge()}
 							<div
 								class="flex flex-col items-start justify-between gap-4 rounded-lg border border-border-line bg-white p-3 md:flex-row md:flex-wrap md:items-center dark:bg-zinc-950/50"
 							>
@@ -316,8 +315,8 @@
 										<Globe size={16} class="shrink-0 text-primary" />
 										<span class="truncate text-sm font-medium">{share.label || share.token}</span>
 										<span
-											class="rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase {badge.class}"
-											>{badge.label}</span
+											class="rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase bg-blue-500/10 text-blue-600"
+											>Plik</span
 										>
 										{#if share.passwordHash}
 											<span

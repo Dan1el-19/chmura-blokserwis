@@ -62,7 +62,6 @@
 			</thead>
 			<tbody class="divide-y divide-border-line">
 				{#each data.users as user}
-					{@const config = roleConfig[user.role]}
 					<tr class="transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/50">
 						<td class="px-6 py-4">
 							<div class="flex flex-col">
@@ -77,11 +76,13 @@
 						</td>
 						<td class="px-6 py-4">
 							<span
-								class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium {config.class}"
+								class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium {roleConfig[
+									user.role
+								].class}"
 							>
 								<!-- Dynamic Component for icon -->
-								<config.icon class="h-3.5 w-3.5" />
-								{config.label}
+								<svelte:component this={roleConfig[user.role].icon} class="h-3.5 w-3.5" />
+								{roleConfig[user.role].label}
 							</span>
 						</td>
 						<td class="px-6 py-4 font-mono text-xs text-text-muted">
@@ -105,7 +106,6 @@
 	<!-- Mobile Cards -->
 	<div class="space-y-3 lg:hidden">
 		{#each data.users as user}
-			{@const config = roleConfig[user.role]}
 			<Card class="p-4">
 				<div class="flex items-start justify-between gap-3">
 					<div class="min-w-0 flex-1">
@@ -115,10 +115,12 @@
 						{/if}
 					</div>
 					<span
-						class="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium {config.class}"
+						class="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium {roleConfig[
+							user.role
+						].class}"
 					>
-						<config.icon class="h-3 w-3" />
-						{config.label}
+						<svelte:component this={roleConfig[user.role].icon} class="h-3 w-3" />
+						{roleConfig[user.role].label}
 					</span>
 				</div>
 

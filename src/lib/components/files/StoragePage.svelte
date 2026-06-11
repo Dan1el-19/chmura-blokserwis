@@ -194,6 +194,8 @@
 	ondrop={onPageDrop}
 />
 
+<h1 class="sr-only">{titleRoot}</h1>
+
 <!-- Page-level drop overlay -->
 {#if isDragOver}
 	<div
