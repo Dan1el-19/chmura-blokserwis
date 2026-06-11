@@ -755,12 +755,11 @@ Potwierdź:
 
 ## Task 13: Pełna Weryfikacja Przed Deploymentem
 
-- [ ] **Step 1: Przywróć graf npm używany przez Cloudflare**
+- [ ] **Step 1: Potwierdź graf npm używany przez Cloudflare**
 
 Run:
 
 ```powershell
-pnpm sdk:unlink
 pnpm install --frozen-lockfile
 ```
 
