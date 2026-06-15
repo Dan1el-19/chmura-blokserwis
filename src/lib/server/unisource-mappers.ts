@@ -1,11 +1,11 @@
 import type {
-	AdminUser,
-	FileRecord,
-	Folder,
-	PublicFileAccessResponse,
-	PublicFileLockedResponse,
-	ShareLink
-} from '@unisource/sdk';
+	AdminUsersListResponse,
+	PublicShareLinkLockedResponse,
+	PublicShareLinkUnlockedResponse,
+	V2File,
+	V2Folder
+} from '@unisource/sdk/v2';
+import type { ShareLink } from '@unisource/sdk';
 
 import type { FileDocument, FileShare, FolderDocument } from '$lib/types/storage';
 import type { UserRole } from './roles';
@@ -17,7 +17,7 @@ function toIso(timestamp: number | null | undefined): string | null {
 	return new Date(timestamp * 1000).toISOString();
 }
 
-export function mapFileFromUnisource(file: FileRecord): FileDocument & { isTrashed: boolean } {
+export function mapFileFromUnisource(file: V2File): FileDocument & { isTrashed: boolean } {
 	return {
 		$id: file.id,
 		$createdAt: toIso(file.created_at) ?? new Date(0).toISOString(),
@@ -35,7 +35,7 @@ export function mapFileFromUnisource(file: FileRecord): FileDocument & { isTrash
 	};
 }
 
-export function mapFolderFromUnisource(folder: Folder): FolderDocument & { isTrashed: boolean } {
+export function mapFolderFromUnisource(folder: V2Folder): FolderDocument & { isTrashed: boolean } {
 	return {
 		$id: folder.id,
 		$createdAt: toIso(folder.created_at) ?? new Date(0).toISOString(),
@@ -83,7 +83,7 @@ export function mapRoleToUnisource(role: UserRole): 'user' | 'plus' | 'admin' {
 	return role;
 }
 
-export function mapAdminUserFromUnisource(user: AdminUser) {
+export function mapAdminUserFromUnisource(user: AdminUsersListResponse['items'][number]) {
 	return {
 		$id: user.id,
 		email: user.email,
@@ -101,7 +101,7 @@ export function mapAdminUserFromUnisource(user: AdminUser) {
 }
 
 export function mapPublicFileFromUnisource(
-	response: PublicFileAccessResponse | PublicFileLockedResponse
+	response: PublicShareLinkUnlockedResponse | PublicShareLinkLockedResponse
 ) {
 	const base = {
 		expired: false,

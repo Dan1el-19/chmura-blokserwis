@@ -4,6 +4,7 @@ import type { RequestHandler } from './$types';
 import { createUserUnisourceClient } from '$lib/server/unisource';
 import { mapShareLinkFromUnisource } from '$lib/server/unisource-mappers';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 function toUnixTimestamp(value: unknown): number | null | undefined {
 	if (value === null) return null;
@@ -29,7 +30,7 @@ export const PATCH: RequestHandler = async (event) => {
 				: {})
 		});
 
-		return json(mapShareLinkFromUnisource(result.link));
+		return json(mapShareLinkFromUnisource(unwrapItem(result)));
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to update share');
 	}

@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 
 import { createUserUnisourceClient } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 /**
  * Proxy → UniSource `DELETE /upload/r2/multipart/abort`
@@ -18,7 +19,7 @@ export const DELETE: RequestHandler = async (event) => {
 		}
 
 		const client = await createUserUnisourceClient(event);
-		const result = await client.upload.multipart.abort(body.upload_id);
+		const result = unwrapItem(await client.upload.multipartAbort(body.upload_id));
 		return json(result);
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to abort multipart upload');

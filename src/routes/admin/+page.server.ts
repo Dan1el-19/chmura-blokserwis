@@ -5,7 +5,7 @@ import { mapRoleFromUnisource } from '$lib/server/unisource-mappers';
 export const load: PageServerLoad = async (event) => {
 	const admin = createAdminUnisourceClient(event);
 	const [usage, users] = await Promise.all([
-		admin.admin.usage(),
+		admin.admin.getServiceUsage(),
 		admin.admin.listUsers({ limit: 100 })
 	]);
 

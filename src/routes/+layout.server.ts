@@ -19,7 +19,7 @@ export const load: LayoutServerLoad = async (event) => {
 	if (event.locals.user) {
 		try {
 			const client = createAdminUnisourceClient(event);
-			const { service } = await client.admin.serviceDetail();
+			const { service } = await client.admin.getService();
 			const v = service.recommended_upload_destination;
 			if (isRecommendedUploadDestination(v)) {
 				recommendedUploadDestination = v;

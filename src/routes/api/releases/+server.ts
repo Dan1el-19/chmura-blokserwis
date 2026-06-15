@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { listReleases } from '$lib/server/storage/releases';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
 import { logger } from '$lib/server/logger';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 export const GET: RequestHandler = async (event) => {
 	const releases = await listReleases(event);
@@ -24,13 +25,15 @@ export const POST: RequestHandler = async (event) => {
 	const client = createAdminUnisourceClient(event);
 
 	try {
-		const init = await client.releases.upload.init({
-			name,
-			filename,
-			tags: tags ?? [],
-			notes: notes ?? null,
-			force_update: force_update ?? false
-		});
+		const init = unwrapItem(
+			await client.releases.uploadInit({
+				name,
+				filename,
+				tags: tags ?? [],
+				notes: notes ?? null,
+				force_update: force_update ?? false
+			})
+		);
 		return json(init, { status: 201 });
 	} catch (error: any) {
 		logger.error('Failed to init release upload:', error);

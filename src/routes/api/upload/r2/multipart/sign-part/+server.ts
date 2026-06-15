@@ -5,6 +5,7 @@ import { createUserUnisourceClient } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { assertPresignedUrlMatchesR2Config } from '$lib/server/storage/r2-url';
 import { requireRuntimeEnv } from '$lib/server/runtime-env';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 /**
  * Proxy → UniSource `GET /upload/r2/multipart/sign-part`
@@ -27,7 +28,9 @@ export const GET: RequestHandler = async (event) => {
 
 	try {
 		const client = await createUserUnisourceClient(event);
-		const result = await client.upload.multipart.signPart(uploadId, partNumber);
+		const result = unwrapItem<{ url: string }>(
+			await client.upload.multipartSignPart(uploadId, partNumber)
+		);
 
 		// Defence-in-depth: make sure the upstream presigned URL still points at
 		// the R2 endpoint we expect. Prevents a misconfigured backend from

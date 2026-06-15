@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
 import { promoteLatest } from '$lib/server/storage/releases';
 import { logger } from '$lib/server/logger';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 export const POST: RequestHandler = async (event) => {
 	if (!event.locals.user) {
@@ -18,7 +19,7 @@ export const POST: RequestHandler = async (event) => {
 
 	try {
 		const client = createAdminUnisourceClient(event);
-		const result = await client.releases.upload.complete({ release_id, size });
+		const result = unwrapItem(await client.releases.uploadComplete(release_id, size));
 
 		// Promote this release to `latest` within its channel, stripping `latest` from previous
 		const ch = typeof channel === 'string' ? channel : 'stable';

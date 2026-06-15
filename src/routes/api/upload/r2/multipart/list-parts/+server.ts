@@ -18,8 +18,8 @@ export const GET: RequestHandler = async (event) => {
 
 	try {
 		const client = await createUserUnisourceClient(event);
-		const result = await client.upload.multipart.listParts(uploadId);
-		return json(result);
+		const result = await client.upload.multipartListParts(uploadId);
+		return json({ parts: result.items });
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to list uploaded parts');
 	}

@@ -32,7 +32,7 @@ export const POST: RequestHandler = async (event) => {
 	try {
 		const client = createAdminUnisourceClient(event);
 		const result = await client.releases.sync({ releases });
-		logger.info(`Synced ${result.synced} releases`);
+		logger.info(`Synced ${result.processed.length} releases`);
 		return json(result);
 	} catch (error: any) {
 		logger.error('Failed to sync releases:', error);

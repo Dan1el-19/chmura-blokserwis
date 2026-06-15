@@ -1,6 +1,7 @@
 import type { RequestEvent } from '@sveltejs/kit';
-import type { ReleaseUpdateRequest } from '@unisource/sdk';
+import type { V2ReleaseUpdateRequest } from '@unisource/sdk/v2';
 import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 import { mapRelease, type ParsedRelease } from '$lib/types/releases';
 
 type RuntimeEvent = Pick<RequestEvent, 'platform'> | undefined;
@@ -16,7 +17,7 @@ export async function listReleases(event?: RuntimeEvent): Promise<ParsedRelease[
 
 export async function getRelease(releaseId: string, event?: RuntimeEvent): Promise<ParsedRelease> {
 	const dto = await client(event).releases.get(releaseId);
-	return mapRelease(dto);
+	return mapRelease(unwrapItem(dto));
 }
 
 export async function getReleaseByName(
@@ -30,11 +31,11 @@ export async function getReleaseByName(
 
 export async function updateRelease(
 	releaseId: string,
-	data: ReleaseUpdateRequest,
+	data: V2ReleaseUpdateRequest,
 	event?: RuntimeEvent
 ): Promise<ParsedRelease> {
 	const dto = await client(event).releases.update(releaseId, data);
-	return mapRelease(dto);
+	return mapRelease(unwrapItem(dto));
 }
 
 export async function deleteRelease(releaseId: string, event?: RuntimeEvent): Promise<void> {

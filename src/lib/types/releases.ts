@@ -1,4 +1,4 @@
-import type { ReleaseDTO } from '@unisource/sdk';
+import type { V2Release } from '@unisource/sdk/v2';
 
 // Mapped release — uses Appwrite-style $id/$createdAt for component compatibility
 export interface ParsedRelease {
@@ -12,10 +12,10 @@ export interface ParsedRelease {
 	notes: string | null;
 	force_update: boolean;
 	uploaded_by: string;
-	upload_status: ReleaseDTO['upload_status'];
+	upload_status: V2Release['upload_status'];
 }
 
-export function mapRelease(dto: ReleaseDTO): ParsedRelease {
+export function mapRelease(dto: V2Release): ParsedRelease {
 	return {
 		$id: dto.id,
 		$createdAt: dto.created_at,

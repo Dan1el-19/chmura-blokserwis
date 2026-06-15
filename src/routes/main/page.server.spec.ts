@@ -27,7 +27,7 @@ describe('/main load', () => {
 	it('uses the service client for shared main storage after local role authorization', async () => {
 		expect.assertions(2);
 
-		adminList.mockResolvedValue({ items: [], next_cursor: null });
+		adminList.mockResolvedValue({ items: [], page: { next_cursor: null, limit: 50 } });
 
 		await load({
 			locals: { user: { $id: 'user-1', labels: ['admin'] } },

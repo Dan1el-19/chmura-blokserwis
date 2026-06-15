@@ -5,6 +5,7 @@ import { mapFileFromUnisource, mapFolderFromUnisource } from '$lib/server/unisou
 import { getUserRole } from '$lib/server/roles';
 import type { Actions, PageServerLoad } from './$types';
 import { logger } from '$lib/server/logger';
+import { unwrapList } from '$lib/server/unisource-v2-contract';
 
 const PAGE_LIMIT = 50;
 
@@ -22,7 +23,7 @@ export const load: PageServerLoad = async (event) => {
 		const client = await createUserUnisourceClient(event);
 		const [files, folders] = await Promise.all([
 			client.myFiles.list({
-				folder_id: parentFolderId,
+				...(parentFolderId ? { folder_id: parentFolderId } : {}),
 				cursor: fileCursor,
 				limit: PAGE_LIMIT
 			}),
@@ -33,26 +34,21 @@ export const load: PageServerLoad = async (event) => {
 			})
 		]);
 
-		// Build breadcrumb path by walking parent chain (max 20 levels)
-		const folderPath: Array<{ id: string; name: string }> = [];
-		if (parentFolderId) {
-			let currentId: string | null = parentFolderId;
-			let depth = 0;
-			const visited = new Set<string>();
-			while (currentId && depth++ < 20 && !visited.has(currentId)) {
-				visited.add(currentId);
-				const { folder } = await client.folders.get(currentId);
-				folderPath.unshift({ id: folder.id, name: folder.name });
-				currentId = folder.parent_id ?? null;
-			}
-		}
+		const fileList = unwrapList<Parameters<typeof mapFileFromUnisource>[0]>(files);
+		const folderList = unwrapList<Parameters<typeof mapFolderFromUnisource>[0]>(folders);
+		const folderPath = parentFolderId
+			? (await client.folders.breadcrumbs(parentFolderId)).breadcrumbs.map(({ id, name }) => ({
+					id,
+					name
+				}))
+			: [];
 
 		return {
-			files: files.items.map(mapFileFromUnisource),
-			folders: folders.items.map(mapFolderFromUnisource),
+			files: fileList.items.map(mapFileFromUnisource),
+			folders: folderList.items.map(mapFolderFromUnisource),
 			currentFolderId: parentFolderId,
-			fileNextCursor: files.next_cursor,
-			folderNextCursor: folders.next_cursor,
+			fileNextCursor: fileList.nextCursor,
+			folderNextCursor: folderList.nextCursor,
 			role: getUserRole(locals.user),
 			storageKind: 'user' as const,
 			folderPath

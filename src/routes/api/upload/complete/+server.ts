@@ -4,6 +4,7 @@ import type { RequestHandler } from './$types';
 import { createUserUnisourceClient } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { getUserRole } from '$lib/server/roles';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 export const POST: RequestHandler = async (event) => {
 	if (!event.locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -16,12 +17,12 @@ export const POST: RequestHandler = async (event) => {
 			if (getUserRole(event.locals.user) === 'basic') {
 				return json({ error: 'Forbidden' }, { status: 403 });
 			}
-			return json(await client.mainStorage.upload.complete(body.upload_id));
+			return json(
+				unwrapItem(await client.upload.complete(body.upload_id, undefined, { isMainStorage: true }))
+			);
 		}
 
-		return json(
-			await client.upload.complete({ upload_id: body.upload_id, is_main_storage: false })
-		);
+		return json(unwrapItem(await client.upload.complete(body.upload_id)));
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to complete upload');
 	}

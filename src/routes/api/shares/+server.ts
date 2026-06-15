@@ -4,6 +4,7 @@ import type { RequestHandler } from './$types';
 import { createUserUnisourceClient } from '$lib/server/unisource';
 import { mapShareLinkFromUnisource } from '$lib/server/unisource-mappers';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 function toUnixTimestamp(value: unknown): number | undefined {
 	if (typeof value !== 'string' || value.length === 0) return undefined;
@@ -27,7 +28,7 @@ export const GET: RequestHandler = async (event) => {
 
 	try {
 		const client = await createUserUnisourceClient(event);
-		const result = await client.shareLinks.list(fileId);
+		const result = await client.shareLinks.listForFile(fileId);
 		return json(result.items.map(mapShareLinkFromUnisource));
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to list shares');
@@ -55,7 +56,7 @@ export const POST: RequestHandler = async (event) => {
 			...(body.maxDownloads ? { max_downloads: Number(body.maxDownloads) } : {})
 		});
 
-		return json(mapShareLinkFromUnisource(result.link));
+		return json(mapShareLinkFromUnisource(unwrapItem(result)));
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to create share');
 	}

@@ -7,6 +7,7 @@ import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { getUserRole } from '$lib/server/roles';
 import { requireRuntimeEnv } from '$lib/server/runtime-env';
 import { assertPresignedUrlMatchesR2Config } from '$lib/server/storage/r2-url';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 function assertUploadUsesConfiguredR2(
 	presignedUrl: string,
@@ -29,23 +30,28 @@ export const POST: RequestHandler = async (event) => {
 			if (getUserRole(event.locals.user) === 'basic') {
 				return json({ error: 'Forbidden' }, { status: 403 });
 			}
-			const init = await client.mainStorage.upload.r2Init({
-				filename: body.filename,
-				size: body.size,
-				mime_type: body.mime_type,
-				...(body.folder_id ? { folder_id: body.folder_id } : {})
-			});
+			const init = unwrapItem<{ presigned_url: string }>(
+				await client.upload.r2Init({
+					filename: body.filename,
+					size: body.size,
+					mime_type: body.mime_type,
+					is_main_storage: true,
+					...(body.folder_id ? { folder_id: body.folder_id } : {})
+				})
+			);
 			assertUploadUsesConfiguredR2(init.presigned_url, event);
 			return json(init);
 		}
 
-		const init = await client.upload.r2Init({
-			filename: body.filename,
-			size: body.size,
-			mime_type: body.mime_type,
-			is_main_storage: false,
-			...(body.folder_id ? { folder_id: body.folder_id } : {})
-		});
+		const init = unwrapItem<{ presigned_url: string }>(
+			await client.upload.r2Init({
+				filename: body.filename,
+				size: body.size,
+				mime_type: body.mime_type,
+				is_main_storage: false,
+				...(body.folder_id ? { folder_id: body.folder_id } : {})
+			})
+		);
 		assertUploadUsesConfiguredR2(init.presigned_url, event);
 		return json(init);
 	} catch (error) {

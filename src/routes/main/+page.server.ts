@@ -4,6 +4,7 @@ import { mapFileFromUnisource } from '$lib/server/unisource-mappers';
 import { getUserRole } from '$lib/server/roles';
 import type { Actions, PageServerLoad } from './$types';
 import { logger } from '$lib/server/logger';
+import { unwrapList } from '$lib/server/unisource-v2-contract';
 
 const PAGE_LIMIT = 50;
 
@@ -23,12 +24,13 @@ export const load: PageServerLoad = async (event) => {
 	try {
 		const client = createAdminUnisourceClient(event);
 		const files = await client.mainStorage.list({ cursor: fileCursor, limit: PAGE_LIMIT });
+		const list = unwrapList<Parameters<typeof mapFileFromUnisource>[0]>(files);
 
 		return {
-			files: files.items.map(mapFileFromUnisource),
+			files: list.items.map(mapFileFromUnisource),
 			folders: [],
 			currentFolderId: null,
-			fileNextCursor: files.next_cursor,
+			fileNextCursor: list.nextCursor,
 			role,
 			storageKind: 'main' as const,
 			folderPath: []

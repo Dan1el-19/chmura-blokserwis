@@ -4,6 +4,7 @@ import type { RequestHandler } from './$types';
 import { createUserUnisourceClient } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { getUserRole } from '$lib/server/roles';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 /**
  * Proxy → UniSource `POST /upload/r2/multipart/create`
@@ -21,13 +22,15 @@ export const POST: RequestHandler = async (event) => {
 			return json({ error: 'Forbidden' }, { status: 403 });
 		}
 
-		const init = await client.upload.multipart.create({
-			filename: body.filename,
-			size: body.size,
-			mime_type: body.mime_type,
-			is_main_storage: isMainStorage,
-			...(body.folder_id ? { folder_id: body.folder_id } : {})
-		});
+		const init = unwrapItem(
+			await client.upload.multipartCreate({
+				filename: body.filename,
+				size: body.size,
+				mime_type: body.mime_type,
+				is_main_storage: isMainStorage,
+				...(body.folder_id ? { folder_id: body.folder_id } : {})
+			})
+		);
 
 		return json(init);
 	} catch (error) {

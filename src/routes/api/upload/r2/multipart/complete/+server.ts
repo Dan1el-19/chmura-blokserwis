@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 
 import { createUserUnisourceClient } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 /**
  * Proxy → UniSource `POST /upload/r2/multipart/complete`
@@ -19,10 +20,7 @@ export const POST: RequestHandler = async (event) => {
 		}
 
 		const client = await createUserUnisourceClient(event);
-		const result = await client.upload.multipart.complete({
-			upload_id: body.upload_id,
-			parts: body.parts
-		});
+		const result = unwrapItem(await client.upload.multipartComplete(body.upload_id, body.parts));
 
 		return json(result);
 	} catch (error) {

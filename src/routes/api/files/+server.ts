@@ -5,6 +5,7 @@ import { createUserUnisourceClient } from '$lib/server/unisource';
 import { mapFileFromUnisource } from '$lib/server/unisource-mappers';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { getUserRole } from '$lib/server/roles';
+import { unwrapList } from '$lib/server/unisource-v2-contract';
 
 const DEFAULT_LIMIT = 50;
 
@@ -24,15 +25,20 @@ export const GET: RequestHandler = async (event) => {
 	try {
 		const client = await createUserUnisourceClient(event);
 		const result = trash
-			? await client.myFiles.trash({ cursor, limit }, undefined, { asUser: targetUserId })
-			: await client.myFiles.list({ folder_id: folderId, cursor, limit }, undefined, {
-					asUser: targetUserId
-				});
+			? await client.myFiles.listTrash({ cursor, limit }, undefined, { asUser: targetUserId })
+			: await client.myFiles.list(
+					{ ...(folderId ? { folder_id: folderId } : {}), cursor, limit },
+					undefined,
+					{
+						asUser: targetUserId
+					}
+				);
+		const list = unwrapList<Parameters<typeof mapFileFromUnisource>[0]>(result);
 
 		return json({
-			items: result.items.map(mapFileFromUnisource),
-			next_cursor: result.next_cursor,
-			limit: result.limit
+			items: list.items.map(mapFileFromUnisource),
+			next_cursor: list.nextCursor,
+			limit: list.limit
 		});
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to list files');

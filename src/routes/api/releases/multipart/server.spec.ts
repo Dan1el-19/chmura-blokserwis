@@ -10,11 +10,7 @@ vi.mock('$lib/server/storage/releases', () => ({
 vi.mock('$lib/server/unisource', () => ({
 	createAdminUnisourceClient: () => ({
 		releases: {
-			upload: {
-				multipart: {
-					create: multipartCreate
-				}
-			}
+			multipartCreate
 		}
 	})
 }));
@@ -42,11 +38,13 @@ describe('/api/releases/multipart POST', () => {
 	it('returns Uppy-compatible payload when SDK multipart create succeeds', async () => {
 		getReleaseByName.mockResolvedValue(null);
 		multipartCreate.mockResolvedValue({
-			upload_id: 'release-1',
-			r2_upload_id: 'r2-multipart-id',
-			key: 'releases/blokserwis-1.11.0.apk',
-			bucket: 'chmura-blokserwis',
-			expires_at: 1_700_000_000
+			item: {
+				upload_id: 'release-1',
+				r2_upload_id: 'r2-multipart-id',
+				key: 'releases/blokserwis-1.11.0.apk',
+				bucket: 'chmura-blokserwis',
+				expires_at: 1_700_000_000
+			}
 		});
 
 		const response = await POST(
@@ -66,14 +64,17 @@ describe('/api/releases/multipart POST', () => {
 			release_id: 'release-1',
 			existingRelease: null
 		});
-		expect(multipartCreate).toHaveBeenCalledWith({
-			name: 'blokserwis-1.11.0.apk',
-			filename: 'blokserwis-1.11.0.apk',
-			mime_type: 'application/vnd.android.package-archive',
-			tags: [],
-			notes: null,
-			force_update: false
-		});
+		expect(multipartCreate).toHaveBeenCalledWith(
+			{
+				name: 'blokserwis-1.11.0.apk',
+				filename: 'blokserwis-1.11.0.apk',
+				mime_type: 'application/vnd.android.package-archive',
+				tags: [],
+				notes: null,
+				force_update: false
+			},
+			undefined
+		);
 	});
 
 	it('returns 409 conflict when a release already exists and overwrite is false', async () => {
@@ -106,6 +107,6 @@ describe('/api/releases/multipart POST', () => {
 		const body = await response.json();
 
 		expect(response.status).toBe(500);
-		expect(body).toEqual({ error: 'UniSource backend rejected the request' });
+		expect(body).toEqual({ error: 'Failed to create multipart upload' });
 	});
 });

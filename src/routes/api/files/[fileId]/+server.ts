@@ -4,6 +4,7 @@ import { createUserUnisourceClient } from '$lib/server/unisource';
 import { mapFileFromUnisource } from '$lib/server/unisource-mappers';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { updateFileSchema } from '$lib/schemas';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 export const GET: RequestHandler = async (event) => {
 	if (!event.locals.user) {
@@ -18,17 +19,20 @@ export const GET: RequestHandler = async (event) => {
 		const includeDownloadUrl = event.url.searchParams.get('download') === 'true';
 
 		if (includeDownloadUrl) {
-			const download = await client.myFiles.downloadUrl(fileId, undefined, {
-				asUser: targetUserId
-			});
+			const download = unwrapItem<{ download_url: string; expires_at: number }>(
+				await client.userFiles.downloadUrl(fileId, undefined, {
+					asUser: targetUserId
+				})
+			);
 			return json({ downloadUrl: download.download_url, expiresAt: download.expires_at });
 		}
 
-		const result = await client.myFiles.get(fileId, undefined, { asUser: targetUserId });
-		if (!result?.file) {
-			return json({ error: 'Get failed: no file returned' }, { status: 500 });
-		}
-		return json(mapFileFromUnisource(result.file));
+		const file = unwrapItem<Parameters<typeof mapFileFromUnisource>[0]>(
+			await client.userFiles.get(fileId, undefined, {
+				asUser: targetUserId
+			})
+		);
+		return json(mapFileFromUnisource(file));
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to get file');
 	}
@@ -45,7 +49,7 @@ export const DELETE: RequestHandler = async (event) => {
 
 	try {
 		const client = await createUserUnisourceClient(event);
-		await client.myFiles.delete(fileId, { permanent }, undefined, { asUser: targetUserId });
+		await client.userFiles.delete(fileId, undefined, { permanent, asUser: targetUserId });
 		return json({ success: true });
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to delete file');
@@ -72,22 +76,18 @@ export const PATCH: RequestHandler = async (event) => {
 		const client = await createUserUnisourceClient(event);
 
 		if (name !== undefined) {
-			const result = await client.myFiles.update(fileId, { filename: name }, undefined, {
-				asUser: targetUserId
-			});
-			if (!result?.file) {
-				return json({ error: 'Update failed: no file returned' }, { status: 500 });
-			}
-			return json(mapFileFromUnisource(result.file));
+			const file = unwrapItem<Parameters<typeof mapFileFromUnisource>[0]>(
+				await client.userFiles.update(fileId, { filename: name }, undefined, {
+					asUser: targetUserId
+				})
+			);
+			return json(mapFileFromUnisource(file));
 		}
 
 		if (parentFolderId !== undefined) {
-			const result = await client.myFiles.move(fileId, { folder_id: parentFolderId }, undefined, {
+			await client.myFiles.move(fileId, { folder_id: parentFolderId }, undefined, {
 				asUser: targetUserId
 			});
-			if (result?.file) {
-				return json(mapFileFromUnisource(result.file));
-			}
 			return json({ success: true });
 		}
 
@@ -109,7 +109,7 @@ export const POST: RequestHandler = async (event) => {
 		}
 
 		const client = await createUserUnisourceClient(event);
-		await client.myFiles.restore(event.params.fileId, undefined, { asUser: targetUserId });
+		await client.userFiles.restore(event.params.fileId, undefined, { asUser: targetUserId });
 		return json({ success: true });
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to restore file');
