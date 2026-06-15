@@ -18,7 +18,13 @@ Upstash and UniSource credentials as stable. Do not create local links to the Un
 3. Add the beta origin to R2 CORS allowed origins.
 4. Create a protected GitHub environment named `beta`.
 5. Add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` to the `beta` GitHub environment.
-6. Configure the beta Worker's required secrets with the same values used by stable:
+   Create the token from Cloudflare's `Edit Cloudflare Workers` template and scope it to this
+   account and the `blokserwis.pl` zone.
+6. Add the required shared Appwrite, R2, Upstash and UniSource values as `beta` environment
+   secrets. The workflow compiles with the public Appwrite values and synchronizes runtime secrets
+   only to `chmura-blokserwis-beta`.
+
+For a local one-time sync instead of GitHub Actions:
 
 ```powershell
 pnpm exec wrangler secret bulk .dev.vars.beta --env beta
@@ -48,7 +54,8 @@ secrets are configured. The workflow:
 3. runs checks and server tests;
 4. confirms stable responds;
 5. deploys only with `--env beta`;
-6. smoke-tests beta and confirms stable still responds.
+6. synchronizes runtime secrets only to the beta Worker;
+7. smoke-tests beta and confirms stable still responds.
 
 ## Rollback
 

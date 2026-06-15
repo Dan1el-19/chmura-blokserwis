@@ -59,6 +59,10 @@ failUnless(
 	'Beta workflow must call the guarded beta deploy script.'
 );
 failUnless(
+	workflow.includes('wrangler secret bulk --env beta'),
+	'Beta workflow must sync runtime secrets only to the beta Worker.'
+);
+failUnless(
 	!/branches:\s*\n\s*-\s*main\b/.test(workflow),
 	'Beta workflow must never trigger on main.'
 );
