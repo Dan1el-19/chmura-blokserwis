@@ -31,7 +31,7 @@ Keep `.dev.vars.beta` local and never commit it.
 ```powershell
 pnpm check:beta-config
 pnpm check
-pnpm exec vitest run --project server
+pnpm exec vitest run
 pnpm deploy:beta:dry
 ```
 

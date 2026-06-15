@@ -49,8 +49,8 @@ jobs:
       - name: Check application
         run: pnpm check
 
-      - name: Test server
-        run: pnpm exec vitest run --project server
+      - name: Test unit
+        run: pnpm exec vitest run
 
       - name: Verify stable before deployment
         run: curl --fail --silent --show-error --max-time 20 https://chmura.blokserwis.pl/ > /dev/null
