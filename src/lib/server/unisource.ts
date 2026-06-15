@@ -1,8 +1,4 @@
-import {
-	getPublicFileInfo as getPublicFileInfoFromSdk,
-	UnisourceClient,
-	unlockPublicFile as unlockPublicFileFromSdk
-} from '@unisource/sdk';
+import { UnisourceV2Client } from '@unisource/sdk/v2';
 import type { RequestEvent } from '@sveltejs/kit';
 
 import { createSessionClient } from './appwrite';
@@ -37,37 +33,49 @@ async function ensureServiceUserAccess(event: RequestEvent, userId: string, serv
 	await pending;
 }
 
-export async function createUserUnisourceClient(event: RequestEvent): Promise<UnisourceClient> {
+export async function createUserUnisourceClient(event: RequestEvent): Promise<UnisourceV2Client> {
 	const { account } = createSessionClient(event);
 	const { baseUrl, serviceId } = getConfig(event);
 	const userId = event.locals.user?.$id ?? (await account.get()).$id;
 
 	await ensureServiceUserAccess(event, userId, serviceId);
 
-	const token = await account.createJWT({ duration: 900 });
-
-	return new UnisourceClient({
+	return new UnisourceV2Client({
 		baseUrl,
 		serviceId,
-		getToken: () => token.jwt
+		getToken: async () => (await account.createJWT({ duration: 900 })).jwt,
+		silentBeta: true
 	});
 }
 
 export function createAdminUnisourceClient(
 	event?: Pick<RequestEvent, 'platform'>
-): UnisourceClient {
+): UnisourceV2Client {
 	const { baseUrl, serviceId } = getConfig(event);
 	const apiKey = requireRuntimeEnv(event, 'UNISOURCE_API_KEY');
 
-	return new UnisourceClient({
+	return new UnisourceV2Client({
 		baseUrl,
 		serviceId,
-		getToken: () => apiKey
+		apiKey,
+		silentBeta: true
+	});
+}
+
+export function createPublicUnisourceClient(
+	event?: Pick<RequestEvent, 'platform'>
+): UnisourceV2Client {
+	const { baseUrl, serviceId } = getConfig(event);
+
+	return new UnisourceV2Client({
+		baseUrl,
+		serviceId,
+		silentBeta: true
 	});
 }
 
 export function getPublicFileInfo(event: Pick<RequestEvent, 'platform'>, slug: string) {
-	return getPublicFileInfoFromSdk(requireRuntimeEnv(event, 'UNISOURCE_URL'), slug);
+	return createPublicUnisourceClient(event).public.getShareLink(slug);
 }
 
 export function unlockPublicFile(
@@ -75,5 +83,5 @@ export function unlockPublicFile(
 	slug: string,
 	password: string
 ) {
-	return unlockPublicFileFromSdk(requireRuntimeEnv(event, 'UNISOURCE_URL'), slug, password);
+	return createPublicUnisourceClient(event).public.unlockShareLink(slug, { password });
 }
