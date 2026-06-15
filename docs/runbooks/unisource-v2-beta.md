@@ -40,7 +40,8 @@ can target stable accidentally. Never run an unscoped `wrangler deploy` for beta
 
 ## Deployment
 
-Push `codex/unisource-v2-beta` or manually run the `Deploy beta` workflow. The workflow:
+Manually run the `Deploy beta` workflow after the protected `beta` environment and its Cloudflare
+secrets are configured. The workflow:
 
 1. refuses to run from `main`;
 2. validates beta isolation;

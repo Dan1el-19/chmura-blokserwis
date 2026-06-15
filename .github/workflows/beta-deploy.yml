@@ -2,9 +2,6 @@ name: Deploy beta
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - codex/unisource-v2-beta
 
 concurrency:
   group: chmura-blokserwis-beta
