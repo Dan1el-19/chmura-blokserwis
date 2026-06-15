@@ -46,8 +46,9 @@ can target stable accidentally. Never run an unscoped `wrangler deploy` for beta
 
 ## Deployment
 
-Manually run the `Deploy beta` workflow after the protected `beta` environment and its Cloudflare
-secrets are configured. The workflow:
+Push `codex/unisource-v2-beta` to run validation. Until `CLOUDFLARE_API_TOKEN` is configured, the
+workflow reports a notice and skips external deployment. After adding the token, re-run the latest
+workflow run or push another commit. The workflow:
 
 1. refuses to run from `main`;
 2. validates beta isolation;

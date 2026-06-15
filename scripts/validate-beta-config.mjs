@@ -63,6 +63,10 @@ failUnless(
 	'Beta workflow must sync runtime secrets only to the beta Worker.'
 );
 failUnless(
+	/branches:\s*\n\s*-\s*codex\/unisource-v2-beta\b/.test(workflow),
+	'Beta workflow push trigger must target only codex/unisource-v2-beta.'
+);
+failUnless(
 	!/branches:\s*\n\s*-\s*main\b/.test(workflow),
 	'Beta workflow must never trigger on main.'
 );

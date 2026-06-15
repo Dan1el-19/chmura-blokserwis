@@ -2,6 +2,9 @@ name: Deploy beta
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - codex/unisource-v2-beta
 
 concurrency:
   group: chmura-blokserwis-beta
@@ -62,19 +65,28 @@ jobs:
       - name: Test unit
         run: pnpm exec vitest run
 
+      - name: Report missing deployment credential
+        if: env.CLOUDFLARE_API_TOKEN == ''
+        run: echo "::notice::Validation passed, but beta deployment is skipped until CLOUDFLARE_API_TOKEN is configured."
+
       - name: Verify stable before deployment
+        if: env.CLOUDFLARE_API_TOKEN != ''
         run: curl --fail --silent --show-error --max-time 20 https://chmura.blokserwis.pl/ > /dev/null
 
       - name: Deploy beta
+        if: env.CLOUDFLARE_API_TOKEN != ''
         run: pnpm deploy:beta
 
       - name: Sync beta runtime secrets
+        if: env.CLOUDFLARE_API_TOKEN != ''
         run: |
           set -o pipefail
           node scripts/render-beta-secrets.mjs | pnpm exec wrangler secret bulk --env beta
 
       - name: Smoke test beta
+        if: env.CLOUDFLARE_API_TOKEN != ''
         run: curl --fail --silent --show-error --retry 5 --retry-delay 5 --max-time 20 https://beta.chmura.blokserwis.pl/ > /dev/null
 
       - name: Verify stable after deployment
+        if: env.CLOUDFLARE_API_TOKEN != ''
         run: curl --fail --silent --show-error --max-time 20 https://chmura.blokserwis.pl/ > /dev/null
