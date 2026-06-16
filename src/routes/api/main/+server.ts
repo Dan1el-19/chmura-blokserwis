@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
+import { requestAdminUnisourceV2 } from '$lib/server/unisource';
 import { mapFileFromUnisource } from '$lib/server/unisource-mappers';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { getUserRole } from '$lib/server/roles';
@@ -16,10 +16,11 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	try {
-		const client = await createRequestAdminUnisourceClient(event);
-		const result = await client.mainStorage.list({
-			cursor: event.url.searchParams.get('cursor') || undefined,
-			limit: Number(event.url.searchParams.get('limit') || DEFAULT_LIMIT)
+		const result = await requestAdminUnisourceV2(event, 'GET', '/v2/main', {
+			query: {
+				cursor: event.url.searchParams.get('cursor') || undefined,
+				limit: Number(event.url.searchParams.get('limit') || DEFAULT_LIMIT)
+			}
 		});
 		const list = unwrapList<Parameters<typeof mapFileFromUnisource>[0]>(result);
 

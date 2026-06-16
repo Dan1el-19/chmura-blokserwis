@@ -1,8 +1,9 @@
 import type { RequestEvent } from '@sveltejs/kit';
-import type { V2ReleaseUpdateRequest } from '@unisource/sdk/v2';
+import type { V2ReleaseListResponse, V2ReleaseUpdateRequest } from '@unisource/sdk/v2';
 import {
 	createAdminUnisourceClient,
-	createRequestAdminUnisourceClient
+	createRequestAdminUnisourceClient,
+	requestAdminUnisourceV2
 } from '$lib/server/unisource';
 import { unwrapItem } from '$lib/server/unisource-v2-contract';
 import { mapRelease, type ParsedRelease } from '$lib/types/releases';
@@ -21,7 +22,14 @@ async function client(event?: RuntimeEvent) {
 }
 
 export async function listReleases(event?: RuntimeEvent): Promise<ParsedRelease[]> {
-	const result = await (await client(event)).releases.list({ limit: 100 });
+	const result = await requestAdminUnisourceV2<V2ReleaseListResponse>(
+		event,
+		'GET',
+		'/v2/releases',
+		{
+			query: { limit: 100 }
+		}
+	);
 	return result.items.map(mapRelease);
 }
 

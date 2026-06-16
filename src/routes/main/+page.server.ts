@@ -1,5 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
+import { requestAdminUnisourceV2 } from '$lib/server/unisource';
 import { mapFileFromUnisource } from '$lib/server/unisource-mappers';
 import { getUserRole } from '$lib/server/roles';
 import type { Actions, PageServerLoad } from './$types';
@@ -22,8 +22,9 @@ export const load: PageServerLoad = async (event) => {
 	const fileCursor = url.searchParams.get('fileCursor') || undefined;
 
 	try {
-		const client = await createRequestAdminUnisourceClient(event);
-		const files = await client.mainStorage.list({ cursor: fileCursor, limit: PAGE_LIMIT });
+		const files = await requestAdminUnisourceV2(event, 'GET', '/v2/main', {
+			query: { cursor: fileCursor, limit: PAGE_LIMIT }
+		});
 		const list = unwrapList<Parameters<typeof mapFileFromUnisource>[0]>(files);
 
 		return {

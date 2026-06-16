@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
 	createJWT: vi.fn(async () => ({ jwt: 'user-jwt' })),
 	getAccount: vi.fn(async () => ({ $id: 'user-1' })),
 	updateUser: vi.fn(async () => ({ item: {} })),
+	fetch: vi.fn(),
 	serviceId: 'default'
 }));
 
@@ -44,7 +45,8 @@ import {
 	createAdminUnisourceClient,
 	createPublicUnisourceClient,
 	createRequestAdminUnisourceClient,
-	createUserUnisourceClient
+	createUserUnisourceClient,
+	requestAdminUnisourceV2
 } from './unisource';
 
 describe('UniSource V2 client factories', () => {
@@ -53,6 +55,8 @@ describe('UniSource V2 client factories', () => {
 		mocks.createJWT.mockClear();
 		mocks.getAccount.mockClear();
 		mocks.updateUser.mockClear();
+		mocks.fetch.mockReset();
+		vi.stubGlobal('fetch', mocks.fetch);
 		mocks.serviceId = 'default';
 	});
 
@@ -143,5 +147,57 @@ describe('UniSource V2 client factories', () => {
 			serviceId: 'default',
 			silentBeta: true
 		});
+	});
+
+	it('performs a raw V2 admin request with service API key auth', async () => {
+		expect.assertions(5);
+
+		mocks.fetch.mockResolvedValueOnce(
+			new Response(JSON.stringify({ item: { current_used_bytes: 123 } }), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json' }
+			})
+		);
+
+		const result = await requestAdminUnisourceV2<{ item: { current_used_bytes: number } }>(
+			undefined,
+			'GET',
+			'/v2/admin/service/usage',
+			{ query: { limit: 100, skip: undefined } }
+		);
+
+		expect(result.item.current_used_bytes).toBe(123);
+		expect(mocks.fetch).toHaveBeenCalledTimes(1);
+		const [url, init] = mocks.fetch.mock.calls[0] as [string, RequestInit];
+		expect(url).toBe('https://unisource.example/v2/admin/service/usage?limit=100');
+		expect(init.headers).toMatchObject({
+			Authorization: 'Bearer admin-key',
+			'X-Service-ID': 'default'
+		});
+		expect(init.body).toBeUndefined();
+	});
+
+	it('uses the request user JWT for raw V2 admin requests when a session event is available', async () => {
+		expect.assertions(4);
+
+		mocks.fetch.mockResolvedValueOnce(
+			new Response(JSON.stringify({ items: [], page: { limit: 100, next_cursor: null } }), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json' }
+			})
+		);
+
+		await requestAdminUnisourceV2(
+			{ platform: undefined, locals: { user: { $id: 'user-1' } }, cookies: {} } as never,
+			'GET',
+			'/v2/releases',
+			{ query: { limit: 100 } }
+		);
+
+		expect(mocks.createJWT).toHaveBeenCalledWith({ duration: 900 });
+		const [url, init] = mocks.fetch.mock.calls[0] as [string, RequestInit];
+		expect(url).toBe('https://unisource.example/v2/releases?limit=100');
+		expect(init.headers).toMatchObject({ Authorization: 'Bearer user-jwt' });
+		expect(init.headers).not.toMatchObject({ Authorization: 'Bearer admin-key' });
 	});
 });

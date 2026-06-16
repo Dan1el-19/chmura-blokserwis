@@ -1,13 +1,19 @@
 import type { PageServerLoad } from './$types';
-import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
+import type { AdminUsersListResponse, AdminServiceUsageResponse } from '@unisource/sdk/v2';
+import { requestAdminUnisourceV2 } from '$lib/server/unisource';
 import { mapRoleFromUnisource } from '$lib/server/unisource-mappers';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
+
+type UsageEnvelope = AdminServiceUsageResponse | { item: AdminServiceUsageResponse };
 
 export const load: PageServerLoad = async (event) => {
-	const admin = await createRequestAdminUnisourceClient(event);
-	const [usage, users] = await Promise.all([
-		admin.admin.getServiceUsage(),
-		admin.admin.listUsers({ limit: 100 })
+	const [usageResponse, users] = await Promise.all([
+		requestAdminUnisourceV2<UsageEnvelope>(event, 'GET', '/v2/admin/service/usage'),
+		requestAdminUnisourceV2<AdminUsersListResponse>(event, 'GET', '/v2/admin/users', {
+			query: { limit: 100 }
+		})
 	]);
+	const usage = 'item' in usageResponse ? unwrapItem<AdminServiceUsageResponse>(usageResponse) : usageResponse;
 
 	const usersByRole = { basic: 0, plus: 0, admin: 0 };
 	for (const user of users.items) {
