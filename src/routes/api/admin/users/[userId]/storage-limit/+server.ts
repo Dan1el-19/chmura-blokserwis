@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 import { getUserRole } from '$lib/server/roles';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 
 export const PUT: RequestHandler = async (event) => {
@@ -13,7 +13,7 @@ export const PUT: RequestHandler = async (event) => {
 	const { limit } = await event.request.json();
 
 	try {
-		const admin = createAdminUnisourceClient(event);
+		const admin = await createRequestAdminUnisourceClient(event);
 		await admin.admin.updateUserStorageLimit(event.params.userId, {
 			limit_bytes: limit === null || limit === undefined ? null : Number(limit)
 		});

@@ -1,9 +1,9 @@
 import type { PageServerLoad } from './$types';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { mapRoleFromUnisource } from '$lib/server/unisource-mappers';
 
 export const load: PageServerLoad = async (event) => {
-	const admin = createAdminUnisourceClient(event);
+	const admin = await createRequestAdminUnisourceClient(event);
 	const [usage, users] = await Promise.all([
 		admin.admin.getServiceUsage(),
 		admin.admin.listUsers({ limit: 100 })

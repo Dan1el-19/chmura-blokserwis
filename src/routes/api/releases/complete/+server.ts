@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { promoteLatest } from '$lib/server/storage/releases';
 import { logger } from '$lib/server/logger';
 import { unwrapItem } from '$lib/server/unisource-v2-contract';
@@ -18,7 +18,7 @@ export const POST: RequestHandler = async (event) => {
 	}
 
 	try {
-		const client = createAdminUnisourceClient(event);
+		const client = await createRequestAdminUnisourceClient(event);
 		const result = unwrapItem(await client.releases.uploadComplete(release_id, size));
 
 		// Promote this release to `latest` within its channel, stripping `latest` from previous

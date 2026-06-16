@@ -9,6 +9,12 @@ vi.mock('$lib/server/unisource', () => ({
 			getServiceUsage,
 			listUsers
 		}
+	}),
+	createRequestAdminUnisourceClient: () => ({
+		admin: {
+			getServiceUsage,
+			listUsers
+		}
 	})
 }));
 

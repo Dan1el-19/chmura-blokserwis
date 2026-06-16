@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { releaseMultipart } from '$lib/server/release-multipart-client';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { assertPresignedUrlMatchesR2Config } from '$lib/server/storage/r2-url';
@@ -35,7 +35,7 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	try {
-		const client = createAdminUnisourceClient(event);
+		const client = await createRequestAdminUnisourceClient(event);
 		const result = await releaseMultipart(client).signPart(uploadId, partNumber);
 
 		assertPresignedUrlMatchesR2Config(

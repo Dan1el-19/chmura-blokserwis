@@ -12,6 +12,11 @@ vi.mock('$lib/server/unisource', () => ({
 		releases: {
 			multipartCreate
 		}
+	}),
+	createRequestAdminUnisourceClient: () => ({
+		releases: {
+			multipartCreate
+		}
 	})
 }));
 

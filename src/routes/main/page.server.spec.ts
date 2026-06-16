@@ -9,6 +9,11 @@ vi.mock('$lib/server/unisource', () => ({
 			list: adminList
 		}
 	}),
+	createRequestAdminUnisourceClient: () => ({
+		mainStorage: {
+			list: adminList
+		}
+	}),
 	createUserUnisourceClient: () => ({
 		mainStorage: {
 			list: userList

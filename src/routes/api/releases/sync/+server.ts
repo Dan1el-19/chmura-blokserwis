@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { logger } from '$lib/server/logger';
 
 export const GET: RequestHandler = async (event) => {
@@ -9,7 +9,7 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	try {
-		const client = createAdminUnisourceClient(event);
+		const client = await createRequestAdminUnisourceClient(event);
 		const latest = await client.releases.latest();
 		return json({ config: latest });
 	} catch {
@@ -30,7 +30,7 @@ export const POST: RequestHandler = async (event) => {
 	}
 
 	try {
-		const client = createAdminUnisourceClient(event);
+		const client = await createRequestAdminUnisourceClient(event);
 		const result = await client.releases.sync({ releases });
 		logger.info(`Synced ${result.processed.length} releases`);
 		return json(result);

@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { releaseUploadSchema } from '$lib/schemas';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { getReleaseByName } from '$lib/server/storage/releases';
 import { z } from 'zod';
 import { releaseTagSchema } from '$lib/schemas';
@@ -42,7 +42,7 @@ export const POST: RequestHandler = async (event) => {
 	const channelTag = channel ?? 'stable';
 	const finalTags = Array.from(new Set([...(tags ?? []), channelTag]));
 
-	const client = createAdminUnisourceClient(event);
+	const client = await createRequestAdminUnisourceClient(event);
 	const init = unwrapItem<{
 		presigned_url: string;
 		r2_key: string;

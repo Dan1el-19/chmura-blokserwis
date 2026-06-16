@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { mapFileFromUnisource } from '$lib/server/unisource-mappers';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { getUserRole } from '$lib/server/roles';
@@ -16,7 +16,7 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	try {
-		const client = createAdminUnisourceClient(event);
+		const client = await createRequestAdminUnisourceClient(event);
 		const result = await client.mainStorage.list({
 			cursor: event.url.searchParams.get('cursor') || undefined,
 			limit: Number(event.url.searchParams.get('limit') || DEFAULT_LIMIT)

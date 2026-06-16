@@ -7,7 +7,7 @@ import {
 	listReleases
 } from '$lib/server/storage/releases';
 import { updateReleaseSchema } from '$lib/schemas';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 
 export const GET: RequestHandler = async (event) => {
 	const { releaseId } = event.params;
@@ -64,7 +64,7 @@ export const DELETE: RequestHandler = async (event) => {
 			.sort((a, b) => new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime())[0];
 
 		if (next) {
-			const c = createAdminUnisourceClient(event);
+			const c = await createRequestAdminUnisourceClient(event);
 			await c.releases.update(next.$id, { tags: Array.from(new Set([...next.tags, 'latest'])) });
 		}
 	}

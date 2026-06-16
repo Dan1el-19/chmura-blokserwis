@@ -3,7 +3,7 @@ import type { RecommendedUploadDestination } from '@unisource/sdk';
 import { UnisourceV2Error } from '@unisource/sdk/v2';
 import type { Actions, PageServerLoad } from './$types';
 
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 
 type RecommendedDestination = RecommendedUploadDestination;
 
@@ -16,7 +16,7 @@ export const load: PageServerLoad = async (event) => {
 		throw redirect(303, '/login');
 	}
 
-	const client = createAdminUnisourceClient(event);
+	const client = await createRequestAdminUnisourceClient(event);
 	const { service } = await client.admin.getService();
 	const dest: RecommendedDestination = isRecommendedDestination(
 		service.recommended_upload_destination
@@ -47,7 +47,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			const client = createAdminUnisourceClient(event);
+			const client = await createRequestAdminUnisourceClient(event);
 			await client.admin.updateServiceSettings({
 				recommended_upload_destination: destination
 			});

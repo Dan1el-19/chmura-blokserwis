@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { mapAdminUserFromUnisource } from '$lib/server/unisource-mappers';
 import { error } from '@sveltejs/kit';
 
@@ -7,7 +7,7 @@ export const load: PageServerLoad = async (event) => {
 	const { params } = event;
 	const { userId } = params;
 
-	const admin = createAdminUnisourceClient(event);
+	const admin = await createRequestAdminUnisourceClient(event);
 
 	try {
 		const users = await admin.admin.listUsers({ search: userId, limit: 100 });

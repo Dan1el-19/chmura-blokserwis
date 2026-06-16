@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { listReleases } from '$lib/server/storage/releases';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { logger } from '$lib/server/logger';
 import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
@@ -22,7 +22,7 @@ export const POST: RequestHandler = async (event) => {
 		return json({ error: 'name and filename are required' }, { status: 400 });
 	}
 
-	const client = createAdminUnisourceClient(event);
+	const client = await createRequestAdminUnisourceClient(event);
 
 	try {
 		const init = unwrapItem(

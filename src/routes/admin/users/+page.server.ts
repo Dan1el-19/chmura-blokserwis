@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { mapAdminUserFromUnisource } from '$lib/server/unisource-mappers';
 
 export const load: PageServerLoad = async (event) => {
@@ -7,7 +7,7 @@ export const load: PageServerLoad = async (event) => {
 	const limit = 20;
 	const offset = (page - 1) * limit;
 
-	const admin = createAdminUnisourceClient(event);
+	const admin = await createRequestAdminUnisourceClient(event);
 	const usersList = await admin.admin.listUsers({ offset, limit });
 
 	return {

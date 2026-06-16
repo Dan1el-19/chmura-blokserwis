@@ -4,7 +4,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { createSessionClient } from './appwrite';
 import { requireRuntimeEnv } from './runtime-env';
 
-const DEFAULT_UNISOURCE_SERVICE_ID = 'usrc';
+const DEFAULT_UNISOURCE_SERVICE_ID = 'default';
 const ensuredServiceUsers = new Map<string, Promise<void>>();
 
 function getConfig(event: Pick<RequestEvent, 'platform'> | undefined) {
@@ -33,12 +33,9 @@ async function ensureServiceUserAccess(event: RequestEvent, userId: string, serv
 	await pending;
 }
 
-export async function createUserUnisourceClient(event: RequestEvent): Promise<UnisourceV2Client> {
+async function createJwtUnisourceClient(event: RequestEvent): Promise<UnisourceV2Client> {
 	const { account } = createSessionClient(event);
 	const { baseUrl, serviceId } = getConfig(event);
-	const userId = event.locals.user?.$id ?? (await account.get()).$id;
-
-	await ensureServiceUserAccess(event, userId, serviceId);
 
 	return new UnisourceV2Client({
 		baseUrl,
@@ -46,6 +43,25 @@ export async function createUserUnisourceClient(event: RequestEvent): Promise<Un
 		getToken: async () => (await account.createJWT({ duration: 900 })).jwt,
 		silentBeta: true
 	});
+}
+
+export async function createUserUnisourceClient(event: RequestEvent): Promise<UnisourceV2Client> {
+	const { account } = createSessionClient(event);
+	const { serviceId } = getConfig(event);
+	const userId = event.locals.user?.$id ?? (await account.get()).$id;
+
+	try {
+		await ensureServiceUserAccess(event, userId, serviceId);
+	} catch {
+		// Let the JWT-scoped request below decide whether the user already has
+		// access. A non-admin service API key must not make every user read fail.
+	}
+
+	return createJwtUnisourceClient(event);
+}
+
+export function createRequestAdminUnisourceClient(event: RequestEvent): Promise<UnisourceV2Client> {
+	return createJwtUnisourceClient(event);
 }
 
 export function createAdminUnisourceClient(

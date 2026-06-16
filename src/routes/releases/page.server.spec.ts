@@ -7,6 +7,11 @@ vi.mock('$lib/server/unisource', () => ({
 		releases: {
 			list
 		}
+	}),
+	createRequestAdminUnisourceClient: () => ({
+		releases: {
+			list
+		}
 	})
 }));
 

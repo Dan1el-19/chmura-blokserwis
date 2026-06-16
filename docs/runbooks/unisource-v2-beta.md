@@ -21,8 +21,14 @@ Upstash and UniSource credentials as stable. Do not create local links to the Un
    Create the token from Cloudflare's `Edit Cloudflare Workers` template and scope it to this
    account and the `blokserwis.pl` zone.
 6. Add the required shared Appwrite, R2, Upstash and UniSource values as `beta` environment
-   secrets. The workflow compiles with the public Appwrite values and synchronizes runtime secrets
-   only to `chmura-blokserwis-beta`.
+   secrets. The workflow compiles with the public Appwrite values and deploys the beta Worker with
+   a temporary `--secrets-file` rendered on the GitHub runner. The file is deleted before the job
+   exits.
+
+`UNISOURCE_API_KEY` must be valid for `UNISOURCE_SERVICE_ID`. If server-to-server maintenance tasks
+need to bootstrap service users or update service settings, the key also needs the UniSource `admin`
+permission. User-facing beta pages use the logged-in Appwrite JWT for admin-scoped UniSource calls,
+so a non-admin service key must not block ordinary file listing.
 
 For a local one-time sync instead of GitHub Actions:
 
@@ -55,7 +61,7 @@ workflow run or push another commit. The workflow:
 3. runs checks and server tests;
 4. confirms stable responds;
 5. deploys only with `--env beta`;
-6. synchronizes runtime secrets only to the beta Worker;
+6. renders runtime secrets only into a temporary runner file for the beta deployment;
 7. smoke-tests beta and confirms stable still responds.
 
 ## Rollback
