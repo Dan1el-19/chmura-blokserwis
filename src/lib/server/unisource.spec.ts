@@ -56,21 +56,35 @@ describe('UniSource V2 client factories', () => {
 		mocks.serviceId = 'default';
 	});
 
-	it('creates a user client with JWT auth without bootstrapping the default service', async () => {
+	it('creates a user client with JWT auth after bootstrapping service access', async () => {
 		await createUserUnisourceClient({
 			locals: { user: { $id: 'user-1' } }
 		} as never);
 
-		expect(mocks.configs).toHaveLength(1);
+		expect(mocks.configs).toHaveLength(2);
 		expect(mocks.configs[0]).toMatchObject({
+			baseUrl: 'https://unisource.example',
+			serviceId: 'default',
+			apiKey: 'admin-key',
+			silentBeta: true
+		});
+		expect(mocks.configs[1]).toMatchObject({
 			baseUrl: 'https://unisource.example',
 			serviceId: 'default',
 			silentBeta: true
 		});
-		expect(mocks.configs[0]).toHaveProperty('getToken');
-		expect(mocks.configs[0]).not.toHaveProperty('apiKey');
-		expect(await (mocks.configs[0].getToken as () => Promise<string>)()).toBe('user-jwt');
-		expect(mocks.updateUser).not.toHaveBeenCalled();
+		expect(mocks.configs[1]).toHaveProperty('getToken');
+		expect(mocks.configs[1]).not.toHaveProperty('apiKey');
+		expect(await (mocks.configs[1].getToken as () => Promise<string>)()).toBe('user-jwt');
+		expect(mocks.updateUser).toHaveBeenCalledWith('user-1', { role: 'user' });
+	});
+
+	it('bootstraps Appwrite admins as UniSource service admins', async () => {
+		await createUserUnisourceClient({
+			locals: { user: { $id: 'admin-1', labels: ['admin'] } }
+		} as never);
+
+		expect(mocks.updateUser).toHaveBeenCalledWith('admin-1', { role: 'admin' });
 	});
 
 	it('keeps user JWT reads possible when non-default bootstrap fails', async () => {
@@ -91,7 +105,7 @@ describe('UniSource V2 client factories', () => {
 			silentBeta: true
 		});
 		expect(mocks.configs[1]).toHaveProperty('getToken');
-		expect(mocks.updateUser).toHaveBeenCalledWith('user-1', {});
+		expect(mocks.updateUser).toHaveBeenCalledWith('user-1', { role: 'user' });
 	});
 
 	it('creates a request admin client with JWT auth', async () => {

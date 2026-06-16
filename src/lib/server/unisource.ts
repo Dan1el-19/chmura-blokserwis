@@ -4,7 +4,6 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { createSessionClient } from './appwrite';
 import { requireRuntimeEnv } from './runtime-env';
 
-const DEFAULT_UNISOURCE_SERVICE_ID = 'default';
 const ensuredServiceUsers = new Map<string, Promise<void>>();
 
 function getConfig(event: Pick<RequestEvent, 'platform'> | undefined) {
@@ -15,13 +14,12 @@ function getConfig(event: Pick<RequestEvent, 'platform'> | undefined) {
 }
 
 async function ensureServiceUserAccess(event: RequestEvent, userId: string, serviceId: string) {
-	if (serviceId === DEFAULT_UNISOURCE_SERVICE_ID) return;
-
 	const cacheKey = `${serviceId}:${userId}`;
 	let pending = ensuredServiceUsers.get(cacheKey);
 	if (!pending) {
+		const role = event.locals.user?.labels?.includes('admin') ? 'admin' : 'user';
 		pending = createAdminUnisourceClient(event)
-			.admin.updateUser(userId, {})
+			.admin.updateUser(userId, { role })
 			.then(() => undefined)
 			.catch((error) => {
 				ensuredServiceUsers.delete(cacheKey);
