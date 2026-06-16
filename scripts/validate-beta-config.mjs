@@ -45,7 +45,7 @@ failUnless(
 	'Beta must declare the same required secret names as stable.'
 );
 
-for (const scriptName of ['deploy:beta', 'deploy:beta:dry']) {
+for (const scriptName of ['deploy:beta', 'deploy:beta:dry', 'deploy:beta:ci']) {
 	const script = packageJson.scripts?.[scriptName] ?? '';
 	failUnless(script.includes('--env beta'), `${scriptName} must always pass --env beta.`);
 }
@@ -59,8 +59,14 @@ failUnless(
 	'Beta workflow must call the guarded beta deploy script.'
 );
 failUnless(
-	workflow.includes('wrangler secret bulk --env beta'),
-	'Beta workflow must sync runtime secrets only to the beta Worker.'
+	workflow.includes('node scripts/render-beta-secrets.mjs > "$RUNNER_TEMP/beta-secrets.json"'),
+	'Beta workflow must render runtime secrets to the temporary GitHub runner directory.'
+);
+failUnless(
+	(packageJson.scripts?.['deploy:beta:ci'] ?? '').includes(
+		'--secrets-file "$RUNNER_TEMP/beta-secrets.json"'
+	),
+	'Beta CI deploy must bootstrap required Worker secrets from the rendered secrets file.'
 );
 failUnless(
 	/branches:\s*\n\s*-\s*codex\/unisource-v2-beta\b/.test(workflow),

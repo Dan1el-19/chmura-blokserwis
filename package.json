@@ -22,6 +22,7 @@
 		"deploy": "pnpm run build && wrangler deploy",
 		"check:beta-config": "node scripts/validate-beta-config.mjs",
 		"deploy:beta:dry": "pnpm build:beta && wrangler deploy --dry-run --env beta",
+		"deploy:beta:ci": "pnpm build:beta && wrangler deploy --env beta --secrets-file \"$RUNNER_TEMP/beta-secrets.json\"",
 		"deploy:beta": "pnpm build:beta && wrangler deploy --env beta"
 	},
 	"pnpm": {

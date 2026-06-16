@@ -73,15 +73,17 @@ jobs:
         if: env.CLOUDFLARE_API_TOKEN != ''
         run: curl --fail --silent --show-error --max-time 20 https://chmura.blokserwis.pl/ > /dev/null
 
+      - name: Render beta runtime secrets
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: node scripts/render-beta-secrets.mjs > "$RUNNER_TEMP/beta-secrets.json"
+
       - name: Deploy beta
         if: env.CLOUDFLARE_API_TOKEN != ''
-        run: pnpm deploy:beta
+        run: pnpm deploy:beta:ci
 
-      - name: Sync beta runtime secrets
-        if: env.CLOUDFLARE_API_TOKEN != ''
-        run: |
-          set -o pipefail
-          node scripts/render-beta-secrets.mjs | pnpm exec wrangler secret bulk --env beta
+      - name: Remove rendered beta runtime secrets
+        if: always()
+        run: rm -f "$RUNNER_TEMP/beta-secrets.json"
 
       - name: Smoke test beta
         if: env.CLOUDFLARE_API_TOKEN != ''
