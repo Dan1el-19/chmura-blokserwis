@@ -61,7 +61,7 @@ export async function createUserUnisourceClient(event: RequestEvent): Promise<Un
 }
 
 export function createRequestAdminUnisourceClient(event: RequestEvent): Promise<UnisourceV2Client> {
-	return createJwtUnisourceClient(event);
+	return createUserUnisourceClient(event);
 }
 
 export function createAdminUnisourceClient(
