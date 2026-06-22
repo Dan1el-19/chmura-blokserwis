@@ -25,8 +25,8 @@ export const load: PageServerLoad = async (event) => {
 		usersByRole,
 		totalStorage: usage.current_used_bytes,
 		storageByDestination: {
-			r2: usage.r2_used_bytes,
-			appwrite: usage.appwrite_used_bytes
+			r2: usage.r2_used_bytes ?? 0,
+			appwrite: usage.appwrite_used_bytes ?? 0
 		}
 	};
 
