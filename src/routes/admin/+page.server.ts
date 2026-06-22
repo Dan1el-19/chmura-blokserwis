@@ -23,7 +23,11 @@ export const load: PageServerLoad = async (event) => {
 	const stats = {
 		totalUsers: users.total,
 		usersByRole,
-		totalStorage: usage.current_used_bytes
+		totalStorage: usage.current_used_bytes,
+		storageByDestination: {
+			r2: usage.r2_used_bytes,
+			appwrite: usage.appwrite_used_bytes
+		}
 	};
 
 	return { stats };

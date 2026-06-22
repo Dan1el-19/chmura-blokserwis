@@ -16,6 +16,12 @@ export const STORAGE = {
 		PLUS: 10 * 1024 * 1024 * 1024,
 		ADMIN: Infinity
 	},
+	PLATFORM: {
+		R2_GB: 10,
+		APPWRITE_GB: 150,
+		R2_BYTES: 10 * 1024 * 1024 * 1024,
+		APPWRITE_BYTES: 150 * 1024 * 1024 * 1024
+	},
 	MAX_ZIP_SIZE: 10 * 1024 * 1024 * 1024,
 	MAX_FILENAME_LENGTH: 255
 } as const;

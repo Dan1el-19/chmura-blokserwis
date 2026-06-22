@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 type AdminPageResult = {
 	stats: {
 		totalStorage: number;
+		storageByDestination: { r2: number; appwrite: number };
 		usersByRole: Record<'basic' | 'plus' | 'admin', number>;
 	};
 };
@@ -37,10 +38,12 @@ describe('/admin load', () => {
 	});
 
 	it('loads stats from raw UniSource V2 admin envelopes', async () => {
-		expect.assertions(4);
+		expect.assertions(5);
 
 		requestAdminUnisourceV2
-			.mockResolvedValueOnce({ item: { current_used_bytes: 123 } })
+			.mockResolvedValueOnce({
+				item: { current_used_bytes: 123, r2_used_bytes: 100, appwrite_used_bytes: 23 }
+			})
 			.mockResolvedValueOnce({
 				items: [
 					{ role: 'admin' },
@@ -68,6 +71,7 @@ describe('/admin load', () => {
 			{ query: { limit: 100 } }
 		);
 		expect(result.stats.totalStorage).toBe(123);
+		expect(result.stats.storageByDestination).toEqual({ r2: 100, appwrite: 23 });
 		expect(result.stats.usersByRole).toEqual({ basic: 1, plus: 1, admin: 1 });
 	});
 });

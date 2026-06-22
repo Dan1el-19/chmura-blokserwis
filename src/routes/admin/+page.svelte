@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { Users, Database, Crown, Sparkle, User } from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
+	import { STORAGE } from '$lib/constants';
 	import Card from '$lib/components/ui/Card.svelte';
+	import PlatformStorageBar from '$lib/components/admin/PlatformStorageBar.svelte';
 
 	let { data } = $props();
 </script>
@@ -71,16 +73,34 @@
 		</Card>
 	</div>
 
-	<Card title="Magazyn systemowy">
-		<div class="flex items-center gap-4">
-			<div class="rounded-full bg-green-100/50 p-3 dark:bg-green-900/20">
-				<Database class="h-6 w-6 text-green-600 dark:text-green-500" />
+	<Card
+		title="Magazyn systemowy"
+		description="Zajętość fizycznych bucketów — limity planów infrastruktury (uploady powyżej limitu są dozwolone)"
+	>
+		<div class="space-y-6">
+			<div class="flex items-center gap-4">
+				<div class="rounded-full bg-green-100/50 p-3 dark:bg-green-900/20">
+					<Database class="h-6 w-6 text-green-600 dark:text-green-500" />
+				</div>
+				<div>
+					<p class="font-mono text-3xl font-bold text-text-main">
+						{formatFileSize(data.stats.totalStorage)}
+					</p>
+					<p class="text-sm text-text-muted">Łącznie w systemie (quota użytkowników)</p>
+				</div>
 			</div>
-			<div>
-				<p class="font-mono text-3xl font-bold text-text-main">
-					{formatFileSize(data.stats.totalStorage)}
-				</p>
-				<p class="text-sm text-text-muted">Łączny rozmiar przydzielony we wszystkich bucketach</p>
+
+			<div class="space-y-4 border-t border-border-line/50 pt-6">
+				<PlatformStorageBar
+					label="Cloudflare R2"
+					usedBytes={data.stats.storageByDestination.r2}
+					limitBytes={STORAGE.PLATFORM.R2_BYTES}
+				/>
+				<PlatformStorageBar
+					label="Appwrite"
+					usedBytes={data.stats.storageByDestination.appwrite}
+					limitBytes={STORAGE.PLATFORM.APPWRITE_BYTES}
+				/>
 			</div>
 		</div>
 	</Card>
