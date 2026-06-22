@@ -42,7 +42,7 @@ describe('/admin load', () => {
 
 		requestAdminUnisourceV2
 			.mockResolvedValueOnce({
-				item: { current_used_bytes: 123, r2_used_bytes: 100, appwrite_used_bytes: 23 }
+				item: { current_used_bytes: 9_999, r2_used_bytes: 100, appwrite_used_bytes: 23 }
 			})
 			.mockResolvedValueOnce({
 				items: [

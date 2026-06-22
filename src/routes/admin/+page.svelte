@@ -86,7 +86,9 @@
 					<p class="font-mono text-3xl font-bold text-text-main">
 						{formatFileSize(data.stats.totalStorage)}
 					</p>
-					<p class="text-sm text-text-muted">Łącznie w systemie (quota użytkowników)</p>
+					<p class="text-sm text-text-muted">
+						Łącznie w bucketach (R2 + Appwrite, pliki aktywne + release'y)
+					</p>
 				</div>
 			</div>
 

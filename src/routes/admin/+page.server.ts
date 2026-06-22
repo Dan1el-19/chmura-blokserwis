@@ -20,13 +20,16 @@ export const load: PageServerLoad = async (event) => {
 		usersByRole[mapRoleFromUnisource(user.role)] += 1;
 	}
 
+	const r2Used = usage.r2_used_bytes ?? 0;
+	const appwriteUsed = usage.appwrite_used_bytes ?? 0;
+
 	const stats = {
 		totalUsers: users.total,
 		usersByRole,
-		totalStorage: usage.current_used_bytes,
+		totalStorage: r2Used + appwriteUsed,
 		storageByDestination: {
-			r2: usage.r2_used_bytes ?? 0,
-			appwrite: usage.appwrite_used_bytes ?? 0
+			r2: r2Used,
+			appwrite: appwriteUsed
 		}
 	};
 
