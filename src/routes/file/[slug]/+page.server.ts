@@ -36,6 +36,7 @@ export const actions: Actions = {
 			return {
 				success: true,
 				downloadUrl: data.downloadUrl,
+				previewUrl: data.previewUrl,
 				remainingDownloads: data.remainingDownloads
 			};
 		} catch (e) {
