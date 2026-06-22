@@ -24,6 +24,8 @@ export interface FileDocument extends AppwriteDocument {
 	bucketId: string;
 	ownerId: string;
 	parentFolderId: string | null;
+	thumbnailUrl?: string | null;
+	previewUrl?: string | null;
 }
 
 export interface FolderDocument extends AppwriteDocument {

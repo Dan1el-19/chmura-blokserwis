@@ -18,6 +18,11 @@ function toIso(timestamp: number | null | undefined): string | null {
 }
 
 export function mapFileFromUnisource(file: V2File): FileDocument & { isTrashed: boolean } {
+	const previewFields = file as V2File & {
+		thumbnail_url?: string | null;
+		preview_url?: string | null;
+	};
+
 	return {
 		$id: file.id,
 		$createdAt: toIso(file.created_at) ?? new Date(0).toISOString(),
@@ -31,7 +36,9 @@ export function mapFileFromUnisource(file: V2File): FileDocument & { isTrashed: 
 		bucketId: file.storage_destination,
 		ownerId: file.user_id,
 		parentFolderId: file.folder_id,
-		isTrashed: file.is_trashed
+		isTrashed: file.is_trashed,
+		thumbnailUrl: 'thumbnail_url' in previewFields ? (previewFields.thumbnail_url ?? null) : null,
+		previewUrl: 'preview_url' in previewFields ? (previewFields.preview_url ?? null) : null
 	};
 }
 
@@ -113,10 +120,17 @@ export function mapPublicFileFromUnisource(
 		remainingDownloads: null as number | null
 	};
 
+	const previewFields = response as typeof response & {
+		preview_url?: string | null;
+		thumbnail_url?: string | null;
+	};
+
 	if (response.requires_password) {
 		return {
 			...base,
 			downloadUrl: null,
+			previewUrl: null,
+			thumbnailUrl: null,
 			expiresAt: null
 		};
 	}
@@ -124,6 +138,8 @@ export function mapPublicFileFromUnisource(
 	return {
 		...base,
 		downloadUrl: response.download_url,
+		previewUrl: 'preview_url' in previewFields ? (previewFields.preview_url ?? null) : null,
+		thumbnailUrl: 'thumbnail_url' in previewFields ? (previewFields.thumbnail_url ?? null) : null,
 		expiresAt: toIso(response.link_expires_at)
 	};
 }

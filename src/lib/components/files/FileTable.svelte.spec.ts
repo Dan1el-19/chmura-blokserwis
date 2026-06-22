@@ -32,6 +32,7 @@ describe('FileTable checkbox interaction', () => {
 				sortDir: 'asc',
 				onSort: () => {},
 				onDownload: () => {},
+				onPreview: () => {},
 				onRename: () => {},
 				onDelete: () => {},
 				onNavigate: () => {},
