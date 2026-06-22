@@ -127,7 +127,7 @@
 		}
 	}
 
-	function sortItems<T extends { name: string; $createdAt: string; size?: number }>(
+	function sortItems<T extends { $id: string; name: string; $createdAt: string; size?: number }>(
 		items: T[]
 	): T[] {
 		return [...items].sort((a, b) => {
@@ -276,6 +276,8 @@
 		{sortBy}
 		{sortDir}
 		onSort={setSort}
+		storageKind={data.storageKind ?? 'user'}
+		targetUserId={data.targetUser?.$id ?? null}
 		currentFolderId={data.currentFolderId}
 		{parentFolderName}
 		{parentFolderId}

@@ -6,6 +6,10 @@ declare global {
 			user: import('appwrite').Models.User<import('appwrite').Models.Preferences> | undefined;
 		}
 
+		interface PageState {
+			previewFileId?: string;
+		}
+
 		interface Platform {
 			env: Env;
 		}
