@@ -1,8 +1,8 @@
 <script lang="ts">
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { Toaster } from 'svelte-sonner';
 	import { page, navigating } from '$app/state';
+	import { afterNavigate } from '$app/navigation';
 	import { Folder, GearSix, Shield, RocketLaunch, Trash } from 'phosphor-svelte';
 	import DesktopSidebar from '$lib/components/layout/DesktopSidebar.svelte';
 	import MobileHeader from '$lib/components/layout/MobileHeader.svelte';
@@ -57,8 +57,7 @@
 
 	let currentPath = $derived(page.url.pathname);
 
-	$effect(() => {
-		currentPath;
+	afterNavigate(() => {
 		isDrawerOpen = false;
 	});
 
@@ -78,7 +77,6 @@
 
 <svelte:head>
 	<title>{pageTitle}</title>
-	<link rel="icon" href={favicon} />
 	<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 	<meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
 </svelte:head>
