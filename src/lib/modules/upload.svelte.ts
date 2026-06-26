@@ -104,7 +104,7 @@ function ensureServiceWorker() {
 	if (serviceWorkerRegistered) return;
 	if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
 	serviceWorkerRegistered = true;
-	navigator.serviceWorker.register('/sw.js').catch(() => {
+	navigator.serviceWorker.register('/service-worker.js').catch(() => {
 		// Non-fatal — Golden Retriever will fall back to LocalStorage + IndexedDB.
 		serviceWorkerRegistered = false;
 	});
