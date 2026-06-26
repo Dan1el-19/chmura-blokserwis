@@ -1,3 +1,9 @@
+## [2.9.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.8.1...v2.9.0) (2026-06-26)
+
+### Features
+
+* **frontend:** add PWA support ([33b63fc](https://github.com/Dan1el-19/chmura-blokserwis/commit/33b63fc4a4785a16157e73bde53d71d1d905ef5b))
+
 ## [2.8.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.8.0...v2.8.1) (2026-06-10)
 
 ### Bug Fixes
