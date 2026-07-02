@@ -19,7 +19,8 @@ vi.mock('$lib/server/rate-limit', () => ({
 	checkRateLimit: vi.fn(),
 	rateLimitHeaders: vi.fn(() => ({})),
 	ratelimit: {},
-	strictRatelimit: {}
+	strictRatelimit: {},
+	RATE_LIMIT_ENABLED: false
 }));
 
 vi.mock('$lib/server/logger', () => ({

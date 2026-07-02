@@ -75,9 +75,7 @@ describe('UploadManager progress state', () => {
 			}
 		).updateProgress(originalReference, 65);
 
-		expect(warn).not.toHaveBeenCalledWith(
-			expect.stringContaining('state_proxy_equality_mismatch')
-		);
+		expect(warn).not.toHaveBeenCalledWith(expect.stringContaining('state_proxy_equality_mismatch'));
 		warn.mockRestore();
 	});
 

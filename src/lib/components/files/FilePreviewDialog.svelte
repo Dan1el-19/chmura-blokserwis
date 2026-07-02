@@ -91,6 +91,7 @@
 					{:else if kind === 'audio'}
 						<audio src={preview.previewUrl} controls preload="metadata" class="w-full"></audio>
 					{:else if kind === 'video'}
+						<!-- svelte-ignore a11y_media_has_caption (user-uploaded videos do not provide caption tracks) -->
 						<video
 							src={preview.previewUrl}
 							controls

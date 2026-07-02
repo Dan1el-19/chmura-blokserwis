@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { defineConfig } from 'vitest/config';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { sveltePhosphorOptimize } from 'phosphor-svelte/vite';
 
 export default defineConfig({
 	plugins: [
@@ -10,7 +11,7 @@ export default defineConfig({
 		sveltekit(),
 		SvelteKitPWA({
 			srcDir: 'src',
-			filename: 'sw.ts',
+			filename: 'service-worker.js',
 			strategies: 'injectManifest',
 			registerType: 'autoUpdate',
 			injectRegister: 'script-defer',
@@ -84,6 +85,7 @@ export default defineConfig({
 				type: 'module'
 			}
 		}),
+		sveltePhosphorOptimize(),
 		devtoolsJson()
 	],
 

@@ -8,6 +8,7 @@ import { getUserRole } from '$lib/server/roles';
 import { requireRuntimeEnv } from '$lib/server/runtime-env';
 import { assertPresignedUrlMatchesR2Config } from '$lib/server/storage/r2-url';
 import { unwrapItem } from '$lib/server/unisource-v2-contract';
+import { uploadInitSchema } from '$lib/schemas';
 
 function assertUploadUsesConfiguredR2(
 	presignedUrl: string,
@@ -25,18 +26,23 @@ export const POST: RequestHandler = async (event) => {
 
 	try {
 		const body = await event.request.json();
+		const validated = uploadInitSchema.safeParse(body);
+		if (!validated.success) {
+			return json({ error: 'Validation failed', details: validated.error.issues }, { status: 400 });
+		}
+		const { filename, size, mime_type, is_main_storage, folder_id } = validated.data;
 		const client = await createUserUnisourceClient(event);
-		if (body.is_main_storage) {
+		if (is_main_storage) {
 			if (getUserRole(event.locals.user) === 'basic') {
 				return json({ error: 'Forbidden' }, { status: 403 });
 			}
 			const init = unwrapItem<{ presigned_url: string }>(
 				await client.upload.r2Init({
-					filename: body.filename,
-					size: body.size,
-					mime_type: body.mime_type,
+					filename,
+					size,
+					mime_type,
 					is_main_storage: true,
-					...(body.folder_id ? { folder_id: body.folder_id } : {})
+					...(folder_id ? { folder_id } : {})
 				})
 			);
 			assertUploadUsesConfiguredR2(init.presigned_url, event);
@@ -45,11 +51,11 @@ export const POST: RequestHandler = async (event) => {
 
 		const init = unwrapItem<{ presigned_url: string }>(
 			await client.upload.r2Init({
-				filename: body.filename,
-				size: body.size,
-				mime_type: body.mime_type,
+				filename,
+				size,
+				mime_type,
 				is_main_storage: false,
-				...(body.folder_id ? { folder_id: body.folder_id } : {})
+				...(folder_id ? { folder_id } : {})
 			})
 		);
 		assertUploadUsesConfiguredR2(init.presigned_url, event);

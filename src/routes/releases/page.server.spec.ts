@@ -58,12 +58,9 @@ describe('/releases load', () => {
 			releases: Array<{ $id: string; name: string; r2Key: string; tags: string[] }>;
 		};
 
-		expect(requestAdminUnisourceV2).toHaveBeenCalledWith(
-			expect.anything(),
-			'GET',
-			'/v2/releases',
-			{ query: { limit: 100 } }
-		);
+		expect(requestAdminUnisourceV2).toHaveBeenCalledWith(expect.anything(), 'GET', '/v2/releases', {
+			query: { limit: 100 }
+		});
 		expect(result.releases[0]).toMatchObject({
 			$id: 'release-1',
 			name: 'blokserwis-1.0.0.apk',

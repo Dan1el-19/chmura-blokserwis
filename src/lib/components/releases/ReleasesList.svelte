@@ -1,6 +1,12 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
-	import { PencilSimple, Trash, AndroidLogo, ArrowsClockwise, DownloadSimple } from 'phosphor-svelte';
+	import {
+		PencilSimple,
+		Trash,
+		AndroidLogo,
+		ArrowsClockwise,
+		DownloadSimple
+	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 	import type { ParsedRelease } from '$lib/types/releases';
 

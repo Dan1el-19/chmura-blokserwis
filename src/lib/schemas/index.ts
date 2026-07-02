@@ -87,3 +87,41 @@ export const updateReleaseSchema = z.object({
 	notes: z.string().max(2048).nullable().optional(),
 	force_update: z.boolean().optional()
 });
+
+// ─── Upload schemas ───────────────────────────────────────────────────────────
+
+export const uploadInitSchema = z.object({
+	filename: filenameSchema,
+	size: z.number().int().positive('Rozmiar pliku musi być większy od 0'),
+	mime_type: mimeTypeSchema,
+	is_main_storage: z.boolean().optional(),
+	folder_id: z.string().min(1).optional()
+});
+
+export const uploadActionSchema = z.object({
+	upload_id: z.string().min(1, 'upload_id jest wymagane'),
+	is_main_storage: z.boolean().optional()
+});
+
+export const multipartPartSchema = z.object({
+	PartNumber: z.number().int().min(1).max(10000),
+	ETag: z.string().min(1)
+});
+
+export const multipartCompleteSchema = z.object({
+	upload_id: z.string().min(1, 'upload_id jest wymagane'),
+	parts: z.array(multipartPartSchema).min(1, 'parts nie może być puste')
+});
+
+export const multipartAbortSchema = z.object({
+	upload_id: z.string().min(1, 'upload_id jest wymagane')
+});
+
+export const multipartSignPartSchema = z.object({
+	upload_id: z.string().min(1, 'upload_id jest wymagane'),
+	part_number: z.coerce.number().int().min(1).max(10000)
+});
+
+export const multipartListPartsSchema = z.object({
+	upload_id: z.string().min(1, 'upload_id jest wymagane')
+});

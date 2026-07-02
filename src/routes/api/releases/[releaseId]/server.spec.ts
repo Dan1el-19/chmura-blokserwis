@@ -32,6 +32,7 @@ describe('/api/releases/[releaseId] GET', () => {
 
 		const response = await GET({
 			params: { releaseId: 'rel-1' },
+			locals: { user: { $id: 'admin-1', labels: ['admin'] } },
 			platform: undefined
 		} as never);
 		const body = await response.json();

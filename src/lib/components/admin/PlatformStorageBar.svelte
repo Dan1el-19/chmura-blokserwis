@@ -1,11 +1,7 @@
 <script lang="ts">
 	import { formatFileSize } from '$lib/utils/format';
 
-	let {
-		label,
-		usedBytes,
-		limitBytes
-	} = $props<{
+	let { label, usedBytes, limitBytes } = $props<{
 		label: string;
 		usedBytes: number;
 		limitBytes: number;
@@ -35,9 +31,7 @@
 		aria-label="{label}: {formatFileSize(usedBytes)} z {formatFileSize(limitBytes)}"
 	>
 		<div
-			class="h-full transition-all duration-500 {isOverLimit
-				? 'bg-amber-500'
-				: 'bg-primary'}"
+			class="h-full transition-all duration-500 {isOverLimit ? 'bg-amber-500' : 'bg-primary'}"
 			style="width: {barWidth}%"
 		></div>
 	</div>

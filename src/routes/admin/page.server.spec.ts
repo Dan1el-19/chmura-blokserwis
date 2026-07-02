@@ -45,11 +45,7 @@ describe('/admin load', () => {
 				item: { current_used_bytes: 9_999, r2_used_bytes: 100, appwrite_used_bytes: 23 }
 			})
 			.mockResolvedValueOnce({
-				items: [
-					{ role: 'admin' },
-					{ role: 'plus' },
-					{ role: 'user' }
-				],
+				items: [{ role: 'admin' }, { role: 'plus' }, { role: 'user' }],
 				page: { limit: 100, next_cursor: null },
 				total: 3,
 				offset: 0

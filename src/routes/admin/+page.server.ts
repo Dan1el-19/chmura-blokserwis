@@ -13,7 +13,8 @@ export const load: PageServerLoad = async (event) => {
 			query: { limit: 100 }
 		})
 	]);
-	const usage = 'item' in usageResponse ? unwrapItem<AdminServiceUsageResponse>(usageResponse) : usageResponse;
+	const usage =
+		'item' in usageResponse ? unwrapItem<AdminServiceUsageResponse>(usageResponse) : usageResponse;
 
 	const usersByRole = { basic: 0, plus: 0, admin: 0 };
 	for (const user of users.items) {

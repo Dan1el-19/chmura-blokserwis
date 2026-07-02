@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
+import { getUserRole } from '$lib/server/roles';
 import { releaseMultipart } from '$lib/server/release-multipart-client';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 
@@ -28,8 +29,8 @@ function isValidPart(part: unknown): part is Part {
  * for compatibility with the Uppy AwsS3 contract (`location` is optional).
  */
 export const POST: RequestHandler = async (event) => {
-	if (!event.locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
+	if (!event.locals.user || getUserRole(event.locals.user) !== 'admin') {
+		return json({ error: 'Forbidden' }, { status: 403 });
 	}
 
 	const { uploadId } = event.params;

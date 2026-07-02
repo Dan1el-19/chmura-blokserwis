@@ -24,7 +24,7 @@ describe('/api/releases/sync GET', () => {
 			}
 		});
 
-		const response = await GET({ locals: { user: { $id: 'user-1' } } } as never);
+		const response = await GET({ locals: { user: { $id: 'user-1', labels: ['admin'] } } } as never);
 		const body = await response.json();
 
 		expect(body.config).toMatchObject({

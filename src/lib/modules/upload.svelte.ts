@@ -97,19 +97,6 @@ function getAdaptiveChunkSize(fileSize: number): number {
 	return Math.max(MIN_CHUNK, Math.min(MAX_CHUNK, Math.max(minRequired, ideal)));
 }
 
-// ─── Service worker registration (idempotent) ─────────────────────────────────
-
-let serviceWorkerRegistered = false;
-function ensureServiceWorker() {
-	if (serviceWorkerRegistered) return;
-	if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
-	serviceWorkerRegistered = true;
-	navigator.serviceWorker.register('/service-worker.js').catch(() => {
-		// Non-fatal — Golden Retriever will fall back to LocalStorage + IndexedDB.
-		serviceWorkerRegistered = false;
-	});
-}
-
 // ─── Validation ───────────────────────────────────────────────────────────────
 
 function isAllowedFile(file: File, options: UploadOptions) {
@@ -320,8 +307,6 @@ export class UploadManager {
 	// ─── R2: multipart (> 100 MiB) ────────────────────────────────────────────
 
 	private async uploadR2Multipart(file: UploadFileState): Promise<UploadResult> {
-		ensureServiceWorker();
-
 		const folderId = this.options.getFolderId?.();
 		this.updateProgress(file, 2);
 

@@ -4,6 +4,7 @@ import { createUserUnisourceClient } from '$lib/server/unisource';
 import { createSessionClient } from '$lib/server/appwrite';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { unwrapItem } from '$lib/server/unisource-v2-contract';
+import { uploadInitSchema } from '$lib/schemas';
 import type { V2UploadAppwriteInitResponse } from '@unisource/sdk/v2';
 
 export const POST: RequestHandler = async (event) => {
@@ -11,6 +12,11 @@ export const POST: RequestHandler = async (event) => {
 
 	try {
 		const body = await event.request.json();
+		const validated = uploadInitSchema.safeParse(body);
+		if (!validated.success) {
+			return json({ error: 'Validation failed', details: validated.error.issues }, { status: 400 });
+		}
+		const { filename, size, mime_type, is_main_storage, folder_id } = validated.data;
 		const client = await createUserUnisourceClient(event);
 
 		// Generujemy JWT server-side (mamy dostęp do cookie __session).
@@ -18,14 +24,14 @@ export const POST: RequestHandler = async (event) => {
 		const { account } = createSessionClient(event);
 		const { jwt } = await account.createJWT();
 
-		if (body.is_main_storage) {
+		if (is_main_storage) {
 			const init = unwrapItem<V2UploadAppwriteInitResponse['item']>(
 				await client.upload.appwriteInit({
-					filename: body.filename,
-					size: body.size,
-					mime_type: body.mime_type,
+					filename,
+					size,
+					mime_type,
 					is_main_storage: true,
-					...(body.folder_id ? { folder_id: body.folder_id } : {})
+					...(folder_id ? { folder_id } : {})
 				})
 			);
 			return json({ ...init, jwt });
@@ -33,11 +39,11 @@ export const POST: RequestHandler = async (event) => {
 
 		const init = unwrapItem<V2UploadAppwriteInitResponse['item']>(
 			await client.upload.appwriteInit({
-				filename: body.filename,
-				size: body.size,
-				mime_type: body.mime_type,
+				filename,
+				size,
+				mime_type,
 				is_main_storage: false,
-				...(body.folder_id ? { folder_id: body.folder_id } : {})
+				...(folder_id ? { folder_id } : {})
 			})
 		);
 		return json({ ...init, jwt });

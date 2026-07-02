@@ -24,7 +24,7 @@ import { POST } from './+server';
 
 function makeRequest(body: unknown) {
 	return {
-		locals: { user: { $id: 'user-1' } },
+		locals: { user: { $id: 'user-1', labels: ['admin'] } },
 		request: new Request('http://localhost/api/releases/multipart', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },

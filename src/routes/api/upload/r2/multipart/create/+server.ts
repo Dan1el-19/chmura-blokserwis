@@ -5,6 +5,7 @@ import { createUserUnisourceClient } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { getUserRole } from '$lib/server/roles';
 import { unwrapItem } from '$lib/server/unisource-v2-contract';
+import { uploadInitSchema } from '$lib/schemas';
 
 /**
  * Proxy → UniSource `POST /upload/r2/multipart/create`
@@ -15,20 +16,25 @@ export const POST: RequestHandler = async (event) => {
 
 	try {
 		const body = await event.request.json();
+		const validated = uploadInitSchema.safeParse(body);
+		if (!validated.success) {
+			return json({ error: 'Validation failed', details: validated.error.issues }, { status: 400 });
+		}
+		const { filename, size, mime_type, is_main_storage, folder_id } = validated.data;
 		const client = await createUserUnisourceClient(event);
 
-		const isMainStorage = body.is_main_storage === true;
+		const isMainStorage = is_main_storage === true;
 		if (isMainStorage && getUserRole(event.locals.user) === 'basic') {
 			return json({ error: 'Forbidden' }, { status: 403 });
 		}
 
 		const init = unwrapItem(
 			await client.upload.multipartCreate({
-				filename: body.filename,
-				size: body.size,
-				mime_type: body.mime_type,
+				filename,
+				size,
+				mime_type,
 				is_main_storage: isMainStorage,
-				...(body.folder_id ? { folder_id: body.folder_id } : {})
+				...(folder_id ? { folder_id } : {})
 			})
 		);
 

@@ -1,4 +1,6 @@
 test-results
+playwright-report/
+.playwright-cli/
 node_modules
 
 # Output

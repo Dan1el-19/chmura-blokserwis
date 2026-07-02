@@ -27,7 +27,20 @@
 	};
 	type FolderType = { $id: string; name: string; $createdAt: string; size?: number };
 
-	let { files, folders, selection, onDownload, onPreview, onRename, onDelete, onNavigate, onShare, currentFolderId = null, parentFolderName = '', onNavigateUp = () => {} } = $props<{
+	let {
+		files,
+		folders,
+		selection,
+		onDownload,
+		onPreview,
+		onRename,
+		onDelete,
+		onNavigate,
+		onShare,
+		currentFolderId = null,
+		parentFolderName = '',
+		onNavigateUp = () => {}
+	} = $props<{
 		files: FileType[];
 		folders: FolderType[];
 		selection: SelectionState;
@@ -120,6 +133,11 @@
 	function handleFolderShare(id: string, name: string) {
 		toast.info(`Udostępnianie folderów (${name}) wkrótce.`);
 		void id;
+	}
+
+	function previewSheetFile(id: string) {
+		const file = files.find((candidate: FileType) => candidate.$id === id);
+		if (file) onPreview(file);
 	}
 </script>
 
@@ -237,11 +255,7 @@
 						aria-label="Zaznacz {file.name}"
 					/>
 				{/if}
-				<FileThumbnail
-					name={file.name}
-					mimeType={file.mimeType}
-					thumbnailUrl={file.thumbnailUrl}
-				/>
+				<FileThumbnail name={file.name} mimeType={file.mimeType} thumbnailUrl={file.thumbnailUrl} />
 				<div class="min-w-0 flex-1">
 					<p class="truncate text-sm font-medium text-text-main">{file.name}</p>
 					<p class="font-mono text-xs text-text-muted">{formatFileSize(file.size)}</p>
@@ -266,13 +280,12 @@
 <BottomSheet bind:open={sheetOpen} title={sheetTarget?.name}>
 	{#if sheetTarget?.kind === 'file'}
 		{@const target = sheetTarget}
-		{@const file = files.find((f: FileType) => f.$id === target.id)}
 		<button
 			type="button"
 			class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"
 			onclick={() => {
 				closeSheet();
-				if (file) onPreview(file);
+				previewSheetFile(target.id);
 			}}
 		>
 			<span

@@ -4,6 +4,7 @@ import type { RequestHandler } from './$types';
 import { releaseUploadSchema, releaseTagSchema } from '$lib/schemas';
 import { getReleaseByName } from '$lib/server/storage/releases';
 import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
+import { getUserRole } from '$lib/server/roles';
 import { releaseMultipart } from '$lib/server/release-multipart-client';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { logger } from '$lib/server/logger';
@@ -20,8 +21,8 @@ const multipartSchema = releaseUploadSchema.extend({
  * returns the Uppy AwsS3-compatible payload `{ key, uploadId, release_id }`.
  */
 export const POST: RequestHandler = async (event) => {
-	if (!event.locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
+	if (!event.locals.user || getUserRole(event.locals.user) !== 'admin') {
+		return json({ error: 'Forbidden' }, { status: 403 });
 	}
 
 	const body = await event.request.json();

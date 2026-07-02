@@ -61,7 +61,7 @@
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-border-line">
-				{#each data.users as user}
+				{#each data.users as user (user.$id)}
 					<tr class="transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/50">
 						<td class="px-6 py-4">
 							<div class="flex flex-col">
@@ -80,8 +80,13 @@
 									user.role
 								].class}"
 							>
-								<!-- Dynamic Component for icon -->
-								<svelte:component this={roleConfig[user.role].icon} class="h-3.5 w-3.5" />
+								{#if user.role === 'admin'}
+									<Crown class="h-3.5 w-3.5" />
+								{:else if user.role === 'plus'}
+									<Sparkle class="h-3.5 w-3.5" />
+								{:else}
+									<UserIcon class="h-3.5 w-3.5" />
+								{/if}
 								{roleConfig[user.role].label}
 							</span>
 						</td>
@@ -105,7 +110,7 @@
 
 	<!-- Mobile Cards -->
 	<div class="space-y-3 lg:hidden">
-		{#each data.users as user}
+		{#each data.users as user (user.$id)}
 			<Card class="p-4">
 				<div class="flex items-start justify-between gap-3">
 					<div class="min-w-0 flex-1">
@@ -119,7 +124,13 @@
 							user.role
 						].class}"
 					>
-						<svelte:component this={roleConfig[user.role].icon} class="h-3 w-3" />
+						{#if user.role === 'admin'}
+							<Crown class="h-3 w-3" />
+						{:else if user.role === 'plus'}
+							<Sparkle class="h-3 w-3" />
+						{:else}
+							<UserIcon class="h-3 w-3" />
+						{/if}
 						{roleConfig[user.role].label}
 					</span>
 				</div>

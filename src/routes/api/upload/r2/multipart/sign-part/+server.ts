@@ -6,6 +6,7 @@ import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { assertPresignedUrlMatchesR2Config } from '$lib/server/storage/r2-url';
 import { requireRuntimeEnv } from '$lib/server/runtime-env';
 import { unwrapItem } from '$lib/server/unisource-v2-contract';
+import { multipartSignPartSchema } from '$lib/schemas';
 
 /**
  * Proxy → UniSource `GET /upload/r2/multipart/sign-part`
@@ -14,17 +15,14 @@ import { unwrapItem } from '$lib/server/unisource-v2-contract';
 export const GET: RequestHandler = async (event) => {
 	if (!event.locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
-	const uploadId = event.url.searchParams.get('upload_id');
-	const partNumberRaw = event.url.searchParams.get('part_number');
-
-	if (!uploadId || !partNumberRaw) {
-		return json({ error: 'Missing upload_id or part_number' }, { status: 400 });
+	const validated = multipartSignPartSchema.safeParse({
+		upload_id: event.url.searchParams.get('upload_id'),
+		part_number: event.url.searchParams.get('part_number')
+	});
+	if (!validated.success) {
+		return json({ error: 'Validation failed', details: validated.error.issues }, { status: 400 });
 	}
-
-	const partNumber = Number(partNumberRaw);
-	if (!Number.isInteger(partNumber) || partNumber < 1 || partNumber > 10_000) {
-		return json({ error: 'Invalid part_number' }, { status: 400 });
-	}
+	const { upload_id: uploadId, part_number: partNumber } = validated.data;
 
 	try {
 		const client = await createUserUnisourceClient(event);

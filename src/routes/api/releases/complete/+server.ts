@@ -2,12 +2,13 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { promoteLatest } from '$lib/server/storage/releases';
+import { getUserRole } from '$lib/server/roles';
 import { logger } from '$lib/server/logger';
 import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 export const POST: RequestHandler = async (event) => {
-	if (!event.locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
+	if (!event.locals.user || getUserRole(event.locals.user) !== 'admin') {
+		return json({ error: 'Forbidden' }, { status: 403 });
 	}
 
 	const body = await event.request.json();
@@ -28,6 +29,6 @@ export const POST: RequestHandler = async (event) => {
 		return json(result);
 	} catch (error: any) {
 		logger.error('Failed to complete release upload:', error);
-		return json({ error: error?.message || 'Failed to complete release upload' }, { status: 500 });
+		return json({ error: 'Failed to complete release upload' }, { status: 500 });
 	}
 };

@@ -4,6 +4,7 @@ import type { RequestHandler } from './$types';
 import { createUserUnisourceClient } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { unwrapItem } from '$lib/server/unisource-v2-contract';
+import { multipartCompleteSchema } from '$lib/schemas';
 
 /**
  * Proxy → UniSource `POST /upload/r2/multipart/complete`
@@ -14,13 +15,14 @@ export const POST: RequestHandler = async (event) => {
 
 	try {
 		const body = await event.request.json();
-
-		if (!body.upload_id || !Array.isArray(body.parts) || body.parts.length === 0) {
-			return json({ error: 'Missing upload_id or parts' }, { status: 400 });
+		const validated = multipartCompleteSchema.safeParse(body);
+		if (!validated.success) {
+			return json({ error: 'Validation failed', details: validated.error.issues }, { status: 400 });
 		}
+		const { upload_id, parts } = validated.data;
 
 		const client = await createUserUnisourceClient(event);
-		const result = unwrapItem(await client.upload.multipartComplete(body.upload_id, body.parts));
+		const result = unwrapItem(await client.upload.multipartComplete(upload_id, parts));
 
 		return json(result);
 	} catch (error) {

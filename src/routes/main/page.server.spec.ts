@@ -35,7 +35,10 @@ describe('/main load', () => {
 	it('uses a raw V2 request for shared main storage after local role authorization', async () => {
 		expect.assertions(2);
 
-		requestAdminUnisourceV2.mockResolvedValue({ items: [], page: { next_cursor: null, limit: 50 } });
+		requestAdminUnisourceV2.mockResolvedValue({
+			items: [],
+			page: { next_cursor: null, limit: 50 }
+		});
 
 		await load({
 			locals: { user: { $id: 'user-1', labels: ['admin'] } },
@@ -43,12 +46,9 @@ describe('/main load', () => {
 			platform: undefined
 		} as any);
 
-		expect(requestAdminUnisourceV2).toHaveBeenCalledWith(
-			expect.anything(),
-			'GET',
-			'/v2/main',
-			{ query: { cursor: undefined, limit: 50 } }
-		);
+		expect(requestAdminUnisourceV2).toHaveBeenCalledWith(expect.anything(), 'GET', '/v2/main', {
+			query: { cursor: undefined, limit: 50 }
+		});
 		expect(userList).not.toHaveBeenCalled();
 	});
 });
