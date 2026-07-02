@@ -1,12 +1,12 @@
 # Raport stabilności bety UniSource v2
 
-> Ostatnia aktualizacja: 2026-07-02
+> Ostatnia aktualizacja: 2026-07-03
 > Zakres: `A:\Projects\chmura-blokserwis` (`codex/unisource-v2-beta`) oraz `A:\Projects\UniSource` (`beta`)
 > Cel: potwierdzić gotowość bety Chmury z UniSource v2 do promocji na stable.
 
 ## Decyzja
 
-Beta jest wdrożona na środowisko beta, przetestowana po deployu i przygotowana do promocji stable na bazie aktualnego `origin/main`.
+Beta została wdrożona, przetestowana i wypromowana na stable na bazie aktualnego `origin/main`.
 
 Nie ma już lokalnego blokera w Chmurze:
 
@@ -15,6 +15,7 @@ Nie ma już lokalnego blokera w Chmurze:
 - Unit, build beta i Playwright smoke E2E przechodzą lokalnie.
 - Kontrakty UniSource v2 używane przez Chmurę mają pokrycie w opublikowanym SDK `1.1.3`.
 - Beta i stable odpowiadają poprawnie na publicznym smoke teście unauthenticated.
+- GitHub Actions `Deploy stable` wykonał realny deploy i smoke produkcji po uzupełnieniu sekretów Cloudflare/GitHub.
 
 ## Zweryfikowane bramki
 
@@ -28,8 +29,9 @@ Nie ma już lokalnego blokera w Chmurze:
 | `pnpm deploy:beta:dry`    |    OK | Wrangler dry-run dla `env beta` przechodzi, bez publikacji                                |
 | Stable dry-run            |    OK | `wrangler deploy --dry-run` dla top-level stable env czyta 80 assetów                     |
 | GitHub Actions beta       |    OK | `Deploy beta` po pushu przeszedł deploy, smoke beta i kontrolę stable po deployu          |
-| Live smoke beta           |    OK | `/` -> 303, `/login` -> 200, `/service-worker.js` -> 200, PWA manifest/register -> 200    |
-| Live smoke stable         |    OK | `/` -> 303 `/login`, `/login` -> 200                                                      |
+| GitHub Actions stable     |    OK | `Deploy stable` run `28625073040`: check, unit, build, deploy i smoke stable              |
+| Live smoke beta           |    OK | `/`, `/login`, `/service-worker.js`, `/registerSW.js`, `/manifest.webmanifest` -> 200     |
+| Live smoke stable         |    OK | `/`, `/login`, `/service-worker.js`, `/registerSW.js`, `/manifest.webmanifest` -> 200     |
 | SDK npm                   |    OK | `@unisource/sdk@1.1.3` zawiera `uploadFail`, `r2_used_bytes`, `appwrite_used_bytes`       |
 
 ## Zamknięte blokery
@@ -46,6 +48,7 @@ Nie ma już lokalnego blokera w Chmurze:
 | 8   | Service Worker 404 / konflikt PWA                 | Worker PWA jest budowany jako `service-worker.js` i zawiera obsługę Uppy resume. |
 | 9   | Brak CSP i słaby fallback rate limitu             | Dodano CSP i in-memory fallback limiter.                                         |
 | 10  | Duży chunk ikon                                   | Dodano `sveltePhosphorOptimize()`; największy client chunk spadł do ok. 275 kB.  |
+| 11  | Stable deploy pomijany lub bez `wrangler` w PATH  | Uzupełniono GitHub `production` secrets i uruchamianie `pnpm exec wrangler deploy`. |
 
 ## Różnice beta vs stable
 
@@ -69,10 +72,12 @@ Nie ma już lokalnego blokera w Chmurze:
 
 - Build PWA nadal pokazuje nieblokujący warning Workboxa o pustym globie `prerendered/**/*.{html,json}`; aplikacja nie prerenderuje stron, a build, E2E i dry-run deploy przechodzą.
 - UniSource worktree ma lokalne, niezamknięte zmiany w skryptach Fakturowni oraz jeden dirty diff w SDK. Nie są wymagane przez Chmurę po przejściu na npm SDK `1.1.3`; nie powinny trafić przypadkiem do commita promocyjnego.
-- Stable deploy powinien przejść przez workflow `Deploy stable` po pushu do `main`, a potem wymaga smoke na domenie produkcyjnej.
 
-## Rekomendowana kolejność promocji
+## Status promocji
 
-1. Wypchnąć commit promocyjny do `main`.
-2. Poczekać na `Deploy stable`.
-3. Wykonać smoke stable: `/`, `/login`, `/service-worker.js`, public preview, admin storage, upload fail/complete, releases.
+Promocja stable jest zamknięta:
+
+1. Commit promocyjny został wypchnięty do `main`.
+2. GitHub `production` secrets zawierają komplet wymagany przez `Deploy stable`.
+3. `Deploy stable` run `28625073040` przeszedł z realnym `Build`, `Deploy stable` i `Smoke test stable`.
+4. Niezależny smoke produkcji po deployu potwierdził `200` dla `/`, `/login`, `/service-worker.js`, `/registerSW.js` i `/manifest.webmanifest`.
