@@ -1,3 +1,9 @@
+## [2.9.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.9.0...v2.9.1) (2026-07-02)
+
+### Bug Fixes
+
+* **backend:** promuj unisource v2 na stable ([8b47dbf](https://github.com/Dan1el-19/chmura-blokserwis/commit/8b47dbf61e1f60b09e6da180a9d6f90d8d8c265c))
+
 ## [2.9.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.8.1...v2.9.0) (2026-06-26)
 
 ### Features
