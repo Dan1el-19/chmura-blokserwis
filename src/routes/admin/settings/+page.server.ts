@@ -1,12 +1,9 @@
 import { fail, redirect } from '@sveltejs/kit';
+import type { RecommendedUploadDestination } from '@unisource/sdk';
+import { UnisourceV2Error } from '@unisource/sdk/v2';
 import type { Actions, PageServerLoad } from './$types';
 
-import { createAdminUnisourceClient } from '$lib/server/unisource';
-import {
-	UnisourceError,
-	UnisourceNetworkError,
-	type RecommendedUploadDestination
-} from '@unisource/sdk';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 
 type RecommendedDestination = RecommendedUploadDestination;
 
@@ -19,8 +16,8 @@ export const load: PageServerLoad = async (event) => {
 		throw redirect(303, '/login');
 	}
 
-	const client = createAdminUnisourceClient(event);
-	const { service } = await client.admin.serviceDetail();
+	const client = await createRequestAdminUnisourceClient(event);
+	const { service } = await client.admin.getService();
 	const dest: RecommendedDestination = isRecommendedDestination(
 		service.recommended_upload_destination
 	)
@@ -50,21 +47,16 @@ export const actions: Actions = {
 		}
 
 		try {
-			const client = createAdminUnisourceClient(event);
+			const client = await createRequestAdminUnisourceClient(event);
 			await client.admin.updateServiceSettings({
 				recommended_upload_destination: destination
 			});
 			return { success: true, destination };
 		} catch (error) {
-			if (error instanceof UnisourceError) {
-				return fail(error.status, { error: error.body?.message || 'Nie udało się zapisać' });
+			if (error instanceof UnisourceV2Error) {
+				return fail(error.status, { error: error.message || 'Nie udało się zapisać' });
 			}
-			if (error instanceof UnisourceNetworkError) {
-				return fail(502, { error: 'Żądanie sieciowe do UniSource nie powiodło się' });
-			}
-			return fail(500, {
-				error: error instanceof Error ? error.message : 'Failed to update service settings'
-			});
+			return fail(500, { error: 'Failed to update service settings' });
 		}
 	}
 };

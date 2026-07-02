@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 import { getUserRole } from '$lib/server/roles';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 
 /**
@@ -31,7 +31,7 @@ export const PATCH: RequestHandler = async (event) => {
 	}
 
 	try {
-		const client = createAdminUnisourceClient(event);
+		const client = await createRequestAdminUnisourceClient(event);
 		const result = await client.admin.updateServiceSettings({
 			recommended_upload_destination: destination
 		});

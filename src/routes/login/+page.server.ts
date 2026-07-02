@@ -30,7 +30,7 @@ export const actions: Actions = {
 				path: '/',
 				httpOnly: true,
 				secure: isSecureContext(event),
-				sameSite: 'lax',
+				sameSite: 'strict',
 				expires: new Date(session.expire)
 			});
 		} catch {

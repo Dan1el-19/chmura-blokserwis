@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
+import { getUserRole } from '$lib/server/roles';
 import { releaseMultipart } from '$lib/server/release-multipart-client';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 
@@ -11,8 +12,8 @@ import { unisourceErrorResponse } from '$lib/server/unisource-errors';
  * matches what `@uppy/aws-s3` expects.
  */
 export const GET: RequestHandler = async (event) => {
-	if (!event.locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
+	if (!event.locals.user || getUserRole(event.locals.user) !== 'admin') {
+		return json({ error: 'Forbidden' }, { status: 403 });
 	}
 
 	const { uploadId } = event.params;
@@ -21,7 +22,7 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	try {
-		const client = createAdminUnisourceClient(event);
+		const client = await createRequestAdminUnisourceClient(event);
 		const result = await releaseMultipart(client).listParts(uploadId);
 		return json(result.parts);
 	} catch (error) {
@@ -34,8 +35,8 @@ export const GET: RequestHandler = async (event) => {
  * Aborts an in-flight multipart upload and marks the release as failed.
  */
 export const DELETE: RequestHandler = async (event) => {
-	if (!event.locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
+	if (!event.locals.user || getUserRole(event.locals.user) !== 'admin') {
+		return json({ error: 'Forbidden' }, { status: 403 });
 	}
 
 	const { uploadId } = event.params;
@@ -44,7 +45,7 @@ export const DELETE: RequestHandler = async (event) => {
 	}
 
 	try {
-		const client = createAdminUnisourceClient(event);
+		const client = await createRequestAdminUnisourceClient(event);
 		await releaseMultipart(client).abort(uploadId);
 		return json({});
 	} catch (error) {

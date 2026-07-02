@@ -4,6 +4,7 @@ import { createUserUnisourceClient } from '$lib/server/unisource';
 import { mapFolderFromUnisource } from '$lib/server/unisource-mappers';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { updateFolderSchema } from '$lib/schemas';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 export const GET: RequestHandler = async (event) => {
 	if (!event.locals.user) {
@@ -17,7 +18,7 @@ export const GET: RequestHandler = async (event) => {
 		const result = await client.folders.get(event.params.folderId, undefined, {
 			asUser: targetUserId
 		});
-		return json(mapFolderFromUnisource(result.folder));
+		return json(mapFolderFromUnisource(unwrapItem(result)));
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to get folder');
 	}
@@ -33,7 +34,8 @@ export const DELETE: RequestHandler = async (event) => {
 
 	try {
 		const client = await createUserUnisourceClient(event);
-		await client.folders.delete(event.params.folderId, { permanent }, undefined, {
+		await client.folders.delete(event.params.folderId, undefined, {
+			permanent,
 			asUser: targetUserId
 		});
 		return json({ success: true });
@@ -64,11 +66,16 @@ export const PATCH: RequestHandler = async (event) => {
 			const result = await client.folders.update(event.params.folderId, { name }, undefined, {
 				asUser: targetUserId
 			});
-			return json(mapFolderFromUnisource(result.folder));
+			return json(mapFolderFromUnisource(unwrapItem(result)));
 		}
 
 		if (parentFolderId !== undefined) {
-			return json({ error: 'Folder move is postponed in UniSource migration' }, { status: 410 });
+			await client.folders.bulkMove(
+				{ ids: [event.params.folderId], parent_id: parentFolderId },
+				undefined,
+				{ asUser: targetUserId }
+			);
+			return json({ success: true });
 		}
 
 		return json({ error: 'No valid operation specified' }, { status: 400 });

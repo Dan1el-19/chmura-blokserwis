@@ -1,11 +1,11 @@
 import type {
-	AdminUser,
-	FileRecord,
-	Folder,
-	PublicFileAccessResponse,
-	PublicFileLockedResponse,
-	ShareLink
-} from '@unisource/sdk';
+	AdminUsersListResponse,
+	PublicShareLinkLockedResponse,
+	PublicShareLinkUnlockedResponse,
+	V2File,
+	V2Folder
+} from '@unisource/sdk/v2';
+import type { ShareLink } from '@unisource/sdk';
 
 import type { FileDocument, FileShare, FolderDocument } from '$lib/types/storage';
 import type { UserRole } from './roles';
@@ -17,7 +17,12 @@ function toIso(timestamp: number | null | undefined): string | null {
 	return new Date(timestamp * 1000).toISOString();
 }
 
-export function mapFileFromUnisource(file: FileRecord): FileDocument & { isTrashed: boolean } {
+export function mapFileFromUnisource(file: V2File): FileDocument & { isTrashed: boolean } {
+	const previewFields = file as V2File & {
+		thumbnail_url?: string | null;
+		preview_url?: string | null;
+	};
+
 	return {
 		$id: file.id,
 		$createdAt: toIso(file.created_at) ?? new Date(0).toISOString(),
@@ -31,11 +36,13 @@ export function mapFileFromUnisource(file: FileRecord): FileDocument & { isTrash
 		bucketId: file.storage_destination,
 		ownerId: file.user_id,
 		parentFolderId: file.folder_id,
-		isTrashed: file.is_trashed
+		isTrashed: file.is_trashed,
+		thumbnailUrl: 'thumbnail_url' in previewFields ? (previewFields.thumbnail_url ?? null) : null,
+		previewUrl: 'preview_url' in previewFields ? (previewFields.preview_url ?? null) : null
 	};
 }
 
-export function mapFolderFromUnisource(folder: Folder): FolderDocument & { isTrashed: boolean } {
+export function mapFolderFromUnisource(folder: V2Folder): FolderDocument & { isTrashed: boolean } {
 	return {
 		$id: folder.id,
 		$createdAt: toIso(folder.created_at) ?? new Date(0).toISOString(),
@@ -83,7 +90,7 @@ export function mapRoleToUnisource(role: UserRole): 'user' | 'plus' | 'admin' {
 	return role;
 }
 
-export function mapAdminUserFromUnisource(user: AdminUser) {
+export function mapAdminUserFromUnisource(user: AdminUsersListResponse['items'][number]) {
 	return {
 		$id: user.id,
 		email: user.email,
@@ -101,7 +108,7 @@ export function mapAdminUserFromUnisource(user: AdminUser) {
 }
 
 export function mapPublicFileFromUnisource(
-	response: PublicFileAccessResponse | PublicFileLockedResponse
+	response: PublicShareLinkUnlockedResponse | PublicShareLinkLockedResponse
 ) {
 	const base = {
 		expired: false,
@@ -113,10 +120,17 @@ export function mapPublicFileFromUnisource(
 		remainingDownloads: null as number | null
 	};
 
+	const previewFields = response as typeof response & {
+		preview_url?: string | null;
+		thumbnail_url?: string | null;
+	};
+
 	if (response.requires_password) {
 		return {
 			...base,
 			downloadUrl: null,
+			previewUrl: null,
+			thumbnailUrl: null,
 			expiresAt: null
 		};
 	}
@@ -124,6 +138,8 @@ export function mapPublicFileFromUnisource(
 	return {
 		...base,
 		downloadUrl: response.download_url,
+		previewUrl: 'preview_url' in previewFields ? (previewFields.preview_url ?? null) : null,
+		thumbnailUrl: 'thumbnail_url' in previewFields ? (previewFields.thumbnail_url ?? null) : null,
 		expiresAt: toIso(response.link_expires_at)
 	};
 }

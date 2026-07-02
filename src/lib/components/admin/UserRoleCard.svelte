@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { User as UserIcon, Sparkle, Crown, FloppyDisk } from 'phosphor-svelte';
+	import { Sparkle, Crown, FloppyDisk, User as UserIcon } from 'phosphor-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
@@ -14,6 +14,8 @@
 		saving: boolean;
 		onSave: () => void;
 	}>();
+
+	const roles = ['basic', 'plus', 'admin'] as const;
 </script>
 
 <Card
@@ -21,13 +23,7 @@
 	description="Zarządzaj uprawnieniami i poziomem dostępu użytkownika."
 >
 	<div class="space-y-3">
-		{#each ['basic', 'plus', 'admin'] as role (role)}
-			{@const icons: Record<string, typeof UserIcon> = {
-				basic: UserIcon,
-				plus: Sparkle,
-				admin: Crown
-			}}
-			{@const Icon = icons[role]}
+		{#each roles as role (role)}
 			<label
 				class="flex cursor-pointer items-center gap-3 rounded-md border p-3 transition-colors
 						{selectedRole === role
@@ -35,13 +31,13 @@
 					: 'hover:bg-bg-msg-hover border-border-line'}"
 			>
 				<input type="radio" name="role" value={role} bind:group={selectedRole} class="sr-only" />
-				<Icon
-					class="h-5 w-5 {role === 'admin'
-						? 'text-amber-500'
-						: role === 'plus'
-							? 'text-purple-500'
-							: 'text-text-muted'}"
-				/>
+				{#if role === 'admin'}
+					<Crown class="h-5 w-5 text-amber-500" />
+				{:else if role === 'plus'}
+					<Sparkle class="h-5 w-5 text-purple-500" />
+				{:else}
+					<UserIcon class="h-5 w-5 text-text-muted" />
+				{/if}
 				<span class="font-medium text-text-main">
 					{role === 'basic' ? 'Podstawowy' : role === 'plus' ? 'Plus' : 'Administrator'}
 				</span>

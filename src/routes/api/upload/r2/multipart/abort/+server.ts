@@ -3,6 +3,8 @@ import type { RequestHandler } from './$types';
 
 import { createUserUnisourceClient } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
+import { multipartAbortSchema } from '$lib/schemas';
 
 /**
  * Proxy → UniSource `DELETE /upload/r2/multipart/abort`
@@ -13,12 +15,14 @@ export const DELETE: RequestHandler = async (event) => {
 
 	try {
 		const body = await event.request.json();
-		if (!body.upload_id) {
-			return json({ error: 'Missing upload_id' }, { status: 400 });
+		const validated = multipartAbortSchema.safeParse(body);
+		if (!validated.success) {
+			return json({ error: 'Validation failed', details: validated.error.issues }, { status: 400 });
 		}
+		const { upload_id } = validated.data;
 
 		const client = await createUserUnisourceClient(event);
-		const result = await client.upload.multipart.abort(body.upload_id);
+		const result = unwrapItem(await client.upload.multipartAbort(upload_id));
 		return json(result);
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to abort multipart upload');

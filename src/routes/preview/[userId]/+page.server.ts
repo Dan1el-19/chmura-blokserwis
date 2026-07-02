@@ -5,6 +5,7 @@ import { createUserUnisourceClient } from '$lib/server/unisource';
 import { createAdminClient } from '$lib/server/appwrite';
 import { mapFileFromUnisource, mapFolderFromUnisource } from '$lib/server/unisource-mappers';
 import { logger } from '$lib/server/logger';
+import { unwrapList } from '$lib/server/unisource-v2-contract';
 
 const PAGE_LIMIT = 50;
 
@@ -41,23 +42,27 @@ export const load: PageServerLoad = async (event) => {
 
 	try {
 		const [filesResult, foldersResult] = await Promise.all([
-			admin.myFiles.list({ folder_id: folderId, limit: PAGE_LIMIT }, undefined, { asUser: userId }),
+			admin.myFiles.list(
+				{ ...(folderId ? { folder_id: folderId } : {}), limit: PAGE_LIMIT },
+				undefined,
+				{ asUser: userId }
+			),
 			admin.folders.list({ parent_id: folderId, limit: PAGE_LIMIT }, undefined, { asUser: userId })
 		]);
 
-		files = filesResult.items.map(mapFileFromUnisource);
-		folders = foldersResult.items.map(mapFolderFromUnisource);
+		files =
+			unwrapList<Parameters<typeof mapFileFromUnisource>[0]>(filesResult).items.map(
+				mapFileFromUnisource
+			);
+		folders =
+			unwrapList<Parameters<typeof mapFolderFromUnisource>[0]>(foldersResult).items.map(
+				mapFolderFromUnisource
+			);
 
 		if (folderId) {
-			const trail: { id: string; name: string }[] = [];
-			let currentId: string | null = folderId;
-
-			while (currentId) {
-				const folderDetail = await admin.folders.get(currentId, undefined, { asUser: userId });
-				trail.unshift({ id: folderDetail.folder.id, name: folderDetail.folder.name });
-				currentId = folderDetail.folder.parent_id;
-			}
-
+			const trail = (
+				await admin.folders.breadcrumbs(folderId, undefined, { asUser: userId })
+			).breadcrumbs.map(({ id, name }) => ({ id, name }));
 			breadcrumbs = [{ id: null, name: 'Root' }, ...trail];
 		}
 	} catch (e) {

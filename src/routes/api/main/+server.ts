@@ -1,10 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { requestAdminUnisourceV2 } from '$lib/server/unisource';
 import { mapFileFromUnisource } from '$lib/server/unisource-mappers';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { getUserRole } from '$lib/server/roles';
+import { unwrapList } from '$lib/server/unisource-v2-contract';
 
 const DEFAULT_LIMIT = 50;
 
@@ -15,15 +16,17 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	try {
-		const client = createAdminUnisourceClient(event);
-		const result = await client.mainStorage.list({
-			cursor: event.url.searchParams.get('cursor') || undefined,
-			limit: Number(event.url.searchParams.get('limit') || DEFAULT_LIMIT)
+		const result = await requestAdminUnisourceV2(event, 'GET', '/v2/main', {
+			query: {
+				cursor: event.url.searchParams.get('cursor') || undefined,
+				limit: Number(event.url.searchParams.get('limit') || DEFAULT_LIMIT)
+			}
 		});
+		const list = unwrapList<Parameters<typeof mapFileFromUnisource>[0]>(result);
 
 		return json({
-			items: result.items.map(mapFileFromUnisource),
-			next_cursor: result.next_cursor
+			items: list.items.map(mapFileFromUnisource),
+			next_cursor: list.nextCursor
 		});
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to list main storage');

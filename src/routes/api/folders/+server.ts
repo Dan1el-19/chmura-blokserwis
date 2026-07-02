@@ -6,6 +6,7 @@ import { mapFolderFromUnisource } from '$lib/server/unisource-mappers';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { getUserRole } from '$lib/server/roles';
 import { createFolderSchema } from '$lib/schemas';
+import { unwrapItem, unwrapList } from '$lib/server/unisource-v2-contract';
 
 const DEFAULT_LIMIT = 50;
 
@@ -25,15 +26,16 @@ export const GET: RequestHandler = async (event) => {
 	try {
 		const client = await createUserUnisourceClient(event);
 		const result = await client.folders.list(
-			{ parent_id: parentId, is_trashed: isTrashed, cursor, limit },
+			{ parent_id: parentId, trash: isTrashed ? 'trashed' : 'active', cursor, limit },
 			undefined,
 			{ asUser: targetUserId }
 		);
+		const list = unwrapList<Parameters<typeof mapFolderFromUnisource>[0]>(result);
 
 		return json({
-			items: result.items.map(mapFolderFromUnisource),
-			next_cursor: result.next_cursor,
-			limit: result.limit
+			items: list.items.map(mapFolderFromUnisource),
+			next_cursor: list.nextCursor,
+			limit: list.limit
 		});
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to list folders');
@@ -55,7 +57,7 @@ export const POST: RequestHandler = async (event) => {
 			...(validated.data.parentFolderId ? { parent_id: validated.data.parentFolderId } : {})
 		});
 
-		return json(mapFolderFromUnisource(result.folder));
+		return json(mapFolderFromUnisource(unwrapItem(result)));
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to create folder');
 	}

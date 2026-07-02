@@ -1,28 +1,51 @@
 <script lang="ts">
 	import {
 		Folder,
-		File as FileIcon,
 		DownloadSimple,
 		Pencil,
 		Trash,
 		Share,
 		DotsThreeVertical,
-		ArrowUp
+		ArrowUp,
+		Eye
 	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
+	import { canPreviewInline } from '$lib/utils/file-preview';
+	import FileThumbnail from './FileThumbnail.svelte';
 	import { swipeAction } from '$lib/actions/gestures';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import type { SelectionState } from '$lib/modules/selection.svelte';
 	import { toast } from 'svelte-sonner';
 
-	type FileType = { $id: string; name: string; size: number; $createdAt: string };
+	type FileType = {
+		$id: string;
+		name: string;
+		size: number;
+		$createdAt: string;
+		mimeType?: string | null;
+		thumbnailUrl?: string | null;
+	};
 	type FolderType = { $id: string; name: string; $createdAt: string; size?: number };
 
-	let { files, folders, selection, onDownload, onRename, onDelete, onNavigate, onShare, currentFolderId = null, parentFolderName = '', onNavigateUp = () => {} } = $props<{
+	let {
+		files,
+		folders,
+		selection,
+		onDownload,
+		onPreview,
+		onRename,
+		onDelete,
+		onNavigate,
+		onShare,
+		currentFolderId = null,
+		parentFolderName = '',
+		onNavigateUp = () => {}
+	} = $props<{
 		files: FileType[];
 		folders: FolderType[];
 		selection: SelectionState;
 		onDownload: (id: string, name: string, isFolder: boolean) => void;
+		onPreview: (file: FileType) => void;
 		onRename: (id: string, name: string, isFolder: boolean) => void;
 		onDelete: (id: string, name: string, isFolder: boolean) => void;
 		onNavigate: (id: string) => void;
@@ -39,7 +62,12 @@
 			onNavigate(id);
 		} else {
 			const file = files.find((f: FileType) => f.$id === id);
-			if (file) openSheet({ kind: 'file', id: file.$id, name: file.name });
+			if (!file) return;
+			if (canPreviewInline(file.mimeType)) {
+				onPreview(file);
+				return;
+			}
+			openSheet({ kind: 'file', id: file.$id, name: file.name });
 		}
 	}
 
@@ -105,6 +133,11 @@
 	function handleFolderShare(id: string, name: string) {
 		toast.info(`Udostępnianie folderów (${name}) wkrótce.`);
 		void id;
+	}
+
+	function previewSheetFile(id: string) {
+		const file = files.find((candidate: FileType) => candidate.$id === id);
+		if (file) onPreview(file);
 	}
 </script>
 
@@ -222,7 +255,7 @@
 						aria-label="Zaznacz {file.name}"
 					/>
 				{/if}
-				<FileIcon class="h-8 w-8 shrink-0 text-blue-500 dark:text-blue-400" />
+				<FileThumbnail name={file.name} mimeType={file.mimeType} thumbnailUrl={file.thumbnailUrl} />
 				<div class="min-w-0 flex-1">
 					<p class="truncate text-sm font-medium text-text-main">{file.name}</p>
 					<p class="font-mono text-xs text-text-muted">{formatFileSize(file.size)}</p>
@@ -247,6 +280,21 @@
 <BottomSheet bind:open={sheetOpen} title={sheetTarget?.name}>
 	{#if sheetTarget?.kind === 'file'}
 		{@const target = sheetTarget}
+		<button
+			type="button"
+			class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"
+			onclick={() => {
+				closeSheet();
+				previewSheetFile(target.id);
+			}}
+		>
+			<span
+				class="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-violet-600 dark:bg-violet-900/40"
+			>
+				<Eye class="h-4 w-4" />
+			</span>
+			Otworz
+		</button>
 		<button
 			type="button"
 			class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"

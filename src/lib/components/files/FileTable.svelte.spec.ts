@@ -1,14 +1,22 @@
-import { page } from 'vitest/browser';
-import { describe, expect, it } from 'vitest';
-import { render } from 'vitest-browser-svelte';
+import { flushSync, mount, unmount } from 'svelte';
+import { afterEach, describe, expect, it } from 'vitest';
 import { SelectionState } from '$lib/modules/selection.svelte';
 import FileTable from './FileTable.svelte';
+
+let component: ReturnType<typeof mount> | undefined;
+
+afterEach(() => {
+	if (component) unmount(component);
+	component = undefined;
+	document.body.replaceChildren();
+});
 
 describe('FileTable checkbox interaction', () => {
 	it('selects a file after clicking directly on its checkbox', async () => {
 		const selection = new SelectionState();
 
-		render(FileTable, {
+		component = mount(FileTable, {
+			target: document.body,
 			props: {
 				files: [
 					{
@@ -24,6 +32,7 @@ describe('FileTable checkbox interaction', () => {
 				sortDir: 'asc',
 				onSort: () => {},
 				onDownload: () => {},
+				onPreview: () => {},
 				onRename: () => {},
 				onDelete: () => {},
 				onNavigate: () => {},
@@ -31,10 +40,15 @@ describe('FileTable checkbox interaction', () => {
 			}
 		});
 
-		const checkbox = page.getByRole('checkbox', { name: 'Zaznacz raport.pdf' });
-		await checkbox.click();
+		const checkbox = document.querySelector<HTMLInputElement>(
+			'input[type="checkbox"][aria-label="Zaznacz raport.pdf"]'
+		);
+		expect(checkbox).not.toBeNull();
 
-		await expect.element(checkbox).toBeChecked();
+		checkbox?.click();
+		flushSync();
+
+		expect(checkbox?.checked).toBe(true);
 		expect(selection.has('file-1')).toBe(true);
 		expect(selection.count).toBe(1);
 	});

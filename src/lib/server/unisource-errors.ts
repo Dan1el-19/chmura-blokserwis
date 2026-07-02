@@ -1,32 +1,32 @@
 import { json } from '@sveltejs/kit';
-import { UnisourceError, UnisourceNetworkError } from '@unisource/sdk';
+import { UnisourceV2Error } from '@unisource/sdk/v2';
 
 export function unisourceErrorResponse(error: unknown, fallback = 'UniSource request failed') {
-	if (error instanceof UnisourceError) {
+	if (error instanceof UnisourceV2Error) {
 		return json(
-			{ error: error.body?.message || error.message || fallback },
+			{
+				error: error.message || fallback,
+				code: error.code,
+				requestId: error.requestId
+			},
 			{ status: error.status }
 		);
 	}
 
-	if (error instanceof UnisourceNetworkError) {
-		return json({ error: 'Żądanie sieciowe do UniSource nie powiodło się' }, { status: 502 });
-	}
-
-	return json({ error: error instanceof Error ? error.message : fallback }, { status: 500 });
+	return json({ error: fallback }, { status: 500 });
 }
 
 export function publicShareErrorState(error: unknown) {
-	if (error instanceof UnisourceError && [403, 410].includes(error.status)) {
+	if (error instanceof UnisourceV2Error && ['forbidden', 'gone'].includes(error.code)) {
 		return {
-			expired: error.status === 410,
+			expired: error.code === 'gone',
 			fileName: null,
 			fileSize: null,
 			mimeType: null,
 			downloadUrl: null,
 			expiresAt: null,
 			requiresPassword: false,
-			limitReached: error.status === 403,
+			limitReached: error.code === 'forbidden',
 			remainingDownloads: null
 		};
 	}

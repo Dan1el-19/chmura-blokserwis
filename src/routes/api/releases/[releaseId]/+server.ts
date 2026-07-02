@@ -7,9 +7,19 @@ import {
 	listReleases
 } from '$lib/server/storage/releases';
 import { updateReleaseSchema } from '$lib/schemas';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
+import { getUserRole } from '$lib/server/roles';
+
+function requireAdmin(event: Parameters<RequestHandler>[0]) {
+	if (!event.locals.user || getUserRole(event.locals.user) !== 'admin') {
+		return json({ error: 'Forbidden' }, { status: 403 });
+	}
+}
 
 export const GET: RequestHandler = async (event) => {
+	const adminCheck = requireAdmin(event);
+	if (adminCheck) return adminCheck;
+
 	const { releaseId } = event.params;
 	try {
 		const release = await getRelease(releaseId, event);
@@ -20,6 +30,9 @@ export const GET: RequestHandler = async (event) => {
 };
 
 export const PATCH: RequestHandler = async (event) => {
+	const adminCheck = requireAdmin(event);
+	if (adminCheck) return adminCheck;
+
 	const { releaseId } = event.params;
 	const body = await event.request.json();
 	const validated = updateReleaseSchema.safeParse(body);
@@ -37,6 +50,9 @@ export const PATCH: RequestHandler = async (event) => {
 };
 
 export const DELETE: RequestHandler = async (event) => {
+	const adminCheck = requireAdmin(event);
+	if (adminCheck) return adminCheck;
+
 	const { releaseId } = event.params;
 
 	let release;
@@ -64,7 +80,7 @@ export const DELETE: RequestHandler = async (event) => {
 			.sort((a, b) => new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime())[0];
 
 		if (next) {
-			const c = createAdminUnisourceClient(event);
+			const c = await createRequestAdminUnisourceClient(event);
 			await c.releases.update(next.$id, { tags: Array.from(new Set([...next.tags, 'latest'])) });
 		}
 	}

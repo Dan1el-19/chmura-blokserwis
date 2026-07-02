@@ -44,7 +44,7 @@ export const GET: RequestHandler = async (event) => {
 		path: '/',
 		httpOnly: true,
 		secure: isSecure,
-		sameSite: 'lax',
+		sameSite: 'strict',
 		expires: new Date(session.expire)
 	});
 

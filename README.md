@@ -5,24 +5,24 @@
 Cloudflare Workers builds install dependencies with `pnpm install --frozen-lockfile`, so
 `@unisource/sdk` must stay pinned to the npm package in `package.json` and `pnpm-lock.yaml`.
 
-For local SDK development, `pnpm dev` links the neighboring checkout before starting Vite:
+The neighboring `A:\Projects\UniSource` checkout is read-only reference material. Do not link it
+into this application or publish the SDK from this repository.
 
-```bash
-pnpm dev
+# UniSource V2 beta
+
+Stable production and the V2 beta are separate Cloudflare Workers:
+
+- stable: `chmura-blokserwis` at `https://chmura.blokserwis.pl`
+- beta: `chmura-blokserwis-beta` at `https://beta.chmura.blokserwis.pl`
+
+Validate and dry-run beta without touching stable:
+
+```powershell
+pnpm check:beta-config
+pnpm deploy:beta:dry
 ```
 
-Run the SDK watcher separately when editing the package:
-
-```bash
-pnpm sdk:dev
-```
-
-Before validating the same dependency graph that Cloudflare will use, switch back to npm:
-
-```bash
-pnpm sdk:unlink
-pnpm run build
-```
+See `docs/runbooks/unisource-v2-beta.md` for infrastructure, deployment and rollback steps.
 
 # Database init
 

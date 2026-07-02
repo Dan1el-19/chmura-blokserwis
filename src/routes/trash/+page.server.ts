@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { createUserUnisourceClient } from '$lib/server/unisource';
 import { mapFileFromUnisource, mapFolderFromUnisource } from '$lib/server/unisource-mappers';
 import { logger } from '$lib/server/logger';
+import { unwrapList } from '$lib/server/unisource-v2-contract';
 
 const PAGE_LIMIT = 50;
 
@@ -18,18 +19,20 @@ export const load: PageServerLoad = async (event) => {
 		const client = await createUserUnisourceClient(event);
 
 		const [files, folders] = await Promise.all([
-			client.myFiles.trash({ cursor: fileCursor, limit: PAGE_LIMIT }),
+			client.myFiles.listTrash({ cursor: fileCursor, limit: PAGE_LIMIT }),
 			client.folders.list(
-				{ is_trashed: true, cursor: folderCursor, limit: PAGE_LIMIT, parent_id: null },
+				{ trash: 'trashed', cursor: folderCursor, limit: PAGE_LIMIT, parent_id: null },
 				undefined
 			)
 		]);
+		const fileList = unwrapList<Parameters<typeof mapFileFromUnisource>[0]>(files);
+		const folderList = unwrapList<Parameters<typeof mapFolderFromUnisource>[0]>(folders);
 
 		return {
-			files: files.items.map(mapFileFromUnisource),
-			folders: folders.items.map(mapFolderFromUnisource),
-			fileNextCursor: files.next_cursor,
-			folderNextCursor: folders.next_cursor
+			files: fileList.items.map(mapFileFromUnisource),
+			folders: folderList.items.map(mapFolderFromUnisource),
+			fileNextCursor: fileList.nextCursor,
+			folderNextCursor: folderList.nextCursor
 		};
 	} catch (error) {
 		logger.error('Error fetching trash items:', error);

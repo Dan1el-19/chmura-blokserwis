@@ -21,3 +21,17 @@ You MUST use this tool whenever writing Svelte code before sending it to the use
 
 Generates a Svelte Playground link with the provided code.
 After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
+
+## Repository Boundary
+
+Work requested for `A:\Projects\chmura-blokserwis` must remain in this
+repository. Treat `A:\Projects\UniSource` as read-only reference material unless
+the user explicitly approves a separate UniSource task.
+
+Without that explicit approval, do not edit files, create branches or commits,
+push, merge, reset branches, run release workflows, publish npm packages, or
+deploy anything from `A:\Projects\UniSource`.
+
+When a missing UniSource API or SDK contract blocks work, report the exact
+contract gap and continue independent chmura-blokserwis tasks. Do not work
+around the boundary with local package links.

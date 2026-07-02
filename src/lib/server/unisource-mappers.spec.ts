@@ -40,7 +40,9 @@ describe('UniSource mappers', () => {
 			bucketId: 'r2',
 			ownerId: 'user-1',
 			parentFolderId: null,
-			isTrashed: false
+			isTrashed: false,
+			thumbnailUrl: null,
+			previewUrl: null
 		});
 	});
 
@@ -138,6 +140,8 @@ describe('UniSource mappers', () => {
 			fileSize: 100,
 			mimeType: 'application/pdf',
 			downloadUrl: 'https://example.com/download',
+			previewUrl: null,
+			thumbnailUrl: null,
 			expiresAt: '2023-11-15T01:00:00.000Z',
 			requiresPassword: false,
 			limitReached: false,

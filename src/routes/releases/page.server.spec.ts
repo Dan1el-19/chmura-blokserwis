@@ -1,9 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const list = vi.hoisted(() => vi.fn());
+const requestAdminUnisourceV2 = vi.hoisted(() => vi.fn());
 
 vi.mock('$lib/server/unisource', () => ({
+	requestAdminUnisourceV2,
 	createAdminUnisourceClient: () => ({
+		releases: {
+			list
+		}
+	}),
+	createRequestAdminUnisourceClient: () => ({
 		releases: {
 			list
 		}
@@ -15,12 +22,13 @@ import { load } from './+page.server';
 describe('/releases load', () => {
 	beforeEach(() => {
 		list.mockReset();
+		requestAdminUnisourceV2.mockReset();
 	});
 
 	it('loads releases from UniSource instead of the legacy local Appwrite database', async () => {
 		expect.assertions(2);
 
-		list.mockResolvedValue({
+		requestAdminUnisourceV2.mockResolvedValue({
 			items: [
 				{
 					id: 'release-1',
@@ -50,7 +58,9 @@ describe('/releases load', () => {
 			releases: Array<{ $id: string; name: string; r2Key: string; tags: string[] }>;
 		};
 
-		expect(list).toHaveBeenCalledWith({ limit: 100 });
+		expect(requestAdminUnisourceV2).toHaveBeenCalledWith(expect.anything(), 'GET', '/v2/releases', {
+			query: { limit: 100 }
+		});
 		expect(result.releases[0]).toMatchObject({
 			$id: 'release-1',
 			name: 'blokserwis-1.0.0.apk',

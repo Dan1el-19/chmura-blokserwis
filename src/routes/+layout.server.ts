@@ -1,7 +1,7 @@
 import type { LayoutServerLoad } from './$types';
 import { getUserRole } from '$lib/server/roles';
 import { toPublicUser } from '$lib/server/public-user';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { logger } from '$lib/server/logger';
 import type { RecommendedUploadDestination } from '@unisource/sdk';
 
@@ -18,8 +18,8 @@ export const load: LayoutServerLoad = async (event) => {
 	let recommendedUploadDestination: RecommendedUploadDestination = 'r2';
 	if (event.locals.user) {
 		try {
-			const client = createAdminUnisourceClient(event);
-			const { service } = await client.admin.serviceDetail();
+			const client = await createRequestAdminUnisourceClient(event);
+			const { service } = await client.admin.getService();
 			const v = service.recommended_upload_destination;
 			if (isRecommendedUploadDestination(v)) {
 				recommendedUploadDestination = v;

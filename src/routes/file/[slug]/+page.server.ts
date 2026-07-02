@@ -4,11 +4,12 @@ import type { Actions, PageServerLoad } from './$types';
 import { getPublicFileInfo, unlockPublicFile } from '$lib/server/unisource';
 import { publicShareErrorState } from '$lib/server/unisource-errors';
 import { mapPublicFileFromUnisource } from '$lib/server/unisource-mappers';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 export const load: PageServerLoad = async (event) => {
 	try {
 		const response = await getPublicFileInfo(event, event.params.slug);
-		return mapPublicFileFromUnisource(response);
+		return mapPublicFileFromUnisource(unwrapItem(response));
 	} catch (e) {
 		const state = publicShareErrorState(e);
 		if (state) return state;
@@ -27,7 +28,7 @@ export const actions: Actions = {
 
 		try {
 			const response = await unlockPublicFile(event, event.params.slug, password);
-			const data = mapPublicFileFromUnisource(response);
+			const data = mapPublicFileFromUnisource(unwrapItem(response));
 			if (data.requiresPassword) {
 				return fail(401, { error: 'Nieprawidłowe hasło' });
 			}
@@ -35,6 +36,7 @@ export const actions: Actions = {
 			return {
 				success: true,
 				downloadUrl: data.downloadUrl,
+				previewUrl: data.previewUrl,
 				remainingDownloads: data.remainingDownloads
 			};
 		} catch (e) {

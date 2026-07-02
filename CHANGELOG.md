@@ -2,83 +2,83 @@
 
 ### Features
 
-* **frontend:** add PWA support ([33b63fc](https://github.com/Dan1el-19/chmura-blokserwis/commit/33b63fc4a4785a16157e73bde53d71d1d905ef5b))
+- **frontend:** add PWA support ([33b63fc](https://github.com/Dan1el-19/chmura-blokserwis/commit/33b63fc4a4785a16157e73bde53d71d1d905ef5b))
 
 ## [2.8.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.8.0...v2.8.1) (2026-06-10)
 
 ### Bug Fixes
 
-* **frontend:** popraw checkboxy na stronie plikow ([6a40efa](https://github.com/Dan1el-19/chmura-blokserwis/commit/6a40efa1b44d9f545802674945701ed844db1e31))
+- **frontend:** popraw checkboxy na stronie plikow ([6a40efa](https://github.com/Dan1el-19/chmura-blokserwis/commit/6a40efa1b44d9f545802674945701ed844db1e31))
 
 ## [2.8.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.3...v2.8.0) (2026-05-21)
 
 ### Features
 
-* **upload:** appwrite — równoległe chunki (8x concurrency) ([3871b5d](https://github.com/Dan1el-19/chmura-blokserwis/commit/3871b5d25320b0547951682ce4bcc34e6a62305e))
+- **upload:** appwrite — równoległe chunki (8x concurrency) ([3871b5d](https://github.com/Dan1el-19/chmura-blokserwis/commit/3871b5d25320b0547951682ce4bcc34e6a62305e))
 
 ## [2.7.3](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.2...v2.7.3) (2026-05-21)
 
 ### Bug Fixes
 
-* **upload:** appwrite — odświeżanie JWT co 10 min, próg auto→R2 obniżony do 100 MiB ([1b9cf09](https://github.com/Dan1el-19/chmura-blokserwis/commit/1b9cf09125152a0b0a8598d6a225da3124e5fc64))
+- **upload:** appwrite — odświeżanie JWT co 10 min, próg auto→R2 obniżony do 100 MiB ([1b9cf09](https://github.com/Dan1el-19/chmura-blokserwis/commit/1b9cf09125152a0b0a8598d6a225da3124e5fc64))
 
 ## [2.7.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.1...v2.7.2) (2026-05-21)
 
 ### Bug Fixes
 
-* **upload:** implement chunked upload with JWT refresh for large files ([0cd565c](https://github.com/Dan1el-19/chmura-blokserwis/commit/0cd565c7e991d2d37b4ad487587580462ddd89b9))
+- **upload:** implement chunked upload with JWT refresh for large files ([0cd565c](https://github.com/Dan1el-19/chmura-blokserwis/commit/0cd565c7e991d2d37b4ad487587580462ddd89b9))
 
 ## [2.7.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.7.0...v2.7.1) (2026-05-21)
 
 ### Bug Fixes
 
-* **frontend:** chunked upload dla Appwrite (ERR_HTTP2_PROTOCOL_ERROR) ([125e7e3](https://github.com/Dan1el-19/chmura-blokserwis/commit/125e7e3efa543c399eef2d17e0653b92f4219a19))
+- **frontend:** chunked upload dla Appwrite (ERR_HTTP2_PROTOCOL_ERROR) ([125e7e3](https://github.com/Dan1el-19/chmura-blokserwis/commit/125e7e3efa543c399eef2d17e0653b92f4219a19))
 
 ## [2.7.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.3...v2.7.0) (2026-05-21)
 
 ### Features
 
-* **frontend:** layout-level skeleton-loading dla cross-route navigation ([4841d6b](https://github.com/Dan1el-19/chmura-blokserwis/commit/4841d6ba61f0b09439216505876508e85b0154d4))
+- **frontend:** layout-level skeleton-loading dla cross-route navigation ([4841d6b](https://github.com/Dan1el-19/chmura-blokserwis/commit/4841d6ba61f0b09439216505876508e85b0154d4))
 
 ## [2.6.3](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.2...v2.6.3) (2026-05-18)
 
 ### Bug Fixes
 
-* **frontend:** popraw udostepnianie plikow ([70dd8a3](https://github.com/Dan1el-19/chmura-blokserwis/commit/70dd8a3e088b17513cbd466d396dd6d17d2252a0))
+- **frontend:** popraw udostepnianie plikow ([70dd8a3](https://github.com/Dan1el-19/chmura-blokserwis/commit/70dd8a3e088b17513cbd466d396dd6d17d2252a0))
 
 ## [2.6.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.1...v2.6.2) (2026-05-16)
 
 ### Bug Fixes
 
-* **frontend:** honor appwrite upload and download ([920fe30](https://github.com/Dan1el-19/chmura-blokserwis/commit/920fe303056087f523383582129ce2ca50200e59))
+- **frontend:** honor appwrite upload and download ([920fe30](https://github.com/Dan1el-19/chmura-blokserwis/commit/920fe303056087f523383582129ce2ca50200e59))
 
 ## [2.6.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.6.0...v2.6.1) (2026-05-16)
 
 ### Bug Fixes
 
-* remove duplicate handleDownload function in releases page ([c75662e](https://github.com/Dan1el-19/chmura-blokserwis/commit/c75662ed894b090a60ac19ee6170ea065af3bc67))
+- remove duplicate handleDownload function in releases page ([c75662e](https://github.com/Dan1el-19/chmura-blokserwis/commit/c75662ed894b090a60ac19ee6170ea065af3bc67))
 
 ## [2.6.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.5.1...v2.6.0) (2026-05-16)
 
 ### Features
 
-* add download button to releases list ([958e544](https://github.com/Dan1el-19/chmura-blokserwis/commit/958e544f11316ea31210972028a5be4d578434c8))
-* add favicon.png and link in app.html ([67ef000](https://github.com/Dan1el-19/chmura-blokserwis/commit/67ef000a70d8338a8f03798027a4d832148192f0))
-* add mobile trash management with swipe gestures ([1458646](https://github.com/Dan1el-19/chmura-blokserwis/commit/1458646e6abe4537211b98dc42dbca0085f743ac))
-* add parent folder row to FileTable and FileList ([aa8326a](https://github.com/Dan1el-19/chmura-blokserwis/commit/aa8326aae7da17b502b90855fc2df1f835030f59))
+- add download button to releases list ([958e544](https://github.com/Dan1el-19/chmura-blokserwis/commit/958e544f11316ea31210972028a5be4d578434c8))
+- add favicon.png and link in app.html ([67ef000](https://github.com/Dan1el-19/chmura-blokserwis/commit/67ef000a70d8338a8f03798027a4d832148192f0))
+- add mobile trash management with swipe gestures ([1458646](https://github.com/Dan1el-19/chmura-blokserwis/commit/1458646e6abe4537211b98dc42dbca0085f743ac))
+- add parent folder row to FileTable and FileList ([aa8326a](https://github.com/Dan1el-19/chmura-blokserwis/commit/aa8326aae7da17b502b90855fc2df1f835030f59))
 
 ### Bug Fixes
 
-* 9 bug fixes — drag&drop, downloads, trash mobile, releases download, share icon, preview routing, main/user separation, checkbox dark mode, parent folder row ([4431739](https://github.com/Dan1el-19/chmura-blokserwis/commit/44317394459ed53a6c30788cd17289bdca6d4aa1))
-* apply remaining 6 bug fixes (T3-T8) ([c5c90ae](https://github.com/Dan1el-19/chmura-blokserwis/commit/c5c90ae6d7a20992fb9cfa60602d76b1c647a1ec))
-* apply T3-T8 changes (trash mobile, releases download, share icon, preview 404, main/user separation, dark checkboxes) ([12739cd](https://github.com/Dan1el-19/chmura-blokserwis/commit/12739cdfb442e7ca4c11b3fde58b0b36591780e5))
-* bypass proxy for R2 presigned URLs, add error logging ([1d4f2b2](https://github.com/Dan1el-19/chmura-blokserwis/commit/1d4f2b2fe38bfed8c9990075324bf3d5feec6e52))
-* clarify move null-file handling with inline comment ([dcf8a30](https://github.com/Dan1el-19/chmura-blokserwis/commit/dcf8a308e06b68e12fe0ff4f2fb80eebe845e818))
-* correct Svelte 5 derived syntax and null root folder handling ([a1707d1](https://github.com/Dan1el-19/chmura-blokserwis/commit/a1707d1c229dfc2e3424ad3d94a8b4ecad73dd84))
-* handle null file response from UniSource move operation ([f66e54e](https://github.com/Dan1el-19/chmura-blokserwis/commit/f66e54eb46d9753977b1abf7ccdf3745f4421742))
-* improve checkbox visibility in dark mode ([3f239f8](https://github.com/Dan1el-19/chmura-blokserwis/commit/3f239f8d87a009769708f662c026bad2509305bc))
-* routing /preview/[userId] — fetch user from Appwrite and improve error handling ([c9e62ae](https://github.com/Dan1el-19/chmura-blokserwis/commit/c9e62aeb040afb7a5d6fd0578d548ff956a51742))
-* use invalidate(pathname) instead of invalidateAll() after upload ([be9995f](https://github.com/Dan1el-19/chmura-blokserwis/commit/be9995ffc47b582bc0696cab87a0d6127f5ad281))
+- 9 bug fixes — drag&drop, downloads, trash mobile, releases download, share icon, preview routing, main/user separation, checkbox dark mode, parent folder row ([4431739](https://github.com/Dan1el-19/chmura-blokserwis/commit/44317394459ed53a6c30788cd17289bdca6d4aa1))
+- apply remaining 6 bug fixes (T3-T8) ([c5c90ae](https://github.com/Dan1el-19/chmura-blokserwis/commit/c5c90ae6d7a20992fb9cfa60602d76b1c647a1ec))
+- apply T3-T8 changes (trash mobile, releases download, share icon, preview 404, main/user separation, dark checkboxes) ([12739cd](https://github.com/Dan1el-19/chmura-blokserwis/commit/12739cdfb442e7ca4c11b3fde58b0b36591780e5))
+- bypass proxy for R2 presigned URLs, add error logging ([1d4f2b2](https://github.com/Dan1el-19/chmura-blokserwis/commit/1d4f2b2fe38bfed8c9990075324bf3d5feec6e52))
+- clarify move null-file handling with inline comment ([dcf8a30](https://github.com/Dan1el-19/chmura-blokserwis/commit/dcf8a308e06b68e12fe0ff4f2fb80eebe845e818))
+- correct Svelte 5 derived syntax and null root folder handling ([a1707d1](https://github.com/Dan1el-19/chmura-blokserwis/commit/a1707d1c229dfc2e3424ad3d94a8b4ecad73dd84))
+- handle null file response from UniSource move operation ([f66e54e](https://github.com/Dan1el-19/chmura-blokserwis/commit/f66e54eb46d9753977b1abf7ccdf3745f4421742))
+- improve checkbox visibility in dark mode ([3f239f8](https://github.com/Dan1el-19/chmura-blokserwis/commit/3f239f8d87a009769708f662c026bad2509305bc))
+- routing /preview/[userId] — fetch user from Appwrite and improve error handling ([c9e62ae](https://github.com/Dan1el-19/chmura-blokserwis/commit/c9e62aeb040afb7a5d6fd0578d548ff956a51742))
+- use invalidate(pathname) instead of invalidateAll() after upload ([be9995f](https://github.com/Dan1el-19/chmura-blokserwis/commit/be9995ffc47b582bc0696cab87a0d6127f5ad281))
 
 ## [2.5.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.5.0...v2.5.1) (2026-05-16)
 

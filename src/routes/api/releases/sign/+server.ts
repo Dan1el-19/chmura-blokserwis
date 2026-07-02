@@ -1,12 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { releaseUploadSchema } from '$lib/schemas';
-import { createAdminUnisourceClient } from '$lib/server/unisource';
+import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
 import { getReleaseByName } from '$lib/server/storage/releases';
 import { z } from 'zod';
 import { releaseTagSchema } from '$lib/schemas';
 import { requireRuntimeEnv } from '$lib/server/runtime-env';
 import { assertPresignedUrlMatchesR2Config } from '$lib/server/storage/r2-url';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 const signSchema = releaseUploadSchema.extend({
 	tags: z.array(releaseTagSchema).max(10).optional(),
@@ -41,14 +42,20 @@ export const POST: RequestHandler = async (event) => {
 	const channelTag = channel ?? 'stable';
 	const finalTags = Array.from(new Set([...(tags ?? []), channelTag]));
 
-	const client = createAdminUnisourceClient(event);
-	const init = await client.releases.upload.init({
-		name: filename,
-		filename,
-		tags: finalTags,
-		notes: notes ?? null,
-		force_update: force_update ?? false
-	});
+	const client = await createRequestAdminUnisourceClient(event);
+	const init = unwrapItem<{
+		presigned_url: string;
+		r2_key: string;
+		release_id: string;
+	}>(
+		await client.releases.uploadInit({
+			name: filename,
+			filename,
+			tags: finalTags,
+			notes: notes ?? null,
+			force_update: force_update ?? false
+		})
+	);
 	assertPresignedUrlMatchesR2Config(
 		init.presigned_url,
 		requireRuntimeEnv(event, 'R2_ENDPOINT'),

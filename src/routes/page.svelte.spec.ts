@@ -1,11 +1,19 @@
-import { page } from 'vitest/browser';
-import { describe, expect, it } from 'vitest';
-import { render } from 'vitest-browser-svelte';
+import { mount, unmount } from 'svelte';
+import { afterEach, describe, expect, it } from 'vitest';
 import Page from './+page.svelte';
+
+let component: ReturnType<typeof mount> | undefined;
+
+afterEach(() => {
+	if (component) unmount(component);
+	component = undefined;
+	document.body.replaceChildren();
+});
 
 describe('/+page.svelte', () => {
 	it('should render h1', async () => {
-		render(Page, {
+		component = mount(Page, {
+			target: document.body,
 			props: {
 				data: {
 					user: null,
@@ -22,7 +30,6 @@ describe('/+page.svelte', () => {
 			}
 		});
 
-		const heading = page.getByRole('heading', { level: 1 });
-		await expect.element(heading).toBeInTheDocument();
+		expect(document.querySelector('h1')).not.toBeNull();
 	});
 });

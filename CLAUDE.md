@@ -26,12 +26,12 @@ SvelteKit app deployed as a **Cloudflare Worker** (`@sveltejs/adapter-cloudflare
 
 ### External services
 
-| Service | Purpose |
-|---|---|
-| **Appwrite** | Auth (sessions via `__session` cookie), user management, database (`main` DB with `files`, `folders`, `file_shares`, `releases` tables via `TablesDB`) |
-| **Cloudflare R2** | File storage via AWS S3 SDK; supports direct upload and multipart upload |
-| **UniSource** | External file/release management SDK (`@unisource/sdk`); accessed via `createUserUnisourceClient` (JWT) or `createAdminUnisourceClient` (API key) |
-| **Upstash Redis** | Rate limiting via `@upstash/ratelimit` |
+| Service           | Purpose                                                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Appwrite**      | Auth (sessions via `__session` cookie), user management, database (`main` DB with `files`, `folders`, `file_shares`, `releases` tables via `TablesDB`) |
+| **Cloudflare R2** | File storage via AWS S3 SDK; supports direct upload and multipart upload                                                                               |
+| **UniSource**     | External file/release management SDK (`@unisource/sdk`); accessed via `createUserUnisourceClient` (JWT) or `createAdminUnisourceClient` (API key)      |
+| **Upstash Redis** | Rate limiting via `@upstash/ratelimit`                                                                                                                 |
 
 ### Environment variables
 
@@ -51,6 +51,7 @@ Required secrets: `APPWRITE_API_KEY`, `UNISOURCE_URL`, `UNISOURCE_SERVICE_ID`, `
 ### Upload flow
 
 Two upload destinations exist (selectable in admin settings):
+
 - **R2 multipart**: `POST /api/upload/r2/multipart/create` → sign parts → complete/abort
 - **Appwrite**: `POST /api/upload/appwrite/init`
 
@@ -63,6 +64,7 @@ Roles are Appwrite user labels: `admin` > `plus` > `basic`. Storage limits: basi
 ### Testing
 
 Vitest has two projects configured in `vite.config.ts`:
+
 - **server**: node environment, matches `src/**/*.{test,spec}.{js,ts}` (excludes `.svelte.spec`)
 - **client**: browser (Playwright/Chromium headless), matches `src/**/*.svelte.{test,spec}.{js,ts}`
 

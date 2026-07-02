@@ -1,19 +1,27 @@
 <script lang="ts">
 	import {
 		Folder,
-		File as FileIcon,
 		DownloadSimple,
 		Pencil,
 		Trash,
 		Share,
 		ArrowUp,
-		ArrowDown
+		ArrowDown,
+		Eye
 	} from 'phosphor-svelte';
 	import { toast } from 'svelte-sonner';
 	import { formatFileSize } from '$lib/utils/format';
 	import type { SelectionState } from '$lib/modules/selection.svelte';
+	import FileThumbnail from './FileThumbnail.svelte';
 
-	type FileType = { $id: string; name: string; size: number; $createdAt: string };
+	type FileType = {
+		$id: string;
+		name: string;
+		size: number;
+		$createdAt: string;
+		mimeType?: string | null;
+		thumbnailUrl?: string | null;
+	};
 	type FolderType = { $id: string; name: string; $createdAt: string; size?: number };
 	type SortBy = 'name' | 'date' | 'size';
 	type SortDir = 'asc' | 'desc';
@@ -26,6 +34,7 @@
 		sortDir,
 		onSort,
 		onDownload,
+		onPreview,
 		onRename,
 		onDelete,
 		onNavigate,
@@ -42,6 +51,7 @@
 		sortDir: SortDir;
 		onSort: (by: SortBy) => void;
 		onDownload: (id: string, name: string, isFolder: boolean) => void;
+		onPreview: (file: FileType) => void;
 		onRename: (id: string, name: string, isFolder: boolean) => void;
 		onDelete: (id: string, name: string, isFolder: boolean) => void;
 		onNavigate: (id: string) => void;
@@ -320,7 +330,7 @@
 					onkeydown={(e) => {
 						if (e.key === 'Enter') {
 							e.preventDefault();
-							onDownload(file.$id, file.name, false);
+							onPreview(file);
 						} else if (e.key === ' ') {
 							e.preventDefault();
 							handleCheckbox(file.$id);
@@ -345,7 +355,11 @@
 					</td>
 					<td class="max-w-[300px] truncate px-4 py-3 text-text-main" title={file.name}>
 						<div class="flex items-center gap-2">
-							<FileIcon class="h-5 w-5 shrink-0 text-blue-500 dark:text-blue-400" />
+							<FileThumbnail
+								name={file.name}
+								mimeType={file.mimeType}
+								thumbnailUrl={file.thumbnailUrl}
+							/>
 							<span class="truncate">{file.name}</span>
 						</div>
 					</td>
@@ -361,6 +375,15 @@
 								title="Udostępnij"
 							>
 								<Share class="h-4 w-4" />
+							</button>
+							<button
+								type="button"
+								onclick={() => onPreview(file)}
+								class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700"
+								aria-label="Otworz {file.name}"
+								title="Otworz"
+							>
+								<Eye class="h-4 w-4" />
 							</button>
 							<button
 								type="button"

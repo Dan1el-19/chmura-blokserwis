@@ -5,11 +5,13 @@
 	import { File, DownloadSimple, ClockCountdown, Lock, Warning } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
 	import { formatFileSize } from '$lib/utils/format';
+	import PublicFilePreview from '$lib/components/public/PublicFilePreview.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let loading = $state(false);
 
 	const downloadUrl = $derived(form?.downloadUrl || data.downloadUrl);
+	const previewUrl = $derived(form?.previewUrl ?? data.previewUrl ?? null);
 	const remainingDownloads = $derived(form?.remainingDownloads ?? data.remainingDownloads);
 </script>
 
@@ -142,6 +144,13 @@
 						</p>
 					{/if}
 				</div>
+
+				<PublicFilePreview
+					fileName={data.fileName ?? ''}
+					mimeType={data.mimeType ?? ''}
+					{previewUrl}
+					{downloadUrl}
+				/>
 
 				<div class="w-full px-8">
 					<a
