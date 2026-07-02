@@ -1,3 +1,34 @@
+## [2.10.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.9.2...v2.10.0) (2026-07-02)
+
+### Features
+
+* **admin:** split platform storage usage with capacity progress bars ([8d675a2](https://github.com/Dan1el-19/chmura-blokserwis/commit/8d675a23eb01c5b3624676e7a77d91d7328afb32))
+* **backend:** dodaj odseparowany deployment beta ([9df60e1](https://github.com/Dan1el-19/chmura-blokserwis/commit/9df60e10bdb52575eb80d05016c3ec1462c1a968))
+* **backend:** synchronizuj sekrety Workera beta ([8010055](https://github.com/Dan1el-19/chmura-blokserwis/commit/801005547b74abe8807130a67fa63ea7d0e926a9))
+* **frontend:** add PWA support ([35d8d2a](https://github.com/Dan1el-19/chmura-blokserwis/commit/35d8d2ae1690e07e592ef6b5fa844c517956fb66))
+* **frontend:** dodaj endpointy url podgladu plikow ([06bcc4c](https://github.com/Dan1el-19/chmura-blokserwis/commit/06bcc4c45b06c1e7adc6a74e42344dc69f32a4e0))
+* **frontend:** dodaj podglad mediow w menedzerze plikow ([9af7dfe](https://github.com/Dan1el-19/chmura-blokserwis/commit/9af7dfe0e554a6e9cf081d882d88f8011e02fa49))
+* **frontend:** dodaj podglad publicznych linkow ([aa6bbdb](https://github.com/Dan1el-19/chmura-blokserwis/commit/aa6bbdb1248068c7a9b7262ac3e6a54db878cae6))
+* **frontend:** dodaj pomocniki podgladu plikow ([6c59496](https://github.com/Dan1el-19/chmura-blokserwis/commit/6c594962e3699985f2fb49dfa4c3d2a2a1ca04a6))
+* **frontend:** pokaz miniatury typow plikow ([2bf54e5](https://github.com/Dan1el-19/chmura-blokserwis/commit/2bf54e5e12286f0c81aca82f67cfcab2fd0c6057))
+* **sdk:** dodaj adaptery kontraktu UniSource v2 ([c47578e](https://github.com/Dan1el-19/chmura-blokserwis/commit/c47578e2a7e30bf04d3bbac24ba24261b0e8ab45))
+* **sdk:** przełącz fabryki klientów na UniSource v2 ([e58026e](https://github.com/Dan1el-19/chmura-blokserwis/commit/e58026e7656ec33b80569f1e76097d2f3bdf0085))
+* **sdk:** zmigruj aplikację na UniSource v2 ([756c452](https://github.com/Dan1el-19/chmura-blokserwis/commit/756c452a6bc2bb3a750276c8000f8d8321d38736))
+
+### Bug Fixes
+
+* **admin:** default storage destination usage to zero when API omits fields ([4ab1dd3](https://github.com/Dan1el-19/chmura-blokserwis/commit/4ab1dd3a73a81d43ba45b9498617d449ce311a5e))
+* **admin:** show actual bucket usage instead of quota counter ([40bb6ff](https://github.com/Dan1el-19/chmura-blokserwis/commit/40bb6fffa26b02dcc1bad12bf47f67783113bdcc))
+* **backend:** bootstrap JWT admina dla service userow ([8481b9c](https://github.com/Dan1el-19/chmura-blokserwis/commit/8481b9c5337c3b2d2658ac2fd2efd21450782250))
+* **backend:** bootstrap role UniSource dla admina ([d3d944d](https://github.com/Dan1el-19/chmura-blokserwis/commit/d3d944dcb722dd4b77b3a4bc916083b696842f33))
+* **backend:** bootstrap sekrety bety podczas deployu ([5026c58](https://github.com/Dan1el-19/chmura-blokserwis/commit/5026c587708f0c84cbc4cf3d334c2a819056bda8))
+* **backend:** domknij stabilizacje bety unisource v2 ([cc87873](https://github.com/Dan1el-19/chmura-blokserwis/commit/cc8787395dec213b9a2b3db44de3223ff258c496))
+* **backend:** stabilize beta unisource reads ([2530d14](https://github.com/Dan1el-19/chmura-blokserwis/commit/2530d140e4d961c72b73814b8f1c5fd6ba6ff267))
+* **backend:** uzyj JWT admina dla bety UniSource ([e434488](https://github.com/Dan1el-19/chmura-blokserwis/commit/e4344883c94338a79fa5236ecc6e960b75c29619))
+* **backend:** waliduj betę przed dostępem Cloudflare ([6acac5b](https://github.com/Dan1el-19/chmura-blokserwis/commit/6acac5b4cae4519c4c55f5840d97ab09ac4d0a86))
+* **backend:** wymagaj ręcznego uruchomienia bety ([02607a6](https://github.com/Dan1el-19/chmura-blokserwis/commit/02607a61756ec7774bdc4e897046302cea128429))
+* **frontend:** odblokuj pełny zestaw testów ([2c65ff1](https://github.com/Dan1el-19/chmura-blokserwis/commit/2c65ff1a10a15c8c1c37e5a65b5bbb9a0491eed2))
+
 ## [2.9.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.9.1...v2.9.2) (2026-07-02)
 
 ### Bug Fixes
