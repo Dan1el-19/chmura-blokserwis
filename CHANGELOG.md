@@ -1,3 +1,9 @@
+## [2.10.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.0...v2.10.1) (2026-07-02)
+
+### Bug Fixes
+
+* tymczasowo wyłącz CSP ([7a84c67](https://github.com/Dan1el-19/chmura-blokserwis/commit/7a84c67fefe441e56ce7e4e7888a8d99288b3416))
+
 ## [2.10.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.9.2...v2.10.0) (2026-07-02)
 
 ### Features
