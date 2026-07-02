@@ -131,21 +131,22 @@ export const handle: Handle = async ({ event, resolve }) => {
 		response.headers.set('X-Frame-Options', 'DENY');
 		response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 		response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-		response.headers.set(
-			'Content-Security-Policy',
-			[
-				"default-src 'self'",
-				"img-src 'self' https: data: blob:",
-				"media-src 'self' https: blob:",
-				"script-src 'self'",
-				"style-src 'self' 'unsafe-inline'",
-				"connect-src 'self' https://*.blokserwis.pl https://*.cloudflare.com",
-				"frame-src 'self'",
-				"object-src 'none'",
-				"base-uri 'self'",
-				"form-action 'self'"
-			].join('; ')
-		);
+			// CSP tymczasowo wyłączone
+			// response.headers.set(
+			// 'Content-Security-Policy',
+			// [
+			// "default-src 'self'",
+			// "img-src 'self' https: data: blob:",
+			// "media-src 'self' https: blob:",
+			// "script-src 'self'",
+			// "style-src 'self' 'unsafe-inline'",
+			// "connect-src 'self' https://*.blokserwis.pl https://*.cloudflare.com",
+			// "frame-src 'self'",
+			// "object-src 'none'",
+			// "base-uri 'self'",
+			// "form-action 'self'"
+			// ].join('; ')
+			// );
 		if (event.url.protocol === 'https:') {
 			response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 		}
