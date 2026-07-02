@@ -1,3 +1,9 @@
+## [2.9.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.9.1...v2.9.2) (2026-07-02)
+
+### Bug Fixes
+
+* **backend:** uzyj lokalnego wranglera w stable deploy ([5cc04f6](https://github.com/Dan1el-19/chmura-blokserwis/commit/5cc04f6506f59558a51d0ffc8c3168a04be6c50e))
+
 ## [2.9.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.9.0...v2.9.1) (2026-07-02)
 
 ### Bug Fixes
