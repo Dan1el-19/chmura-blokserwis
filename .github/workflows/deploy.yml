@@ -69,7 +69,7 @@ jobs:
 
       - name: Deploy stable
         if: env.CLOUDFLARE_API_TOKEN != ''
-        run: wrangler deploy
+        run: pnpm exec wrangler deploy
 
       - name: Smoke test stable
         if: env.CLOUDFLARE_API_TOKEN != ''
