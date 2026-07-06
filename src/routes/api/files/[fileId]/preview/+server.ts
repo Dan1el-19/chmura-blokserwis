@@ -12,10 +12,6 @@ type PreviewUrlItem = {
 	thumbnail_url?: string | null;
 };
 
-type UserFilesWithPreview = {
-	previewUrl: (id: string, signal?: AbortSignal, options?: { asUser?: string }) => Promise<unknown>;
-};
-
 export const GET: RequestHandler = async (event) => {
 	if (!event.locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
@@ -25,9 +21,8 @@ export const GET: RequestHandler = async (event) => {
 
 	try {
 		const client = await createUserUnisourceClient(event);
-		const userFiles = client.userFiles as typeof client.userFiles & UserFilesWithPreview;
 		const result = unwrapItem<PreviewUrlItem>(
-			await userFiles.previewUrl(event.params.fileId, undefined, {
+			await client.userFiles.previewUrl(event.params.fileId, undefined, {
 				asUser: targetUserId
 			})
 		);
