@@ -1,3 +1,9 @@
+## [2.10.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.1...v2.10.2) (2026-07-06)
+
+### Bug Fixes
+
+* **frontend:** repair file preview dialog flow ([ec2e2c8](https://github.com/Dan1el-19/chmura-blokserwis/commit/ec2e2c88abd309abde3a2c1cd8f87fce2e14ec56))
+
 ## [2.10.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.0...v2.10.1) (2026-07-02)
 
 ### Bug Fixes
