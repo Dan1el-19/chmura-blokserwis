@@ -1,3 +1,10 @@
+## [2.10.3](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.2...v2.10.3) (2026-07-06)
+
+### Bug Fixes
+
+* **frontend:** close preview without history back ([67651d3](https://github.com/Dan1el-19/chmura-blokserwis/commit/67651d33770473a04684294cb331401876c51adf))
+* **sdk:** use preview URL capable UniSource client ([0aad517](https://github.com/Dan1el-19/chmura-blokserwis/commit/0aad5172c112de553b46c0b9e2c45b75120fdbb2))
+
 ## [2.10.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.1...v2.10.2) (2026-07-06)
 
 ### Bug Fixes
