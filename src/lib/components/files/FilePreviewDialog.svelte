@@ -4,7 +4,8 @@
 	import {
 		getMediaKind,
 		type FilePreviewResponse,
-		type FilePreviewTarget
+		type FilePreviewTarget,
+		getThumbnailLabel
 	} from '$lib/utils/file-preview';
 
 	let {
@@ -26,7 +27,24 @@
 	} = $props();
 
 	const kind = $derived(file ? getMediaKind(file.mimeType) : 'unsupported');
+	const label = $derived(
+		file ? getThumbnailLabel({ name: file.name, mimeType: file.mimeType }) : ''
+	);
+
+	function closeOnEscape(e: KeyboardEvent) {
+		if (!open) return;
+		if (e.key === 'Escape') onClose();
+	}
+
+	function handleDialogKeydown(e: KeyboardEvent) {
+		if (!open) return;
+		if (e.key !== 'Escape') return;
+		e.stopPropagation();
+		onClose();
+	}
 </script>
+
+<svelte:window onkeydown={closeOnEscape} />
 
 {#if open && file}
 	<div
@@ -34,9 +52,14 @@
 		role="dialog"
 		aria-modal="true"
 		aria-label={file.name}
+		tabindex="-1"
+		onclick={onClose}
+		onkeydown={handleDialogKeydown}
 	>
 		<div
 			class="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-border-line bg-bg-panel shadow-xl"
+			onclick={(e) => e.stopPropagation()}
+			role="presentation"
 		>
 			<div class="flex items-center justify-between gap-3 border-b border-border-line px-4 py-3">
 				<div class="min-w-0 flex-1">
@@ -99,7 +122,9 @@
 							class="max-h-[70vh] w-full bg-black"
 						></video>
 					{:else}
-						<p class="text-sm text-text-muted">Ten typ pliku nie ma podgladu.</p>
+						<p class="text-sm text-text-muted">
+							{label} – podgląd nie jest dostępny dla tego formatu.
+						</p>
 					{/if}
 				{/if}
 			</div>

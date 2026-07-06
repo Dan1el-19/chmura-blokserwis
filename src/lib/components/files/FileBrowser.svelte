@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidateAll, pushState } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { toast } from 'svelte-sonner';
 	import { triggerDownload } from '$lib/utils/download';
@@ -16,6 +16,11 @@
 	import ShareDialog from './ShareDialog.svelte';
 	import FilePreviewDialog from './FilePreviewDialog.svelte';
 	import type { SelectionState } from '$lib/modules/selection.svelte';
+	import {
+		closePreviewHistory,
+		openPreviewHistory,
+		type PreviewOpenSource
+	} from '$lib/utils/preview-navigation';
 
 	type SortBy = 'name' | 'date' | 'size';
 	type SortDir = 'asc' | 'desc';
@@ -69,7 +74,7 @@
 
 		const file = files.find((item: FileItem) => item.$id === previewFileId);
 		if (file) {
-			void onPreview(file);
+			void openPreview(file, 'history');
 		}
 	});
 
@@ -129,9 +134,9 @@
 		}
 	}
 
-	async function onPreview(file: FileItem) {
+	async function openPreview(file: FileItem, source: PreviewOpenSource) {
 		if (!canPreviewInline(file.mimeType)) {
-			await onDownload(file.$id, file.name, false);
+			toast.info('Ten typ pliku nie obsluguje podgladu');
 			return;
 		}
 
@@ -141,8 +146,12 @@
 			mimeType: file.mimeType ?? '',
 			size: file.size ?? 0
 		};
-		pushState('', { previewFileId: file.$id });
+		openPreviewHistory(file.$id, source);
 		await fetchPreview(file);
+	}
+
+	async function onPreview(file: FileItem) {
+		await openPreview(file, 'user');
 	}
 
 	function closePreview() {
@@ -150,9 +159,7 @@
 		previewData = null;
 		previewError = null;
 		previewLoading = false;
-		if (page.state.previewFileId) {
-			history.back();
-		}
+		closePreviewHistory(page.state);
 	}
 
 	async function onDelete(id: string, name: string, isFolder: boolean) {
