@@ -159,7 +159,7 @@
 		previewData = null;
 		previewError = null;
 		previewLoading = false;
-		closePreviewHistory(page.state);
+		closePreviewHistory();
 	}
 
 	async function onDelete(id: string, name: string, isFolder: boolean) {

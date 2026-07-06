@@ -34,19 +34,19 @@ describe('closePreviewHistory', () => {
 		vi.clearAllMocks();
 	});
 
-	it('goes back when the preview was opened as a shallow history entry', () => {
+	it('clears the current state when the preview was opened as a shallow history entry', () => {
 		const back = vi.spyOn(history, 'back').mockImplementation(() => {});
 
-		closePreviewHistory({ previewFileId: 'file-1' });
+		closePreviewHistory();
 
-		expect(back).toHaveBeenCalledTimes(1);
-		expect(replaceState).not.toHaveBeenCalled();
+		expect(back).not.toHaveBeenCalled();
+		expect(replaceState).toHaveBeenCalledWith('', {});
 	});
 
 	it('clears current state when there is no preview history entry', () => {
 		const back = vi.spyOn(history, 'back').mockImplementation(() => {});
 
-		closePreviewHistory({});
+		closePreviewHistory();
 
 		expect(back).not.toHaveBeenCalled();
 		expect(replaceState).toHaveBeenCalledWith('', {});

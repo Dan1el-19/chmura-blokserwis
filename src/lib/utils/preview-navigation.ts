@@ -7,11 +7,6 @@ export function openPreviewHistory(fileId: string, source: PreviewOpenSource) {
 	pushState('', { previewFileId: fileId });
 }
 
-export function closePreviewHistory(pageState: App.PageState) {
-	if (pageState.previewFileId) {
-		history.back();
-		return;
-	}
-
+export function closePreviewHistory() {
 	replaceState('', {});
 }
