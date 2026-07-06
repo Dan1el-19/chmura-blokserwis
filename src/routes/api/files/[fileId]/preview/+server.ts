@@ -40,6 +40,12 @@ export const GET: RequestHandler = async (event) => {
 			thumbnailUrl: result.thumbnail_url ?? null
 		});
 	} catch (error) {
+		console.error('[files/preview] Failed to get preview URL', {
+			fileId: event.params.fileId,
+			targetUserId,
+			err: error instanceof Error ? error.message : String(error),
+			status: error instanceof Error && 'status' in error ? (error as any).status : undefined
+		});
 		return unisourceErrorResponse(error, 'Failed to get preview URL');
 	}
 };
