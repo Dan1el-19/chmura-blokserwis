@@ -20,6 +20,10 @@
 		saving: boolean;
 		onSave: () => void;
 	}>();
+
+	function formatLimit(bytes: number) {
+		return bytes === Infinity ? 'Bez limitu' : formatFileSize(bytes);
+	}
 </script>
 
 <Card title="Limit magazynu" description="Ustaw indywidualny limit miejsca dla tego użytkownika.">
@@ -47,7 +51,7 @@
 			/>
 		</div>
 		<p class="text-xs text-text-muted">
-			Obecny limit roli: {formatFileSize(roleLimitBytes)}
+			Obecny limit roli: {formatLimit(roleLimitBytes)}
 		</p>
 	</div>
 

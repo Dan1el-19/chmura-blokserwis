@@ -116,9 +116,32 @@ describe('UniSource mappers', () => {
 		expect(user.role).toBe('basic');
 		expect(user.storageUsage).toBe(512);
 		expect(user.storageLimit).toBe(1024);
+		expect(user.customLimit).toBeNull();
 		expect(mapRoleToUnisource('basic')).toBe('user');
 		expect(mapRoleToUnisource('plus')).toBe('plus');
 		expect(mapRoleToUnisource('admin')).toBe('admin');
+	});
+
+	it('keeps custom and effective storage limits from UniSource admin users', () => {
+		const user = mapAdminUserFromUnisource({
+			id: 'user-1',
+			name: 'Alice',
+			email: 'alice@example.com',
+			status: true,
+			labels: [],
+			role: 'plus',
+			has_service_access: true,
+			max_storage_bytes: 2 * 1024 ** 3,
+			effective_max_storage_bytes: 2 * 1024 ** 3,
+			current_used_bytes: 1536 * 1024 ** 2,
+			registration: 1_700_000_000,
+			email_verification: true
+		});
+
+		expect(user.role).toBe('plus');
+		expect(user.storageUsage).toBe(1536 * 1024 ** 2);
+		expect(user.storageLimit).toBe(2 * 1024 ** 3);
+		expect(user.customLimit).toBe(2 * 1024 ** 3);
 	});
 
 	it('maps public file responses using the share link expiry, not the short-lived download URL expiry', () => {

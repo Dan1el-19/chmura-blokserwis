@@ -31,14 +31,8 @@
 		}
 	};
 
-	const STORAGE_LIMITS = {
-		basic: 5 * 1024 * 1024 * 1024,
-		plus: 10 * 1024 * 1024 * 1024,
-		admin: Infinity
-	};
-
-	function getStorageLimit(role: 'basic' | 'plus' | 'admin') {
-		const limit = STORAGE_LIMITS[role];
+	function formatStorageLimit(limit: number | null | undefined) {
+		if (limit == null) return 'Bez limitu';
 		return limit === Infinity ? '∞' : formatFileSize(limit);
 	}
 
@@ -91,7 +85,7 @@
 							</span>
 						</td>
 						<td class="px-6 py-4 font-mono text-xs text-text-muted">
-							{formatFileSize(user.storageUsage)} / {getStorageLimit(user.role)}
+							{formatFileSize(user.storageUsage)} / {formatStorageLimit(user.storageLimit)}
 						</td>
 						<td class="px-6 py-4 text-right">
 							<a
@@ -140,7 +134,7 @@
 				>
 					<div class="font-mono">{formatDate(user.$createdAt)}</div>
 					<div class="font-mono">
-						{formatFileSize(user.storageUsage)} / {getStorageLimit(user.role)}
+						{formatFileSize(user.storageUsage)} / {formatStorageLimit(user.storageLimit)}
 					</div>
 				</div>
 
