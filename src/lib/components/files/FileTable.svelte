@@ -87,6 +87,16 @@
 		lastClickedId = id;
 	}
 
+	function handleFileRowClick(e: MouseEvent, file: FileType) {
+		if (e.shiftKey || e.ctrlKey || e.metaKey || selection.isSelectionMode) {
+			handleRowClick(e, file.$id);
+			return;
+		}
+
+		lastClickedId = file.$id;
+		onPreview(file);
+	}
+
 	function handleCheckbox(id: string) {
 		selection.toggle(id);
 		lastClickedId = id;
@@ -326,7 +336,7 @@
 					aria-label={`Plik ${file.name}`}
 					draggable="true"
 					ondragstart={(e) => onDragStart(e, file.$id, file.name, false)}
-					onclick={(e) => handleRowClick(e, file.$id)}
+					onclick={(e) => handleFileRowClick(e, file)}
 					onkeydown={(e) => {
 						if (e.key === 'Enter') {
 							e.preventDefault();
