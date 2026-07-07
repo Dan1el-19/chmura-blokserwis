@@ -145,12 +145,15 @@
 					{/if}
 				</div>
 
-				<PublicFilePreview
-					fileName={data.fileName ?? ''}
-					mimeType={data.mimeType ?? ''}
-					{previewUrl}
-					{downloadUrl}
-				/>
+				{#key previewUrl ?? downloadUrl}
+					<PublicFilePreview
+						fileName={data.fileName ?? ''}
+						mimeType={data.mimeType ?? ''}
+						fileSize={data.fileSize ?? 0}
+						{previewUrl}
+						{downloadUrl}
+					/>
+				{/key}
 
 				<div class="w-full px-8">
 					<a

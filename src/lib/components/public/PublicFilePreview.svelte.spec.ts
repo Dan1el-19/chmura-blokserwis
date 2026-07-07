@@ -11,24 +11,42 @@ afterEach(() => {
 });
 
 describe('PublicFilePreview', () => {
-	it('renders inline image preview for previewable media', async () => {
+	it('opens a preview modal for previewable media', async () => {
 		component = mount(PublicFilePreview, {
 			target: document.body,
 			props: {
 				fileName: 'photo.png',
 				mimeType: 'image/png',
 				previewUrl: 'https://example.com/photo.png',
-				downloadUrl: 'https://example.com/photo.png?download=1'
+				downloadUrl: 'https://example.com/photo.png?download=1',
+				fileSize: 1234
 			}
 		});
 		flushSync();
 
-		const image = document.querySelector('img[alt="photo.png"]') as HTMLImageElement | null;
+		const dialog = document.querySelector('[role="dialog"]');
+		const image = dialog?.querySelector('img[alt="photo.png"]') as HTMLImageElement | null;
+		expect(dialog).not.toBeNull();
 		expect(image).not.toBeNull();
 		expect(image?.src).toBe('https://example.com/photo.png');
 	});
 
-	it('renders nothing when preview URL is missing', async () => {
+	it('renders no modal when both preview and download URLs are missing', async () => {
+		component = mount(PublicFilePreview, {
+			target: document.body,
+			props: {
+				fileName: 'photo.png',
+				mimeType: 'image/png',
+				previewUrl: null,
+				downloadUrl: null
+			}
+		});
+		flushSync();
+
+		expect(document.querySelector('[role="dialog"]')).toBeNull();
+	});
+
+	it('opens a preview modal with the download URL when preview URL is missing', async () => {
 		component = mount(PublicFilePreview, {
 			target: document.body,
 			props: {
@@ -40,6 +58,9 @@ describe('PublicFilePreview', () => {
 		});
 		flushSync();
 
-		expect(document.querySelector('img')).toBeNull();
+		const dialog = document.querySelector('[role="dialog"]');
+		const image = dialog?.querySelector('img[alt="photo.png"]') as HTMLImageElement | null;
+		expect(dialog).not.toBeNull();
+		expect(image?.src).toBe('https://example.com/photo.png?download=1');
 	});
 });

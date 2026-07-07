@@ -1,40 +1,48 @@
 <script lang="ts">
-	import { getMediaKind, canPreviewInline } from '$lib/utils/file-preview';
+	import { canPreviewInline } from '$lib/utils/file-preview';
+	import FilePreviewDialog from '$lib/components/files/FilePreviewDialog.svelte';
 
 	let {
 		fileName,
 		mimeType,
 		previewUrl,
-		downloadUrl
+		downloadUrl,
+		fileSize = 0
 	}: {
 		fileName: string;
 		mimeType: string;
 		previewUrl: string | null;
 		downloadUrl: string | null;
+		fileSize?: number | null;
 	} = $props();
 
-	const kind = $derived(getMediaKind(mimeType));
-	const showPreview = $derived(Boolean(previewUrl && downloadUrl && canPreviewInline(mimeType)));
+	const resolvedPreviewUrl = $derived(previewUrl ?? downloadUrl);
+	const showPreview = $derived(Boolean(resolvedPreviewUrl && canPreviewInline(mimeType)));
+	const preview = $derived(
+		resolvedPreviewUrl
+			? {
+					previewUrl: resolvedPreviewUrl,
+					downloadUrl: downloadUrl ?? resolvedPreviewUrl,
+					expiresAt: 0,
+					contentType: mimeType,
+					thumbnailUrl: null
+				}
+			: null
+	);
+	let previewOpen = $state(true);
 </script>
 
-{#if showPreview && previewUrl}
-	<div class="w-full px-8">
-		{#if kind === 'image'}
-			<img
-				src={previewUrl}
-				alt={fileName}
-				class="mx-auto max-h-[50vh] max-w-full rounded-lg object-contain"
-			/>
-		{:else if kind === 'audio'}
-			<audio src={previewUrl} controls preload="metadata" class="w-full"></audio>
-		{:else if kind === 'video'}
-			<!-- svelte-ignore a11y_media_has_caption (user-uploaded videos do not provide caption tracks) -->
-			<video
-				src={previewUrl}
-				controls
-				preload="metadata"
-				class="max-h-[50vh] w-full rounded-lg bg-black"
-			></video>
-		{/if}
-	</div>
-{/if}
+<FilePreviewDialog
+	open={previewOpen && showPreview}
+	file={{
+		id: 'public-share',
+		name: fileName,
+		mimeType,
+		size: fileSize ?? 0
+	}}
+	{preview}
+	loading={false}
+	error={null}
+	onClose={() => (previewOpen = false)}
+	onRetry={() => (previewOpen = true)}
+/>
