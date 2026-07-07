@@ -1,3 +1,10 @@
+## [2.10.4](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.3...v2.10.4) (2026-07-07)
+
+### Bug Fixes
+
+* **backend:** support appwrite preview fallback ([836cf6f](https://github.com/Dan1el-19/chmura-blokserwis/commit/836cf6f7dd4aa01ba309c172ea302f9ed16547b6))
+* **frontend:** open preview from file row ([d67063f](https://github.com/Dan1el-19/chmura-blokserwis/commit/d67063fe268b291b966ab9855bd6e314cbdd8fbd))
+
 ## [2.10.3](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.2...v2.10.3) (2026-07-06)
 
 ### Bug Fixes
