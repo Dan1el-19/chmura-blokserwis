@@ -6,6 +6,7 @@
 	import { enhance } from '$app/forms';
 	import { formatFileSize } from '$lib/utils/format';
 	import PublicFilePreview from '$lib/components/public/PublicFilePreview.svelte';
+	import { canPreviewInline } from '$lib/utils/file-preview';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let loading = $state(false);
@@ -13,6 +14,9 @@
 	const downloadUrl = $derived(form?.downloadUrl || data.downloadUrl);
 	const previewUrl = $derived(form?.previewUrl ?? data.previewUrl ?? null);
 	const remainingDownloads = $derived(form?.remainingDownloads ?? data.remainingDownloads);
+	const hasInlinePreview = $derived(
+		Boolean((previewUrl ?? downloadUrl) && canPreviewInline(data.mimeType))
+	);
 </script>
 
 <div class="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4 dark:bg-zinc-950">
@@ -25,7 +29,9 @@
 		</div>
 	</div>
 	<Card
-		class="w-full max-w-md border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
+		class={hasInlinePreview
+			? 'w-full max-w-5xl border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-900'
+			: 'w-full max-w-md border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-900'}
 	>
 		{#if data.expired}
 			<!-- Expired Link View -->
@@ -125,46 +131,54 @@
 			</div>
 		{:else}
 			<!-- Active Link View (with download URL) -->
-			<div class="flex flex-col items-center gap-6 py-6 text-center">
-				<div class="rounded-full bg-primary/5 p-6 ring-1 ring-primary/10">
-					<File size={48} weight="duotone" class="text-primary" />
+			<div
+				class={hasInlinePreview
+					? 'grid gap-6 py-6 text-center lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-stretch lg:text-left'
+					: 'flex flex-col items-center gap-6 py-6 text-center'}
+			>
+				<div class="flex flex-col items-center gap-6 lg:justify-center">
+					<div class="rounded-full bg-primary/5 p-6 ring-1 ring-primary/10">
+						<File size={48} weight="duotone" class="text-primary" />
+					</div>
+
+					<div class="space-y-1">
+						<h1 class="px-4 text-xl font-semibold break-all text-text-main">{data.fileName}</h1>
+						<p class="text-sm text-text-muted">{formatFileSize(data.fileSize ?? 0)}</p>
+						{#if data.expiresAt}
+							<p class="mt-2 text-xs text-orange-500">
+								Wygasa: {new Date(data.expiresAt).toLocaleString('pl-PL')}
+							</p>
+						{/if}
+						{#if remainingDownloads !== null}
+							<p class="text-xs text-text-muted">
+								Pozostało pobrań: {remainingDownloads}
+							</p>
+						{/if}
+					</div>
+
+					<div class="w-full max-w-sm px-8 lg:px-0">
+						<a
+							href={downloadUrl ?? '#'}
+							download={data.fileName}
+							class="group flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none active:scale-[0.98]"
+						>
+							<DownloadSimple size={22} weight="bold" />
+							Pobierz plik
+						</a>
+					</div>
 				</div>
 
-				<div class="space-y-1">
-					<h1 class="px-4 text-xl font-semibold break-all text-text-main">{data.fileName}</h1>
-					<p class="text-sm text-text-muted">{formatFileSize(data.fileSize ?? 0)}</p>
-					{#if data.expiresAt}
-						<p class="mt-2 text-xs text-orange-500">
-							Wygasa: {new Date(data.expiresAt).toLocaleString('pl-PL')}
-						</p>
-					{/if}
-					{#if remainingDownloads !== null}
-						<p class="text-xs text-text-muted">
-							Pozostało pobrań: {remainingDownloads}
-						</p>
-					{/if}
-				</div>
-
-				{#key previewUrl ?? downloadUrl}
-					<PublicFilePreview
-						fileName={data.fileName ?? ''}
-						mimeType={data.mimeType ?? ''}
-						fileSize={data.fileSize ?? 0}
-						{previewUrl}
-						{downloadUrl}
-					/>
-				{/key}
-
-				<div class="w-full px-8">
-					<a
-						href={downloadUrl ?? '#'}
-						download={data.fileName}
-						class="group flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none active:scale-[0.98]"
-					>
-						<DownloadSimple size={22} weight="bold" />
-						Pobierz plik
-					</a>
-				</div>
+				{#if hasInlinePreview}
+					{#key previewUrl ?? downloadUrl}
+						<PublicFilePreview
+							fileName={data.fileName ?? ''}
+							mimeType={data.mimeType ?? ''}
+							fileSize={data.fileSize ?? 0}
+							{previewUrl}
+							{downloadUrl}
+						/>
+					{/key}
+				{/if}
 			</div>
 		{/if}
 	</Card>

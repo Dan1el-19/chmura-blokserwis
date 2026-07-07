@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 describe('PublicFilePreview', () => {
-	it('opens a preview modal for previewable media', async () => {
+	it('renders an inline preview for previewable media', async () => {
 		component = mount(PublicFilePreview, {
 			target: document.body,
 			props: {
@@ -24,14 +24,15 @@ describe('PublicFilePreview', () => {
 		});
 		flushSync();
 
-		const dialog = document.querySelector('[role="dialog"]');
-		const image = dialog?.querySelector('img[alt="photo.png"]') as HTMLImageElement | null;
-		expect(dialog).not.toBeNull();
+		const preview = document.querySelector('[aria-label="Podgląd pliku photo.png"]');
+		const image = preview?.querySelector('img[alt="photo.png"]') as HTMLImageElement | null;
+		expect(preview).not.toBeNull();
+		expect(document.querySelector('[role="dialog"]')).toBeNull();
 		expect(image).not.toBeNull();
 		expect(image?.src).toBe('https://example.com/photo.png');
 	});
 
-	it('renders no modal when both preview and download URLs are missing', async () => {
+	it('renders no preview when both preview and download URLs are missing', async () => {
 		component = mount(PublicFilePreview, {
 			target: document.body,
 			props: {
@@ -44,9 +45,10 @@ describe('PublicFilePreview', () => {
 		flushSync();
 
 		expect(document.querySelector('[role="dialog"]')).toBeNull();
+		expect(document.querySelector('[aria-label^="Podgląd pliku"]')).toBeNull();
 	});
 
-	it('opens a preview modal with the download URL when preview URL is missing', async () => {
+	it('renders an inline preview with the download URL when preview URL is missing', async () => {
 		component = mount(PublicFilePreview, {
 			target: document.body,
 			props: {
@@ -58,9 +60,10 @@ describe('PublicFilePreview', () => {
 		});
 		flushSync();
 
-		const dialog = document.querySelector('[role="dialog"]');
-		const image = dialog?.querySelector('img[alt="photo.png"]') as HTMLImageElement | null;
-		expect(dialog).not.toBeNull();
+		const preview = document.querySelector('[aria-label="Podgląd pliku photo.png"]');
+		const image = preview?.querySelector('img[alt="photo.png"]') as HTMLImageElement | null;
+		expect(preview).not.toBeNull();
+		expect(document.querySelector('[role="dialog"]')).toBeNull();
 		expect(image?.src).toBe('https://example.com/photo.png?download=1');
 	});
 });
