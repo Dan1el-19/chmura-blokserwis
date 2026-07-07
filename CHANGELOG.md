@@ -1,3 +1,9 @@
+## [2.10.7](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.6...v2.10.7) (2026-07-07)
+
+### Bug Fixes
+
+* **frontend:** correct user storage usage display ([72c1136](https://github.com/Dan1el-19/chmura-blokserwis/commit/72c11367a80e6ee9700ea48ac60a00948cf9cf65))
+
 ## [2.10.6](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.5...v2.10.6) (2026-07-07)
 
 ### Bug Fixes
