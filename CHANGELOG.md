@@ -1,3 +1,9 @@
+## [2.10.5](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.4...v2.10.5) (2026-07-07)
+
+### Bug Fixes
+
+* **frontend:** show modal preview for public links ([9257cb5](https://github.com/Dan1el-19/chmura-blokserwis/commit/9257cb5cbe17ed533ae9681134e52d72db7d23c7))
+
 ## [2.10.4](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.3...v2.10.4) (2026-07-07)
 
 ### Bug Fixes
