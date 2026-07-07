@@ -1,3 +1,9 @@
+## [2.10.8](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.7...v2.10.8) (2026-07-07)
+
+### Bug Fixes
+
+* **frontend:** show user storage breakdown ([299fc63](https://github.com/Dan1el-19/chmura-blokserwis/commit/299fc632284460f06277cfd5c4f8f57c5f36e557))
+
 ## [2.10.7](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.6...v2.10.7) (2026-07-07)
 
 ### Bug Fixes
