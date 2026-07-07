@@ -8,6 +8,8 @@
 	let {
 		customLimit = $bindable(),
 		usage,
+		trashUsage = 0,
+		totalUsage = usage + trashUsage,
 		limit,
 		roleLimitBytes,
 		saving,
@@ -15,6 +17,8 @@
 	} = $props<{
 		customLimit: string;
 		usage: number;
+		trashUsage?: number;
+		totalUsage?: number;
 		limit: number;
 		roleLimitBytes: number;
 		saving: boolean;
@@ -30,14 +34,15 @@
 	<div class="space-y-4">
 		<div class="rounded-md bg-bg-app p-3">
 			<p class="text-sm text-text-muted">Obecne użycie</p>
-			<div class="flex items-baseline gap-2">
-				<span class="text-lg font-bold text-text-main">
-					{formatFileSize(usage)}
+			<div class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+				<span class="text-text-muted">Aktywne</span>
+				<span class="text-right font-mono font-semibold text-text-main">
+					{formatFileSize(usage)} / {limit === Infinity ? 'Bez limitu' : formatFileSize(limit)}
 				</span>
-				<span class="text-text-muted">/</span>
-				<span class="text-sm text-text-muted">
-					{limit === Infinity ? 'Bez limitu' : formatFileSize(limit)}
-				</span>
+				<span class="text-text-muted">Kosz</span>
+				<span class="text-right font-mono text-text-main">{formatFileSize(trashUsage)}</span>
+				<span class="text-text-muted">Razem</span>
+				<span class="text-right font-mono text-text-main">{formatFileSize(totalUsage)}</span>
 			</div>
 		</div>
 

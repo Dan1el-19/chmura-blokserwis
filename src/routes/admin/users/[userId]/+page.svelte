@@ -15,17 +15,9 @@
 		data.targetUser.customLimit ? (data.targetUser.customLimit / 1024 / 1024 / 1024).toString() : ''
 	);
 
-	let selectedRole = $state<'basic' | 'plus' | 'admin'>('basic');
-	let customLimit = $state('');
+	let selectedRole = $derived(initialRole);
+	let customLimit = $derived(initialLimit);
 	let saving = $state(false);
-
-	$effect(() => {
-		selectedRole = initialRole;
-	});
-
-	$effect(() => {
-		customLimit = initialLimit;
-	});
 
 	async function saveRole() {
 		saving = true;
@@ -119,6 +111,8 @@
 		<UserStorageLimitCard
 			bind:customLimit
 			usage={data.targetUser.storageUsage}
+			trashUsage={data.targetUser.storageTrashUsage}
+			totalUsage={data.targetUser.storageTotalUsage}
 			limit={data.targetUser.storageLimit}
 			roleLimitBytes={initialRole === 'admin'
 				? Infinity

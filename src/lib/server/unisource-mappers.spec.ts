@@ -109,12 +109,16 @@ describe('UniSource mappers', () => {
 			max_storage_bytes: null,
 			effective_max_storage_bytes: 1024,
 			current_used_bytes: 512,
+			trashed_used_bytes: 128,
+			total_used_bytes: 640,
 			registration: 1_700_000_000,
 			email_verification: true
 		});
 
 		expect(user.role).toBe('basic');
 		expect(user.storageUsage).toBe(512);
+		expect(user.storageTrashUsage).toBe(128);
+		expect(user.storageTotalUsage).toBe(640);
 		expect(user.storageLimit).toBe(1024);
 		expect(user.customLimit).toBeNull();
 		expect(mapRoleToUnisource('basic')).toBe('user');
@@ -134,12 +138,16 @@ describe('UniSource mappers', () => {
 			max_storage_bytes: 2 * 1024 ** 3,
 			effective_max_storage_bytes: 2 * 1024 ** 3,
 			current_used_bytes: 1536 * 1024 ** 2,
+			trashed_used_bytes: 256 * 1024 ** 2,
+			total_used_bytes: 1792 * 1024 ** 2,
 			registration: 1_700_000_000,
 			email_verification: true
 		});
 
 		expect(user.role).toBe('plus');
 		expect(user.storageUsage).toBe(1536 * 1024 ** 2);
+		expect(user.storageTrashUsage).toBe(256 * 1024 ** 2);
+		expect(user.storageTotalUsage).toBe(1792 * 1024 ** 2);
 		expect(user.storageLimit).toBe(2 * 1024 ** 3);
 		expect(user.customLimit).toBe(2 * 1024 ** 3);
 	});

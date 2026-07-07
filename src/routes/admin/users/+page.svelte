@@ -36,6 +36,22 @@
 		return limit === Infinity ? '∞' : formatFileSize(limit);
 	}
 
+	function formatStorageBreakdown(user: {
+		storageUsage: number;
+		storageTrashUsage: number;
+		storageTotalUsage: number;
+		storageLimit: number | null;
+	}) {
+		return [
+			{ label: 'Aktywne', value: formatFileSize(user.storageUsage) },
+			{ label: 'Kosz', value: formatFileSize(user.storageTrashUsage) },
+			{
+				label: 'Razem',
+				value: `${formatFileSize(user.storageTotalUsage)} / ${formatStorageLimit(user.storageLimit)}`
+			}
+		];
+	}
+
 	const formatDate = (date: string) => new Date(date).toLocaleDateString('pl-PL');
 </script>
 
@@ -84,8 +100,13 @@
 								{roleConfig[user.role].label}
 							</span>
 						</td>
-						<td class="px-6 py-4 font-mono text-xs text-text-muted">
-							{formatFileSize(user.storageUsage)} / {formatStorageLimit(user.storageLimit)}
+						<td class="px-6 py-4 text-xs text-text-muted">
+							<div class="grid min-w-56 grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+								{#each formatStorageBreakdown(user) as item (item.label)}
+									<span>{item.label}</span>
+									<span class="text-right font-mono text-text-main">{item.value}</span>
+								{/each}
+							</div>
 						</td>
 						<td class="px-6 py-4 text-right">
 							<a
@@ -133,8 +154,11 @@
 					class="mt-4 flex items-center justify-between border-t border-border-line pt-3 text-xs text-text-muted"
 				>
 					<div class="font-mono">{formatDate(user.$createdAt)}</div>
-					<div class="font-mono">
-						{formatFileSize(user.storageUsage)} / {formatStorageLimit(user.storageLimit)}
+					<div class="grid min-w-40 grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-right">
+						{#each formatStorageBreakdown(user) as item (item.label)}
+							<span>{item.label}</span>
+							<span class="font-mono text-text-main">{item.value}</span>
+						{/each}
 					</div>
 				</div>
 

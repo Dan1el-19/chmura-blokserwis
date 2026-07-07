@@ -90,7 +90,14 @@ export function mapRoleToUnisource(role: UserRole): 'user' | 'plus' | 'admin' {
 	return role;
 }
 
-export function mapAdminUserFromUnisource(user: AdminUsersListResponse['items'][number]) {
+type AdminUserWithStorageBreakdown = AdminUsersListResponse['items'][number] & {
+	trashed_used_bytes?: number;
+	total_used_bytes?: number;
+};
+
+export function mapAdminUserFromUnisource(user: AdminUserWithStorageBreakdown) {
+	const trashUsage = user.trashed_used_bytes ?? 0;
+
 	return {
 		$id: user.id,
 		email: user.email,
@@ -98,6 +105,8 @@ export function mapAdminUserFromUnisource(user: AdminUsersListResponse['items'][
 		$createdAt: toIso(user.registration) ?? new Date(0).toISOString(),
 		role: mapRoleFromUnisource(user.role),
 		storageUsage: user.current_used_bytes,
+		storageTrashUsage: trashUsage,
+		storageTotalUsage: user.total_used_bytes ?? user.current_used_bytes + trashUsage,
 		storageLimit: user.effective_max_storage_bytes,
 		customLimit: user.max_storage_bytes,
 		status: user.status,
