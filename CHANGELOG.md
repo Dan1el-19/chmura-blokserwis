@@ -1,3 +1,9 @@
+## [2.10.6](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.5...v2.10.6) (2026-07-07)
+
+### Bug Fixes
+
+* **frontend:** render public file previews inline ([bf3d363](https://github.com/Dan1el-19/chmura-blokserwis/commit/bf3d36340e413b4fa946f3f08fbe3538147b4eeb))
+
 ## [2.10.5](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.4...v2.10.5) (2026-07-07)
 
 ### Bug Fixes
