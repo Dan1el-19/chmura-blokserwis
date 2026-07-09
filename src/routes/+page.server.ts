@@ -6,6 +6,7 @@ import { getUserRole } from '$lib/server/roles';
 import type { Actions, PageServerLoad } from './$types';
 import { logger } from '$lib/server/logger';
 import { unwrapList } from '$lib/server/unisource-v2-contract';
+import { getActiveFolderSizes } from '$lib/server/folder-sizes';
 
 const PAGE_LIMIT = 50;
 
@@ -36,6 +37,10 @@ export const load: PageServerLoad = async (event) => {
 
 		const fileList = unwrapList<Parameters<typeof mapFileFromUnisource>[0]>(files);
 		const folderList = unwrapList<Parameters<typeof mapFolderFromUnisource>[0]>(folders);
+		const folderSizes = await getActiveFolderSizes(client, folderList.items).catch((error) => {
+			logger.warn('Error calculating folder sizes:', error);
+			return new Map<string, number>();
+		});
 		const folderPath = parentFolderId
 			? (await client.folders.breadcrumbs(parentFolderId)).breadcrumbs.map(({ id, name }) => ({
 					id,
@@ -45,7 +50,10 @@ export const load: PageServerLoad = async (event) => {
 
 		return {
 			files: fileList.items.map(mapFileFromUnisource),
-			folders: folderList.items.map(mapFolderFromUnisource),
+			folders: folderList.items.map((folder) => ({
+				...mapFolderFromUnisource(folder),
+				size: folderSizes.get(folder.id) ?? 0
+			})),
 			currentFolderId: parentFolderId,
 			fileNextCursor: fileList.nextCursor,
 			folderNextCursor: folderList.nextCursor,

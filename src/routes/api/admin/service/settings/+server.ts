@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 import { getUserRole } from '$lib/server/roles';
-import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
+import { requestAdminUnisourceV2 } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 
 /**
@@ -31,10 +31,12 @@ export const PATCH: RequestHandler = async (event) => {
 	}
 
 	try {
-		const client = await createRequestAdminUnisourceClient(event);
-		const result = await client.admin.updateServiceSettings({
-			recommended_upload_destination: destination
-		});
+		const result = await requestAdminUnisourceV2<unknown>(
+			event,
+			'PATCH',
+			'/v2/admin/service/settings',
+			{ body: { recommended_upload_destination: destination } }
+		);
 		return json(result);
 	} catch (e) {
 		return unisourceErrorResponse(e, 'Failed to update service settings');

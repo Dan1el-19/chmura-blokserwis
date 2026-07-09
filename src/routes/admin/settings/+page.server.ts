@@ -1,9 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
-import type { RecommendedUploadDestination } from '@unisource/sdk';
+import type { RecommendedUploadDestination, Service } from '@unisource/sdk';
 import { UnisourceV2Error } from '@unisource/sdk/v2';
 import type { Actions, PageServerLoad } from './$types';
 
-import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
+import { requestAdminUnisourceV2 } from '$lib/server/unisource';
+import { unwrapItem } from '$lib/server/unisource-v2-contract';
 
 type RecommendedDestination = RecommendedUploadDestination;
 
@@ -16,8 +17,12 @@ export const load: PageServerLoad = async (event) => {
 		throw redirect(303, '/login');
 	}
 
-	const client = await createRequestAdminUnisourceClient(event);
-	const { service } = await client.admin.getService();
+	// UniSource V2 wraps the resource in `item`, while the SDK client currently
+	// expects a legacy `service` envelope. Use the raw request adapter shared by
+	// the other admin routes to handle the deployed V2 contract.
+	const service = unwrapItem<Service>(
+		await requestAdminUnisourceV2<unknown>(event, 'GET', '/v2/admin/service')
+	);
 	const dest: RecommendedDestination = isRecommendedDestination(
 		service.recommended_upload_destination
 	)
@@ -47,9 +52,8 @@ export const actions: Actions = {
 		}
 
 		try {
-			const client = await createRequestAdminUnisourceClient(event);
-			await client.admin.updateServiceSettings({
-				recommended_upload_destination: destination
+			await requestAdminUnisourceV2<unknown>(event, 'PATCH', '/v2/admin/service/settings', {
+				body: { recommended_upload_destination: destination }
 			});
 			return { success: true, destination };
 		} catch (error) {

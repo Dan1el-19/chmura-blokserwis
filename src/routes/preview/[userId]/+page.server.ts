@@ -5,6 +5,7 @@ import { createUserUnisourceClient } from '$lib/server/unisource';
 import { createAdminClient } from '$lib/server/appwrite';
 import { mapFileFromUnisource, mapFolderFromUnisource } from '$lib/server/unisource-mappers';
 import { logger } from '$lib/server/logger';
+import { getActiveFolderSizes } from '$lib/server/folder-sizes';
 import { unwrapList } from '$lib/server/unisource-v2-contract';
 
 const PAGE_LIMIT = 50;
@@ -36,7 +37,7 @@ export const load: PageServerLoad = async (event) => {
 	const admin = await createUserUnisourceClient(event);
 
 	let files: ReturnType<typeof mapFileFromUnisource>[] = [];
-	let folders: ReturnType<typeof mapFolderFromUnisource>[] = [];
+	let folders: Array<ReturnType<typeof mapFolderFromUnisource> & { size: number }> = [];
 	let breadcrumbs: { id: string | null; name: string }[] = [{ id: null, name: 'Root' }];
 	let errorMsg: string | undefined;
 
@@ -54,10 +55,17 @@ export const load: PageServerLoad = async (event) => {
 			unwrapList<Parameters<typeof mapFileFromUnisource>[0]>(filesResult).items.map(
 				mapFileFromUnisource
 			);
-		folders =
-			unwrapList<Parameters<typeof mapFolderFromUnisource>[0]>(foldersResult).items.map(
-				mapFolderFromUnisource
-			);
+		const rawFolders = unwrapList<Parameters<typeof mapFolderFromUnisource>[0]>(foldersResult).items;
+		const folderSizes = await getActiveFolderSizes(admin, rawFolders, { asUser: userId }).catch(
+			(sizeError) => {
+				logger.warn('Error calculating preview folder sizes:', sizeError);
+				return new Map<string, number>();
+			}
+		);
+		folders = rawFolders.map((folder) => ({
+			...mapFolderFromUnisource(folder),
+			size: folderSizes.get(folder.id) ?? 0
+		}));
 
 		if (folderId) {
 			const trail = (

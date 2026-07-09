@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { UnisourceV2Error } from '@unisource/sdk/v2';
 
 const mockClient = vi.hoisted(() => ({
 	myFiles: {
@@ -147,12 +148,28 @@ describe('/api/folders/[folderId] DELETE', () => {
 
 	it('returns 500 when SDK throws an error', async () => {
 		mockClient.folders.delete.mockRejectedValue(new Error('SDK error'));
+		mockClient.folders.get.mockResolvedValue({ item: { id: 'folder-1' } });
 
 		const response = await DELETE(makeRequest());
 
 		expect(response.status).toBe(500);
 		const body = await response.json();
 		expect(body).toEqual({ error: 'Failed to delete folder' });
+	});
+
+	it('accepts a deletion confirmed by a not-found follow-up read', async () => {
+		mockClient.folders.delete.mockRejectedValue(new Error('Invalid delete response'));
+		mockClient.folders.get.mockRejectedValue(
+			new UnisourceV2Error('Folder not found', 404, 'not_found', 'req_1')
+		);
+
+		const response = await DELETE(makeRequest());
+
+		expect(response.status).toBe(200);
+		expect(mockClient.folders.get).toHaveBeenCalledWith('folder-1', undefined, {
+			asUser: undefined
+		});
+		expect(await response.json()).toEqual({ success: true });
 	});
 });
 

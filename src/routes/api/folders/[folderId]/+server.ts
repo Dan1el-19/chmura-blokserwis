@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { UnisourceV2Error } from '@unisource/sdk/v2';
 import type { RequestHandler } from './$types';
 import { createUserUnisourceClient } from '$lib/server/unisource';
 import { mapFolderFromUnisource } from '$lib/server/unisource-mappers';
@@ -34,10 +35,25 @@ export const DELETE: RequestHandler = async (event) => {
 
 	try {
 		const client = await createUserUnisourceClient(event);
-		await client.folders.delete(event.params.folderId, undefined, {
-			permanent,
-			asUser: targetUserId
-		});
+		try {
+			await client.folders.delete(event.params.folderId, undefined, {
+				permanent,
+				asUser: targetUserId
+			});
+		} catch (deleteError) {
+			// UniSource may complete the deletion but return a legacy response body
+			// rejected by the SDK parser. Only treat it as successful if a follow-up
+			// read confirms that the folder is gone.
+			try {
+				await client.folders.get(event.params.folderId, undefined, { asUser: targetUserId });
+			} catch (verifyError) {
+				if (verifyError instanceof UnisourceV2Error && verifyError.status === 404) {
+					return json({ success: true });
+				}
+			}
+
+			throw deleteError;
+		}
 		return json({ success: true });
 	} catch (error) {
 		return unisourceErrorResponse(error, 'Failed to delete folder');

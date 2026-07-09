@@ -4,6 +4,7 @@ import { createUserUnisourceClient } from '$lib/server/unisource';
 import { mapFileFromUnisource, mapFolderFromUnisource } from '$lib/server/unisource-mappers';
 import { logger } from '$lib/server/logger';
 import { unwrapList } from '$lib/server/unisource-v2-contract';
+import { getTrashedFolderSizes } from '$lib/server/folder-sizes';
 
 const PAGE_LIMIT = 50;
 
@@ -27,10 +28,17 @@ export const load: PageServerLoad = async (event) => {
 		]);
 		const fileList = unwrapList<Parameters<typeof mapFileFromUnisource>[0]>(files);
 		const folderList = unwrapList<Parameters<typeof mapFolderFromUnisource>[0]>(folders);
+		const folderSizes = await getTrashedFolderSizes(client).catch((error) => {
+			logger.warn('Error calculating trashed folder sizes:', error);
+			return new Map<string, number>();
+		});
 
 		return {
 			files: fileList.items.map(mapFileFromUnisource),
-			folders: folderList.items.map(mapFolderFromUnisource),
+			folders: folderList.items.map((folder) => ({
+				...mapFolderFromUnisource(folder),
+				size: folderSizes.get(folder.id) ?? 0
+			})),
 			fileNextCursor: fileList.nextCursor,
 			folderNextCursor: folderList.nextCursor
 		};
