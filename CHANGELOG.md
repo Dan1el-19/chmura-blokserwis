@@ -1,3 +1,10 @@
+## [2.10.9](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.8...v2.10.9) (2026-07-09)
+
+### Bug Fixes
+
+* **backend:** handle service and folder V2 responses ([58f8acb](https://github.com/Dan1el-19/chmura-blokserwis/commit/58f8acb8f4ee443340d99dee122ae2226de7bc50))
+* **frontend:** improve folder and admin interactions ([e851977](https://github.com/Dan1el-19/chmura-blokserwis/commit/e851977b27ffa6e7ee75ac6bcf4f39d7ec21d4fa))
+
 ## [2.10.8](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.7...v2.10.8) (2026-07-07)
 
 ### Bug Fixes
