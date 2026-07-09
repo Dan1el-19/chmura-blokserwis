@@ -6,8 +6,7 @@
 		Trash,
 		Share,
 		DotsThreeVertical,
-		ArrowUp,
-		Eye
+		ArrowUp
 	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 	import { canPreviewInline } from '$lib/utils/file-preview';
@@ -134,11 +133,6 @@
 		toast.info(`Udostępnianie folderów (${name}) wkrótce.`);
 		void id;
 	}
-
-	function previewSheetFile(id: string) {
-		const file = files.find((candidate: FileType) => candidate.$id === id);
-		if (file) onPreview(file);
-	}
 </script>
 
 <div class="space-y-2 select-none lg:hidden">
@@ -202,7 +196,7 @@
 				/>
 				<div class="min-w-0 flex-1">
 					<p class="truncate text-sm font-medium text-text-main">{folder.name}</p>
-					<p class="font-mono text-xs text-text-muted">Folder</p>
+					<p class="font-mono text-xs text-text-muted">{formatFileSize(folder.size ?? 0)}</p>
 				</div>
 				<button
 					type="button"
@@ -280,21 +274,6 @@
 <BottomSheet bind:open={sheetOpen} title={sheetTarget?.name}>
 	{#if sheetTarget?.kind === 'file'}
 		{@const target = sheetTarget}
-		<button
-			type="button"
-			class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"
-			onclick={() => {
-				closeSheet();
-				previewSheetFile(target.id);
-			}}
-		>
-			<span
-				class="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-violet-600 dark:bg-violet-900/40"
-			>
-				<Eye class="h-4 w-4" />
-			</span>
-			Otworz
-		</button>
 		<button
 			type="button"
 			class="flex h-12 w-full items-center gap-3 rounded-md px-4 text-left text-sm font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"

@@ -91,4 +91,41 @@ describe('FileTable checkbox interaction', () => {
 		expect(onPreview).toHaveBeenCalledWith(file);
 		expect(selection.has('file-1')).toBe(false);
 	});
+
+	it('opens a folder after clicking anywhere on its row', () => {
+		const selection = new SelectionState();
+		const onNavigate = vi.fn();
+
+		component = mount(FileTable, {
+			target: document.body,
+			props: {
+				files: [],
+				folders: [
+					{
+						$id: 'folder-1',
+						name: 'Dokumenty',
+						$createdAt: '2026-06-10T12:00:00.000Z',
+						size: 1024
+					}
+				],
+				selection,
+				sortBy: 'name',
+				sortDir: 'asc',
+				onSort: () => {},
+				onDownload: () => {},
+				onPreview: () => {},
+				onRename: () => {},
+				onDelete: () => {},
+				onNavigate,
+				onShare: () => {}
+			}
+		});
+
+		const row = document.querySelector<HTMLElement>('[aria-label="Folder Dokumenty"]');
+		expect(row).not.toBeNull();
+
+		row?.click();
+
+		expect(onNavigate).toHaveBeenCalledWith('folder-1');
+	});
 });

@@ -207,7 +207,9 @@
 									<span class="truncate font-medium text-text-main">{folder.name}</span>
 								</div>
 							</td>
-							<td class="px-4 py-3 font-mono text-xs text-text-muted">—</td>
+							<td class="px-4 py-3 font-mono text-xs text-text-muted">
+								{formatFileSize(folder.size ?? 0)}
+							</td>
 							<td class="px-4 py-3 font-mono text-xs text-text-muted">
 								{formatDate(folder.$updatedAt)}
 							</td>

@@ -5,7 +5,8 @@
 		ArrowSquareOut,
 		Crown,
 		Sparkle,
-		User as UserIcon
+		User as UserIcon,
+		UsersThree
 	} from 'phosphor-svelte';
 	import { formatFileSize } from '$lib/utils/format';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -56,118 +57,166 @@
 </script>
 
 <div class="space-y-6">
-	<!-- Desktop Table -->
-	<div class="hidden overflow-hidden rounded-md border border-border-line bg-bg-panel lg:block">
-		<table class="w-full text-left text-sm">
-			<thead
-				class="border-b border-border-line bg-gray-50/50 font-medium text-text-muted dark:bg-zinc-900/50"
+	<section
+		class="flex flex-col gap-4 border-b border-border-line pb-5 sm:flex-row sm:items-end sm:justify-between"
+	>
+		<div>
+			<p class="text-xs font-semibold tracking-[0.16em] text-primary uppercase">Konta i limity</p>
+			<h2 class="mt-2 text-xl font-semibold tracking-tight text-text-main sm:text-2xl">
+				Użytkownicy
+			</h2>
+			<p class="mt-1 max-w-2xl text-sm leading-6 text-text-muted">
+				Przeglądaj role i rzeczywiste użycie miejsca — również dane pozostawione w koszu.
+			</p>
+		</div>
+		<div
+			class="inline-flex w-fit items-center gap-2 rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm text-text-muted"
+		>
+			<UsersThree class="h-4 w-4 text-primary" />
+			<span
+				><span class="font-mono font-semibold text-text-main">{data.total}</span> wszystkich kont</span
 			>
-				<tr>
-					<th class="px-6 py-3 font-medium">Użytkownik</th>
-					<th class="px-6 py-3 font-medium">Dołączył</th>
-					<th class="px-6 py-3 font-medium">Rola</th>
-					<th class="px-6 py-3 font-medium">Magazyn</th>
-					<th class="px-6 py-3 text-right font-medium">Akcje</th>
-				</tr>
-			</thead>
-			<tbody class="divide-y divide-border-line">
-				{#each data.users as user (user.$id)}
-					<tr class="transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/50">
-						<td class="px-6 py-4">
-							<div class="flex flex-col">
-								<span class="font-medium text-text-main">{user.email}</span>
-								{#if user.name}
-									<span class="text-xs text-text-muted">{user.name}</span>
-								{/if}
-							</div>
-						</td>
-						<td class="px-6 py-4 font-mono text-xs text-text-muted">
-							{formatDate(user.$createdAt)}
-						</td>
-						<td class="px-6 py-4">
-							<span
-								class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium {roleConfig[
-									user.role
-								].class}"
-							>
-								{#if user.role === 'admin'}
-									<Crown class="h-3.5 w-3.5" />
-								{:else if user.role === 'plus'}
-									<Sparkle class="h-3.5 w-3.5" />
-								{:else}
-									<UserIcon class="h-3.5 w-3.5" />
-								{/if}
-								{roleConfig[user.role].label}
-							</span>
-						</td>
-						<td class="px-6 py-4 text-xs text-text-muted">
-							<div class="grid min-w-56 grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-								{#each formatStorageBreakdown(user) as item (item.label)}
-									<span>{item.label}</span>
-									<span class="text-right font-mono text-text-main">{item.value}</span>
-								{/each}
-							</div>
-						</td>
-						<td class="px-6 py-4 text-right">
-							<a
-								href="/admin/users/{user.$id}"
-								class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
-							>
-								Szczegóły
-								<ArrowSquareOut class="h-3.5 w-3.5" />
-							</a>
-						</td>
+		</div>
+	</section>
+
+	<!-- Desktop Table -->
+	<div class="hidden overflow-hidden rounded-md border border-border-line bg-bg-panel xl:block">
+		<div class="overflow-x-auto">
+			<table class="w-full min-w-[960px] text-left text-sm">
+				<thead
+					class="border-b border-border-line bg-gray-50/50 font-medium text-text-muted dark:bg-zinc-900/50"
+				>
+					<tr>
+						<th class="px-6 py-3 font-medium">Użytkownik</th>
+						<th class="px-6 py-3 font-medium">Dołączył</th>
+						<th class="px-6 py-3 font-medium">Rola</th>
+						<th class="px-6 py-3 font-medium">Magazyn</th>
+						<th class="px-6 py-3 text-right font-medium">Akcje</th>
 					</tr>
-				{/each}
-			</tbody>
-		</table>
+				</thead>
+				<tbody class="divide-y divide-border-line">
+					{#each data.users as user (user.$id)}
+						<tr class="group transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/50">
+							<td class="px-6 py-4">
+								<div class="flex flex-col">
+									<a
+										href="/admin/users/{user.$id}"
+										class="w-fit font-medium text-text-main underline-offset-4 group-hover:text-primary group-hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+									>
+										{user.email}
+									</a>
+									{#if user.name}
+										<span class="text-xs text-text-muted">{user.name}</span>
+									{/if}
+								</div>
+							</td>
+							<td class="px-6 py-4 font-mono text-xs text-text-muted">
+								{formatDate(user.$createdAt)}
+							</td>
+							<td class="px-6 py-4">
+								<span
+									class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium {roleConfig[
+										user.role
+									].class}"
+								>
+									{#if user.role === 'admin'}
+										<Crown class="h-3.5 w-3.5" />
+									{:else if user.role === 'plus'}
+										<Sparkle class="h-3.5 w-3.5" />
+									{:else}
+										<UserIcon class="h-3.5 w-3.5" />
+									{/if}
+									{roleConfig[user.role].label}
+								</span>
+							</td>
+							<td class="px-6 py-4 text-xs text-text-muted">
+								<div class="grid min-w-56 grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+									{#each formatStorageBreakdown(user) as item (item.label)}
+										<span>{item.label}</span>
+										<span class="text-right font-mono text-text-main">{item.value}</span>
+									{/each}
+								</div>
+							</td>
+							<td class="px-6 py-4 text-right">
+								<a
+									href="/admin/users/{user.$id}"
+									class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80"
+								>
+									Szczegóły
+									<ArrowSquareOut class="h-3.5 w-3.5" />
+								</a>
+							</td>
+						</tr>
+					{:else}
+						<tr>
+							<td colspan="5" class="px-6 py-14 text-center text-sm text-text-muted">
+								Nie znaleziono użytkowników na tej stronie.
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
 	</div>
 
 	<!-- Mobile Cards -->
-	<div class="space-y-3 lg:hidden">
+	<div class="space-y-3 xl:hidden">
 		{#each data.users as user (user.$id)}
-			<Card class="p-4">
-				<div class="flex items-start justify-between gap-3">
-					<div class="min-w-0 flex-1">
-						<p class="truncate font-medium text-text-main">{user.email}</p>
-						{#if user.name}
-							<p class="truncate text-sm text-text-muted">{user.name}</p>
-						{/if}
+			<a
+				href="/admin/users/{user.$id}"
+				class="group block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+			>
+				<Card class="group-hover:border-primary/40 group-hover:bg-primary/[0.015]">
+					<div class="flex items-start justify-between gap-3">
+						<div class="min-w-0 flex-1">
+							<p class="truncate font-medium text-text-main">{user.email}</p>
+							{#if user.name}
+								<p class="truncate text-sm text-text-muted">{user.name}</p>
+							{/if}
+						</div>
+						<span
+							class="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium {roleConfig[
+								user.role
+							].class}"
+						>
+							{#if user.role === 'admin'}
+								<Crown class="h-3 w-3" />
+							{:else if user.role === 'plus'}
+								<Sparkle class="h-3 w-3" />
+							{:else}
+								<UserIcon class="h-3 w-3" />
+							{/if}
+							{roleConfig[user.role].label}
+						</span>
 					</div>
-					<span
-						class="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium {roleConfig[
-							user.role
-						].class}"
+
+					<div
+						class="mt-4 grid gap-3 border-t border-border-line pt-3 text-xs text-text-muted sm:grid-cols-[auto_1fr] sm:items-end"
 					>
-						{#if user.role === 'admin'}
-							<Crown class="h-3 w-3" />
-						{:else if user.role === 'plus'}
-							<Sparkle class="h-3 w-3" />
-						{:else}
-							<UserIcon class="h-3 w-3" />
-						{/if}
-						{roleConfig[user.role].label}
-					</span>
-				</div>
-
-				<div
-					class="mt-4 flex items-center justify-between border-t border-border-line pt-3 text-xs text-text-muted"
-				>
-					<div class="font-mono">{formatDate(user.$createdAt)}</div>
-					<div class="grid min-w-40 grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-right">
-						{#each formatStorageBreakdown(user) as item (item.label)}
-							<span>{item.label}</span>
-							<span class="font-mono text-text-main">{item.value}</span>
-						{/each}
+						<div>
+							<p class="text-[11px] font-medium tracking-wide uppercase">Dołączył</p>
+							<p class="mt-1 font-mono text-text-main">{formatDate(user.$createdAt)}</p>
+						</div>
+						<div class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 sm:justify-self-end">
+							{#each formatStorageBreakdown(user) as item (item.label)}
+								<span>{item.label}</span>
+								<span class="text-right font-mono text-text-main">{item.value}</span>
+							{/each}
+						</div>
 					</div>
-				</div>
 
-				<div class="mt-3 flex justify-end">
-					<a href="/admin/users/{user.$id}">
-						<Button size="sm" variant="ghost" class="h-7 gap-1 text-xs">
-							Szczegóły <ArrowSquareOut class="h-3 w-3" />
-						</Button>
-					</a>
+					<div
+						class="mt-4 flex items-center justify-between border-t border-border-line pt-3 text-sm font-medium text-primary"
+					>
+						<span>Otwórz profil użytkownika</span>
+						<ArrowSquareOut class="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+					</div>
+				</Card>
+			</a>
+		{:else}
+			<Card>
+				<div class="py-8 text-center text-sm text-text-muted">
+					Nie znaleziono użytkowników na tej stronie.
 				</div>
 			</Card>
 		{/each}

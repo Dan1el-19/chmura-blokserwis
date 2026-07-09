@@ -6,8 +6,7 @@
 		Trash,
 		Share,
 		ArrowUp,
-		ArrowDown,
-		Eye
+		ArrowDown
 	} from 'phosphor-svelte';
 	import { toast } from 'svelte-sonner';
 	import { formatFileSize } from '$lib/utils/format';
@@ -95,6 +94,16 @@
 
 		lastClickedId = file.$id;
 		onPreview(file);
+	}
+
+	function handleFolderRowClick(e: MouseEvent, folder: FolderType) {
+		if (e.shiftKey || e.ctrlKey || e.metaKey || selection.isSelectionMode) {
+			handleRowClick(e, folder.$id);
+			return;
+		}
+
+		lastClickedId = folder.$id;
+		onNavigate(folder.$id);
 	}
 
 	function handleCheckbox(id: string) {
@@ -256,7 +265,7 @@
 					ondragover={(e) => onFolderDragOver(e, folder.$id)}
 					ondragleave={onFolderDragLeave}
 					ondrop={(e) => onFolderDrop(e, folder.$id)}
-					onclick={(e) => handleRowClick(e, folder.$id)}
+					onclick={(e) => handleFolderRowClick(e, folder)}
 					onkeydown={(e) => {
 						if (e.key === 'Enter') {
 							e.preventDefault();
@@ -288,21 +297,15 @@
 							<Folder
 								class="h-5 w-5 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400"
 							/>
-							<button
-								onclick={(e) => {
-									e.stopPropagation();
-									onNavigate(folder.$id);
-								}}
-								class="truncate font-medium text-text-main hover:underline"
-							>
-								{folder.name}
-							</button>
+							<span class="truncate font-medium text-text-main">{folder.name}</span>
 						</div>
 					</td>
 					<td class="px-4 py-3 font-mono text-xs text-text-muted"
 						>{formatDate(folder.$createdAt)}</td
 					>
-					<td class="px-4 py-3 font-mono text-xs text-text-muted">—</td>
+					<td class="px-4 py-3 font-mono text-xs text-text-muted"
+						>{formatFileSize(folder.size ?? 0)}</td
+					>
 					<td class="px-4 py-3" onclick={(e) => e.stopPropagation()}>
 						<div class="flex justify-end gap-1">
 							<button
@@ -385,15 +388,6 @@
 								title="Udostępnij"
 							>
 								<Share class="h-4 w-4" />
-							</button>
-							<button
-								type="button"
-								onclick={() => onPreview(file)}
-								class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700"
-								aria-label="Otworz {file.name}"
-								title="Otworz"
-							>
-								<Eye class="h-4 w-4" />
 							</button>
 							<button
 								type="button"
