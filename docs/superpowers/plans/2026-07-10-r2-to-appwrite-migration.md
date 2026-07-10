@@ -8,7 +8,7 @@
 - Źródłem prawdy o lokalizacji pliku pozostaje UniSource/D1. Frontend nigdy nie wybiera źródła przy pobieraniu pliku ani nie dostaje kluczy R2/Appwrite.
 - Do migracji kwalifikują się pliki `r2` o rozmiarze `> 0` i `<= 5 GiB`, od największych. Pliki większe dostają czytelny status `skipped_size_limit` i pozostają w R2.
 - Automatyka startuje po przekroczeniu `2 GiB` w R2 i planuje największe pliki do osiągnięcia celu `1,5 GiB`. Dokładnie `2 GiB` nie uruchamia przebiegu; start następuje od pierwszego bajtu powyżej progu.
-- Do progu kosztowego wliczają się również pliki w koszu, ponieważ Cloudflare R2 nalicza ich zajętość do czasu fizycznego usunięcia lub migracji.
+- Do progu kosztowego wliczają się aktywne pliki, pliki w koszu i ukończone artefakty releases z tego samego bucketa; każda kategoria jest liczona dokładnie raz.
 - Panel administracyjny nie uruchamia transferu bezpośrednio. Tworzy run w UniSource, a Heroku odbiera go bezpiecznym kanałem wewnętrznym.
 - Po powodzeniu następuje atomowe przełączenie rekordu `files` na `appwrite`; usunięcie obiektu z R2 jest późniejszym, powtarzalnym krokiem. Nigdy odwrotnie.
 
