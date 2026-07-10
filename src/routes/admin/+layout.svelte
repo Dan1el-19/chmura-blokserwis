@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page, navigating } from '$app/state';
-	import { SquaresFour, Users, GearSix } from 'phosphor-svelte';
+	import { SquaresFour, Users, GearSix, ArrowsClockwise } from 'phosphor-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { createCrossRouteNavigationLoading } from '$lib/modules/navigation-loading.svelte';
 	import RouteSkeleton from '$lib/components/ui/RouteSkeleton.svelte';
@@ -16,6 +16,12 @@
 	const tabs = [
 		{ href: '/admin', label: 'Pulpit', icon: SquaresFour, exact: true },
 		{ href: '/admin/users', label: 'Użytkownicy', icon: Users, exact: false },
+		{
+			href: '/admin/storage-migrations',
+			label: 'Migracje plików',
+			icon: ArrowsClockwise,
+			exact: false
+		},
 		{ href: '/admin/settings', label: 'Ustawienia', icon: GearSix, exact: false }
 	];
 
