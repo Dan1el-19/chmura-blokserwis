@@ -1,3 +1,9 @@
+## [2.11.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.9...v2.11.0) (2026-07-10)
+
+### Features
+
+* **frontend:** add storage migration controls ([0a85292](https://github.com/Dan1el-19/chmura-blokserwis/commit/0a85292abe6b57dbae2f2f851e0b603b7424a40d))
+
 ## [2.10.9](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.8...v2.10.9) (2026-07-09)
 
 ### Bug Fixes
