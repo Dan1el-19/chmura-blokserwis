@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-import { createUserUnisourceClient } from '$lib/server/unisource';
+import { createUserUnisourceClient, requestUserUnisourceV2 } from '$lib/server/unisource';
 import { unisourceErrorResponse } from '$lib/server/unisource-errors';
 import { unwrapItem } from '$lib/server/unisource-v2-contract';
 import { multipartCompleteSchema } from '$lib/schemas';
@@ -19,8 +19,17 @@ export const POST: RequestHandler = async (event) => {
 		if (!validated.success) {
 			return json({ error: 'Validation failed', details: validated.error.issues }, { status: 400 });
 		}
-		const { upload_id, parts } = validated.data;
+		const { upload_id, parts, migrate_to_appwrite } = validated.data;
 
+		if (migrate_to_appwrite) {
+			return json(
+				unwrapItem(
+					await requestUserUnisourceV2(event, 'POST', '/v2/upload/r2/multipart/complete', {
+						body: { upload_id, parts, migrate_to_appwrite: true }
+					})
+				)
+			);
+		}
 		const client = await createUserUnisourceClient(event);
 		const result = unwrapItem(await client.upload.multipartComplete(upload_id, parts));
 

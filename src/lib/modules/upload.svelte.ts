@@ -13,6 +13,7 @@
  */
 
 export type UploadDestination = 'r2' | 'appwrite';
+export type UploadIntent = UploadDestination | 'auto' | 'fast';
 export type RecommendedUploadDestination = 'r2' | 'appwrite' | 'hybrid';
 
 /**
@@ -57,6 +58,7 @@ type UploadFileState = {
 	type: string;
 	source: File;
 	destination: UploadDestination;
+	migrateToAppwrite?: boolean;
 	uploadId?: string;
 	error?: string;
 	progress: {
@@ -74,7 +76,7 @@ type UploadOptions = {
 	getFolderId?: () => string | null | undefined;
 	isMainStorage?: boolean | (() => boolean);
 	/** Default destination when `addFile` is called without an explicit one. */
-	destination?: UploadDestination | 'auto' | (() => UploadDestination | 'auto');
+	destination?: UploadIntent | (() => UploadIntent);
 	/**
 	 * Service-wide preference for the auto/hybrid destination resolver. Comes
 	 * from the admin settings UI. Defaults to 'hybrid'.
@@ -87,6 +89,7 @@ type UploadOptions = {
 // ─── Adaptive chunk size ──────────────────────────────────────────────────────
 
 const MULTIPART_THRESHOLD = 100 * 1024 * 1024; // 100 MiB
+const APPWRITE_MIGRATION_LIMIT = 5 * 1024 * 1024 * 1024; // 5 GiB
 const MIN_CHUNK = 5 * 1024 * 1024; // 5 MiB (R2 minimum)
 const MAX_CHUNK = 100 * 1024 * 1024; // 100 MiB
 const TARGET_PARTS = 100;
@@ -157,6 +160,7 @@ export class UploadManager {
 		if (resolved === 'auto' || resolved === undefined) {
 			return resolveAutoDestination(sizeBytes ?? 0, this.getRecommended());
 		}
+		if (resolved === 'fast') return 'r2';
 		return resolved === 'appwrite' ? 'appwrite' : 'r2';
 	}
 
@@ -284,7 +288,8 @@ export class UploadManager {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				upload_id: init.upload_id,
-				is_main_storage: this.isMain
+				is_main_storage: this.isMain,
+				migrate_to_appwrite: file.migrateToAppwrite
 			}),
 			signal: file.controller.signal
 		});
@@ -405,7 +410,8 @@ export class UploadManager {
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({
 							upload_id: opts.uploadId,
-							parts: opts.parts.map((p) => ({ PartNumber: p.PartNumber, ETag: p.ETag }))
+							parts: opts.parts.map((p) => ({ PartNumber: p.PartNumber, ETag: p.ETag })),
+							migrate_to_appwrite: file.migrateToAppwrite
 						}),
 						signal: opts.signal
 					});
@@ -677,16 +683,23 @@ export class UploadManager {
 
 	// ─── Public API (legacy-compatible) ───────────────────────────────────────
 
-	addFile(source: File, destination?: UploadDestination | 'auto') {
+	addFile(source: File, destination?: UploadIntent) {
 		try {
 			isAllowedFile(source, this.options);
 
+			const intent =
+				destination ??
+				(typeof this.options.destination === 'function'
+					? this.options.destination()
+					: this.options.destination);
 			const resolvedDestination =
 				destination === undefined
 					? this.getDefaultDestination(source.size)
 					: destination === 'auto'
 						? resolveAutoDestination(source.size, this.getRecommended())
-						: destination;
+						: destination === 'fast'
+							? 'r2'
+							: destination;
 			const file: UploadFileState = {
 				id: crypto.randomUUID(),
 				name: source.name,
@@ -694,6 +707,7 @@ export class UploadManager {
 				type: source.type || 'application/octet-stream',
 				source,
 				destination: resolvedDestination,
+				migrateToAppwrite: intent === 'fast' && source.size <= APPWRITE_MIGRATION_LIMIT,
 				progress: { percentage: 0, uploadComplete: false },
 				controller: new AbortController()
 			};

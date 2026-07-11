@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { Lightning, CaretDown, CloudArrowUp, Database } from 'phosphor-svelte';
 	import { onMount } from 'svelte';
+	import type { Attachment } from 'svelte/attachments';
 
-	type Destination = 'r2' | 'appwrite' | 'auto';
+	type Destination = 'r2' | 'appwrite' | 'auto' | 'fast';
 
 	interface Props {
 		onUpload: (destination: Destination) => void;
@@ -13,14 +14,14 @@
 
 	let dropdownOpen = $state(false);
 	let rootEl: HTMLDivElement | null = $state(null);
+	const captureRoot: Attachment<HTMLDivElement> = (node) => {
+		rootEl = node;
+		return () => (rootEl = null);
+	};
 
 	function handlePrimaryClick() {
 		if (disabled) return;
-		// Fast Upload defers to admin's recommended_upload_destination — 'auto'
-		// tells the upload manager to honour the service-wide setting (r2 /
-		// appwrite / hybrid) via the existing mechanism until a dedicated
-		// Fast Upload pipeline replaces this call.
-		onUpload('auto');
+		onUpload('fast');
 	}
 
 	function handleOptionClick(dest: Destination) {
@@ -51,7 +52,7 @@
 	});
 </script>
 
-<div class="relative inline-flex items-center gap-1.5" bind:this={rootEl}>
+<div class="relative inline-flex items-center gap-1.5" {@attach captureRoot}>
 	<button
 		type="button"
 		onclick={handlePrimaryClick}
@@ -75,7 +76,12 @@
 		title="Wybierz miejsce przesyłania"
 		class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-gray-100 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-zinc-800"
 	>
-		<CaretDown class="h-4 w-4 transition-transform duration-150 {dropdownOpen ? 'rotate-180' : ''} motion-reduce:transition-none" weight="bold" />
+		<CaretDown
+			class="h-4 w-4 transition-transform duration-150 {dropdownOpen
+				? 'rotate-180'
+				: ''} motion-reduce:transition-none"
+			weight="bold"
+		/>
 	</button>
 
 	{#if dropdownOpen}

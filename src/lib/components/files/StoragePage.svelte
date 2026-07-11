@@ -34,7 +34,7 @@
 	import { page } from '$app/state';
 
 	let showCreateFolder = $state(false);
-	let pendingDestination = $state<'r2' | 'appwrite' | 'auto'>('auto');
+	let pendingDestination = $state<'r2' | 'appwrite' | 'auto' | 'fast'>('auto');
 	let isDragOver = $state(false);
 	let dragCounter = $state(0);
 
@@ -85,7 +85,7 @@
 	let uploadCompletionBuffer = $state<UploadResult[]>([]);
 	let uploadToastTimer: ReturnType<typeof setTimeout> | null = $state(null);
 
-	function startUpload(destination: 'r2' | 'appwrite' | 'auto') {
+	function startUpload(destination: 'r2' | 'appwrite' | 'auto' | 'fast') {
 		pendingDestination = destination;
 		document.getElementById('file-input')?.click();
 	}
@@ -248,16 +248,16 @@
 				{/if}
 
 				<div class="hidden flex-wrap items-center gap-2 lg:flex">
+					<UploadSplitButton onUpload={startUpload} />
+
 					<button
 						type="button"
 						onclick={() => (showCreateFolder = true)}
-						class="flex items-center gap-1.5 rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm font-medium text-text-main transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800"
+						class="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border-line bg-transparent px-3 text-sm font-medium text-text-main transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:outline-none motion-reduce:transition-none"
 					>
 						<FolderPlus class="h-4 w-4" />
 						<span>Nowy folder</span>
 					</button>
-
-					<UploadSplitButton onUpload={startUpload} />
 				</div>
 			</div>
 		</div>

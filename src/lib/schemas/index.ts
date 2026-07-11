@@ -100,7 +100,8 @@ export const uploadInitSchema = z.object({
 
 export const uploadActionSchema = z.object({
 	upload_id: z.string().min(1, 'upload_id jest wymagane'),
-	is_main_storage: z.boolean().optional()
+	is_main_storage: z.boolean().optional(),
+	migrate_to_appwrite: z.boolean().optional()
 });
 
 export const multipartPartSchema = z.object({
@@ -110,7 +111,8 @@ export const multipartPartSchema = z.object({
 
 export const multipartCompleteSchema = z.object({
 	upload_id: z.string().min(1, 'upload_id jest wymagane'),
-	parts: z.array(multipartPartSchema).min(1, 'parts nie może być puste')
+	parts: z.array(multipartPartSchema).min(1, 'parts nie może być puste'),
+	migrate_to_appwrite: z.boolean().optional()
 });
 
 export const multipartAbortSchema = z.object({

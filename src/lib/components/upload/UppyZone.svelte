@@ -6,7 +6,7 @@
 
 	let { uppyState, onMobileUpload, onMobileNewFolder } = $props<{
 		uppyState: UppyState;
-		onMobileUpload?: (destination: 'r2' | 'appwrite' | 'auto') => void;
+		onMobileUpload?: (destination: 'r2' | 'appwrite' | 'auto' | 'fast') => void;
 		onMobileNewFolder?: () => void;
 	}>();
 

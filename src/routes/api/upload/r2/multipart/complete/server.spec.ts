@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const multipartComplete = vi.hoisted(() => vi.fn());
+const requestUserUnisourceV2 = vi.hoisted(() => vi.fn());
 
 vi.mock('$lib/server/unisource', () => ({
 	createUserUnisourceClient: () => ({
 		upload: { multipartComplete }
-	})
+	}),
+	requestUserUnisourceV2
 }));
 
 vi.mock('$env/dynamic/private', () => ({ env: {} }));
@@ -28,6 +30,7 @@ function makeRequest(body: unknown) {
 describe('/api/upload/r2/multipart/complete POST', () => {
 	beforeEach(() => {
 		multipartComplete.mockReset();
+		requestUserUnisourceV2.mockReset();
 	});
 
 	it('completes a multipart upload', async () => {
@@ -61,6 +64,29 @@ describe('/api/upload/r2/multipart/complete POST', () => {
 		} as never);
 
 		expect(response.status).toBe(401);
+	});
+
+	it('forwards the Fast Upload migration request', async () => {
+		requestUserUnisourceV2.mockResolvedValue({ item: { id: 'mp-2', migration_queued: true } });
+		await POST(
+			makeRequest({
+				upload_id: 'mp-2',
+				parts: [{ PartNumber: 1, ETag: 'etag' }],
+				migrate_to_appwrite: true
+			})
+		);
+		expect(requestUserUnisourceV2).toHaveBeenCalledWith(
+			expect.anything(),
+			'POST',
+			'/v2/upload/r2/multipart/complete',
+			{
+				body: {
+					upload_id: 'mp-2',
+					parts: [{ PartNumber: 1, ETag: 'etag' }],
+					migrate_to_appwrite: true
+				}
+			}
+		);
 	});
 
 	it('returns 400 for missing upload_id', async () => {

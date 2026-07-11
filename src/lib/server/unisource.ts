@@ -97,6 +97,24 @@ export async function requestAdminUnisourceV2<T>(
 	return (await response.json()) as T;
 }
 
+/** Raw JWT-scoped V2 request for contracts newer than the installed SDK. */
+export async function requestUserUnisourceV2<T>(
+	event: RequestEvent,
+	method: string,
+	path: string,
+	options: V2RawOptions = {}
+): Promise<T> {
+	const { account } = createSessionClient(event);
+	const { serviceId } = getConfig(event);
+	const userId = event.locals.user?.$id ?? (await account.get()).$id;
+	try {
+		await ensureServiceUserAccess(event, userId, serviceId);
+	} catch {
+		// Preserve the normal JWT request as the authoritative access check.
+	}
+	return requestAdminUnisourceV2<T>(event, method, path, options);
+}
+
 async function ensureServiceUserAccess(event: RequestEvent, userId: string, serviceId: string) {
 	const cacheKey = `${serviceId}:${userId}`;
 	let pending = ensuredServiceUsers.get(cacheKey);

@@ -20,4 +20,16 @@ describe('storage page breadcrumb UX', () => {
 		expect(source).toContain("if (rootHref === '?') return `?folder=${folderId}`;");
 		expect(source).toContain('href={folderHref(crumb.id)}');
 	});
+
+	it('keeps Fast Upload primary and New Folder secondary in the desktop toolbar', () => {
+		const fastUploadIndex = source.indexOf('<UploadSplitButton onUpload={startUpload} />');
+		const newFolderIndex = source.indexOf('<span>Nowy folder</span>');
+
+		expect(fastUploadIndex).toBeGreaterThan(-1);
+		expect(newFolderIndex).toBeGreaterThan(fastUploadIndex);
+		expect(source).toContain(
+			'h-10 items-center gap-1.5 rounded-lg border border-border-line bg-transparent'
+		);
+		expect(source).toContain('focus-visible:ring-2 focus-visible:ring-primary/50');
+	});
 });

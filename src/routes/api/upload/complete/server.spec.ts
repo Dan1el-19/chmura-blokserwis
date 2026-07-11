@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const complete = vi.hoisted(() => vi.fn());
+const requestUserUnisourceV2 = vi.hoisted(() => vi.fn());
 
 vi.mock('$lib/server/unisource', () => ({
 	createUserUnisourceClient: () => ({
 		upload: { complete }
-	})
+	}),
+	requestUserUnisourceV2
 }));
 
 vi.mock('$env/dynamic/private', () => ({ env: {} }));
@@ -28,6 +30,7 @@ function makeRequest(body: unknown, labels: string[] = ['plus']) {
 describe('/api/upload/complete POST', () => {
 	beforeEach(() => {
 		complete.mockReset();
+		requestUserUnisourceV2.mockReset();
 	});
 
 	it('completes a standard upload', async () => {
@@ -54,6 +57,17 @@ describe('/api/upload/complete POST', () => {
 		expect(response.status).toBe(200);
 		expect(body).toEqual({ id: 'file-2', name: 'main.txt', size: 2048 });
 		expect(complete).toHaveBeenCalledWith('up-2', undefined, { isMainStorage: true });
+	});
+
+	it('forwards the Fast Upload migration request', async () => {
+		requestUserUnisourceV2.mockResolvedValue({ item: { id: 'up-3', migration_queued: true } });
+		await POST(makeRequest({ upload_id: 'up-3', migrate_to_appwrite: true }));
+		expect(requestUserUnisourceV2).toHaveBeenCalledWith(
+			expect.anything(),
+			'POST',
+			'/v2/upload/complete',
+			{ body: { upload_id: 'up-3', is_main_storage: false, migrate_to_appwrite: true } }
+		);
 	});
 
 	it('returns 401 when user is missing', async () => {

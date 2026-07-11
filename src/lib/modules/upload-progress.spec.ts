@@ -151,4 +151,24 @@ describe('UploadManager progress state', () => {
 
 		expect(manager.files[0].destination).toBe('appwrite');
 	});
+
+	it('forces Fast Upload through R2 and marks eligible files for Appwrite migration', () => {
+		const manager = new UploadManager({ destination: () => 'fast' });
+		(manager as unknown as { uploadFile: () => Promise<void> }).uploadFile = async () => undefined;
+
+		manager.addFile(new File(['contents'], 'fast.txt', { type: 'text/plain' }));
+
+		expect(manager.files[0]).toMatchObject({ destination: 'r2', migrateToAppwrite: true });
+	});
+
+	it('keeps Fast Upload files above 5 GiB in R2 without migration', () => {
+		const manager = new UploadManager({ destination: () => 'fast' });
+		(manager as unknown as { uploadFile: () => Promise<void> }).uploadFile = async () => undefined;
+		const file = new File(['x'], 'huge.bin', { type: 'application/octet-stream' });
+		Object.defineProperty(file, 'size', { value: 5 * 1024 * 1024 * 1024 + 1 });
+
+		manager.addFile(file);
+
+		expect(manager.files[0]).toMatchObject({ destination: 'r2', migrateToAppwrite: false });
+	});
 });
