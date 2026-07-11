@@ -1,3 +1,9 @@
+## [2.14.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.13.0...v2.14.0) (2026-07-11)
+
+### Features
+
+* **frontend:** add correlated migration timeline ([fd73ce2](https://github.com/Dan1el-19/chmura-blokserwis/commit/fd73ce29f82c6fcc2011f3fdd3e338bb08145937))
+
 ## [2.13.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.12.0...v2.13.0) (2026-07-11)
 
 ### Features
