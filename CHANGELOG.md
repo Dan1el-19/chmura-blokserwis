@@ -1,3 +1,9 @@
+## [2.12.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.11.0...v2.12.0) (2026-07-11)
+
+### Features
+
+* **upload:** redesign upload section UI/UX ([4137a86](https://github.com/Dan1el-19/chmura-blokserwis/commit/4137a86b4d22f490e0ffbe3b806153a1cb577d07))
+
 ## [2.11.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.10.9...v2.11.0) (2026-07-10)
 
 ### Features
