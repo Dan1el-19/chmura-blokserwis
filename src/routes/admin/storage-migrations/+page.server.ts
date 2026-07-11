@@ -11,19 +11,51 @@ type MigrationRun = {
 	id: string;
 	status: MigrationStatus;
 	dry_run: boolean;
+	trigger: string | null;
+	requested_by: string | null;
 	files_total: number;
 	files_completed: number;
 	files_failed: number;
 	bytes_transferred: number;
+	progress_percent: number | null;
 	started_at: string | null;
 	finished_at: string | null;
+	duration_ms: number | null;
 };
 
 type MigrationEvent = {
 	id: string;
+	run_id: string;
+	item_id: string | null;
+	file_id: string | null;
+	event_type: string;
 	level: 'info' | 'warning' | 'error';
 	message: string;
 	file_name: string | null;
+	file_size: number | null;
+	trigger: string | null;
+	origin: string | null;
+	source: {
+		provider: 'r2';
+		bucket: string | null;
+		key: string | null;
+	} | null;
+	destination: {
+		provider: 'appwrite';
+		bucket: string | null;
+		file_id: string | null;
+	} | null;
+	from_state: string | null;
+	to_state: string | null;
+	bytes_completed: number | null;
+	expected_size: number | null;
+	progress_percent: number | null;
+	attempt_count: number | null;
+	retry_at: string | null;
+	error_code: string | null;
+	error_message: string | null;
+	duration_ms: number | null;
+	metadata: Record<string, unknown>;
 	created_at: string;
 };
 
@@ -40,46 +72,245 @@ type RawMigrationRun = {
 	id: string;
 	status: MigrationStatus;
 	dry_run: number | boolean;
+	trigger?: unknown;
+	origin?: unknown;
+	requested_by?: unknown;
 	planned_count: number;
 	migrated_count: number;
 	failed_count: number;
 	bytes_migrated: number;
-	started_at: number | null;
-	finished_at: number | null;
+	progress_percent?: unknown;
+	started_at: number | string | null;
+	finished_at: number | string | null;
+	duration_seconds?: unknown;
+	duration_ms?: unknown;
 };
 
 type RawMigrationEvent = {
 	id: string;
 	event_type: string;
-	created_at: number;
+	run_id?: unknown;
+	item_id?: unknown;
+	file_id?: unknown;
+	bytes_completed?: unknown;
+	metadata?: unknown;
+	filename?: unknown;
+	file_name?: unknown;
+	file_size?: unknown;
+	trigger?: unknown;
+	origin?: unknown;
+	source_provider?: unknown;
+	source_bucket?: unknown;
+	source_storage_key?: unknown;
+	destination_provider?: unknown;
+	destination_bucket?: unknown;
+	destination_file_id?: unknown;
+	state_from?: unknown;
+	state_to?: unknown;
+	current_state?: unknown;
+	expected_size?: unknown;
+	progress_percent?: unknown;
+	attempt_count?: unknown;
+	next_retry_at?: unknown;
+	retry_at?: unknown;
+	duration_seconds?: unknown;
+	duration_ms?: unknown;
+	error_code?: unknown;
+	error_message?: unknown;
+	message?: unknown;
+	level?: unknown;
+	created_at: number | string;
 };
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+	return value !== null && typeof value === 'object' && !Array.isArray(value)
+		? (value as Record<string, unknown>)
+		: null;
+}
+
+function parseMetadata(value: unknown): Record<string, unknown> {
+	const record = asRecord(value);
+	if (record) return record;
+	if (typeof value !== 'string') return value == null ? {} : { raw: value };
+
+	try {
+		const parsed = JSON.parse(value) as unknown;
+		return asRecord(parsed) ?? { raw: parsed };
+	} catch {
+		return { raw: value };
+	}
+}
+
+function stringValue(...values: unknown[]): string | null {
+	for (const value of values) {
+		if (typeof value === 'string' && value.trim()) return value;
+	}
+	return null;
+}
+
+function numberValue(...values: unknown[]): number | null {
+	for (const value of values) {
+		if (typeof value === 'number' && Number.isFinite(value)) return value;
+		if (typeof value === 'string' && value.trim()) {
+			const number = Number(value);
+			if (Number.isFinite(number)) return number;
+		}
+	}
+	return null;
+}
+
+function timestampToIso(value: unknown): string | null {
+	if (typeof value === 'string' && value.trim() && !Number.isFinite(Number(value))) {
+		const timestamp = Date.parse(value);
+		return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+	}
+
+	const timestamp = numberValue(value);
+	if (timestamp === null) return null;
+	const milliseconds = Math.abs(timestamp) >= 1_000_000_000_000 ? timestamp : timestamp * 1000;
+	const date = new Date(milliseconds);
+	return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function eventLevel(eventType: string, explicitLevel: unknown): MigrationEvent['level'] {
+	if (explicitLevel === 'info' || explicitLevel === 'warning' || explicitLevel === 'error') {
+		return explicitLevel;
+	}
+	if (
+		eventType.includes('retry') ||
+		eventType.includes('skipped') ||
+		eventType.includes('cancelled') ||
+		eventType === 'source_cleanup_failed'
+	) {
+		return 'warning';
+	}
+	return eventType.includes('failed') ||
+		eventType.includes('error') ||
+		eventType.includes('conflicted')
+		? 'error'
+		: 'info';
+}
+
 function mapRun(run: RawMigrationRun): MigrationRun {
+	const startedAt = timestampToIso(run.started_at);
+	const finishedAt = timestampToIso(run.finished_at);
+	const filesTotal = Number(run.planned_count ?? 0);
+	const filesCompleted = Number(run.migrated_count ?? 0);
+	const filesFailed = Number(run.failed_count ?? 0);
+	const explicitDurationMs = numberValue(run.duration_ms);
+	const durationSeconds = numberValue(run.duration_seconds);
+	const calculatedDurationMs =
+		startedAt && finishedAt ? Math.max(0, Date.parse(finishedAt) - Date.parse(startedAt)) : null;
 	return {
 		id: run.id,
 		status: run.status,
 		dry_run: Boolean(run.dry_run),
-		files_total: Number(run.planned_count ?? 0),
-		files_completed: Number(run.migrated_count ?? 0),
-		files_failed: Number(run.failed_count ?? 0),
+		trigger: stringValue(run.origin, run.trigger),
+		requested_by: stringValue(run.requested_by),
+		files_total: filesTotal,
+		files_completed: filesCompleted,
+		files_failed: filesFailed,
 		bytes_transferred: Number(run.bytes_migrated ?? 0),
-		started_at: run.started_at ? new Date(run.started_at * 1000).toISOString() : null,
-		finished_at: run.finished_at ? new Date(run.finished_at * 1000).toISOString() : null
+		progress_percent:
+			numberValue(run.progress_percent) ??
+			(filesTotal > 0 ? Math.min(100, ((filesCompleted + filesFailed) / filesTotal) * 100) : null),
+		started_at: startedAt,
+		finished_at: finishedAt,
+		duration_ms:
+			explicitDurationMs ??
+			(durationSeconds === null ? calculatedDurationMs : durationSeconds * 1000)
 	};
 }
 
 function mapEvent(event: RawMigrationEvent): MigrationEvent {
-	const level = event.event_type.includes('failed')
-		? 'error'
-		: event.event_type.includes('retry') || event.event_type.includes('skipped')
-			? 'warning'
-			: 'info';
+	const metadata = parseMetadata(event.metadata);
+	const source = asRecord(metadata.source);
+	const destination = asRecord(metadata.destination);
+	const error = asRecord(metadata.error);
+	const sourceBucket = stringValue(event.source_bucket, metadata.source_bucket, source?.bucket);
+	const sourceKey = stringValue(
+		event.source_storage_key,
+		metadata.source_storage_key,
+		metadata.source_key,
+		source?.key
+	);
+	const sourceProvider = stringValue(
+		event.source_provider,
+		metadata.source_provider,
+		source?.provider
+	);
+	const destinationBucket = stringValue(
+		event.destination_bucket,
+		metadata.destination_bucket,
+		destination?.bucket
+	);
+	const destinationFileId = stringValue(
+		event.destination_file_id,
+		metadata.destination_file_id,
+		metadata.appwrite_file_id,
+		destination?.file_id
+	);
+	const destinationProvider = stringValue(
+		event.destination_provider,
+		metadata.destination_provider,
+		destination?.provider
+	);
+	const durationMs = numberValue(event.duration_ms, metadata.duration_ms);
+	const durationSeconds = numberValue(event.duration_seconds, metadata.duration_seconds);
+	const createdAt = timestampToIso(event.created_at) ?? new Date(0).toISOString();
+	const eventType = event.event_type || 'unknown';
+	const errorMessage = stringValue(
+		event.error_message,
+		metadata.error_message,
+		error?.message,
+		typeof metadata.error === 'string' ? metadata.error : null
+	);
 	return {
 		id: event.id,
-		level,
-		message: event.event_type.replaceAll('_', ' '),
-		file_name: null,
-		created_at: new Date(event.created_at * 1000).toISOString()
+		run_id: stringValue(event.run_id, metadata.run_id) ?? '',
+		item_id: stringValue(event.item_id, metadata.item_id),
+		file_id: stringValue(event.file_id, metadata.file_id),
+		event_type: eventType,
+		level: eventLevel(eventType, event.level ?? metadata.level),
+		message: stringValue(event.message, metadata.message) ?? eventType.replaceAll('_', ' '),
+		file_name: stringValue(event.filename, event.file_name, metadata.filename, metadata.file_name),
+		file_size: numberValue(event.file_size, metadata.file_size, metadata.size),
+		trigger: stringValue(event.trigger, metadata.trigger),
+		origin: stringValue(event.origin, metadata.origin),
+		source:
+			sourceProvider === 'r2' || sourceBucket !== null || sourceKey !== null
+				? { provider: 'r2', bucket: sourceBucket, key: sourceKey }
+				: null,
+		destination:
+			destinationProvider === 'appwrite' || destinationBucket !== null || destinationFileId !== null
+				? { provider: 'appwrite', bucket: destinationBucket, file_id: destinationFileId }
+				: null,
+		from_state: stringValue(
+			event.state_from,
+			metadata.state_from,
+			metadata.from_state,
+			metadata.previous_state
+		),
+		to_state: stringValue(
+			event.state_to,
+			event.current_state,
+			metadata.state_to,
+			metadata.to_state,
+			metadata.current_state,
+			metadata.state
+		),
+		bytes_completed: numberValue(event.bytes_completed, metadata.bytes_completed),
+		expected_size: numberValue(event.expected_size, metadata.expected_size),
+		progress_percent: numberValue(event.progress_percent, metadata.progress_percent),
+		attempt_count: numberValue(event.attempt_count, metadata.attempt_count, metadata.attempt),
+		retry_at: timestampToIso(
+			event.next_retry_at ?? event.retry_at ?? metadata.next_retry_at ?? metadata.retry_at
+		),
+		error_code: stringValue(event.error_code, metadata.error_code, error?.code),
+		error_message: errorMessage,
+		duration_ms: durationMs ?? (durationSeconds === null ? null : durationSeconds * 1000),
+		metadata,
+		created_at: createdAt
 	};
 }
 
