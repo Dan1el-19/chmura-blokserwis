@@ -1,3 +1,9 @@
+## [2.13.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.12.0...v2.13.0) (2026-07-11)
+
+### Features
+
+* **frontend:** implement fast upload migration flow ([1161a7d](https://github.com/Dan1el-19/chmura-blokserwis/commit/1161a7db490de3c033c48301c0a0ac91b636270f))
+
 ## [2.12.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.11.0...v2.12.0) (2026-07-11)
 
 ### Features
