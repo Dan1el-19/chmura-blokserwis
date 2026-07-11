@@ -2,7 +2,7 @@
 	"name": "chmura-blokserwis",
 	"private": true,
 	"version": "2.11.0",
-	"packageManager": "pnpm@11.0.9",
+	"packageManager": "pnpm@11.10.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev --host",
@@ -25,10 +25,8 @@
 		"deploy:beta:ci": "pnpm build:beta && wrangler deploy --env beta --secrets-file \"$RUNNER_TEMP/beta-secrets.json\"",
 		"deploy:beta": "pnpm build:beta && wrangler deploy --env beta"
 	},
-	"pnpm": {
-		"overrides": {
-			"@smithy/smithy-client": "4.13.0"
-		}
+	"overrides": {
+		"@smithy/smithy-client": "4.13.0"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20260520.1",

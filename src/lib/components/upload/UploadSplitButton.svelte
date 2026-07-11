@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CloudArrowUp, CaretDown, ArrowsLeftRight, Database } from 'phosphor-svelte';
+	import { Lightning, CaretDown, CloudArrowUp, Database } from 'phosphor-svelte';
 	import { onMount } from 'svelte';
 
 	type Destination = 'r2' | 'appwrite' | 'auto';
@@ -16,9 +16,10 @@
 
 	function handlePrimaryClick() {
 		if (disabled) return;
-		// Primary action defers to admin's recommended_upload_destination.
-		// 'auto' tells the upload manager to honour the service-wide setting
-		// (r2 / appwrite / hybrid) instead of hard-picking a backend client side.
+		// Fast Upload defers to admin's recommended_upload_destination — 'auto'
+		// tells the upload manager to honour the service-wide setting (r2 /
+		// appwrite / hybrid) via the existing mechanism until a dedicated
+		// Fast Upload pipeline replaces this call.
 		onUpload('auto');
 	}
 
@@ -50,44 +51,46 @@
 	});
 </script>
 
-<div class="relative inline-flex" bind:this={rootEl}>
-	<div
-		class="flex overflow-hidden rounded-md border border-primary shadow-sm"
-		class:opacity-50={disabled}
+<div class="relative inline-flex items-center gap-1.5" bind:this={rootEl}>
+	<button
+		type="button"
+		onclick={handlePrimaryClick}
+		{disabled}
+		class="group inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-primary/90 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:active:scale-100 motion-reduce:transition-none motion-reduce:active:scale-100"
 	>
-		<button
-			type="button"
-			onclick={handlePrimaryClick}
-			{disabled}
-			class="flex items-center gap-2 bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus:outline-none disabled:cursor-not-allowed"
-		>
-			<CloudArrowUp class="h-4 w-4" weight="bold" />
-			<span>Prześlij</span>
-		</button>
+		<Lightning
+			class="h-4 w-4 shrink-0 transition-transform duration-150 group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+			weight="fill"
+		/>
+		<span>Fast Upload</span>
+	</button>
 
-		<button
-			type="button"
-			onclick={toggleDropdown}
-			{disabled}
-			aria-haspopup="menu"
-			aria-expanded={dropdownOpen}
-			aria-label="Wybierz miejsce uploadu"
-			class="flex items-center justify-center border-l border-white/20 bg-primary px-2 text-white transition-colors hover:bg-primary/90 focus:outline-none disabled:cursor-not-allowed"
-		>
-			<CaretDown class="h-4 w-4" weight="bold" />
-		</button>
-	</div>
+	<button
+		type="button"
+		onclick={toggleDropdown}
+		{disabled}
+		aria-haspopup="menu"
+		aria-expanded={dropdownOpen}
+		aria-label="Więcej opcji przesyłania"
+		title="Wybierz miejsce przesyłania"
+		class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-gray-100 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-zinc-800"
+	>
+		<CaretDown class="h-4 w-4 transition-transform duration-150 {dropdownOpen ? 'rotate-180' : ''} motion-reduce:transition-none" weight="bold" />
+	</button>
 
 	{#if dropdownOpen}
 		<div
-			class="absolute top-full right-0 z-50 mt-1 min-w-[260px] rounded-md border border-border-line bg-bg-panel shadow-lg"
+			class="absolute top-full right-0 z-50 mt-2 min-w-[240px] overflow-hidden rounded-lg border border-border-line bg-bg-panel py-1 shadow-lg"
 			role="menu"
 		>
+			<p class="px-3 pt-1.5 pb-1 text-[11px] font-medium tracking-wide text-text-muted uppercase">
+				Wybierz miejsce
+			</p>
 			<button
 				type="button"
 				role="menuitem"
 				onclick={() => handleOptionClick('r2')}
-				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-main transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800"
+				class="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-text-main transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none dark:hover:bg-zinc-800 dark:focus-visible:bg-zinc-800"
 			>
 				<CloudArrowUp class="h-4 w-4 text-text-muted" />
 				<span>Cloudflare R2</span>
@@ -96,7 +99,7 @@
 				type="button"
 				role="menuitem"
 				onclick={() => handleOptionClick('appwrite')}
-				class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-text-main transition-colors last:rounded-b-md hover:bg-gray-50 dark:hover:bg-zinc-800"
+				class="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-text-main transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none dark:hover:bg-zinc-800 dark:focus-visible:bg-zinc-800"
 			>
 				<Database class="h-4 w-4 text-text-muted" />
 				<span>Appwrite Storage</span>
