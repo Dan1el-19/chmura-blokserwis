@@ -1,3 +1,9 @@
+## [2.16.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.15.1...v2.16.0) (2026-07-15)
+
+### Features
+
+* **frontend:** curate quotation AI picker ([eacb3d3](https://github.com/Dan1el-19/chmura-blokserwis/commit/eacb3d31956f2c0c4f25badc3c58af35b49ecd71))
+
 ## [2.15.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.15.0...v2.15.1) (2026-07-15)
 
 ### Bug Fixes
