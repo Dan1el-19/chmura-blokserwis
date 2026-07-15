@@ -62,6 +62,12 @@ export interface UpdateQuotationPayload extends Partial<QuotationDraftInput> {
 export interface QuotationModelPrice {
 	id: string;
 	name: string;
+	description?: string;
+	category?: string;
+	useCase?: string;
+	defaultFor?: string | string[];
+	reasoningSupported?: boolean;
+	reasoningEfforts?: string[];
 	promptPriceUsd?: string;
 	completionPriceUsd?: string;
 	recommended?: boolean;

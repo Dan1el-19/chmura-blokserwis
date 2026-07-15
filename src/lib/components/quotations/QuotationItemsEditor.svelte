@@ -128,7 +128,7 @@
 					<div
 						class="grid gap-2 rounded-md border border-border-line bg-bg-panel p-3 lg:grid-cols-[minmax(12rem,1fr)_6rem_6rem_8rem_2.5rem]"
 					>
-						<div class="grid gap-2">
+						<div class="grid min-w-0 gap-2">
 							<input
 								{disabled}
 								aria-label="Nazwa pozycji"
@@ -145,7 +145,7 @@
 								class="h-9 rounded-md border border-border-line bg-bg-app px-2 text-xs text-text-main"
 							/>
 						</div>
-						<label class="grid gap-1 text-xs text-text-muted"
+						<label class="grid min-w-0 gap-1 text-xs text-text-muted"
 							>Ilość<input
 								{disabled}
 								type="number"
@@ -153,25 +153,25 @@
 								step="0.001"
 								value={item.quantity}
 								oninput={(event) => updateItem(itemIndex, 'quantity', event.currentTarget.value)}
-								class="h-9 rounded-md border border-border-line bg-bg-app px-2 font-mono text-text-main"
+								class="h-9 min-w-0 w-full rounded-md border border-border-line bg-bg-app px-2 font-mono text-text-main"
 							/></label
 						>
-						<label class="grid gap-1 text-xs text-text-muted"
+						<label class="grid min-w-0 gap-1 text-xs text-text-muted"
 							>Jednostka<input
 								{disabled}
 								value={item.unit}
 								oninput={(event) => updateItem(itemIndex, 'unit', event.currentTarget.value)}
-								class="h-9 rounded-md border border-border-line bg-bg-app px-2 text-text-main"
+								class="h-9 min-w-0 w-full rounded-md border border-border-line bg-bg-app px-2 text-text-main"
 							/></label
 						>
-						<label class="grid gap-1 text-xs text-text-muted"
+						<label class="grid min-w-0 gap-1 text-xs text-text-muted"
 							>Cena brutto<input
 								{disabled}
 								inputmode="decimal"
 								value={(item.unitGrossCents / 100).toFixed(2)}
 								oninput={(event) =>
 									updateItem(itemIndex, 'unitGrossCents', event.currentTarget.value)}
-								class="h-9 rounded-md border border-border-line bg-bg-app px-2 text-right font-mono text-text-main"
+								class="h-9 min-w-0 w-full rounded-md border border-border-line bg-bg-app px-2 text-right font-mono text-text-main"
 							/><span class="text-right">{money.format(item.totalGrossCents / 100)}</span></label
 						>
 						<button

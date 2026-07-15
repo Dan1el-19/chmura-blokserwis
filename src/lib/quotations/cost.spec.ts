@@ -43,6 +43,25 @@ describe('quotation AI cost', () => {
 		).toBeNull();
 	});
 
+	it('uses a conservative completion budget when reasoning is enabled', () => {
+		const estimate = estimateQuotationAiCost(
+			{
+				id: 'reasoning-model',
+				name: 'Reasoning model',
+				promptPriceUsd: '0.000001',
+				completionPriceUsd: '0.000002'
+			},
+			{ reasoningEnabled: true }
+		);
+
+		expect(estimate).toMatchObject({
+			promptTokens: 3_000,
+			completionTokens: 3_000,
+			totalCostUsdMicros: 9_000,
+			isExact: false
+		});
+	});
+
 	it('provides stable token and localized display helpers', () => {
 		expect(estimateTokenCount('12345678')).toBe(2);
 		expect(estimateTokenCount('')).toBe(0);

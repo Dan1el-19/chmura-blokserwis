@@ -2,6 +2,7 @@ import type { QuotationModelPrice } from './types';
 
 export const DEFAULT_AI_PROMPT_TOKENS = 3_000;
 export const DEFAULT_AI_COMPLETION_TOKENS = 1_500;
+export const DEFAULT_AI_REASONING_COMPLETION_TOKENS = 3_000;
 
 export interface QuotationAiCostEstimate {
 	promptTokens: number;
@@ -14,14 +15,21 @@ export interface QuotationAiCostEstimate {
 
 export function estimateQuotationAiCost(
 	model: QuotationModelPrice,
-	options: { promptTokens?: number; completionTokens?: number } = {}
+	options: {
+		promptTokens?: number;
+		completionTokens?: number;
+		reasoningEnabled?: boolean;
+	} = {}
 ): QuotationAiCostEstimate | null {
 	const promptPrice = parseUsdPerToken(model.promptPriceUsd);
 	const completionPrice = parseUsdPerToken(model.completionPriceUsd);
 	if (promptPrice === null || completionPrice === null) return null;
 
 	const promptTokens = tokenCount(options.promptTokens, DEFAULT_AI_PROMPT_TOKENS);
-	const completionTokens = tokenCount(options.completionTokens, DEFAULT_AI_COMPLETION_TOKENS);
+	const completionTokens = tokenCount(
+		options.completionTokens,
+		options.reasoningEnabled ? DEFAULT_AI_REASONING_COMPLETION_TOKENS : DEFAULT_AI_COMPLETION_TOKENS
+	);
 	const promptCostUsdMicros = Math.round(promptTokens * promptPrice * 1_000_000);
 	const completionCostUsdMicros = Math.round(completionTokens * completionPrice * 1_000_000);
 

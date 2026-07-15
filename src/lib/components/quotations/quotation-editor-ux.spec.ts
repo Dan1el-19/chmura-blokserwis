@@ -17,4 +17,16 @@ describe('quotation editor critical UX contracts', () => {
 		expect(editor).not.toContain("quotation.status !== 'draft'");
 		expect(editor).toContain('Zatwierdź zmiany ponownie');
 	});
+
+	it('uses versioned manual model preference and action-specific automatic defaults', () => {
+		expect(editor).toContain("const MODEL_STORAGE_KEY = 'blokserwis:quotation-ai-model:v2'");
+		expect(editor).toContain("modelForAction('generate')");
+		expect(editor).toContain("modelForAction('revise_block')");
+		expect(editor).toContain('manualModelSelection = true');
+		expect(editor).toContain('window.localStorage.removeItem(MODEL_STORAGE_KEY)');
+	});
+
+	it('sends the reasoning choice for generation and revisions', () => {
+		expect(editor.match(/reasoningEnabled,/g)).toHaveLength(2);
+	});
 });
