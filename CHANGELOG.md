@@ -1,3 +1,9 @@
+## [2.15.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.15.0...v2.15.1) (2026-07-15)
+
+### Bug Fixes
+
+* **frontend:** prevent quotation hydration crash ([dc26676](https://github.com/Dan1el-19/chmura-blokserwis/commit/dc26676358008e276c02d68158c292bc46afd6f7))
+
 ## [2.15.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.14.0...v2.15.0) (2026-07-15)
 
 ### Features
