@@ -3,7 +3,7 @@
 	import { Toaster } from 'svelte-sonner';
 	import { page, navigating } from '$app/state';
 	import { afterNavigate } from '$app/navigation';
-	import { Folder, GearSix, Shield, RocketLaunch, Trash } from 'phosphor-svelte';
+	import { FileText, Folder, GearSix, Shield, RocketLaunch, Trash } from 'phosphor-svelte';
 	import DesktopSidebar from '$lib/components/layout/DesktopSidebar.svelte';
 	import MobileHeader from '$lib/components/layout/MobileHeader.svelte';
 	import MobileDrawer from '$lib/components/layout/MobileDrawer.svelte';
@@ -25,6 +25,13 @@
 			label: 'Pliki',
 			icon: Folder,
 			color: 'bg-blue-500',
+			roles: ['basic', 'plus', 'admin']
+		},
+		{
+			href: '/wyceny',
+			label: 'Wyceny',
+			icon: FileText,
+			color: 'bg-cyan-600',
 			roles: ['basic', 'plus', 'admin']
 		},
 		{
@@ -63,7 +70,9 @@
 
 	let pageTitle = $derived.by(() => {
 		const path = currentPath;
-		const navItem = allNavItems.find((item) => item.href === path);
+		const navItem = allNavItems.find(
+			(item) => item.href === path || (item.href !== '/' && path.startsWith(`${item.href}/`))
+		);
 		if (navItem) return `${navItem.label} | Chmura Blokserwis`;
 		if (path.startsWith('/login')) return 'Logowanie | Chmura Blokserwis';
 		if (path.startsWith('/admin/users')) {

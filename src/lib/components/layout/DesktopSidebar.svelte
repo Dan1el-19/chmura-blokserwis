@@ -32,11 +32,11 @@
 	</div>
 
 	<nav class="flex-1 space-y-1.5 overflow-y-auto p-5">
-		{#each primaryNavItems as item}
+		{#each primaryNavItems as item (item.href)}
 			<a
 				href={item.href}
 				class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors
-                           {currentPath === item.href
+                           {currentPath === item.href || currentPath.startsWith(`${item.href}/`)
 					? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
 					: 'text-text-muted hover:bg-gray-50 hover:text-text-main dark:hover:bg-zinc-800'}"
 			>

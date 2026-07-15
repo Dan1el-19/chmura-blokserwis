@@ -36,6 +36,7 @@
 		if (item.color === 'bg-emerald-500') return 'bg-emerald-50 dark:bg-emerald-900/20';
 		if (item.color === 'bg-violet-500') return 'bg-violet-50 dark:bg-violet-900/20';
 		if (item.color === 'bg-orange-500') return 'bg-orange-50 dark:bg-orange-900/20';
+		if (item.color === 'bg-cyan-600') return 'bg-cyan-50 dark:bg-cyan-900/20';
 		if (item.color === 'bg-red-500') return 'bg-red-50 dark:bg-red-900/20';
 		return 'bg-bg-panel';
 	}
@@ -56,11 +57,13 @@
 		in:fly={{ y: -20, duration: 300, easing: quintOut }}
 		out:fly={{ y: -10, duration: 150 }}
 	>
-		{#each primaryNavItems as item, i}
+		{#each primaryNavItems as item, i (item.href)}
 			<a
 				href={item.href}
 				class="flex items-center gap-4 rounded-full py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]
-								   {currentPath === item.href ? activeBgFor(item) : 'bg-bg-panel'}"
+								   {currentPath === item.href || currentPath.startsWith(`${item.href}/`)
+					? activeBgFor(item)
+					: 'bg-bg-panel'}"
 				in:fly={{ y: -24, duration: 280, delay: itemDelay(i), easing: backOut }}
 				out:scale={{ duration: 100, start: 0.95 }}
 			>

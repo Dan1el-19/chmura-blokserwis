@@ -64,4 +64,24 @@ describe('handle', () => {
 		expect(cookies.delete).toHaveBeenCalledWith('__session', { path: '/' });
 		expect(resolve).toHaveBeenCalledOnce();
 	});
+
+	it.each([
+		['/wyceny/quote-1', 'DENY'],
+		['/api/quotations/quote-1/preview', 'SAMEORIGIN']
+	])('sets the expected frame policy for %s', async (pathname, expectedPolicy) => {
+		accountGet.mockResolvedValue({ $id: 'user-1', labels: [] });
+		const event = {
+			url: new URL(`https://chmura.example${pathname}`),
+			cookies: { get: vi.fn(), delete: vi.fn() },
+			locals: {},
+			getClientAddress: vi.fn(() => '127.0.0.1')
+		};
+
+		const response = await handle({
+			event,
+			resolve: vi.fn(async () => new Response('ok'))
+		} as any);
+
+		expect(response.headers.get('X-Frame-Options')).toBe(expectedPolicy);
+	});
 });
