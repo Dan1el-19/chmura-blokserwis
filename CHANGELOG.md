@@ -1,3 +1,9 @@
+## [2.15.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.14.0...v2.15.0) (2026-07-15)
+
+### Features
+
+* **frontend:** add production quotation workspace ([cf859e1](https://github.com/Dan1el-19/chmura-blokserwis/commit/cf859e1d4333d0e02d2e4d675a68445e8568980d))
+
 ## [2.14.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.13.0...v2.14.0) (2026-07-11)
 
 ### Features
