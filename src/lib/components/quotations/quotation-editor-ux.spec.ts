@@ -7,7 +7,8 @@ describe('quotation editor critical UX contracts', () => {
 	it('uses the serialized autosave state machine and the shared price estimator', () => {
 		expect(editor).toContain("import { QuotationAutosave } from '$lib/quotations/autosave.svelte'");
 		expect(editor).toContain("import { estimateQuotationAiCost } from '$lib/quotations/cost'");
-		expect(editor).toContain('autosave.schedule(structuredClone($state.snapshot(document)))');
+		expect(editor).toContain('autosave.schedule(cloneJson($state.snapshot(document)))');
+		expect(editor).not.toContain('structuredClone(');
 		expect(editor).not.toContain('prompt * 0.004');
 	});
 

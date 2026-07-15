@@ -13,6 +13,9 @@
 	import QuotationPreview from './QuotationPreview.svelte';
 
 	type AnyRecord = Record<string, any>;
+	function cloneJson<T>(value: T): T {
+		return JSON.parse(JSON.stringify(value)) as T;
+	}
 	type SaveState = 'saved' | 'dirty' | 'saving' | 'error' | 'conflict';
 	type Props = {
 		quotation: AnyRecord;
@@ -30,8 +33,8 @@
 		operations = [],
 		versions = []
 	}: Props = $props();
-	let quotation = $state(untrack(() => structuredClone(initialQuotation)));
-	let document = $state(untrack(() => structuredClone(initialQuotation.document)));
+	let quotation = $state(untrack(() => cloneJson(initialQuotation)));
+	let document = $state(untrack(() => cloneJson(initialQuotation.document)));
 	let errorMessage = $state('');
 	let selectedModel = $state(
 		untrack(() => models.find((model) => model.recommended)?.id ?? models[0]?.id ?? '')
@@ -48,7 +51,7 @@
 	let modelOptions = $derived(models as any);
 	let editable = $derived(quotation.status !== 'archived');
 	const autosave = new QuotationAutosave<AnyRecord>({
-		initialDocument: untrack(() => structuredClone(document)),
+		initialDocument: untrack(() => cloneJson(document)),
 		initialLockVersion: untrack(() => quotation.lockVersion),
 		debounceMs: 1_000,
 		save: async (pendingDocument, expectedLockVersion, signal) => {
@@ -109,16 +112,16 @@
 	}
 	function acceptServerMutation(item: AnyRecord) {
 		quotation = item;
-		document = structuredClone(item.document);
-		autosave.replaceFromServer(structuredClone(item.document), item.lockVersion);
+		document = cloneJson(item.document);
+		autosave.replaceFromServer(cloneJson(item.document), item.lockVersion);
 		revision = item.lockVersion;
 	}
 	function markDirty() {
 		if (quotation.status === 'archived') return;
-		autosave.schedule(structuredClone($state.snapshot(document)));
+		autosave.schedule(cloneJson($state.snapshot(document)));
 	}
 	function replaceDocument(next: AnyRecord, shouldSave = true) {
-		document = structuredClone(next);
+		document = cloneJson(next);
 		if (shouldSave) markDirty();
 	}
 	async function api(path: string, init?: RequestInit) {
@@ -153,7 +156,7 @@
 			const latest = await api(`/api/quotations/${encodeURIComponent(quotation.id)}`);
 			const item = latest.item ?? latest.quotation ?? latest;
 			quotation = item;
-			document = structuredClone(item.document);
+			document = cloneJson(item.document);
 			revision = item.lockVersion;
 			autosave.resolveWithServer(item.document, item.lockVersion);
 		} catch (error) {
@@ -179,7 +182,7 @@
 		if (saveState !== 'saved') return;
 		aiBusy = true;
 		errorMessage = '';
-		undoDocument = structuredClone(document);
+		undoDocument = cloneJson($state.snapshot(document));
 		try {
 			const payload = await api(`/api/quotations/${encodeURIComponent(quotation.id)}/ai/generate`, {
 				method: 'POST',
@@ -205,7 +208,7 @@
 		if (saveState !== 'saved') return;
 		revisingId = blockId;
 		errorMessage = '';
-		undoDocument = structuredClone(document);
+		undoDocument = cloneJson($state.snapshot(document));
 		try {
 			const payload = await api(
 				`/api/quotations/${encodeURIComponent(quotation.id)}/ai/revise-block`,
