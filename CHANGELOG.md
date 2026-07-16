@@ -1,3 +1,9 @@
+## [2.17.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.16.0...v2.17.0) (2026-07-16)
+
+### Features
+
+* **frontend:** upraszczam wybor modelu AI ([fd8db90](https://github.com/Dan1el-19/chmura-blokserwis/commit/fd8db90227e865218c9c0cf72212b70753c7c437))
+
 ## [2.16.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.15.1...v2.16.0) (2026-07-15)
 
 ### Features
