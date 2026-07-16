@@ -1,3 +1,9 @@
+## [2.18.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.17.0...v2.18.0) (2026-07-16)
+
+### Features
+
+* **frontend:** stream quotation AI activity ([655a7e6](https://github.com/Dan1el-19/chmura-blokserwis/commit/655a7e65413403c7a2b9ed9ae6b8259fb7588538))
+
 ## [2.17.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.16.0...v2.17.0) (2026-07-16)
 
 ### Features
