@@ -4,6 +4,10 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { QuotationAutosave } from '$lib/quotations/autosave.svelte';
 	import { estimateQuotationAiCost } from '$lib/quotations/cost';
+	import {
+		consumeQuotationAiStream,
+		type QuotationAiStreamEvent
+	} from '$lib/quotations/ai-stream';
 	import { quotationDocumentToUpdatePayload } from '$lib/quotations/document';
 	import { modelReasoningEffort, quotationModelForAction } from '$lib/quotations/models';
 	import type { QuotationModelPrice } from '$lib/quotations/types';
@@ -51,6 +55,14 @@
 	let reasoningEnabled = $state(false);
 	let aiInstructions = $state('');
 	let aiBusy = $state(false);
+	let webSearchEnabled = $state(true);
+	let aiStatus = $state('');
+	let aiReasoning = $state('');
+	let aiRawResponse = $state('');
+	let aiActivity = $state<Array<{ id: string; text: string; completed: boolean }>>([]);
+	let aiSources = $state<Array<{ title: string; url: string; description?: string }>>([]);
+	let aiFieldPreviews = $state<Record<string, { label: string; value: string }>>({});
+	let aiAbortController: AbortController | null = null;
 	let revisingId = $state('');
 	let approving = $state(false);
 	let useAsAiExample = $state(true);
@@ -101,7 +113,10 @@
 			manualModelSelection = true;
 		}
 	});
-	onDestroy(() => autosave.dispose());
+	onDestroy(() => {
+		aiAbortController?.abort();
+		autosave.dispose();
+	});
 
 	function idempotencyKey() {
 		return crypto.randomUUID();
@@ -179,6 +194,84 @@
 		}
 		return payload;
 	}
+	function resetAiStream() {
+		aiStatus = 'Uruchamiam asystenta AI';
+		aiReasoning = '';
+		aiRawResponse = '';
+		aiActivity = [];
+		aiSources = [];
+		aiFieldPreviews = {};
+	}
+	function addAiActivity(text: string, completed = false) {
+		aiActivity = [
+			...aiActivity.slice(-11),
+			{ id: crypto.randomUUID(), text, completed }
+		];
+	}
+	function previewLabel(event: Extract<QuotationAiStreamEvent, { type: 'field.preview' }>) {
+		if (event.field === 'introduction') return 'Wprowadzenie';
+		if (event.field === 'revision') return 'Poprawiona treść';
+		if (event.field === 'item_description') {
+			return document.items.find((item: AnyRecord) => item.id === event.itemId)?.name ?? 'Opis pozycji';
+		}
+		return event.field === 'block_title'
+			? `Tytuł bloku ${(event.blockIndex ?? 0) + 1}`
+			: `Treść bloku ${(event.blockIndex ?? 0) + 1}`;
+	}
+	function handleAiEvent(event: QuotationAiStreamEvent) {
+		switch (event.type) {
+			case 'status':
+				aiStatus = event.message;
+				addAiActivity(event.message);
+				break;
+			case 'web_search.started':
+				aiStatus = `Szukam: ${event.itemName}`;
+				addAiActivity(`Przeszukuję internet: ${event.itemName}`);
+				break;
+			case 'web_search.completed':
+				addAiActivity(
+					event.sources.length > 0
+						? `Znaleziono ${event.sources.length} źródła dla: ${event.itemName}`
+						: `Brak wiarygodnych wyników dla: ${event.itemName}`,
+					true
+				);
+				for (const source of event.sources) {
+					if (!aiSources.some((entry) => entry.url === source.url)) aiSources.push(source);
+				}
+				break;
+			case 'reasoning.delta':
+				aiReasoning = (aiReasoning + event.delta).slice(-30_000);
+				break;
+			case 'content.delta':
+				aiRawResponse = (aiRawResponse + event.delta).slice(-50_000);
+				break;
+			case 'field.preview': {
+				const key = `${event.field}:${event.itemId ?? event.blockIndex ?? 'root'}`;
+				aiFieldPreviews[key] = { label: previewLabel(event), value: event.value };
+				break;
+			}
+			case 'attempt.reset':
+				aiReasoning = '';
+				aiRawResponse = '';
+				aiFieldPreviews = {};
+				addAiActivity(`Ponawiam generowanie — próba ${event.attempt}`);
+				break;
+			case 'done':
+				aiStatus = 'Wygenerowana wersja została zapisana';
+				addAiActivity('Wygenerowana wersja została zapisana', true);
+				break;
+		}
+	}
+	async function streamApi(path: string, body: AnyRecord) {
+		aiAbortController = new AbortController();
+		const response = await fetch(path, {
+			method: 'POST',
+			signal: aiAbortController.signal,
+			headers: { 'content-type': 'application/json', accept: 'text/event-stream' },
+			body: JSON.stringify(body)
+		});
+		return consumeQuotationAiStream(response, handleAiEvent);
+	}
 	async function save() {
 		await autosave.flush();
 		while (autosave.status === 'saving' || autosave.status === 'dirty') {
@@ -218,24 +311,27 @@
 		if (saveState !== 'saved') return;
 		aiBusy = true;
 		errorMessage = '';
+		resetAiStream();
 		undoDocument = cloneJson($state.snapshot(document));
 		try {
-			const payload = await api(`/api/quotations/${encodeURIComponent(quotation.id)}/ai/generate`, {
-				method: 'POST',
-				body: JSON.stringify({
+			const payload = await streamApi(
+				`/api/quotations/${encodeURIComponent(quotation.id)}/ai/generate`,
+				{
 					modelId: operationModel.id,
 					reasoningEnabled,
+					webSearchEnabled,
 					instructions: aiInstructions || undefined,
 					expectedLockVersion: quotation.lockVersion,
 					idempotencyKey: idempotencyKey()
-				})
-			});
+				}
+			);
 			acceptServerMutation(payload.item ?? payload.quotation ?? payload);
 			recordAiUsage(payload.operation);
 		} catch (error) {
 			errorMessage = error instanceof Error ? error.message : 'Generowanie nie powiodło się.';
 			undoDocument = null;
 		} finally {
+			aiAbortController = null;
 			aiBusy = false;
 		}
 	}
@@ -246,20 +342,19 @@
 		if (saveState !== 'saved') return;
 		revisingId = blockId;
 		errorMessage = '';
+		resetAiStream();
 		undoDocument = cloneJson($state.snapshot(document));
 		try {
-			const payload = await api(
+			const payload = await streamApi(
 				`/api/quotations/${encodeURIComponent(quotation.id)}/ai/revise-block`,
 				{
-					method: 'POST',
-					body: JSON.stringify({
-						modelId: operationModel.id,
-						reasoningEnabled,
-						blockId,
-						feedback,
-						expectedLockVersion: quotation.lockVersion,
-						idempotencyKey: idempotencyKey()
-					})
+					modelId: operationModel.id,
+					reasoningEnabled,
+					webSearchEnabled,
+					blockId,
+					feedback,
+					expectedLockVersion: quotation.lockVersion,
+					idempotencyKey: idempotencyKey()
 				}
 			);
 			acceptServerMutation(payload.item ?? payload.quotation ?? payload);
@@ -268,6 +363,7 @@
 			errorMessage = error instanceof Error ? error.message : 'Poprawa bloku nie powiodła się.';
 			undoDocument = null;
 		} finally {
+			aiAbortController = null;
 			revisingId = '';
 		}
 	}
@@ -493,17 +589,116 @@
 					onchange={selectModel}
 					onreasoningchange={(enabled) => (reasoningEnabled = enabled)}
 					onresetauto={resetAutomaticModelSelection}
-				/><textarea
+				/>
+				<label
+					class="flex items-start gap-2 rounded-md border border-border-line bg-bg-app p-3 text-sm text-text-main"
+				>
+					<input
+						type="checkbox"
+						bind:checked={webSearchEnabled}
+						disabled={!editable || aiBusy || Boolean(revisingId)}
+						class="mt-0.5 file-selection-checkbox"
+					/>
+					<span>
+						<span class="block font-medium">Aktualny research internetowy</span>
+						<span class="mt-0.5 block text-xs text-text-muted">
+							Sprawdza modele urządzeń w Brave Search i przekazuje źródła wybranemu modelowi.
+						</span>
+					</span>
+				</label>
+				<textarea
 					bind:value={aiInstructions}
 					disabled={!editable}
 					rows="3"
 					placeholder="Dodatkowe wskazówki, np. podkreśl szybki termin realizacji…"
 					class="w-full rounded-md border border-border-line bg-bg-app p-3 text-sm text-text-main"
-				></textarea><Button
+				></textarea>
+				<Button
 					loading={aiBusy}
 					disabled={!selectedModel || !editable}
-					onclick={generate}><MagicWand class="mr-2 h-4 w-4" /> Generuj kompletny opis</Button
+					onclick={generate}
+					><MagicWand class="mr-2 h-4 w-4" /> Generuj kompletny opis</Button
 				>
+				{#if aiBusy || aiStatus}
+					<div
+						class="space-y-3 rounded-md border border-primary/25 bg-primary/5 p-3"
+						aria-live="polite"
+					>
+						<div class="flex items-center gap-2 text-sm font-medium text-text-main">
+							<span
+								class:animate-pulse={aiBusy || Boolean(revisingId)}
+								class="h-2.5 w-2.5 rounded-full bg-primary"
+							></span>
+							{aiStatus}
+						</div>
+						{#if aiActivity.length > 0}
+							<ul class="space-y-1.5 text-xs text-text-muted">
+								{#each aiActivity.slice(-6) as activity (activity.id)}
+									<li class="flex gap-2">
+										<span class={activity.completed ? 'text-emerald-600' : 'text-primary'}>
+											{activity.completed ? '✓' : '●'}
+										</span>
+										<span>{activity.text}</span>
+									</li>
+								{/each}
+							</ul>
+						{/if}
+						{#if Object.keys(aiFieldPreviews).length > 0}
+							<div class="space-y-2 border-t border-primary/15 pt-3">
+								<p class="text-xs font-semibold uppercase tracking-wide text-text-muted">
+									Generowana treść
+								</p>
+								{#each Object.entries(aiFieldPreviews).slice(-6) as [key, preview] (key)}
+									<div class="rounded border border-border-line bg-bg-panel p-2.5">
+										<p class="mb-1 text-xs font-medium text-text-main">{preview.label}</p>
+										<p class="whitespace-pre-wrap text-xs leading-relaxed text-text-muted">
+											{preview.value}<span class:animate-pulse={aiBusy}>▍</span>
+										</p>
+									</div>
+								{/each}
+							</div>
+						{/if}
+						{#if aiSources.length > 0}
+							<details class="border-t border-primary/15 pt-2 text-xs">
+								<summary class="cursor-pointer font-medium text-text-main">
+									Źródła internetowe ({aiSources.length})
+								</summary>
+								<ul class="mt-2 space-y-1.5">
+									{#each aiSources as source (source.url)}
+										<li>
+											<a
+												href={source.url}
+												target="_blank"
+												rel="noreferrer"
+												class="font-medium text-primary hover:underline"
+											>{source.title}</a>
+										</li>
+									{/each}
+								</ul>
+							</details>
+						{/if}
+						{#if aiReasoning}
+							<details class="border-t border-primary/15 pt-2 text-xs">
+								<summary class="cursor-pointer font-medium text-text-main">Analiza modelu</summary>
+								<p
+									class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap leading-relaxed text-text-muted"
+								>
+									{aiReasoning}
+								</p>
+							</details>
+						{/if}
+						{#if aiRawResponse}
+							<details class="border-t border-primary/15 pt-2 text-xs">
+								<summary class="cursor-pointer font-medium text-text-main">
+									Surowy strumień odpowiedzi
+								</summary>
+								<pre
+									class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-[11px] text-text-muted"
+								>{aiRawResponse}</pre>
+							</details>
+						{/if}
+					</div>
+				{/if}
 				{#if operations.length > 0}
 					<details
 						class="rounded-md border border-border-line bg-bg-app p-3 text-xs text-text-muted"

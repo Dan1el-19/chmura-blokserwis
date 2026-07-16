@@ -4,4 +4,4 @@ allowBuilds:
   sharp: true
   workerd: true
 minimumReleaseAgeExclude:
-  - '@unisource/sdk@1.4.0 || 1.5.0'
+  - '@unisource/sdk@1.4.0 || 1.5.0 || 1.5.1'

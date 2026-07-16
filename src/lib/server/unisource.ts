@@ -20,6 +20,10 @@ type V2RawOptions = {
 	body?: unknown;
 };
 
+type V2StreamOptions = V2RawOptions & {
+	idempotencyKey: string;
+};
+
 type RuntimeEvent = Pick<RequestEvent, 'platform'> | RequestEvent | undefined;
 
 function applyQuery(url: URL, query: V2Query | undefined) {
@@ -113,6 +117,36 @@ export async function requestUserUnisourceV2<T>(
 		// Preserve the normal JWT request as the authoritative access check.
 	}
 	return requestAdminUnisourceV2<T>(event, method, path, options);
+}
+
+/** JWT-scoped streaming request that preserves the upstream response body. */
+export async function requestUserUnisourceV2Stream(
+	event: RequestEvent,
+	method: 'POST',
+	path: string,
+	options: V2StreamOptions
+): Promise<Response> {
+	const { account } = createSessionClient(event);
+	const { baseUrl, serviceId } = getConfig(event);
+	const userId = event.locals.user?.$id ?? (await account.get()).$id;
+	try {
+		await ensureServiceUserAccess(event, userId, serviceId);
+	} catch {
+		// Preserve the normal JWT request as the authoritative access check.
+	}
+	const url = new URL(path, baseUrl);
+	applyQuery(url, options.query);
+	return fetch(url, {
+		method,
+		headers: {
+			Authorization: await resolveRawAdminAuthHeader(event),
+			'X-Service-ID': serviceId,
+			'Idempotency-Key': options.idempotencyKey,
+			Accept: 'text/event-stream',
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify(options.body)
+	});
 }
 
 async function ensureServiceUserAccess(event: RequestEvent, userId: string, serviceId: string) {
