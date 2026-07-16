@@ -46,6 +46,10 @@ describe('QuotationModelSelector', () => {
 		expect(radios).toHaveLength(5);
 		expect(radios.map((radio) => radio.value)).toEqual(models.map((model) => model.id));
 		expect(radios[2].checked).toBe(true);
+		expect(document.querySelector('[data-model-track]')).not.toBeNull();
+		expect(document.body.textContent?.replace(/\s+/g, ' ')).toContain(
+			'Standardowy DeepSeek V4 Pro'
+		);
 		radios[3].click();
 		flushSync();
 		expect(onchange).toHaveBeenCalledWith('openai/gpt-5.6-luna');
