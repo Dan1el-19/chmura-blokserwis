@@ -1,3 +1,9 @@
+## [2.19.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.18.0...v2.19.0) (2026-07-27)
+
+### Features
+
+* **quotations:** redesign editor UI ([3011cc7](https://github.com/Dan1el-19/chmura-blokserwis/commit/3011cc7c1bd0b85f4d4bc6bc48d64c613e8587b7))
+
 ## [2.18.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.17.0...v2.18.0) (2026-07-16)
 
 ### Features
