@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { RadioGroup, Switch } from 'bits-ui';
+	import { CaretLeft, CaretRight } from 'phosphor-svelte';
 	import {
 		QUOTATION_MODEL_CATEGORIES,
 		QUOTATION_MODEL_CATEGORY_META,
@@ -34,6 +36,7 @@
 		onreasoningchange,
 		onresetauto
 	}: Props = $props();
+
 	const usd = new Intl.NumberFormat('pl-PL', {
 		style: 'currency',
 		currency: 'USD',
@@ -43,19 +46,33 @@
 		minimumFractionDigits: 0,
 		maximumFractionDigits: 4
 	});
-	let selected = $derived(models.find((model) => model.id === value));
-	let reasoningEffort = $derived(modelReasoningEffort(selected));
-	let reasoningAvailable = $derived(reasoningEffort !== null);
-	let modelSlots = $derived(
+
+	let slots = $derived(
 		QUOTATION_MODEL_CATEGORIES.map((category) => ({
 			category,
 			meta: QUOTATION_MODEL_CATEGORY_META[category],
 			model: quotationModelForCategory(models, category)
-		}))
+		})).filter((slot) => slot.model)
 	);
-	let selectedSlot = $derived(modelSlots.find((slot) => slot.model?.id === value));
-	let selectedSlotIndex = $derived(modelSlots.findIndex((slot) => slot.model?.id === value));
-	const progressClasses = ['w-0', 'w-[20%]', 'w-[40%]', 'w-[60%]', 'w-[80%]'];
+
+	let selectedIndex = $derived(slots.findIndex((slot) => slot.model?.id === value));
+
+	function selectIndex(index: number) {
+		const model = slots[index]?.model;
+		if (model && model.available !== false) onchange(model.id);
+	}
+
+	function prev() {
+		if (selectedIndex > 0) selectIndex(selectedIndex - 1);
+	}
+
+	function next() {
+		if (selectedIndex < slots.length - 1) selectIndex(selectedIndex + 1);
+	}
+
+	let selected = $derived(models.find((model) => model.id === value));
+	let reasoningEffort = $derived(modelReasoningEffort(selected));
+	let reasoningAvailable = $derived(reasoningEffort !== null);
 
 	function pricePerMillion(value: string | undefined) {
 		if (value === undefined || value.trim() === '') return 'brak cennika';
@@ -66,14 +83,14 @@
 	}
 </script>
 
-<div class="grid gap-3">
-	<div class="flex flex-wrap items-end justify-between gap-2">
+<div class="space-y-4" role="group" aria-labelledby="quotation-model-label">
+	<div class="flex flex-wrap items-start justify-between gap-2">
 		<div>
 			<p id="quotation-model-label" class="text-sm font-medium text-text-main">Model AI</p>
 			<p id="quotation-model-rule" class="mt-0.5 text-xs text-text-muted">
 				{manualSelection
-					? 'Wybór ręczny obowiązuje przy generowaniu i wszystkich poprawkach.'
-					: 'Automatycznie: Standardowy do generowania, Szybki do poprawek i review.'}
+					? 'Wybór ręczny obowiązuje przy generowaniu i poprawkach.'
+					: 'Automatycznie: Standardowy do generowania, Szybki do poprawek.'}
 			</p>
 		</div>
 		{#if manualSelection}
@@ -87,86 +104,76 @@
 		{/if}
 	</div>
 
-	<div
-		role="radiogroup"
-		aria-labelledby="quotation-model-label"
-		aria-describedby="quotation-model-rule"
-		class="rounded-lg border border-border-line bg-bg-app px-1 py-2.5"
-		data-model-track
-	>
-		<div class="relative grid h-9 grid-cols-5 items-center px-2">
-			<div
-				class="absolute top-1/2 right-[10%] left-[10%] h-1 -translate-y-1/2 rounded-full bg-border-line"
-				aria-hidden="true"
-			></div>
-			<div
-				class="absolute top-1/2 left-[10%] h-1 -translate-y-1/2 rounded-full bg-primary transition-[width] duration-200 motion-reduce:transition-none {progressClasses[
-					selectedSlotIndex
-				] ?? 'w-0'}"
-				aria-hidden="true"
-			></div>
-			{#each modelSlots as slot (slot.category)}
-				{#if slot.model}
-					<label
-						class="relative z-10 flex h-9 cursor-pointer items-center justify-center rounded-full focus-within:ring-2 focus-within:ring-primary/40 focus-within:ring-offset-2 focus-within:ring-offset-bg-app {slot
-							.model.available === false
-							? 'cursor-not-allowed opacity-40'
-							: ''}"
-						title="{slot.meta.label} — {slot.model.name}"
-					>
-						<input
-							type="radio"
-							name="quotation-ai-model"
-							value={slot.model.id}
-							checked={value === slot.model.id}
-							disabled={slot.model.available === false}
-							onchange={() => onchange(slot.model!.id)}
-							aria-label="{slot.meta.label}: {slot.model.name}"
-							class="sr-only"
-						/>
-						<span
-							class={value === slot.model.id
-								? 'h-7 w-7 rounded-full border-[5px] border-primary bg-bg-panel shadow-sm transition-[width,height] duration-200 motion-reduce:transition-none'
-								: 'h-2.5 w-2.5 rounded-full border-2 border-bg-app bg-text-muted transition-[width,height,background-color] duration-200 hover:bg-primary motion-reduce:transition-none'}
-							aria-hidden="true"
-						></span>
-					</label>
-				{:else}
-					<div
-						class="relative z-10 flex h-9 items-center justify-center opacity-35"
-						aria-label="{slot.meta.label}: model niedostępny"
-					>
-						<span class="h-2.5 w-2.5 rounded-full border-2 border-bg-app bg-text-muted"></span>
-					</div>
-				{/if}
-			{/each}
-		</div>
-	</div>
-	{#if selectedSlot?.model}
-		<div
-			class="flex min-w-0 items-baseline justify-center gap-1.5 px-2 text-center"
-			aria-live="polite"
+	<div class="flex items-center gap-2">
+		<button
+			type="button"
+			disabled={selectedIndex <= 0}
+			onclick={prev}
+			class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-line bg-bg-panel text-text-muted transition-colors hover:bg-bg-app hover:text-text-main disabled:opacity-30"
+			aria-label="Poprzedni poziom"
 		>
-			<span class="text-sm font-semibold text-text-main">{selectedSlot.meta.label}</span>
-			<span class="truncate text-xs text-text-muted">{selectedSlot.model.name}</span>
-		</div>
-	{/if}
+			<CaretLeft class="h-4 w-4" />
+		</button>
+
+		<RadioGroup.Root
+			{value}
+			onValueChange={onchange}
+			orientation="horizontal"
+			class="min-w-0 flex-1 overflow-hidden"
+		>
+			<div
+				class="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 scrollbar-hide"
+				role="listbox"
+				aria-label="Poziomy modeli AI"
+			>
+				{#each slots as slot (slot.category)}
+					<RadioGroup.Item
+						value={slot.model!.id}
+						disabled={slot.model!.available === false}
+						class="min-w-[8.5rem] max-w-[10rem] shrink-0 snap-center rounded-lg border p-3 text-left transition-all
+							border-border-line bg-bg-app hover:border-primary/50
+							data-[state=checked]:border-primary data-[state=checked]:bg-blue-50
+							dark:data-[state=checked]:bg-blue-950/20
+							data-disabled:cursor-not-allowed data-disabled:opacity-40"
+					>
+						<span class="block text-xs font-medium text-text-muted">{slot.meta.label}</span>
+						<span class="block truncate text-sm font-semibold text-text-main">
+							{slot.model!.name}
+						</span>
+					</RadioGroup.Item>
+				{/each}
+			</div>
+		</RadioGroup.Root>
+
+		<button
+			type="button"
+			disabled={selectedIndex >= slots.length - 1}
+			onclick={next}
+			class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border-line bg-bg-panel text-text-muted transition-colors hover:bg-bg-app hover:text-text-main disabled:opacity-30"
+			aria-label="Następny poziom"
+		>
+			<CaretRight class="h-4 w-4" />
+		</button>
+	</div>
 
 	<div class="rounded-md border border-border-line bg-bg-app p-3">
-		<label class="flex items-start gap-2 text-sm text-text-main">
-			<input
-				type="checkbox"
+		<label class="flex items-start gap-3 text-sm text-text-main">
+			<Switch.Root
 				checked={reasoningEnabled && reasoningAvailable}
 				disabled={!reasoningAvailable}
-				onchange={(event) => onreasoningchange(event.currentTarget.checked)}
-				class="mt-0.5 file-selection-checkbox"
-			/>
+				onCheckedChange={(checked) => onreasoningchange(checked)}
+				class="peer mt-0.5 inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-border-line bg-bg-panel transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+			>
+				<Switch.Thumb
+					class="pointer-events-none block h-4 w-4 rounded-full bg-text-muted shadow-sm transition-transform data-[state=checked]:translate-x-4 data-[state=checked]:bg-white"
+				/>
+			</Switch.Root>
 			<span>
 				<span class="font-medium">Reasoning</span>
 				<span class="mt-0.5 block text-xs leading-5 text-text-muted">
 					{#if reasoningAvailable}
-						Włącza rozumowanie z poziomem {reasoningEffort}. Może poprawić jakość, ale zużywa więcej
-						tokenów i kosztuje więcej.
+						Włącza rozumowanie z poziomem {reasoningEffort}. Poprawia jakość, ale zużywa więcej
+						tokenów.
 					{:else if selected}
 						Reasoning nie jest dostępny dla modelu {selected.name}.
 					{:else}
@@ -179,25 +186,29 @@
 
 	<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
 		<span>
-			Szacunek pełnego generowania: <strong class="font-mono text-text-main">
+			Szacunek generowania:
+			<strong class="font-mono text-text-main">
 				{estimatedCostUsd === null ? 'brak cennika' : usd.format(estimatedCostUsd)}
 			</strong>
 		</span>
 		{#if usage?.quotationCostUsdMicros !== undefined}
 			<span>
-				Ta wycena: <strong class="font-mono text-text-main">
+				Ta wycena:
+				<strong class="font-mono text-text-main">
 					{usd.format(usage.quotationCostUsdMicros / 1_000_000)}
 				</strong>
 			</span>
 		{/if}
 		{#if usage?.monthCostUsdMicros !== undefined}
 			<span>
-				Miesiąc: <strong class="font-mono text-text-main">
+				Miesiąc:
+				<strong class="font-mono text-text-main">
 					{usd.format(usage.monthCostUsdMicros / 1_000_000)}
 				</strong>
 			</span>
 		{/if}
 	</div>
+
 	{#if selected}
 		<p class="text-[0.7rem] leading-4 text-text-muted">
 			Cennik {selected.name} za 1 mln tokenów: wejście
@@ -209,11 +220,4 @@
 			</strong>.
 		</p>
 	{/if}
-	<p class="text-[0.7rem] leading-4 text-text-muted">
-		Szacunek jest orientacyjny: zakłada 3000 tokenów wejściowych i
-		{reasoningEnabled && reasoningAvailable
-			? ' 3000 tokenów wyjściowych z reasoning.'
-			: ' 1500 tokenów wyjściowych.'}
-		Rzeczywisty koszt pochodzi z użycia zarejestrowanego przez dostawcę.
-	</p>
 </div>

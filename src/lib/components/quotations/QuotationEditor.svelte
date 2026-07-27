@@ -1,13 +1,17 @@
 <script lang="ts">
 	import { onDestroy, onMount, untrack } from 'svelte';
-	import { Check, DownloadSimple, MagicWand, WarningCircle } from 'phosphor-svelte';
+	import {
+		Check,
+		DownloadSimple,
+		Eye,
+		MagicWand,
+		PencilSimple,
+		WarningCircle
+	} from 'phosphor-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { QuotationAutosave } from '$lib/quotations/autosave.svelte';
 	import { estimateQuotationAiCost } from '$lib/quotations/cost';
-	import {
-		consumeQuotationAiStream,
-		type QuotationAiStreamEvent
-	} from '$lib/quotations/ai-stream';
+	import { consumeQuotationAiStream, type QuotationAiStreamEvent } from '$lib/quotations/ai-stream';
 	import { quotationDocumentToUpdatePayload } from '$lib/quotations/document';
 	import { modelReasoningEffort, quotationModelForAction } from '$lib/quotations/models';
 	import type { QuotationModelPrice } from '$lib/quotations/types';
@@ -16,6 +20,7 @@
 	import QuotationLetterheadSelector from './QuotationLetterheadSelector.svelte';
 	import QuotationModelSelector from './QuotationModelSelector.svelte';
 	import QuotationPreview from './QuotationPreview.svelte';
+	import CollapsibleSection from '$lib/components/ui/CollapsibleSection.svelte';
 
 	type AnyRecord = Record<string, any>;
 	const MODEL_STORAGE_KEY = 'blokserwis:quotation-ai-model:v2';
@@ -65,6 +70,7 @@
 	let aiAbortController: AbortController | null = null;
 	let revisingId = $state('');
 	let approving = $state(false);
+	let mobilePreviewOpen = $state(false);
 	let useAsAiExample = $state(true);
 	let saveVerifiedProductDescriptions = $state(true);
 	let undoDocument = $state<AnyRecord | null>(null);
@@ -203,16 +209,15 @@
 		aiFieldPreviews = {};
 	}
 	function addAiActivity(text: string, completed = false) {
-		aiActivity = [
-			...aiActivity.slice(-11),
-			{ id: crypto.randomUUID(), text, completed }
-		];
+		aiActivity = [...aiActivity.slice(-11), { id: crypto.randomUUID(), text, completed }];
 	}
 	function previewLabel(event: Extract<QuotationAiStreamEvent, { type: 'field.preview' }>) {
 		if (event.field === 'introduction') return 'Wprowadzenie';
 		if (event.field === 'revision') return 'Poprawiona treść';
 		if (event.field === 'item_description') {
-			return document.items.find((item: AnyRecord) => item.id === event.itemId)?.name ?? 'Opis pozycji';
+			return (
+				document.items.find((item: AnyRecord) => item.id === event.itemId)?.name ?? 'Opis pozycji'
+			);
 		}
 		return event.field === 'block_title'
 			? `Tytuł bloku ${(event.blockIndex ?? 0) + 1}`
@@ -466,7 +471,7 @@
 			</div>
 		</div>{/if}
 	<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,0.8fr)]">
-		<main class="min-w-0 space-y-4">
+		<main class="min-w-0 space-y-4 {mobilePreviewOpen ? 'hidden' : 'block'} xl:block">
 			<section class="space-y-4 rounded-md border border-border-line bg-bg-panel p-4 sm:p-5">
 				<h2 class="font-semibold text-text-main">Dane wyceny</h2>
 				<label class="grid gap-1 text-sm font-medium text-text-main"
@@ -545,15 +550,7 @@
 						rows="3"
 						class="rounded-md border border-border-line bg-bg-app p-3 text-sm leading-6 text-text-main"
 					></textarea></label
-				><QuotationLetterheadSelector
-					value={document.letterheadVariant}
-					letterheads={letterheadOptions}
-					disabled={!editable}
-					onchange={(value) => {
-						document.letterheadVariant = value;
-						markDirty();
-					}}
-				/>
+				>
 			</section>
 			<QuotationItemsEditor
 				categories={document.categories}
@@ -565,20 +562,44 @@
 					markDirty();
 				}}
 			/>
-			<QuotationBlocksEditor
-				blocks={document.descriptionBlocks}
-				disabled={!editable}
-				{revisingId}
-				canUndo={undoDocument !== null}
-				onchange={(blocks) => {
-					document.descriptionBlocks = blocks;
-					markDirty();
-				}}
-				onrevise={revise}
-				onundo={undoAi}
-			/>
-			<section class="space-y-3 rounded-md border border-border-line bg-bg-panel p-4 sm:p-5">
-				<h2 class="font-semibold text-text-main">Asystent AI</h2>
+			<CollapsibleSection
+				title="Bloki opisu"
+				description="Opis zakresu, standardu i korzyści dla klienta."
+				open={document.descriptionBlocks.length > 0}
+			>
+				<QuotationBlocksEditor
+					blocks={document.descriptionBlocks}
+					disabled={!editable}
+					{revisingId}
+					canUndo={undoDocument !== null}
+					onchange={(blocks) => {
+						document.descriptionBlocks = blocks;
+						markDirty();
+					}}
+					onrevise={revise}
+					onundo={undoAi}
+				/>
+			</CollapsibleSection>
+
+			<CollapsibleSection
+				title="Ustawienia dokumentu"
+				description="Papier firmowy i szablony wydruku."
+			>
+				<QuotationLetterheadSelector
+					value={document.letterheadVariant}
+					letterheads={letterheadOptions}
+					disabled={!editable}
+					onchange={(value) => {
+						document.letterheadVariant = value;
+						markDirty();
+					}}
+				/>
+			</CollapsibleSection>
+
+			<CollapsibleSection
+				title="Asystent AI"
+				description="Generowanie i poprawianie treści z pomocą AI."
+			>
 				<QuotationModelSelector
 					models={modelOptions}
 					value={selectedModel}
@@ -613,10 +634,7 @@
 					placeholder="Dodatkowe wskazówki, np. podkreśl szybki termin realizacji…"
 					class="w-full rounded-md border border-border-line bg-bg-app p-3 text-sm text-text-main"
 				></textarea>
-				<Button
-					loading={aiBusy}
-					disabled={!selectedModel || !editable}
-					onclick={generate}
+				<Button loading={aiBusy} disabled={!selectedModel || !editable} onclick={generate}
 					><MagicWand class="mr-2 h-4 w-4" /> Generuj kompletny opis</Button
 				>
 				{#if aiBusy || aiStatus}
@@ -670,8 +688,8 @@
 												href={source.url}
 												target="_blank"
 												rel="noreferrer"
-												class="font-medium text-primary hover:underline"
-											>{source.title}</a>
+												class="font-medium text-primary hover:underline">{source.title}</a
+											>
 										</li>
 									{/each}
 								</ul>
@@ -693,8 +711,7 @@
 									Surowy strumień odpowiedzi
 								</summary>
 								<pre
-									class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-[11px] text-text-muted"
-								>{aiRawResponse}</pre>
+									class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-[11px] text-text-muted">{aiRawResponse}</pre>
 							</details>
 						{/if}
 					</div>
@@ -716,11 +733,9 @@
 				{#if versions.length > 0}<p class="text-xs text-text-muted">
 						Zapisane wersje dokumentu: {versions.length}
 					</p>{/if}
-			</section>
-			{#if editable}<section
-					class="space-y-3 rounded-md border border-border-line bg-bg-panel p-4 sm:p-5"
-				>
-					<h2 class="font-semibold text-text-main">Zatwierdzenie</h2>
+			</CollapsibleSection>
+			{#if editable}
+				<CollapsibleSection title="Zatwierdzenie" description="Zatwierdź dokument i nadaj numer.">
 					<p class="text-sm text-text-muted">
 						{quotation.status === 'approved'
 							? 'Ponowne zatwierdzenie utrwali zmiany i zachowa dotychczasowy numer.'
@@ -744,26 +759,39 @@
 							? 'Zatwierdź zmiany ponownie'
 							: 'Zatwierdź i nadaj numer'}</Button
 					>
-				</section>{/if}
+				</CollapsibleSection>{/if}
 		</main>
-		<aside class="min-w-0 xl:sticky xl:top-4 xl:self-start">
+		<aside
+			class="min-w-0 {mobilePreviewOpen
+				? 'block'
+				: 'hidden'} xl:block xl:sticky xl:top-4 xl:self-start"
+		>
 			<QuotationPreview quotationId={quotation.id} {revision} title={document.title} />
 		</aside>
 	</div>
 	<div
-		class="fixed inset-x-0 bottom-0 z-30 border-t border-border-line bg-bg-panel/95 p-3 backdrop-blur lg:hidden"
+		class="fixed inset-x-0 bottom-0 z-30 border-t border-border-line bg-bg-panel/95 p-3 backdrop-blur xl:hidden"
 	>
 		<div class="mx-auto flex max-w-6xl gap-2">
-			<a
-				href={exportUrl('pdf')}
-				class="inline-flex h-11 flex-1 items-center justify-center rounded-md border border-border-line text-sm font-medium text-text-main"
-				>PDF</a
-			>{#if editable}<Button
-					class="flex-1"
-					disabled={saveState !== 'saved'}
-					loading={approving}
-					onclick={approve}>Zatwierdź</Button
-				>{/if}
+			<button
+				type="button"
+				onclick={() => (mobilePreviewOpen = !mobilePreviewOpen)}
+				class="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-md border border-border-line bg-bg-panel text-sm font-medium text-text-main hover:bg-bg-app"
+			>
+				{#if mobilePreviewOpen}<PencilSimple class="h-4 w-4" /> Edycja{:else}<Eye class="h-4 w-4" /> Podgląd{/if}
+			</button>
+			{#if !mobilePreviewOpen}
+				<a
+					href={exportUrl('pdf')}
+					class="inline-flex h-11 flex-1 items-center justify-center rounded-md border border-border-line text-sm font-medium text-text-main"
+					>PDF</a
+				>{#if editable}<Button
+						class="flex-1"
+						disabled={saveState !== 'saved'}
+						loading={approving}
+						onclick={approve}>Zatwierdź</Button
+					>{/if}
+			{/if}
 		</div>
 	</div>
 </div>

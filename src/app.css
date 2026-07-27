@@ -94,6 +94,41 @@ body {
 	outline-offset: 2px;
 }
 
+@keyframes collapsible-down {
+	from {
+		height: 0;
+	}
+	to {
+		height: var(--bits-collapsible-content-height);
+	}
+}
+
+@keyframes collapsible-up {
+	from {
+		height: var(--bits-collapsible-content-height);
+	}
+	to {
+		height: 0;
+	}
+}
+
+.animate-collapsible-down {
+	animation: collapsible-down 200ms ease-out;
+}
+
+.animate-collapsible-up {
+	animation: collapsible-up 200ms ease-out;
+}
+
+.scrollbar-hide {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
+
 @media (max-width: 640px) {
 	button,
 	a,

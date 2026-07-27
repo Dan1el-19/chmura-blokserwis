@@ -42,14 +42,15 @@ describe('QuotationModelSelector', () => {
 			}
 		});
 
-		const radios = [...document.querySelectorAll<HTMLInputElement>('input[type="radio"]')];
+		const radios = [...document.querySelectorAll<HTMLElement>('[role="radio"]')];
 		expect(radios).toHaveLength(5);
-		expect(radios.map((radio) => radio.value)).toEqual(models.map((model) => model.id));
-		expect(radios[2].checked).toBe(true);
-		expect(document.querySelector('[data-model-track]')).not.toBeNull();
-		expect(document.body.textContent?.replace(/\s+/g, ' ')).toContain(
-			'Standardowy DeepSeek V4 Pro'
+		expect(radios.map((radio) => radio.getAttribute('data-value'))).toEqual(
+			models.map((model) => model.id)
 		);
+		expect(radios[2].getAttribute('aria-checked')).toBe('true');
+		const copy = document.body.textContent?.replace(/\s+/g, ' ');
+		expect(copy).toContain('Standardowy');
+		expect(copy).toContain('DeepSeek V4 Pro');
 		radios[3].click();
 		flushSync();
 		expect(onchange).toHaveBeenCalledWith('openai/gpt-5.6-luna');
@@ -69,15 +70,15 @@ describe('QuotationModelSelector', () => {
 			}
 		});
 
-		const checkbox = document.querySelector<HTMLInputElement>('input[type="checkbox"]');
-		expect(checkbox?.checked).toBe(true);
-		expect(document.body.textContent).toContain('poziomem low');
-		expect(document.body.textContent).toContain('kosztuje więcej');
+		const switchButton = document.querySelector<HTMLElement>('[role="switch"]');
+		expect(switchButton?.getAttribute('aria-checked')).toBe('true');
 		const copy = document.body.textContent?.replace(/\s+/g, ' ');
-		expect(copy).toContain('Szacunek pełnego generowania');
-		expect(copy).toContain('za 1 mln tokenów');
-		expect(copy).toContain('wejście 1 USD, wyjście 2 USD');
-		checkbox?.click();
+		expect(copy).toContain('poziomem low');
+		expect(copy).toContain('więcej tokenów');
+		expect(copy).toContain('Szacunek generowania');
+		expect(copy).toContain('wejście 1 USD');
+		expect(copy).toContain('wyjście 2 USD');
+		switchButton?.click();
 		flushSync();
 		expect(onreasoningchange).toHaveBeenCalledWith(false);
 	});
@@ -94,9 +95,9 @@ describe('QuotationModelSelector', () => {
 			}
 		});
 
-		const checkbox = document.querySelector<HTMLInputElement>('input[type="checkbox"]');
+		const switchButton = document.querySelector<HTMLButtonElement>('[role="switch"]');
 		const copy = document.body.textContent?.replace(/\s+/g, ' ');
-		expect(checkbox?.disabled).toBe(true);
+		expect(switchButton?.disabled).toBe(true);
 		expect(copy).toContain('wejście 0 USD');
 		expect(copy).toContain('wyjście 0 USD');
 	});

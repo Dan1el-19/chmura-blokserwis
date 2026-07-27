@@ -28,6 +28,13 @@
 			roles: ['basic', 'plus', 'admin']
 		},
 		{
+			href: '/main',
+			label: 'Main',
+			icon: Shield,
+			color: 'bg-emerald-500',
+			roles: ['plus', 'admin']
+		},
+		{
 			href: '/wyceny',
 			label: 'Wyceny',
 			icon: FileText,
@@ -40,13 +47,6 @@
 			icon: Trash,
 			color: 'bg-red-500',
 			roles: ['basic', 'plus', 'admin']
-		},
-		{
-			href: '/main',
-			label: 'Main',
-			icon: Shield,
-			color: 'bg-emerald-500',
-			roles: ['plus', 'admin']
 		},
 		{
 			href: '/releases',
