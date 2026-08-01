@@ -18,8 +18,8 @@ importers:
         specifier: ^3.12.1
         version: 3.12.1
       '@unisource/sdk':
-        specifier: 1.5.1
-        version: 1.5.1
+        specifier: 1.6.0
+        version: 1.6.0
       '@uppy/aws-s3':
         specifier: ^5.1.0
         version: 5.1.0(@uppy/core@5.2.0)
@@ -2282,8 +2282,8 @@ packages:
     resolution: {integrity: sha512-U3gxVaDVnuZKhSspW/MzMxE1kq7zOdc072FcSNoqA1I9p8HyKbBFfEHoWckBAMgNMph4MamwS5iTVzFmrnt8TQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@unisource/sdk@1.5.1':
-    resolution: {integrity: sha512-MBCwHFOdWLVsMtSv9bCdG1qsDB6M86s7U4zV93z9yG7HICUfbGkqagPoKIEile1p0pAo8yW/0Skp8PlH8ya+5g==}
+  '@unisource/sdk@1.6.0':
+    resolution: {integrity: sha512-l3LAO7S8yVj8Tff8O/9P2hReA0AUSw1EGxEzdM72ortO9dnY8flTPxbdl+SM4d0w52tPVxcGwy24YwIDPeb/QA==}
 
   '@uppy/aws-s3@5.1.0':
     resolution: {integrity: sha512-UBz+shrtDbnOf11AboDrkc9Fq2Cdf8HbFftE+gqfxig6fkv5rHpHhBCLkl8wCGAq+X/CxdqvvNhm/OM23Uzw2w==}
@@ -7473,7 +7473,7 @@ snapshots:
       '@typescript-eslint/types': 8.59.4
       eslint-visitor-keys: 5.0.1
 
-  '@unisource/sdk@1.5.1':
+  '@unisource/sdk@1.6.0':
     dependencies:
       zod: 4.4.3
 

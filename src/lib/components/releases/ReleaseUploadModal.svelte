@@ -18,6 +18,10 @@
 			overwrite: boolean;
 			forceUpdate: boolean;
 			channel: 'stable' | 'beta';
+			versionCode: number;
+			minSupportedVersionCode: number;
+			rollout: number;
+			certificateSha256: string;
 		}) => void;
 		onCancel: () => void;
 	};
@@ -42,6 +46,21 @@
 	let overwrite = $state(false);
 	let forceUpdate = $state(false);
 	let channel = $state<'stable' | 'beta'>('stable');
+	let versionCode = $state(1);
+	let minSupportedVersionCode = $state(1);
+	let rollout = $state(100);
+	let certificateSha256 = $state('');
+	let manifestFieldsValid = $derived(
+		Number.isInteger(Number(versionCode)) &&
+		Number(versionCode) > 0 &&
+		Number.isInteger(Number(minSupportedVersionCode)) &&
+		Number(minSupportedVersionCode) > 0 &&
+		Number(minSupportedVersionCode) <= Number(versionCode) &&
+		Number.isInteger(Number(rollout)) &&
+		Number(rollout) >= 0 &&
+		Number(rollout) <= 100 &&
+		/^[a-f\d]{64}$/i.test(certificateSha256.trim())
+	);
 
 	$effect(() => {
 		channel = isBetaFilename ? 'beta' : 'stable';
@@ -49,7 +68,19 @@
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
-		onConfirm({ name, tags, notes, overwrite, forceUpdate, channel });
+		if (!manifestFieldsValid) return;
+		onConfirm({
+			name,
+			tags,
+			notes,
+			overwrite,
+			forceUpdate,
+			channel,
+			versionCode: Number(versionCode),
+			minSupportedVersionCode: Number(minSupportedVersionCode),
+			rollout: Number(rollout),
+			certificateSha256: certificateSha256.trim().toLowerCase()
+		});
 	}
 </script>
 
@@ -170,6 +201,48 @@
 				{/if}
 			</div>
 
+			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+				<Input
+					bind:value={versionCode}
+					label="versionCode"
+					type="number"
+					min="1"
+					required
+				/>
+				<Input
+					bind:value={minSupportedVersionCode}
+					label="Minimalny versionCode"
+					type="number"
+					min="1"
+					error={Number(minSupportedVersionCode) > Number(versionCode)
+						? 'Minimalna wersja nie może być większa od versionCode'
+						: undefined}
+					required
+				/>
+			</div>
+
+			<Input
+				bind:value={rollout}
+				label="Rollout (%)"
+				type="number"
+				min="0"
+				max="100"
+				required
+			/>
+
+			<Input
+				bind:value={certificateSha256}
+				label="SHA-256 certyfikatu podpisującego"
+				placeholder="64 znaki hex"
+				class="font-mono"
+				maxlength="64"
+				pattern="[a-fA-F0-9]{64}"
+				error={certificateSha256.length > 0 && !/^[a-f\d]{64}$/i.test(certificateSha256.trim())
+					? 'Wymagane jest dokładnie 64 znaki hex'
+					: undefined}
+				required
+			/>
+
 			<TagsInput bind:value={tags} label="Tagi" placeholder="Dodaj tagi wersji..." />
 
 			<div class="space-y-1.5">
@@ -206,7 +279,9 @@
 
 			<div class="flex justify-end gap-2 pt-2">
 				<Button variant="ghost" onclick={onCancel} type="button">Anuluj</Button>
-				<Button type="submit" disabled={(!!existingRelease && !overwrite) || !isValidFormat}
+				<Button
+					type="submit"
+					disabled={(!!existingRelease && !overwrite) || !isValidFormat || !manifestFieldsValid}
 					>Prześlij</Button
 				>
 			</div>

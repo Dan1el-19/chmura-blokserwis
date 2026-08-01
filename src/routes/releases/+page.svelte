@@ -104,6 +104,10 @@
 		overwrite: boolean;
 		forceUpdate: boolean;
 		channel: 'stable' | 'beta';
+		versionCode: number;
+		minSupportedVersionCode: number;
+		rollout: number;
+		certificateSha256: string;
 	}) {
 		if (!pendingFile) return;
 
@@ -116,6 +120,10 @@
 			tags: uploadData.tags,
 			notes: uploadData.notes || null,
 			force_update: uploadData.forceUpdate,
+			versionCode: uploadData.versionCode,
+			minSupportedVersionCode: uploadData.minSupportedVersionCode,
+			rollout: uploadData.rollout,
+			certificateSha256: uploadData.certificateSha256,
 			onProgress: (p) => {
 				uploadProgress = p;
 			},

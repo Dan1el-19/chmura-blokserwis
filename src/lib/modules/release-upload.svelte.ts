@@ -11,6 +11,10 @@ export type ReleaseUploadOptions = {
 	tags?: string[];
 	notes?: string | null;
 	force_update?: boolean;
+	versionCode: number;
+	minSupportedVersionCode: number;
+	rollout: number;
+	certificateSha256: string;
 	onProgress?: (progress: number) => void;
 	onComplete?: (result: ReleaseUploadResult) => void;
 	onError?: (error: Error) => void;
@@ -34,6 +38,8 @@ export class ReleaseUploader {
 		this.progress = 0;
 
 		try {
+			const sha256 = await hashFile(file);
+
 			// 1. Get presigned PUT URL from our backend
 			const signRes = await fetch('/api/releases/sign', {
 				method: 'POST',
@@ -89,15 +95,24 @@ export class ReleaseUploader {
 			});
 
 			// 3. Confirm upload complete
-			await fetch('/api/releases/complete', {
+			const completeRes = await fetch('/api/releases/complete', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					release_id,
 					size: file.size,
-					channel: this.options.channel ?? 'stable'
+					channel: this.options.channel ?? 'stable',
+					version_code: this.options.versionCode,
+					min_supported_version_code: this.options.minSupportedVersionCode,
+					rollout: this.options.rollout,
+					sha256,
+					certificate_sha256: this.options.certificateSha256.trim().toLowerCase()
 				})
 			});
+			if (!completeRes.ok) {
+				const body = await completeRes.json().catch(() => ({}));
+				throw new Error(body.message || body.error || 'Nie udało się zapisać manifestu wydania');
+			}
 
 			this.progress = 100;
 			this.isUploading = false;
@@ -118,4 +133,9 @@ export class ReleaseUploader {
 	destroy() {
 		this.cancel();
 	}
+}
+
+async function hashFile(file: File): Promise<string> {
+	const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+	return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
