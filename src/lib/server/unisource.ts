@@ -2,6 +2,7 @@ import { UnisourceV2Client, UnisourceV2Error, isV2ErrorCode } from '@unisource/s
 import type { RequestEvent } from '@sveltejs/kit';
 
 import { createSessionClient } from './appwrite';
+import { resolveClerkSessionToken } from './provider-auth';
 import { requireRuntimeEnv } from './runtime-env';
 
 const ensuredServiceUsers = new Map<string, Promise<void>>();
@@ -43,6 +44,12 @@ function hasSession(event: RuntimeEvent): event is RequestEvent {
 }
 
 async function resolveRawAdminAuthHeader(event: RuntimeEvent) {
+	if (event && 'locals' in event && event.locals.authProvider === 'clerk') {
+		const token = resolveClerkSessionToken(event);
+		if (!token) throw new Error('Clerk session token is unavailable');
+		return `Bearer ${token}`;
+	}
+
 	if (hasSession(event)) {
 		const { account } = createSessionClient(event);
 		const { jwt } = await account.createJWT({ duration: 900 });
@@ -108,6 +115,10 @@ export async function requestUserUnisourceV2<T>(
 	path: string,
 	options: V2RawOptions = {}
 ): Promise<T> {
+	if (event.locals.authProvider === 'clerk') {
+		return requestAdminUnisourceV2<T>(event, method, path, options);
+	}
+
 	const { account } = createSessionClient(event);
 	const { serviceId } = getConfig(event);
 	const userId = event.locals.user?.$id ?? (await account.get()).$id;
@@ -126,6 +137,23 @@ export async function requestUserUnisourceV2Stream(
 	path: string,
 	options: V2StreamOptions
 ): Promise<Response> {
+	if (event.locals.authProvider === 'clerk') {
+		const { baseUrl, serviceId } = getConfig(event);
+		const url = new URL(path, baseUrl);
+		applyQuery(url, options.query);
+		return fetch(url, {
+			method,
+			headers: {
+				Authorization: await resolveRawAdminAuthHeader(event),
+				'X-Service-ID': serviceId,
+				'Idempotency-Key': options.idempotencyKey,
+				Accept: 'text/event-stream',
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(options.body)
+		});
+	}
+
 	const { account } = createSessionClient(event);
 	const { baseUrl, serviceId } = getConfig(event);
 	const userId = event.locals.user?.$id ?? (await account.get()).$id;
@@ -168,8 +196,21 @@ async function ensureServiceUserAccess(event: RequestEvent, userId: string, serv
 }
 
 async function createJwtUnisourceClient(event: RequestEvent): Promise<UnisourceV2Client> {
-	const { account } = createSessionClient(event);
 	const { baseUrl, serviceId } = getConfig(event);
+	if (event.locals.authProvider === 'clerk') {
+		return new UnisourceV2Client({
+			baseUrl,
+			serviceId,
+			getToken: async () => {
+				const token = resolveClerkSessionToken(event);
+				if (!token) throw new Error('Clerk session token is unavailable');
+				return token;
+			},
+			silentBeta: true
+		});
+	}
+
+	const { account } = createSessionClient(event);
 
 	return new UnisourceV2Client({
 		baseUrl,
@@ -180,6 +221,10 @@ async function createJwtUnisourceClient(event: RequestEvent): Promise<UnisourceV
 }
 
 export async function createUserUnisourceClient(event: RequestEvent): Promise<UnisourceV2Client> {
+	if (event.locals.authProvider === 'clerk') {
+		return createJwtUnisourceClient(event);
+	}
+
 	const { account } = createSessionClient(event);
 	const { serviceId } = getConfig(event);
 	const userId = event.locals.user?.$id ?? (await account.get()).$id;
