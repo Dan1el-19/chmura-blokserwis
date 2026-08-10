@@ -1,3 +1,9 @@
+## [2.20.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.20.0...v2.20.1) (2026-08-10)
+
+### Bug Fixes
+
+* **releases:** preserve certificate hash pattern ([4261851](https://github.com/Dan1el-19/chmura-blokserwis/commit/42618517a00470392377d3c30c5536cfd9c9ca0c))
+
 ## [2.20.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.19.0...v2.20.0) (2026-08-10)
 
 ### Features
