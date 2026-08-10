@@ -1,3 +1,9 @@
+## [2.20.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.19.0...v2.20.0) (2026-08-10)
+
+### Features
+
+* **frontend:** publish validated release manifests ([b39fc3f](https://github.com/Dan1el-19/chmura-blokserwis/commit/b39fc3fb93a795ff34621b1351025379ae9793d2))
+
 ## [2.19.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.18.0...v2.19.0) (2026-07-27)
 
 ### Features
