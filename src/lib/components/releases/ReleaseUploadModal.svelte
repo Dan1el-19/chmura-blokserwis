@@ -8,6 +8,8 @@
 	import type { ParsedRelease } from '$lib/types/releases';
 	import { untrack } from 'svelte';
 
+	const CERTIFICATE_SHA256_PATTERN = '[a-fA-F0-9]{64}';
+
 	type Props = {
 		file: File;
 		existingRelease?: ParsedRelease | null;
@@ -52,14 +54,14 @@
 	let certificateSha256 = $state('');
 	let manifestFieldsValid = $derived(
 		Number.isInteger(Number(versionCode)) &&
-		Number(versionCode) > 0 &&
-		Number.isInteger(Number(minSupportedVersionCode)) &&
-		Number(minSupportedVersionCode) > 0 &&
-		Number(minSupportedVersionCode) <= Number(versionCode) &&
-		Number.isInteger(Number(rollout)) &&
-		Number(rollout) >= 0 &&
-		Number(rollout) <= 100 &&
-		/^[a-f\d]{64}$/i.test(certificateSha256.trim())
+			Number(versionCode) > 0 &&
+			Number.isInteger(Number(minSupportedVersionCode)) &&
+			Number(minSupportedVersionCode) > 0 &&
+			Number(minSupportedVersionCode) <= Number(versionCode) &&
+			Number.isInteger(Number(rollout)) &&
+			Number(rollout) >= 0 &&
+			Number(rollout) <= 100 &&
+			/^[a-f\d]{64}$/i.test(certificateSha256.trim())
 	);
 
 	$effect(() => {
@@ -202,13 +204,7 @@
 			</div>
 
 			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-				<Input
-					bind:value={versionCode}
-					label="versionCode"
-					type="number"
-					min="1"
-					required
-				/>
+				<Input bind:value={versionCode} label="versionCode" type="number" min="1" required />
 				<Input
 					bind:value={minSupportedVersionCode}
 					label="Minimalny versionCode"
@@ -221,14 +217,7 @@
 				/>
 			</div>
 
-			<Input
-				bind:value={rollout}
-				label="Rollout (%)"
-				type="number"
-				min="0"
-				max="100"
-				required
-			/>
+			<Input bind:value={rollout} label="Rollout (%)" type="number" min="0" max="100" required />
 
 			<Input
 				bind:value={certificateSha256}
@@ -236,7 +225,7 @@
 				placeholder="64 znaki hex"
 				class="font-mono"
 				maxlength="64"
-				pattern="[a-fA-F0-9]{64}"
+				pattern={CERTIFICATE_SHA256_PATTERN}
 				error={certificateSha256.length > 0 && !/^[a-f\d]{64}$/i.test(certificateSha256.trim())
 					? 'Wymagane jest dokładnie 64 znaki hex'
 					: undefined}
