@@ -15,6 +15,15 @@ export interface ParsedRelease {
 	upload_status: V2Release['upload_status'];
 }
 
+export interface ReleaseUploadDefaults {
+	versionCode: number;
+	minSupportedVersionCode: number;
+	rollout: number;
+	certificateSha256: string;
+	suggestedVersion: string | null;
+	sourceReleaseName: string | null;
+}
+
 export function mapRelease(dto: V2Release): ParsedRelease {
 	return {
 		$id: dto.id,

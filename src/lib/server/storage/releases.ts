@@ -1,12 +1,11 @@
 import type { RequestEvent } from '@sveltejs/kit';
-import type { V2ReleaseListResponse, V2ReleaseUpdateRequest } from '@unisource/sdk/v2';
+import type { V2ReleaseUpdateRequest } from '@unisource/sdk/v2';
 import {
 	createAdminUnisourceClient,
-	createRequestAdminUnisourceClient,
-	requestAdminUnisourceV2
+	createRequestAdminUnisourceClient
 } from '$lib/server/unisource';
 import { unwrapItem } from '$lib/server/unisource-v2-contract';
-import { mapRelease, type ParsedRelease } from '$lib/types/releases';
+import { mapRelease, type ParsedRelease, type ReleaseUploadDefaults } from '$lib/types/releases';
 
 type RuntimeEvent = RequestEvent | Pick<RequestEvent, 'platform'> | undefined;
 
@@ -22,14 +21,9 @@ async function client(event?: RuntimeEvent) {
 }
 
 export async function listReleases(event?: RuntimeEvent): Promise<ParsedRelease[]> {
-	const result = await requestAdminUnisourceV2<V2ReleaseListResponse>(
-		event,
-		'GET',
-		'/v2/releases',
-		{
-			query: { limit: 100 }
-		}
-	);
+	// Use the same request client as the other release operations so a logged-in
+	// admin is provisioned for the configured service before the JWT request.
+	const result = await (await client(event)).releases.list({ limit: 100 });
 	return result.items.map(mapRelease);
 }
 
@@ -70,6 +64,53 @@ export async function getLatestByChannel(
 		.filter((r) => r.upload_status === 'completed' && r.tags.includes(channel))
 		.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 	return match.length > 0 ? mapRelease(match[0]) : null;
+}
+
+function extractVersion(name: string): string | null {
+	return name.match(/(\d+\.\d+\.\d+(?:[.-][\w]+(?:[.-][\w]+)*)?)\.apk$/i)?.[1] ?? null;
+}
+
+function suggestNextVersion(version: string | null): string | null {
+	if (!version) return null;
+	const match = version.match(/^(\d+)\.(\d+)\.(\d+)$/);
+	if (!match) return version;
+	return `${match[1]}.${match[2]}.${Number(match[3]) + 1}`;
+}
+
+/**
+ * Reads the last stable app manifest so the upload form can fill technical
+ * metadata automatically. Missing manifests should not block the releases page;
+ * the advanced form remains available for a first release or legacy release.
+ */
+export async function getReleaseUploadDefaults(
+	event?: RuntimeEvent
+): Promise<ReleaseUploadDefaults> {
+	const fallback: ReleaseUploadDefaults = {
+		versionCode: 1,
+		minSupportedVersionCode: 1,
+		rollout: 100,
+		certificateSha256: '',
+		suggestedVersion: null,
+		sourceReleaseName: null
+	};
+
+	try {
+		const latest = await getLatestByChannel('stable', event);
+		if (!latest) return fallback;
+
+		const manifest = await (await client(event)).releases.getAppManifest(latest.$id);
+		return {
+			versionCode: manifest.item.version_code + 1,
+			minSupportedVersionCode: manifest.item.min_supported_version_code,
+			rollout: 100,
+			certificateSha256: manifest.item.certificate_sha256,
+			suggestedVersion: suggestNextVersion(extractVersion(latest.name)),
+			sourceReleaseName: latest.name
+		};
+	} catch (error) {
+		console.warn('Could not load release upload defaults:', error);
+		return fallback;
+	}
 }
 
 /**

@@ -107,6 +107,7 @@
 		versionCode: number;
 		minSupportedVersionCode: number;
 		rollout: number;
+		applicationId: 'pl.blokserwis.db' | 'com.unisource.id';
 		certificateSha256: string;
 	}) {
 		if (!pendingFile) return;
@@ -115,6 +116,7 @@
 
 		uploader = new ReleaseUploader({
 			filename: uploadData.name,
+			applicationId: uploadData.applicationId,
 			overwrite: uploadData.overwrite,
 			channel: uploadData.channel,
 			tags: uploadData.tags,
@@ -318,6 +320,7 @@
 	<ReleaseUploadModal
 		file={pendingFile}
 		{existingRelease}
+		defaults={data.releaseUploadDefaults}
 		onConfirm={handleUploadConfirm}
 		onCancel={handleUploadCancel}
 	/>

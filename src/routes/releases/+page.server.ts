@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { listReleases } from '$lib/server/storage/releases';
+import { getReleaseUploadDefaults, listReleases } from '$lib/server/storage/releases';
 import { getUserRole } from '$lib/server/roles';
 
 export const load: PageServerLoad = async (event) => {
@@ -8,5 +8,6 @@ export const load: PageServerLoad = async (event) => {
 		throw redirect(303, '/');
 	}
 	const releases = await listReleases(event);
-	return { releases };
+	const releaseUploadDefaults = await getReleaseUploadDefaults(event);
+	return { releases, releaseUploadDefaults };
 };
