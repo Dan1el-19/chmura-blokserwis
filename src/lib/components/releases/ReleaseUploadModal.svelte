@@ -391,7 +391,7 @@
 									class="font-mono"
 									oninput={() => (certificateTouched = true)}
 									maxlength="64"
-									pattern="[a-fA-F0-9]{64}"
+					pattern={'[a-fA-F0-9]{64}'}
 									error={certificateSha256.length > 0 &&
 									!/^[a-f\d]{64}$/i.test(certificateSha256.trim())
 										? 'Wymagane jest dokładnie 64 znaki hex'
