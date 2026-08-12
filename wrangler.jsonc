@@ -19,13 +19,13 @@
 	"keep_vars": true,
 	"vars": {
 		"PUBLIC_APPWRITE_PROJECT_NAME": "Chmura Blokserwis",
-		"ORIGIN": "https://chmura.blokserwis.pl",
-		"UNISOURCE_SERVICE_ID": "com-blokserwis-db"
+		"ORIGIN": "https://chmura.blokserwis.pl"
 	},
 	"secrets": {
 		"required": [
 			"APPWRITE_API_KEY",
 			"UNISOURCE_URL",
+			"UNISOURCE_SERVICE_ID",
 			"UNISOURCE_API_KEY",
 			"UPSTASH_REDIS_REST_URL",
 			"UPSTASH_REDIS_REST_TOKEN",
@@ -47,13 +47,13 @@
 			},
 			"vars": {
 				"PUBLIC_APPWRITE_PROJECT_NAME": "Chmura Blokserwis Beta",
-				"ORIGIN": "https://beta.chmura.blokserwis.pl",
-				"UNISOURCE_SERVICE_ID": "com-blokserwis-db"
+				"ORIGIN": "https://beta.chmura.blokserwis.pl"
 			},
 			"secrets": {
 				"required": [
 					"APPWRITE_API_KEY",
 					"UNISOURCE_URL",
+					"UNISOURCE_SERVICE_ID",
 					"UNISOURCE_API_KEY",
 					"UPSTASH_REDIS_REST_URL",
 					"UPSTASH_REDIS_REST_TOKEN",
