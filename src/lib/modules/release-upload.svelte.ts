@@ -6,7 +6,6 @@ export type ReleaseUploadResult = {
 
 export type ReleaseUploadOptions = {
 	filename: string;
-	applicationId: 'pl.blokserwis.db' | 'com.unisource.id';
 	overwrite: boolean;
 	channel?: 'stable' | 'beta';
 	tags?: string[];
@@ -106,7 +105,6 @@ export class ReleaseUploader {
 					version_code: this.options.versionCode,
 					min_supported_version_code: this.options.minSupportedVersionCode,
 					rollout: this.options.rollout,
-					application_id: this.options.applicationId,
 					sha256,
 					certificate_sha256: this.options.certificateSha256.trim().toLowerCase()
 				})

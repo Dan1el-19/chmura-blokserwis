@@ -9,11 +9,6 @@ import {
 	RATE_LIMIT_ENABLED
 } from '$lib/server/rate-limit';
 import { logger } from '$lib/server/logger';
-import {
-	configuredWebAuthMode,
-	resolveClerkSessionToken,
-	isClerkWebSession
-} from '$lib/server/provider-auth';
 
 const PUBLIC_ROUTES = ['/login', '/register', '/auth/callback'];
 const QUOTATION_PREVIEW_PATH = /^\/api\/quotations\/[^/]+\/preview$/;
@@ -67,18 +62,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 		}
 
+		const { account } = createSessionClient(event);
 		const sessionCookie = event.cookies.get(SESSION_COOKIE);
-		const configuredAuthMode = configuredWebAuthMode(event);
-		const sessionClient = configuredAuthMode === 'clerk' ? undefined : createSessionClient(event);
-		event.locals.authProvider = undefined;
-		event.locals.clerkSessionToken = undefined;
-
-		if (configuredAuthMode === 'clerk' || configuredAuthMode === 'dual') {
-			event.locals.clerkSessionToken = resolveClerkSessionToken(event) ?? undefined;
-		}
-		if (configuredAuthMode === 'clerk') {
-			event.locals.authProvider = 'clerk';
-		}
 
 		try {
 			if (sessionCookie) {
@@ -91,13 +76,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 			} else {
 				logger.debug('[HOOKS]', event.url.pathname, 'No session cookie');
 			}
-			if (configuredAuthMode === 'clerk') {
-				event.locals.user = undefined;
-			} else {
-				event.locals.user = await sessionClient!.account.get();
-				event.locals.authProvider = 'appwrite';
-				logger.info('[HOOKS]', event.url.pathname, 'User authenticated:', event.locals.user.$id);
-			}
+			event.locals.user = await account.get();
+			logger.info('[HOOKS]', event.url.pathname, 'User authenticated:', event.locals.user.$id);
 		} catch (err) {
 			if (sessionCookie) {
 				logger.error('[HOOKS]', event.url.pathname, 'Failed to get user from session:', err);
@@ -108,16 +88,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 			event.locals.user = undefined;
 		}
 
-		if (!event.locals.user && isClerkWebSession(event)) {
-			event.locals.authProvider = 'clerk';
-		}
-
 		const isPublicRoute = PUBLIC_ROUTES.some((route) => {
 			return event.url.pathname === route || event.url.pathname.startsWith('/file/');
 		});
 
-		const hasAuthenticatedSession = Boolean(event.locals.user) || isClerkWebSession(event);
-		if (!hasAuthenticatedSession && !isPublicRoute) {
+		if (!event.locals.user && !isPublicRoute) {
 			if (event.url.pathname.startsWith('/api/')) {
 				return new Response(JSON.stringify({ error: 'Unauthorized' }), {
 					status: 401,
@@ -127,7 +102,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			throw redirect(303, '/login');
 		}
 
-		if (hasAuthenticatedSession && event.url.pathname === '/login') {
+		if (event.locals.user && event.url.pathname === '/login') {
 			throw redirect(303, '/');
 		}
 
@@ -137,16 +112,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 			event.url.pathname.startsWith('/preview/') ||
 			event.url.pathname.startsWith('/releases') ||
 			event.url.pathname.startsWith('/api/releases');
-
-		if (isAdminRoute && event.locals.authProvider === 'clerk') {
-			if (event.url.pathname.startsWith('/api/')) {
-				return new Response(JSON.stringify({ error: 'Forbidden' }), {
-					status: 403,
-					headers: { 'Content-Type': 'application/json' }
-				});
-			}
-			throw redirect(303, '/');
-		}
 
 		if (isAdminRoute && event.locals.user) {
 			const role = getUserRole(event.locals.user);

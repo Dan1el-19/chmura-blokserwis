@@ -13,7 +13,6 @@ const completeSchema = z
 		release_id: z.string().min(1),
 		size: z.number().int().positive(),
 		channel: z.enum(['stable', 'beta']),
-		application_id: z.enum(['pl.blokserwis.db', 'com.unisource.id']),
 		version_code: z.number().int().positive(),
 		min_supported_version_code: z.number().int().positive(),
 		rollout: z.number().int().min(0).max(100),
@@ -38,17 +37,13 @@ export const POST: RequestHandler = async (event) => {
 	const parsed = completeSchema.safeParse(await event.request.json().catch(() => null));
 
 	if (!parsed.success) {
-		return json(
-			{ error: 'Invalid release manifest', details: parsed.error.issues },
-			{ status: 400 }
-		);
+		return json({ error: 'Invalid release manifest', details: parsed.error.issues }, { status: 400 });
 	}
 
 	const {
 		release_id,
 		size,
 		channel,
-		application_id,
 		version_code,
 		min_supported_version_code,
 		rollout,
@@ -61,7 +56,6 @@ export const POST: RequestHandler = async (event) => {
 		const result = unwrapItem(await client.releases.uploadComplete(release_id, size));
 		await client.releases.putAppManifest(release_id, {
 			...v2AppReleaseManifestInputSchema.parse({
-				application_id,
 				version_code,
 				min_supported_version_code,
 				sha256: sha256.toLowerCase(),
