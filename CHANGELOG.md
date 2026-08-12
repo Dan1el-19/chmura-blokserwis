@@ -1,3 +1,17 @@
+## [2.21.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.20.1...v2.21.0) (2026-08-12)
+
+### Features
+
+* **auth:** add provider-neutral web auth seam ([d049485](https://github.com/Dan1el-19/chmura-blokserwis/commit/d049485068026906eeb50cb4b3dc3a78757cbafe))
+* **releases:** detect native APK applications ([733671c](https://github.com/Dan1el-19/chmura-blokserwis/commit/733671cf7488425ee998db65f5579a5ae3bb530b))
+
+### Bug Fixes
+
+* **config:** remove stale worker vars ([433ccb9](https://github.com/Dan1el-19/chmura-blokserwis/commit/433ccb952a54b2d8eb2bc778c85fe464921bb82a))
+* **config:** restore service id secret ([b5e7fc6](https://github.com/Dan1el-19/chmura-blokserwis/commit/b5e7fc6460d6a8b76a39ea3f2ed34c1f5a6b1768))
+* **frontend:** prevent mobile drawer items from stretching ([db04aaa](https://github.com/Dan1el-19/chmura-blokserwis/commit/db04aaa42363b3970c0d8796ea2483703b5747c0))
+* **releases:** preserve APK certificate validation pattern ([3033088](https://github.com/Dan1el-19/chmura-blokserwis/commit/3033088440578a898b15b885bc9ddeeb78168ee0))
+
 ## [2.20.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.20.0...v2.20.1) (2026-08-10)
 
 ### Bug Fixes
