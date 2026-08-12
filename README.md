@@ -8,22 +8,6 @@ Cloudflare Workers builds install dependencies with `pnpm install --frozen-lockf
 The neighboring `A:\Projects\UniSource` checkout is read-only reference material. Do not link it
 into this application or publish the SDK from this repository.
 
-# UniSource V2 beta
-
-Stable production and the V2 beta are separate Cloudflare Workers:
-
-- stable: `chmura-blokserwis` at `https://chmura.blokserwis.pl`
-- beta: `chmura-blokserwis-beta` at `https://beta.chmura.blokserwis.pl`
-
-Validate and dry-run beta without touching stable:
-
-```powershell
-pnpm check:beta-config
-pnpm deploy:beta:dry
-```
-
-See `docs/runbooks/unisource-v2-beta.md` for infrastructure, deployment and rollback steps.
-
 # Database init
 
 ```bash

@@ -9,7 +9,6 @@
 		"db:init": "npx vite-node scripts/init-db.ts",
 		"r2:abort": "tsx scripts/abort-multipart-uploads.ts",
 		"build": "vite build",
-		"build:beta": "pnpm check:beta-config && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -19,11 +18,7 @@
 		"test:unit": "vitest",
 		"test": "pnpm test:unit -- --run && pnpm test:e2e",
 		"test:e2e": "playwright test",
-		"deploy": "pnpm run build && wrangler deploy",
-		"check:beta-config": "node scripts/validate-beta-config.mjs",
-		"deploy:beta:dry": "pnpm build:beta && wrangler deploy --dry-run --env beta",
-		"deploy:beta:ci": "pnpm build:beta && wrangler deploy --env beta --secrets-file \"$RUNNER_TEMP/beta-secrets.json\"",
-		"deploy:beta": "pnpm build:beta && wrangler deploy --env beta"
+		"deploy": "pnpm run build && wrangler deploy"
 	},
 	"overrides": {
 		"@smithy/smithy-client": "4.13.0"

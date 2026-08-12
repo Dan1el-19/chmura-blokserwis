@@ -46,7 +46,7 @@ describe('/admin/users load', () => {
 
 		const result = (await load({
 			platform: undefined,
-			url: new URL('https://beta.chmura.blokserwis.pl/admin/users?page=1')
+			url: new URL('https://chmura.blokserwis.pl/admin/users?page=1')
 		} as any)) as AdminUsersPageResult;
 
 		expect(requestAdminUnisourceV2).toHaveBeenCalledWith(
