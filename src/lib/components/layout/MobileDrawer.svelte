@@ -53,14 +53,14 @@
 
 	<!-- Mobile Nav Menu -->
 	<nav
-		class="fixed top-14 right-0 left-0 z-30 flex flex-col gap-2 p-4 lg:hidden"
+		class="fixed top-14 left-0 z-30 flex w-screen max-w-[100vw] flex-col gap-2 overflow-x-hidden p-4 lg:hidden"
 		in:fly={{ y: -20, duration: 300, easing: quintOut }}
 		out:fly={{ y: -10, duration: 150 }}
 	>
 		{#each primaryNavItems as item, i (item.href)}
 			<a
 				href={item.href}
-				class="flex items-center gap-4 rounded-full py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]
+				class="flex w-full min-w-0 items-center gap-4 rounded-full py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]
 								   {currentPath === item.href || currentPath.startsWith(`${item.href}/`)
 					? activeBgFor(item)
 					: 'bg-bg-panel'}"
@@ -79,7 +79,7 @@
 		{#if trashNavItem}
 			<a
 				href={trashNavItem.href}
-				class="mt-2 flex items-center gap-4 rounded-full py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]
+				class="mt-2 flex w-full min-w-0 items-center gap-4 rounded-full py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]
 								   {currentPath === trashNavItem.href ? activeBgFor(trashNavItem) : 'bg-bg-panel'}"
 				in:fly={{
 					y: -24,
@@ -99,7 +99,7 @@
 		{/if}
 
 		<!-- Logout -->
-		<form action="/logout" method="POST">
+		<form action="/logout" method="POST" class="w-full">
 			<button
 				type="submit"
 				class="flex w-full items-center gap-4 rounded-full bg-bg-panel py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]"

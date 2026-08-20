@@ -28,4 +28,14 @@ describe('sidebar action placement', () => {
 		expect(source).toContain('const logoutIndex');
 		expect(source.indexOf('{#if trashNavItem}')).toBeLessThan(source.indexOf('<!-- Logout -->'));
 	});
+
+	it('pins the mobile drawer to the viewport on horizontally wide pages', () => {
+		const source = readComponent('src/lib/components/layout/MobileDrawer.svelte');
+
+		expect(source).toContain('w-screen max-w-[100vw]');
+		expect(source).toContain('overflow-x-hidden');
+		expect(source).not.toContain('right-0 left-0');
+		expect(source).toContain('class="flex w-full min-w-0 items-center gap-4');
+		expect(source).toContain('method="POST" class="w-full"');
+	});
 });
