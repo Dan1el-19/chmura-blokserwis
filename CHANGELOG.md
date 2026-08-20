@@ -1,3 +1,14 @@
+## [2.21.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.21.0...v2.21.1) (2026-08-20)
+
+### Bug Fixes
+
+* **frontend:** constrain mobile drawer to viewport ([8415726](https://github.com/Dan1el-19/chmura-blokserwis/commit/8415726c2425e409998b7d9459cb2baddfe8e757))
+
+### Reverts
+
+* **frontend:** restore full-width mobile drawer items ([e2072a9](https://github.com/Dan1el-19/chmura-blokserwis/commit/e2072a9cca11d1e24071f79ca505c67575efd07a))
+* restore main before unrelated release changes ([d967148](https://github.com/Dan1el-19/chmura-blokserwis/commit/d967148861a217efccfadc74887b5be2710b2e4a))
+
 ## [2.20.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.20.0...v2.20.1) (2026-08-10)
 
 ### Bug Fixes
