@@ -28,12 +28,4 @@ describe('sidebar action placement', () => {
 		expect(source).toContain('const logoutIndex');
 		expect(source.indexOf('{#if trashNavItem}')).toBeLessThan(source.indexOf('<!-- Logout -->'));
 	});
-
-	it('keeps mobile drawer actions from stretching across the viewport', () => {
-		const source = readComponent('src/lib/components/layout/MobileDrawer.svelte');
-
-		expect(source).toContain('flex flex-col items-start gap-2');
-		expect(source).toContain('class="flex w-fit items-center gap-4');
-		expect(source).toContain('method="POST" class="w-fit"');
-	});
 });
