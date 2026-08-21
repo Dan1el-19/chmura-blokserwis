@@ -1,3 +1,9 @@
+## [2.23.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.22.2...v2.23.0) (2026-08-21)
+
+### Features
+
+* **quotations:** simplify v2 generation flow ([e95cac3](https://github.com/Dan1el-19/chmura-blokserwis/commit/e95cac3d7a2129cd90bef8f7f77ffd4713410df0))
+
 ## [2.22.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.22.1...v2.22.2) (2026-08-21)
 
 ### Bug Fixes
