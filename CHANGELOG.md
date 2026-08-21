@@ -1,3 +1,9 @@
+## [2.22.2](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.22.1...v2.22.2) (2026-08-21)
+
+### Bug Fixes
+
+* **quotations:** stabilize template preview switching ([797d201](https://github.com/Dan1el-19/chmura-blokserwis/commit/797d20157a59c4007962babeb422a3e81d128023))
+
 ## [2.22.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.22.0...v2.22.1) (2026-08-21)
 
 ### Bug Fixes
