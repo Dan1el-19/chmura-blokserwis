@@ -1,3 +1,9 @@
+## [2.22.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.21.1...v2.22.0) (2026-08-21)
+
+### Features
+
+* **quotations:** streamline quotation list and generator ([54f8e29](https://github.com/Dan1el-19/chmura-blokserwis/commit/54f8e29be1bac1ab98e9a1ecd291e978c9e64156))
+
 ## [2.21.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.21.0...v2.21.1) (2026-08-20)
 
 ### Bug Fixes
