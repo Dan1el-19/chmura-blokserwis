@@ -16,14 +16,18 @@ describe('quotation editor critical UX contracts', () => {
 		expect(editor).toContain('Zatwierdź zmiany ponownie');
 	});
 
-	it('pins generation and revisions to GPT 5.6 Luna without exposing a model selector', () => {
+	it('uses automatic selection by default and keeps manual model controls advanced', () => {
 		expect(editor).toContain("import { QUOTATION_AI_MODEL_ID } from '$lib/quotations/models'");
-		expect(editor).toContain('modelId: QUOTATION_AI_MODEL_ID');
+		expect(editor).toContain('manualModelId.trim() || QUOTATION_AI_MODEL_ID');
+		expect(editor).toContain("mode: 'automatic' as const");
+		expect(editor).toContain("mode: 'custom' as const");
+		expect(editor).toContain('Automatyczny dobór (zalecany)');
+		expect(editor).toContain('title="Asystent AI"');
 		expect(editor).not.toContain('QuotationModelSelector');
 		expect(editor).not.toContain('MODEL_STORAGE_KEY');
 	});
 
-	it('keeps reasoning disabled for the fixed model', () => {
-		expect(editor.match(/reasoningEnabled: false/g)).toHaveLength(2);
+	it('keeps reasoning disabled for the legacy block editor', () => {
+		expect(editor.match(/reasoningEnabled: false/g)).toHaveLength(1);
 	});
 });

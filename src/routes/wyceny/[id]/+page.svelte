@@ -10,6 +10,7 @@
 		letterheads={data.letterheads?.items ?? []}
 		operations={data.operations?.items ?? []}
 		versions={data.versions?.items ?? []}
+		models={data.models?.items ?? []}
 	/>
 {:else}
 	<section

@@ -11,7 +11,7 @@ export const QUOTATION_MODEL_CATEGORIES = [
 ] as const;
 
 export type QuotationModelCategory = (typeof QUOTATION_MODEL_CATEGORIES)[number];
-export type QuotationAiAction = 'generate' | 'revise_block';
+export type QuotationAiAction = 'generate' | 'revise_block' | 'revise_document';
 
 export const QUOTATION_MODEL_CATEGORY_META: Record<
 	QuotationModelCategory,

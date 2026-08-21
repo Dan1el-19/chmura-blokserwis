@@ -1,7 +1,10 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-import { requestUserUnisourceV2, requestUserUnisourceV2Stream } from '$lib/server/unisource';
+import {
+	requestUserUnisourceV2,
+	requestUserUnisourceV2Stream
+} from '$lib/server/unisource';
 import {
 	quotationErrorResponse,
 	quotationIdempotencyKey,
@@ -21,7 +24,7 @@ export const POST: RequestHandler = async (event) => {
 			const upstream = await requestUserUnisourceV2Stream(
 				event,
 				'POST',
-				`/v2/quotations/${encodeURIComponent(event.params.id)}/ai/generate/stream`,
+				`/v2/quotations/${encodeURIComponent(event.params.id)}/ai/revise-document/stream`,
 				{ body: withoutProxyFields(body), idempotencyKey }
 			);
 			return new Response(upstream.body, {
@@ -33,14 +36,12 @@ export const POST: RequestHandler = async (event) => {
 			});
 		}
 		return json(
-			await requestUserUnisourceV2(
-				event,
-				'POST',
-				`/v2/quotations/${encodeURIComponent(event.params.id)}/ai/generate`,
-				{ body: withoutProxyFields(body), idempotencyKey }
-			)
+			await requestUserUnisourceV2(event, 'POST', `/v2/quotations/${encodeURIComponent(event.params.id)}/ai/revise-document`, {
+				body: withoutProxyFields(body),
+				idempotencyKey
+			})
 		);
 	} catch (error) {
-		return quotationErrorResponse(error, 'Generowanie wyceny nie powiodło się.');
+		return quotationErrorResponse(error, 'Poprawianie wyceny nie powiodło się.');
 	}
 };

@@ -1,5 +1,13 @@
 <script lang="ts">
 	import { onDestroy, untrack } from 'svelte';
+	import type {
+		Quotation,
+		QuotationAiMutationResponse,
+		QuotationAiOperation,
+		QuotationDocument,
+		QuotationLetterhead,
+		QuotationVersion
+	} from '@unisource/sdk/v2';
 	import {
 		Check,
 		DownloadSimple,
@@ -13,34 +21,46 @@
 	import { consumeQuotationAiStream, type QuotationAiStreamEvent } from '$lib/quotations/ai-stream';
 	import { quotationDocumentToUpdatePayload } from '$lib/quotations/document';
 	import { QUOTATION_AI_MODEL_ID } from '$lib/quotations/models';
+	import type { QuotationModelPrice } from '$lib/quotations/types';
 	import QuotationBlocksEditor from './QuotationBlocksEditor.svelte';
 	import QuotationItemsEditor from './QuotationItemsEditor.svelte';
 	import QuotationLetterheadSelector from './QuotationLetterheadSelector.svelte';
 	import QuotationPreview from './QuotationPreview.svelte';
 	import CollapsibleSection from '$lib/components/ui/CollapsibleSection.svelte';
 
-	type AnyRecord = Record<string, any>;
 	function cloneJson<T>(value: T): T {
 		return JSON.parse(JSON.stringify(value)) as T;
 	}
+	type ApiPayload = Record<string, unknown> & {
+		item?: Quotation;
+		quotation?: Quotation;
+		message?: unknown;
+		error?: unknown;
+	};
 	type SaveState = 'saved' | 'dirty' | 'saving' | 'error' | 'conflict';
 	type Props = {
-		quotation: AnyRecord;
-		letterheads?: AnyRecord[];
-		operations?: AnyRecord[];
-		versions?: AnyRecord[];
+		quotation: Quotation;
+		letterheads?: QuotationLetterhead[];
+		operations?: QuotationAiOperation[];
+		versions?: QuotationVersion[];
+		models?: QuotationModelPrice[];
 	};
 	let {
 		quotation: initialQuotation,
 		letterheads = [],
 		operations = [],
-		versions = []
+		versions = [],
+		models = []
 	}: Props = $props();
-	let quotation = $state(untrack(() => cloneJson(initialQuotation)));
-	let document = $state(untrack(() => cloneJson(initialQuotation.document)));
+	let quotation = $state<Quotation>(untrack(() => cloneJson(initialQuotation)));
+	let document = $state<QuotationDocument>(untrack(() => cloneJson(initialQuotation.document)));
 	let errorMessage = $state('');
 	let aiInstructions = $state('');
+	let documentFeedback = $state('');
+	let manualModelId = $state('');
+	let manualReasoningEnabled = $state(false);
 	let aiBusy = $state(false);
+	let documentRevisionBusy = $state(false);
 	let webSearchEnabled = $state(true);
 	let aiStatus = $state('');
 	let aiReasoning = $state('');
@@ -51,14 +71,15 @@
 	let aiAbortController: AbortController | null = null;
 	let revisingId = $state('');
 	let approving = $state(false);
-	let mobilePreviewOpen = $state(false);
+	let mobilePreviewOpen = $state(true);
 	let useAsAiExample = $state(true);
 	let saveVerifiedProductDescriptions = $state(true);
-	let undoDocument = $state<AnyRecord | null>(null);
+	let undoDocument = $state<QuotationDocument | null>(null);
 	let revision = $state(untrack(() => initialQuotation.lockVersion ?? 0));
-	let letterheadOptions = $derived(letterheads as any);
+	let letterheadOptions = $derived(letterheads);
+	const retryStoragePrefix = `chmura:quotation-v2:${untrack(() => initialQuotation.id)}:`;
 	let editable = $derived(quotation.status !== 'archived');
-	const autosave = new QuotationAutosave<AnyRecord>({
+	const autosave = new QuotationAutosave<QuotationDocument>({
 		initialDocument: untrack(() => cloneJson(document)),
 		initialLockVersion: untrack(() => quotation.lockVersion),
 		debounceMs: 1_000,
@@ -67,11 +88,11 @@
 				method: 'PATCH',
 				signal,
 				body: JSON.stringify({
-					...quotationDocumentToUpdatePayload(pendingDocument as any, expectedLockVersion),
+					...quotationDocumentToUpdatePayload(pendingDocument, expectedLockVersion),
 					knowledgeEnabled: quotation.knowledgeEnabled ?? true
 				})
 			});
-			const item = payload.item ?? payload.quotation ?? payload;
+			const item = quotationFromPayload(payload);
 			quotation = { ...quotation, ...item, document: quotation.document };
 			revision = item.lockVersion;
 			return { document: item.document, lockVersion: item.lockVersion };
@@ -87,42 +108,97 @@
 		autosave.dispose();
 	});
 
-	function idempotencyKey() {
-		return crypto.randomUUID();
+	let aiRetryKeys = $state<Record<string, string>>({});
+	function readRetryKey(scope: string): string | null {
+		if (typeof window === 'undefined') return null;
+		try {
+			return window.localStorage.getItem(`${retryStoragePrefix}${scope}`);
+		} catch {
+			return null;
+		}
 	}
-	function recordAiUsage(operation: AnyRecord | undefined) {
+	function writeRetryKey(scope: string, value: string): void {
+		if (typeof window === 'undefined') return;
+		try {
+			window.localStorage.setItem(`${retryStoragePrefix}${scope}`, value);
+		} catch {
+			// Storage is an optional resilience layer.
+		}
+	}
+	function removeRetryKey(scope: string): void {
+		if (typeof window === 'undefined') return;
+		try {
+			window.localStorage.removeItem(`${retryStoragePrefix}${scope}`);
+		} catch {
+			// Storage cleanup is best effort.
+		}
+	}
+	function idempotencyKey(scope = 'generic') {
+		const existing = aiRetryKeys[scope] ?? readRetryKey(scope);
+		if (existing) return existing;
+		const next = crypto.randomUUID();
+		aiRetryKeys = { ...aiRetryKeys, [scope]: next };
+		writeRetryKey(scope, next);
+		return next;
+	}
+	function clearIdempotencyKey(scope: string) {
+		if (scope in aiRetryKeys) {
+			const next = { ...aiRetryKeys };
+			delete next[scope];
+			aiRetryKeys = next;
+		}
+		removeRetryKey(scope);
+	}
+	function shouldRotateIdempotencyKey(error: unknown): boolean {
+		if (!error || typeof error !== 'object') return false;
+		const code = (error as { code?: unknown }).code;
+		return typeof code === 'string' && (code === 'conflict' || code.startsWith('quotation_'));
+	}
+	function recordAiUsage(operation: QuotationAiOperation | undefined) {
 		if (!operation) return;
 		operations = [operation, ...operations];
 	}
-	function acceptServerMutation(item: AnyRecord) {
+	function acceptServerMutation(item: Quotation) {
 		quotation = item;
 		document = cloneJson(item.document);
 		autosave.replaceFromServer(cloneJson(item.document), item.lockVersion);
 		revision = item.lockVersion;
 	}
+	function quotationFromPayload(payload: ApiPayload | QuotationAiMutationResponse): Quotation {
+		if ('item' in payload && payload.item) return payload.item;
+		if ('quotation' in payload && payload.quotation) return payload.quotation;
+		return payload as unknown as Quotation;
+	}
 	function markDirty() {
 		if (quotation.status === 'archived') return;
 		autosave.schedule(cloneJson($state.snapshot(document)));
 	}
-	function replaceDocument(next: AnyRecord, shouldSave = true) {
+	function replaceDocument(next: QuotationDocument, shouldSave = true) {
 		document = cloneJson(next);
 		if (shouldSave) markDirty();
 	}
-	async function api(path: string, init?: RequestInit) {
+	async function api<T extends ApiPayload = ApiPayload>(path: string, init?: RequestInit): Promise<T> {
 		const response = await fetch(path, {
 			...init,
 			headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) }
 		});
-		const payload = await response.json().catch(() => ({}));
+		const payload = (await response.json().catch(() => ({}))) as T;
 		if (!response.ok) {
+			const nestedError = payload.error && typeof payload.error === 'object' && !Array.isArray(payload.error)
+				? (payload.error as { message?: unknown; code?: unknown; details?: unknown })
+				: undefined;
 			const apiError = new Error(
-				payload.message ??
-					payload.error?.message ??
-					(typeof payload.error === 'string' ? payload.error : 'Operacja nie powiodła się.')
-			) as Error & { status?: number; code?: string; details?: unknown; payload?: AnyRecord };
+				typeof payload.message === 'string'
+					? payload.message
+					: typeof nestedError?.message === 'string'
+						? nestedError.message
+						: typeof payload.error === 'string'
+							? payload.error
+							: 'Operacja nie powiodła się.'
+			) as Error & { status?: number; code?: string; details?: unknown; payload?: ApiPayload };
 			apiError.status = response.status;
-			apiError.code = payload.error?.code;
-			apiError.details = payload.error?.details;
+			apiError.code = typeof nestedError?.code === 'string' ? nestedError.code : undefined;
+			apiError.details = nestedError?.details;
 			apiError.payload = payload;
 			throw apiError;
 		}
@@ -136,6 +212,17 @@
 		aiSources = [];
 		aiFieldPreviews = {};
 	}
+	function aiSelection() {
+		const modelId = manualModelId.trim();
+		return modelId
+			? {
+					mode: 'custom' as const,
+					modelId,
+					reasoningEnabled: manualReasoningEnabled,
+					webSearchEnabled
+				}
+			: { mode: 'automatic' as const };
+	}
 	function addAiActivity(text: string, completed = false) {
 		aiActivity = [...aiActivity.slice(-11), { id: crypto.randomUUID(), text, completed }];
 	}
@@ -144,7 +231,7 @@
 		if (event.field === 'revision') return 'Poprawiona treść';
 		if (event.field === 'item_description') {
 			return (
-				document.items.find((item: AnyRecord) => item.id === event.itemId)?.name ?? 'Opis pozycji'
+			document.items.find((item) => item.id === event.itemId)?.name ?? 'Opis pozycji'
 			);
 		}
 		return event.field === 'block_title'
@@ -195,7 +282,7 @@
 				break;
 		}
 	}
-	async function streamApi(path: string, body: AnyRecord) {
+	async function streamApi(path: string, body: Record<string, unknown>): Promise<QuotationAiMutationResponse> {
 		aiAbortController = new AbortController();
 		const response = await fetch(path, {
 			method: 'POST',
@@ -203,7 +290,7 @@
 			headers: { 'content-type': 'application/json', accept: 'text/event-stream' },
 			body: JSON.stringify(body)
 		});
-		return consumeQuotationAiStream(response, handleAiEvent);
+		return (await consumeQuotationAiStream(response, handleAiEvent)) as unknown as QuotationAiMutationResponse;
 	}
 	async function save() {
 		await autosave.flush();
@@ -215,7 +302,7 @@
 	async function loadServerVersion() {
 		try {
 			const latest = await api(`/api/quotations/${encodeURIComponent(quotation.id)}`);
-			const item = latest.item ?? latest.quotation ?? latest;
+			const item = quotationFromPayload(latest);
 			quotation = item;
 			document = cloneJson(item.document);
 			revision = item.lockVersion;
@@ -228,7 +315,7 @@
 	async function applyLocalOnLatest() {
 		try {
 			const latest = await api(`/api/quotations/${encodeURIComponent(quotation.id)}`);
-			const item = latest.item ?? latest.quotation ?? latest;
+			const item = quotationFromPayload(latest);
 			quotation = { ...quotation, ...item, document: quotation.document };
 			autosave.resolveWithLocal(item.lockVersion);
 			await save();
@@ -249,22 +336,53 @@
 			const payload = await streamApi(
 				`/api/quotations/${encodeURIComponent(quotation.id)}/ai/generate`,
 				{
-					modelId: QUOTATION_AI_MODEL_ID,
-					reasoningEnabled: false,
-					webSearchEnabled,
+					selection: aiSelection(),
 					instructions: aiInstructions || undefined,
 					expectedLockVersion: quotation.lockVersion,
-					idempotencyKey: idempotencyKey()
+					idempotencyKey: idempotencyKey('generate')
 				}
 			);
-			acceptServerMutation(payload.item ?? payload.quotation ?? payload);
+			acceptServerMutation(quotationFromPayload(payload));
 			recordAiUsage(payload.operation);
+			clearIdempotencyKey('generate');
 		} catch (error) {
 			errorMessage = error instanceof Error ? error.message : 'Generowanie nie powiodło się.';
+			if (shouldRotateIdempotencyKey(error)) clearIdempotencyKey('generate');
 			undoDocument = null;
 		} finally {
 			aiAbortController = null;
 			aiBusy = false;
+		}
+	}
+	async function reviseDocument() {
+		const feedback = documentFeedback.trim();
+		if (!feedback || documentRevisionBusy || !editable) return;
+		if (saveState !== 'saved') await save();
+		if (saveState !== 'saved') return;
+		documentRevisionBusy = true;
+		errorMessage = '';
+		resetAiStream();
+		undoDocument = cloneJson($state.snapshot(document));
+		try {
+			const payload = await streamApi(
+				`/api/quotations/${encodeURIComponent(quotation.id)}/ai/revise-document`,
+				{
+					selection: aiSelection(),
+					feedback,
+					expectedLockVersion: quotation.lockVersion,
+					idempotencyKey: idempotencyKey('revise-document')
+				}
+			);
+			acceptServerMutation(quotationFromPayload(payload));
+			recordAiUsage(payload.operation);
+			documentFeedback = '';
+			clearIdempotencyKey('revise-document');
+		} catch (error) {
+			errorMessage = error instanceof Error ? error.message : 'Poprawa wyceny nie powiodła się.';
+			if (shouldRotateIdempotencyKey(error)) clearIdempotencyKey('revise-document');
+		} finally {
+			aiAbortController = null;
+			documentRevisionBusy = false;
 		}
 	}
 	async function revise(blockId: string, feedback: string) {
@@ -279,19 +397,21 @@
 			const payload = await streamApi(
 				`/api/quotations/${encodeURIComponent(quotation.id)}/ai/revise-block`,
 				{
-					modelId: QUOTATION_AI_MODEL_ID,
+					modelId: manualModelId.trim() || QUOTATION_AI_MODEL_ID,
 					reasoningEnabled: false,
 					webSearchEnabled,
 					blockId,
 					feedback,
 					expectedLockVersion: quotation.lockVersion,
-					idempotencyKey: idempotencyKey()
+					idempotencyKey: idempotencyKey(`revise-block:${blockId}`)
 				}
 			);
-			acceptServerMutation(payload.item ?? payload.quotation ?? payload);
+			acceptServerMutation(quotationFromPayload(payload));
 			recordAiUsage(payload.operation);
+			clearIdempotencyKey(`revise-block:${blockId}`);
 		} catch (error) {
 			errorMessage = error instanceof Error ? error.message : 'Poprawa bloku nie powiodła się.';
+			if (shouldRotateIdempotencyKey(error)) clearIdempotencyKey(`revise-block:${blockId}`);
 			undoDocument = null;
 		} finally {
 			aiAbortController = null;
@@ -317,12 +437,14 @@
 					expectedLockVersion: quotation.lockVersion,
 					useAsAiExample,
 					saveVerifiedProductDescriptions,
-					idempotencyKey: idempotencyKey()
+					idempotencyKey: idempotencyKey('approve')
 				})
 			});
-			acceptServerMutation(payload.item ?? payload.quotation ?? payload);
+			acceptServerMutation(quotationFromPayload(payload));
+			clearIdempotencyKey('approve');
 		} catch (error) {
 			errorMessage = error instanceof Error ? error.message : 'Nie udało się zatwierdzić wyceny.';
+			if (shouldRotateIdempotencyKey(error)) clearIdempotencyKey('approve');
 		} finally {
 			approving = false;
 		}
@@ -396,10 +518,39 @@
 				><Button size="sm" onclick={applyLocalOnLatest}>Zastosuj moje zmiany na najnowszej</Button>
 			</div>
 		</div>{/if}
+	<section class="space-y-3 rounded-md border border-primary/25 bg-primary/5 p-4 sm:p-5">
+		<div>
+			<h2 class="font-semibold text-text-main">Podgląd i szybka poprawka</h2>
+			<p class="mt-1 text-sm text-text-muted">
+				Podgląd dokumentu jest po prawej. Napisz, co zmienić w narracji — ilości, jednostki i ceny pozostaną bez zmian.
+			</p>
+		</div>
+		<label class="grid gap-1 text-sm font-medium text-text-main" for="document-feedback"
+			>Co poprawić?<textarea
+				id="document-feedback"
+				bind:value={documentFeedback}
+				disabled={!editable || documentRevisionBusy || aiBusy || Boolean(revisingId)}
+				rows="3"
+				placeholder="Np. skróć wprowadzenie i podkreśl szybki termin realizacji…"
+				class="rounded-md border border-border-line bg-bg-panel p-3 text-sm font-normal leading-6 text-text-main"
+			></textarea>
+		</label>
+		<div class="flex flex-wrap items-center gap-2">
+			<Button
+				loading={documentRevisionBusy}
+				disabled={!editable || !documentFeedback.trim() || documentRevisionBusy || aiBusy || Boolean(revisingId)}
+				onclick={reviseDocument}
+				><MagicWand class="mr-2 h-4 w-4" /> Popraw z AI</Button
+			>
+			{#if undoDocument}
+				<Button variant="secondary" disabled={documentRevisionBusy || aiBusy} onclick={undoAi}>Cofnij ostatnią zmianę</Button>
+			{/if}
+		</div>
+	</section>
 	<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,0.8fr)]">
 		<main class="min-w-0 space-y-4 {mobilePreviewOpen ? 'hidden' : 'block'} xl:block">
 			<section class="space-y-4 rounded-md border border-border-line bg-bg-panel p-4 sm:p-5">
-				<h2 class="font-semibold text-text-main">Dane wyceny</h2>
+				<h2 class="font-semibold text-text-main">Podstawowe dane</h2>
 				<label class="grid gap-1 text-sm font-medium text-text-main"
 					>Tytuł<input
 						disabled={!editable}
@@ -411,6 +562,12 @@
 						class="h-10 rounded-md border border-border-line bg-bg-app px-3 text-text-main"
 					/></label
 				>
+			</section>
+			<CollapsibleSection
+				title="Klient i wprowadzenie"
+				description="Dane odbiorcy oraz tekst otwierający dokument."
+				open={false}
+			>
 				<div class="grid gap-3 sm:grid-cols-2">
 					<label class="grid gap-1 text-xs text-text-muted"
 						>Firma klienta<input
@@ -477,21 +634,27 @@
 						class="rounded-md border border-border-line bg-bg-app p-3 text-sm leading-6 text-text-main"
 					></textarea></label
 				>
-			</section>
-			<QuotationItemsEditor
-				categories={document.categories}
-				items={document.items}
-				disabled={!editable}
-				onchange={(categories, items) => {
-					document.categories = categories;
-					document.items = items;
-					markDirty();
-				}}
-			/>
+			</CollapsibleSection>
+			<CollapsibleSection
+				title="Pozycje i kategorie"
+				description="Ilości i ceny są chronione przed globalną poprawką AI."
+				open={false}
+			>
+				<QuotationItemsEditor
+					categories={document.categories}
+					items={document.items}
+					disabled={!editable}
+					onchange={(categories, items) => {
+						document.categories = categories;
+						document.items = items;
+						markDirty();
+					}}
+				/>
+			</CollapsibleSection>
 			<CollapsibleSection
 				title="Bloki opisu"
 				description="Opis zakresu, standardu i korzyści dla klienta."
-				open={document.descriptionBlocks.length > 0}
+				open={false}
 			>
 				<QuotationBlocksEditor
 					blocks={document.descriptionBlocks}
@@ -510,6 +673,7 @@
 			<CollapsibleSection
 				title="Ustawienia dokumentu"
 				description="Papier firmowy i szablony wydruku."
+				open={false}
 			>
 				<QuotationLetterheadSelector
 					value={document.letterheadVariant}
@@ -525,7 +689,46 @@
 			<CollapsibleSection
 				title="Asystent AI"
 				description="Generowanie i poprawianie treści z pomocą AI."
+				open={false}
 			>
+				{#if models.length > 0}
+					<label class="grid gap-1 rounded-md border border-border-line bg-bg-app p-3 text-sm text-text-main">
+						<span class="font-medium">Model AI (opcje zaawansowane)</span>
+						<select
+							value={manualModelId}
+							disabled={!editable || aiBusy || documentRevisionBusy || Boolean(revisingId)}
+							onchange={(event) => {
+								manualModelId = event.currentTarget.value;
+								if (!models.find((model) => model.id === manualModelId)?.reasoningSupported) {
+									manualReasoningEnabled = false;
+								}
+							}}
+							class="h-10 rounded-md border border-border-line bg-bg-panel px-3 text-sm text-text-main"
+						>
+							<option value="">Automatyczny dobór (zalecany)</option>
+							{#each models.filter((model) => model.available !== false) as model (model.id)}
+								<option value={model.id}>{model.name}</option>
+							{/each}
+						</select>
+						<span class="text-xs text-text-muted">
+							Domyślnie backend dobiera model, research i reasoning. Ręczny wybór działa tylko dla tej wyceny.
+						</span>
+					</label>
+					{#if manualModelId}
+						<label class="flex items-start gap-2 rounded-md border border-border-line bg-bg-app p-3 text-sm text-text-main">
+							<input
+								type="checkbox"
+								bind:checked={manualReasoningEnabled}
+								disabled={!editable || aiBusy || documentRevisionBusy || Boolean(revisingId) || !models.find((model) => model.id === manualModelId)?.reasoningSupported}
+								class="mt-0.5 file-selection-checkbox"
+							/>
+							<span>
+								<span class="block font-medium">Reasoning dla wybranego modelu</span>
+								<span class="mt-0.5 block text-xs text-text-muted">Może poprawić jakość, ale zwiększa czas i koszt generowania.</span>
+							</span>
+						</label>
+					{/if}
+				{/if}
 				<label
 					class="flex items-start gap-2 rounded-md border border-border-line bg-bg-app p-3 text-sm text-text-main"
 				>
@@ -610,25 +813,6 @@
 								</ul>
 							</details>
 						{/if}
-						{#if aiReasoning}
-							<details class="border-t border-primary/15 pt-2 text-xs">
-								<summary class="cursor-pointer font-medium text-text-main">Analiza modelu</summary>
-								<p
-									class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap leading-relaxed text-text-muted"
-								>
-									{aiReasoning}
-								</p>
-							</details>
-						{/if}
-						{#if aiRawResponse}
-							<details class="border-t border-primary/15 pt-2 text-xs">
-								<summary class="cursor-pointer font-medium text-text-main">
-									Surowy strumień odpowiedzi
-								</summary>
-								<pre
-									class="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-[11px] text-text-muted">{aiRawResponse}</pre>
-							</details>
-						{/if}
 					</div>
 				{/if}
 				{#if operations.length > 0}
@@ -650,7 +834,7 @@
 					</p>{/if}
 			</CollapsibleSection>
 			{#if editable}
-				<CollapsibleSection title="Zatwierdzenie" description="Zatwierdź dokument i nadaj numer.">
+				<CollapsibleSection title="Zatwierdzenie" description="Zatwierdź dokument i nadaj numer." open={false}>
 					<p class="text-sm text-text-muted">
 						{quotation.status === 'approved'
 							? 'Ponowne zatwierdzenie utrwali zmiany i zachowa dotychczasowy numer.'

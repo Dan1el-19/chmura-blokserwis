@@ -46,11 +46,11 @@ describe('/wyceny server load', () => {
 		});
 	});
 
-	it('loads letterheads on the authenticated new quotation route', async () => {
+	it('keeps the authenticated new quotation route lightweight', async () => {
 		expect(await loadNewQuotation({ locals: { user: { $id: 'user-1' } } } as any)).toMatchObject({
-			persistence: 'server',
-			letterheads: { defaultVariant: 'orange_axis' }
+			persistence: 'server'
 		});
+		expect(listLetterheads).not.toHaveBeenCalled();
 		await expect(loadNewQuotation({ locals: {} } as any)).rejects.toMatchObject({
 			status: 303,
 			location: '/login'

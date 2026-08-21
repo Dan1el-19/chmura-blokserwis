@@ -1,7 +1,7 @@
 import type { LayoutServerLoad } from './$types';
 import { getUserRole } from '$lib/server/roles';
 import { toPublicUser } from '$lib/server/public-user';
-import { createRequestAdminUnisourceClient } from '$lib/server/unisource';
+import { requestAdminUnisourceV2 } from '$lib/server/unisource';
 import { logger } from '$lib/server/logger';
 import type { RecommendedUploadDestination } from '@unisource/sdk';
 
@@ -18,9 +18,15 @@ export const load: LayoutServerLoad = async (event) => {
 	let recommendedUploadDestination: RecommendedUploadDestination = 'r2';
 	if (event.locals.user) {
 		try {
-			const client = await createRequestAdminUnisourceClient(event);
-			const { service } = await client.admin.getService();
-			const v = service.recommended_upload_destination;
+			// Keep this small bootstrap call tolerant during rolling SDK/backend
+			// deployments: the V2 backend historically returned `{ item }`, while
+			// newer SDKs expose `{ service }`.
+			const response = await requestAdminUnisourceV2<{
+				service?: { recommended_upload_destination?: unknown };
+				item?: { recommended_upload_destination?: unknown };
+			}>(event, 'GET', '/v2/admin/service');
+			const service = response.service ?? response.item;
+			const v = service?.recommended_upload_destination;
 			if (isRecommendedUploadDestination(v)) {
 				recommendedUploadDestination = v;
 			}

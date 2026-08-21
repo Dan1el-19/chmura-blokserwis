@@ -156,6 +156,21 @@ export function parseQuotationWorkbook(
 
 	const issues: QuotationImportIssue[] = [];
 	const items: ImportedQuotationItem[] = [];
+	if (!options.mapping) {
+		for (const field of Object.keys(HEADER_ALIASES) as QuotationImportField[]) {
+			const candidates = selected.rows[detectedHeader.rowIndex]
+				.map(cellText)
+				.map((header, index) => ({ header, index }))
+				.filter(({ header }) => HEADER_ALIASES[field].includes(normalizeLabel(header)));
+			if (candidates.length > 1 && detectedHeader.mapping[field] !== undefined) {
+				issues.push({
+					rowNumber: detectedHeader.rowIndex + 1,
+					field,
+					message: `Znaleziono kilka możliwych kolumn dla pola „${field}”. Sprawdź mapowanie.`
+				});
+			}
+		}
+	}
 
 	for (let index = detectedHeader.rowIndex + 1; index < selected.rows.length; index += 1) {
 		const row = selected.rows[index];
@@ -163,7 +178,7 @@ export function parseQuotationWorkbook(
 
 		const rowNumber = index + 1;
 		const item = parseItem(row, rowNumber, mapping, issues);
-		if (item) items.push({ ...item, sortOrder: items.length });
+		items.push({ ...item, sortOrder: items.length });
 		if (items.length > MAX_QUOTATION_IMPORT_ROWS) {
 			throw new QuotationXlsxImportError(
 				`Arkusz może zawierać maksymalnie ${MAX_QUOTATION_IMPORT_ROWS} pozycji.`,
@@ -250,33 +265,34 @@ function parseItem(
 	rowNumber: number,
 	mapping: QuotationColumnMapping,
 	issues: QuotationImportIssue[]
-): Omit<ImportedQuotationItem, 'sortOrder'> | null {
+): Omit<ImportedQuotationItem, 'sortOrder'> {
 	const name = cellText(row[mapping.name!]);
-	const quantity = parsePositiveQuantity(row[mapping.quantity!]);
-	const unitGrossCents = parseMoneyCents(row[mapping.unitGross!]);
-	let valid = true;
+	const parsedQuantity = parsePositiveQuantity(row[mapping.quantity!]);
+	const parsedUnitGrossCents = parseMoneyCents(row[mapping.unitGross!]);
+	const invalidFields: QuotationImportField[] = [];
 
 	if (!name) {
 		issues.push({ rowNumber, field: 'name', message: 'Brak nazwy pozycji.' });
-		valid = false;
+		invalidFields.push('name');
 	}
-	if (quantity === null) {
+	if (parsedQuantity === null) {
 		issues.push({
 			rowNumber,
 			field: 'quantity',
 			message: 'Ilość musi być dodatnia i mieć maksymalnie 3 miejsca po przecinku.'
 		});
-		valid = false;
+		invalidFields.push('quantity');
 	}
-	if (unitGrossCents === null) {
+	if (parsedUnitGrossCents === null) {
 		issues.push({
 			rowNumber,
 			field: 'unitGross',
 			message: 'Cena jednostkowa brutto musi być liczbą nieujemną.'
 		});
-		valid = false;
+		invalidFields.push('unitGross');
 	}
-	if (!valid || quantity === null || unitGrossCents === null) return null;
+	const quantity = parsedQuantity ?? 0;
+	const unitGrossCents = parsedUnitGrossCents ?? 0;
 
 	const shortDescription = mappedText(row, mapping.shortDescription);
 	const categoryTitle = mappedText(row, mapping.category);
@@ -292,7 +308,8 @@ function parseItem(
 		unitGrossCents,
 		totalGrossCents: Math.round((quantityMilli * unitGrossCents) / 1000),
 		...(categoryTitle ? { categoryTitle } : {}),
-		sourceRowNumber: rowNumber
+		sourceRowNumber: rowNumber,
+		...(invalidFields.length > 0 ? { invalidFields } : {})
 	};
 }
 

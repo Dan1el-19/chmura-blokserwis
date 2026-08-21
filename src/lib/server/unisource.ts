@@ -18,6 +18,7 @@ type V2Query = Record<string, string | number | boolean | null | undefined>;
 type V2RawOptions = {
 	query?: V2Query;
 	body?: unknown;
+	idempotencyKey?: string;
 };
 
 type V2StreamOptions = V2RawOptions & {
@@ -67,6 +68,7 @@ export async function requestAdminUnisourceV2<T>(
 		'X-Service-ID': serviceId,
 		Accept: 'application/json'
 	};
+	if (options.idempotencyKey) headers['Idempotency-Key'] = options.idempotencyKey;
 	if (options.body !== undefined) {
 		headers['Content-Type'] = 'application/json';
 	}

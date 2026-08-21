@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { QuotationAiMutationResponse } from '@unisource/sdk/v2';
 import {
 	QuotationAiStreamError,
 	consumeQuotationAiStream,
@@ -24,17 +25,18 @@ function responseFor(events: QuotationAiStreamEvent[]) {
 describe('consumeQuotationAiStream', () => {
 	it('parses fragmented SSE and returns the final mutation', async () => {
 		const received: QuotationAiStreamEvent[] = [];
+		const mutation = { item: { id: 'q1' }, operation: { id: 'op1' } } as unknown as QuotationAiMutationResponse;
 		const result = await consumeQuotationAiStream(
 			responseFor([
 				{ type: 'status', stage: 'research', message: 'Szukam urządzeń' },
 				{ type: 'content.delta', delta: 'Opis' },
-				{ type: 'result', data: { item: { id: 'q1' }, operation: { id: 'op1' } } },
+				{ type: 'result', data: mutation },
 				{ type: 'done' }
 			]),
 			(event) => received.push(event)
 		);
 
-		expect(result).toEqual({ item: { id: 'q1' }, operation: { id: 'op1' } });
+		expect(result).toEqual(mutation);
 		expect(received.map(({ type }) => type)).toEqual([
 			'status',
 			'content.delta',

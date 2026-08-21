@@ -88,7 +88,7 @@ describe('quotation XLSX parser', () => {
 		});
 	});
 
-	it('reports invalid data rows without importing partial invalid items', () => {
+	it('keeps invalid data rows in the correction table with field-level issues', () => {
 		const buffer = workbookBuffer({
 			Dane: [
 				['Nazwa', 'Ilość', 'Cena jednostkowa brutto'],
@@ -101,7 +101,16 @@ describe('quotation XLSX parser', () => {
 
 		const result = parseQuotationWorkbook(buffer);
 
-		expect(result.items).toHaveLength(1);
+		expect(result.items).toHaveLength(4);
+		expect(result.items[1]).toMatchObject({
+		name: 'Za dużo miejsc', quantity: 0, unitGrossCents: 2000, invalidFields: ['quantity']
+	});
+		expect(result.items[2]).toMatchObject({
+		name: 'Cena ujemna', quantity: 1, unitGrossCents: 0, invalidFields: ['unitGross']
+	});
+		expect(result.items[3]).toMatchObject({
+		name: '', quantity: 2, unitGrossCents: 10000, invalidFields: ['name']
+	});
 		expect(result.issues).toEqual([
 			expect.objectContaining({ rowNumber: 3, field: 'quantity' }),
 			expect.objectContaining({ rowNumber: 4, field: 'unitGross' }),
@@ -138,6 +147,23 @@ describe('quotation XLSX parser', () => {
 				'Wartość brutto'
 			])
 		).toEqual({ name: 1, quantity: 2, unitGross: 3, comparisonTotalGross: 4 });
+	});
+
+	it('reports ambiguous automatic columns while keeping the first mapping usable', () => {
+		const result = parseQuotationWorkbook(
+			workbookBuffer({
+				Dane: [
+					['Nazwa', 'Ilość', 'Cena', 'Cena brutto'],
+					['Kamera IP', 1, 100, 100]
+				]
+			})
+		);
+
+		expect(result.mapping.unitGross).toBe(2);
+		expect(result.items).toHaveLength(1);
+		expect(result.issues).toEqual([
+			expect.objectContaining({ rowNumber: 1, field: 'unitGross' })
+		]);
 	});
 
 	it('rejects unsupported files before reading their contents', async () => {

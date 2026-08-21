@@ -163,7 +163,7 @@ describe('UniSource V2 client factories', () => {
 			undefined,
 			'GET',
 			'/v2/admin/service/usage',
-			{ query: { limit: 100, skip: undefined } }
+			{ query: { limit: 100, skip: undefined }, idempotencyKey: 'raw-request-1' }
 		);
 
 		expect(result.item.current_used_bytes).toBe(123);
@@ -172,7 +172,8 @@ describe('UniSource V2 client factories', () => {
 		expect(url).toBe('https://unisource.example/v2/admin/service/usage?limit=100');
 		expect(init.headers).toMatchObject({
 			Authorization: 'Bearer admin-key',
-			'X-Service-ID': 'default'
+			'X-Service-ID': 'default',
+			'Idempotency-Key': 'raw-request-1'
 		});
 		expect(init.body).toBeUndefined();
 	});

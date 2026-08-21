@@ -1,3 +1,5 @@
+import type { QuotationAiMutationResponse } from '@unisource/sdk/v2';
+
 export type QuotationAiStreamEvent =
 	| { type: 'operation.started'; operationId: string }
 	| { type: 'status'; stage: 'preparing' | 'research' | 'generating' | 'saving'; message: string }
@@ -20,7 +22,7 @@ export type QuotationAiStreamEvent =
 			partial: boolean;
 	  }
 	| { type: 'attempt.reset'; attempt: number }
-	| { type: 'result'; data: Record<string, any> }
+	| { type: 'result'; data: QuotationAiMutationResponse }
 	| { type: 'error'; code: string; message: string }
 	| { type: 'done' };
 
@@ -37,7 +39,7 @@ export class QuotationAiStreamError extends Error {
 export async function consumeQuotationAiStream(
 	response: Response,
 	onEvent: (event: QuotationAiStreamEvent) => void
-): Promise<Record<string, any>> {
+): Promise<QuotationAiMutationResponse> {
 	if (!response.ok) {
 		const payload = await response.json().catch(() => ({}));
 		throw new QuotationAiStreamError(
@@ -50,7 +52,7 @@ export async function consumeQuotationAiStream(
 	const reader = response.body.getReader();
 	const decoder = new TextDecoder();
 	let buffer = '';
-	let result: Record<string, any> | undefined;
+	let result: QuotationAiMutationResponse | undefined;
 	const consumeBlock = (block: string) => {
 		for (const line of block.split(/\r?\n/)) {
 			if (!line.startsWith('data:')) continue;

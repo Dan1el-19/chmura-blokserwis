@@ -108,6 +108,8 @@ export interface ImportedQuotationItem {
 	categoryTitle?: string;
 	sortOrder: number;
 	sourceRowNumber: number;
+	/** Fields that need correction before this row can be sent to UniSource. */
+	invalidFields?: QuotationImportField[];
 }
 
 export interface QuotationSheetSummary {
