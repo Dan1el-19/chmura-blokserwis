@@ -15,10 +15,8 @@ export const load: PageServerLoad = async (event) => {
 	if (!event.locals.user) throw redirect(303, '/login');
 	const client = await createUserUnisourceClient(event);
 	const quotation = await client.quotations.get(event.params.id);
-	const [letterheads, models, usage, operations, versions] = await Promise.all([
+	const [letterheads, operations, versions] = await Promise.all([
 		optional(client.quotations.listLetterheads()),
-		optional(client.quotations.listModels()),
-		optional(client.quotations.getAiUsage({ quotationId: event.params.id })),
 		optional(client.quotations.listAiOperations(event.params.id, { limit: 20 })),
 		optional(client.quotations.listVersions(event.params.id))
 	]);
@@ -26,8 +24,6 @@ export const load: PageServerLoad = async (event) => {
 	return {
 		quotation,
 		letterheads,
-		models,
-		usage,
 		operations,
 		versions
 	};

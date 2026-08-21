@@ -1,5 +1,5 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
+	import blokserwisLogo from '$lib/assets/BlokserwisLogo.svg';
 	import { SignOut } from 'phosphor-svelte';
 	import type { Component } from 'svelte';
 
@@ -23,12 +23,8 @@
 <aside
 	class="sticky top-0 hidden h-dvh w-65 shrink-0 flex-col border-r border-border-line bg-bg-panel lg:flex"
 >
-	<div class="relative flex h-16 items-center border-b border-border-line px-6">
-		<img src={favicon} alt="" class="h-6 w-6" />
-		<span
-			class="absolut ml-3 font-mono text-base font-bold tracking-tight whitespace-nowrap text-text-main"
-			>Chmura Blokserwis</span
-		>
+	<div class="flex h-16 items-center border-b border-border-line px-6">
+		<img src={blokserwisLogo} alt="Blokserwis" class="h-auto w-full max-w-48" />
 	</div>
 
 	<nav class="flex-1 space-y-1.5 overflow-y-auto p-5">

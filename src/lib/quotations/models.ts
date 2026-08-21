@@ -1,5 +1,7 @@
 import type { QuotationModelPrice } from './types';
 
+export const QUOTATION_AI_MODEL_ID = 'openai/gpt-5.6-luna';
+
 export const QUOTATION_MODEL_CATEGORIES = [
 	'free',
 	'fast',

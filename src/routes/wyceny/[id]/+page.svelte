@@ -8,8 +8,6 @@
 	<QuotationEditor
 		{quotation}
 		letterheads={data.letterheads?.items ?? []}
-		models={data.models?.items ?? []}
-		usage={data.usage ?? null}
 		operations={data.operations?.items ?? []}
 		versions={data.versions?.items ?? []}
 	/>

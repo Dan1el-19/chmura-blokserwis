@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, onMount, untrack } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 	import {
 		Check,
 		DownloadSimple,
@@ -10,20 +10,16 @@
 	} from 'phosphor-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { QuotationAutosave } from '$lib/quotations/autosave.svelte';
-	import { estimateQuotationAiCost } from '$lib/quotations/cost';
 	import { consumeQuotationAiStream, type QuotationAiStreamEvent } from '$lib/quotations/ai-stream';
 	import { quotationDocumentToUpdatePayload } from '$lib/quotations/document';
-	import { modelReasoningEffort, quotationModelForAction } from '$lib/quotations/models';
-	import type { QuotationModelPrice } from '$lib/quotations/types';
+	import { QUOTATION_AI_MODEL_ID } from '$lib/quotations/models';
 	import QuotationBlocksEditor from './QuotationBlocksEditor.svelte';
 	import QuotationItemsEditor from './QuotationItemsEditor.svelte';
 	import QuotationLetterheadSelector from './QuotationLetterheadSelector.svelte';
-	import QuotationModelSelector from './QuotationModelSelector.svelte';
 	import QuotationPreview from './QuotationPreview.svelte';
 	import CollapsibleSection from '$lib/components/ui/CollapsibleSection.svelte';
 
 	type AnyRecord = Record<string, any>;
-	const MODEL_STORAGE_KEY = 'blokserwis:quotation-ai-model:v2';
 	function cloneJson<T>(value: T): T {
 		return JSON.parse(JSON.stringify(value)) as T;
 	}
@@ -31,33 +27,18 @@
 	type Props = {
 		quotation: AnyRecord;
 		letterheads?: AnyRecord[];
-		models?: AnyRecord[];
-		usage?: AnyRecord | null;
 		operations?: AnyRecord[];
 		versions?: AnyRecord[];
 	};
 	let {
 		quotation: initialQuotation,
 		letterheads = [],
-		models = [],
-		usage = null,
 		operations = [],
 		versions = []
 	}: Props = $props();
 	let quotation = $state(untrack(() => cloneJson(initialQuotation)));
 	let document = $state(untrack(() => cloneJson(initialQuotation.document)));
 	let errorMessage = $state('');
-	let selectedModel = $state(
-		untrack(
-			() =>
-				quotationModelForAction(models as QuotationModelPrice[], 'generate')?.id ??
-				models.find((model) => model.recommended)?.id ??
-				models[0]?.id ??
-				''
-		)
-	);
-	let manualModelSelection = $state(false);
-	let reasoningEnabled = $state(false);
 	let aiInstructions = $state('');
 	let aiBusy = $state(false);
 	let webSearchEnabled = $state(true);
@@ -76,7 +57,6 @@
 	let undoDocument = $state<AnyRecord | null>(null);
 	let revision = $state(untrack(() => initialQuotation.lockVersion ?? 0));
 	let letterheadOptions = $derived(letterheads as any);
-	let modelOptions = $derived(models as QuotationModelPrice[]);
 	let editable = $derived(quotation.status !== 'archived');
 	const autosave = new QuotationAutosave<AnyRecord>({
 		initialDocument: untrack(() => cloneJson(document)),
@@ -102,23 +82,6 @@
 		return autosave.status;
 	});
 	let displayedError = $derived(errorMessage || autosave.error?.message || '');
-	let estimatedCostUsd = $derived.by(() => {
-		const model = models.find((entry) => entry.id === selectedModel);
-		if (!model) return null;
-		const estimate = estimateQuotationAiCost(model as QuotationModelPrice, { reasoningEnabled });
-		return estimate ? estimate.totalCostUsdMicros / 1_000_000 : null;
-	});
-
-	onMount(() => {
-		const savedModel = window.localStorage.getItem(MODEL_STORAGE_KEY);
-		if (
-			savedModel &&
-			models.some((model) => model.id === savedModel && model.available !== false)
-		) {
-			selectedModel = savedModel;
-			manualModelSelection = true;
-		}
-	});
 	onDestroy(() => {
 		aiAbortController?.abort();
 		autosave.dispose();
@@ -127,43 +90,8 @@
 	function idempotencyKey() {
 		return crypto.randomUUID();
 	}
-	function selectModel(value: string) {
-		selectedModel = value;
-		manualModelSelection = true;
-		if (!modelReasoningEffort(models.find((model) => model.id === value) as QuotationModelPrice)) {
-			reasoningEnabled = false;
-		}
-		window.localStorage.setItem(MODEL_STORAGE_KEY, value);
-	}
-	function resetAutomaticModelSelection() {
-		manualModelSelection = false;
-		selectedModel =
-			quotationModelForAction(models as QuotationModelPrice[], 'generate')?.id ??
-			models.find((model) => model.recommended)?.id ??
-			models[0]?.id ??
-			'';
-		if (
-			!modelReasoningEffort(
-				models.find((model) => model.id === selectedModel) as QuotationModelPrice
-			)
-		) {
-			reasoningEnabled = false;
-		}
-		window.localStorage.removeItem(MODEL_STORAGE_KEY);
-	}
-	function modelForAction(action: 'generate' | 'revise_block') {
-		if (manualModelSelection) return models.find((model) => model.id === selectedModel);
-		return quotationModelForAction(models as QuotationModelPrice[], action);
-	}
 	function recordAiUsage(operation: AnyRecord | undefined) {
-		const cost = operation?.usage?.costUsdMicros;
-		if (!operation || typeof cost !== 'number') return;
-		usage = {
-			...(usage ?? {}),
-			quotationCostUsdMicros: (usage?.quotationCostUsdMicros ?? 0) + cost,
-			monthCostUsdMicros: (usage?.monthCostUsdMicros ?? 0) + cost,
-			operations: (usage?.operations ?? 0) + 1
-		};
+		if (!operation) return;
 		operations = [operation, ...operations];
 	}
 	function acceptServerMutation(item: AnyRecord) {
@@ -310,8 +238,7 @@
 		}
 	}
 	async function generate() {
-		const operationModel = modelForAction('generate');
-		if (!operationModel || aiBusy) return;
+		if (aiBusy) return;
 		if (saveState !== 'saved') await save();
 		if (saveState !== 'saved') return;
 		aiBusy = true;
@@ -322,8 +249,8 @@
 			const payload = await streamApi(
 				`/api/quotations/${encodeURIComponent(quotation.id)}/ai/generate`,
 				{
-					modelId: operationModel.id,
-					reasoningEnabled,
+					modelId: QUOTATION_AI_MODEL_ID,
+					reasoningEnabled: false,
 					webSearchEnabled,
 					instructions: aiInstructions || undefined,
 					expectedLockVersion: quotation.lockVersion,
@@ -341,8 +268,7 @@
 		}
 	}
 	async function revise(blockId: string, feedback: string) {
-		const operationModel = modelForAction('revise_block');
-		if (!operationModel || revisingId) return;
+		if (revisingId) return;
 		if (saveState !== 'saved') await save();
 		if (saveState !== 'saved') return;
 		revisingId = blockId;
@@ -353,8 +279,8 @@
 			const payload = await streamApi(
 				`/api/quotations/${encodeURIComponent(quotation.id)}/ai/revise-block`,
 				{
-					modelId: operationModel.id,
-					reasoningEnabled,
+					modelId: QUOTATION_AI_MODEL_ID,
+					reasoningEnabled: false,
 					webSearchEnabled,
 					blockId,
 					feedback,
@@ -600,17 +526,6 @@
 				title="Asystent AI"
 				description="Generowanie i poprawianie treści z pomocą AI."
 			>
-				<QuotationModelSelector
-					models={modelOptions}
-					value={selectedModel}
-					{usage}
-					{estimatedCostUsd}
-					{reasoningEnabled}
-					manualSelection={manualModelSelection}
-					onchange={selectModel}
-					onreasoningchange={(enabled) => (reasoningEnabled = enabled)}
-					onresetauto={resetAutomaticModelSelection}
-				/>
 				<label
 					class="flex items-start gap-2 rounded-md border border-border-line bg-bg-app p-3 text-sm text-text-main"
 				>
@@ -623,7 +538,7 @@
 					<span>
 						<span class="block font-medium">Aktualny research internetowy</span>
 						<span class="mt-0.5 block text-xs text-text-muted">
-							Sprawdza modele urządzeń w Brave Search i przekazuje źródła wybranemu modelowi.
+							Sprawdza modele urządzeń w Brave Search i przekazuje źródła do generowanego opisu.
 						</span>
 					</span>
 				</label>
@@ -634,7 +549,7 @@
 					placeholder="Dodatkowe wskazówki, np. podkreśl szybki termin realizacji…"
 					class="w-full rounded-md border border-border-line bg-bg-app p-3 text-sm text-text-main"
 				></textarea>
-				<Button loading={aiBusy} disabled={!selectedModel || !editable} onclick={generate}
+				<Button loading={aiBusy} disabled={!editable} onclick={generate}
 					><MagicWand class="mr-2 h-4 w-4" /> Generuj kompletny opis</Button
 				>
 				{#if aiBusy || aiStatus}
@@ -725,7 +640,7 @@
 						>
 						<ul class="mt-2 space-y-1">
 							{#each operations.slice(0, 5) as operation (operation.id)}
-								<li>{operation.operationType} · {operation.modelId} · {operation.status}</li>
+								<li>{operation.operationType} · {operation.status}</li>
 							{/each}
 						</ul>
 					</details>
