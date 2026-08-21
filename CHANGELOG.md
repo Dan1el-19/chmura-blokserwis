@@ -1,3 +1,9 @@
+## [2.22.1](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.22.0...v2.22.1) (2026-08-21)
+
+### Bug Fixes
+
+* **layout:** restore Chmura Blokserwis header branding ([caa0c2e](https://github.com/Dan1el-19/chmura-blokserwis/commit/caa0c2e1ffbdbe4de6dc66df8a7bcb39c9fa76f0))
+
 ## [2.22.0](https://github.com/Dan1el-19/chmura-blokserwis/compare/v2.21.1...v2.22.0) (2026-08-21)
 
 ### Features
