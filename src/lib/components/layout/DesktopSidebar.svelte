@@ -25,8 +25,7 @@
 >
 	<div class="flex h-16 items-center border-b border-border-line px-6">
 		<img src={favicon} alt="" class="h-6 w-6" />
-		<span
-			class="absolute ml-3 font-mono text-base font-bold tracking-tight whitespace-nowrap text-text-main"
+		<span class="ml-3 font-mono text-base font-bold tracking-tight whitespace-nowrap text-text-main"
 			>Chmura Blokserwis</span
 		>
 	</div>

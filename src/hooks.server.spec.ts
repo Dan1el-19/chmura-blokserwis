@@ -67,7 +67,7 @@ describe('handle', () => {
 
 	it.each([
 		['/wyceny/quote-1', 'DENY'],
-		['/api/quotations/quote-1/preview', 'SAMEORIGIN']
+		['/api/quotations/quote-1/preview', null]
 	])('sets the expected frame policy for %s', async (pathname, expectedPolicy) => {
 		accountGet.mockResolvedValue({ $id: 'user-1', labels: [] });
 		const event = {

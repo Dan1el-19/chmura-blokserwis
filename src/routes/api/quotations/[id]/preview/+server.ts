@@ -15,7 +15,6 @@ export const GET: RequestHandler = async (event) => {
 				'Cache-Control': 'private, no-store, max-age=0',
 				Pragma: 'no-cache',
 				'X-Content-Type-Options': 'nosniff',
-				'X-Frame-Options': 'SAMEORIGIN',
 				'Content-Security-Policy':
 					"default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; frame-ancestors 'self'; base-uri 'none'; form-action 'none'"
 			}

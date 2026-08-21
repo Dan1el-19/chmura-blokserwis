@@ -49,6 +49,7 @@ describe('/api/quotations', () => {
 		expect(response.headers.get('content-type')).toContain('text/html');
 		expect(response.headers.get('cache-control')).toContain('no-store');
 		expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'self'");
+		expect(response.headers.get('x-frame-options')).toBeNull();
 		expect(await response.text()).toContain('Wycena');
 	});
 

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import '../app.css';
 	import { Toaster } from 'svelte-sonner';
-	import { page, navigating } from '$app/state';
-	import { afterNavigate } from '$app/navigation';
+	import { page, navigating, updated } from '$app/state';
+	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { FileText, Folder, GearSix, Shield, RocketLaunch, Trash } from 'phosphor-svelte';
 	import DesktopSidebar from '$lib/components/layout/DesktopSidebar.svelte';
 	import MobileHeader from '$lib/components/layout/MobileHeader.svelte';
@@ -66,6 +66,12 @@
 
 	afterNavigate(() => {
 		isDrawerOpen = false;
+	});
+
+	beforeNavigate(({ willUnload, to }) => {
+		if (updated.current && !willUnload && to?.url) {
+			location.href = to.url.href;
+		}
 	});
 
 	let pageTitle = $derived.by(() => {

@@ -129,10 +129,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const response = await resolve(event);
 		response.headers.set('Cache-Control', 'private');
 		response.headers.set('X-Content-Type-Options', 'nosniff');
-		response.headers.set(
-			'X-Frame-Options',
-			QUOTATION_PREVIEW_PATH.test(event.url.pathname) ? 'SAMEORIGIN' : 'DENY'
-		);
+		// The quotation preview already has a CSP `frame-ancestors 'self'` policy.
+		// Sending both policies makes browsers report a noisy, harmless warning.
+		if (!QUOTATION_PREVIEW_PATH.test(event.url.pathname)) {
+			response.headers.set('X-Frame-Options', 'DENY');
+		}
 		response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 		response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 		// CSP tymczasowo wyłączone
