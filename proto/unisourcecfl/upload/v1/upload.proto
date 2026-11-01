@@ -1,0 +1,107 @@
+syntax = "proto3";
+package unisourcecfl.upload.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unisourcecfl/catalog/v1/catalog.proto";
+service UploadService {
+  rpc CreateUpload(CreateUploadRequest) returns (CreateUploadResponse);
+  rpc GetUpload(GetUploadRequest) returns (GetUploadResponse);
+  rpc CompleteUpload(CompleteUploadRequest) returns (CompleteUploadResponse);
+  rpc CancelUpload(CancelUploadRequest) returns (CancelUploadResponse);
+  rpc RetryUpload(RetryUploadRequest) returns (RetryUploadResponse);
+}
+message CreateUploadRequest {
+  string space_id = 1;
+  optional string parent_id = 2;
+  string name = 3;
+  optional uint64 size_bytes = 4;
+  string md5_base64 = 5;
+  string request_id = 6;
+  UploadMode upload_mode = 7;
+  bool supports_attempts = 8;
+}
+message CreateUploadResponse {
+  UploadSession session = 1;
+  UploadTarget target = 2;
+}
+message UploadTarget {
+  string url = 1;
+  map<string, string> headers = 2;
+  google.protobuf.Timestamp expires_at = 3;
+}
+message UploadSession {
+  string id = 1;
+  string space_id = 2;
+  optional string parent_id = 3;
+  string name = 4;
+  uint64 size_bytes = 5;
+  string md5_base64 = 6;
+  UploadState state = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp expires_at = 9;
+  unisourcecfl.catalog.v1.Entry entry = 10;
+  unisourcecfl.catalog.v1.StorageLocation storage_location = 11;
+  UploadMode upload_mode = 12;
+  string selection_reason = 13;
+  string attempt_id = 14;
+  uint32 attempt_number = 15;
+  bool fallback_allowed = 16;
+}
+
+enum UploadMode {
+  UPLOAD_MODE_UNSPECIFIED = 0;
+  UPLOAD_MODE_R2 = 1;
+  UPLOAD_MODE_RUSTFS = 2;
+  UPLOAD_MODE_AUTO = 3;
+}
+enum UploadState {
+  UPLOAD_STATE_UNSPECIFIED = 0;
+  UPLOAD_STATE_OPEN = 1;
+  UPLOAD_STATE_COMPLETED = 2;
+  UPLOAD_STATE_EXPIRED = 3;
+  UPLOAD_STATE_CANCELLED = 4;
+}
+message GetUploadRequest {
+  string upload_id = 1;
+}
+message GetUploadResponse {
+  UploadSession session = 1;
+}
+message CompleteUploadRequest {
+  string upload_id = 1;
+  string attempt_id = 2;
+}
+message CompleteUploadResponse {
+  unisourcecfl.catalog.v1.Entry entry = 1;
+}
+message CancelUploadRequest {
+  string upload_id = 1;
+}
+message CancelUploadResponse {
+  UploadSession session = 1;
+}
+message UploadErrorDetail {
+  string code = 1;
+  string request_id = 2;
+}
+
+message RetryUploadRequest {
+  string upload_id = 1;
+  string failed_attempt_id = 2;
+  string request_id = 3;
+  UploadFailureKind failure_kind = 4;
+}
+message RetryUploadResponse {
+  UploadSession session = 1;
+  UploadTarget target = 2;
+  unisourcecfl.catalog.v1.Entry entry = 3;
+}
+enum UploadFailureKind {
+  UPLOAD_FAILURE_KIND_UNSPECIFIED = 0;
+  UPLOAD_FAILURE_KIND_TRANSPORT = 1;
+  UPLOAD_FAILURE_KIND_SERVER = 2;
+  UPLOAD_FAILURE_KIND_CLIENT = 3;
+  UPLOAD_FAILURE_KIND_INTEGRITY = 4;
+  UPLOAD_FAILURE_KIND_CANCELLED = 5;
+  UPLOAD_FAILURE_KIND_OFFLINE = 6;
+}

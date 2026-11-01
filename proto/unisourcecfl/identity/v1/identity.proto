@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package unisourcecfl.identity.v1;
+
+service IdentityService {
+  rpc GetMe(GetMeRequest) returns (GetMeResponse);
+}
+
+message GetMeRequest {}
+
+message GetMeResponse {
+  string clerk_user_id = 1;
+}

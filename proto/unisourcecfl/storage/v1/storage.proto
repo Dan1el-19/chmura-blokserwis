@@ -1,0 +1,48 @@
+syntax = "proto3";
+package unisourcecfl.storage.v1;
+
+service StorageSettingsService {
+  rpc GetUploadLimits(GetUploadLimitsRequest) returns (GetUploadLimitsResponse);
+  rpc GetStorageSettings(GetStorageSettingsRequest) returns (GetStorageSettingsResponse);
+  rpc UpdateStorageSettings(UpdateStorageSettingsRequest) returns (UpdateStorageSettingsResponse);
+}
+
+message GetUploadLimitsRequest {}
+message GetUploadLimitsResponse {
+  uint64 max_upload_bytes = 1;
+  uint64 revision = 2;
+  bool can_manage = 3;
+  MultipartUploadCapabilities multipart = 4;
+}
+message GetStorageSettingsRequest {}
+message GetStorageSettingsResponse {
+  StorageSettings settings = 1;
+}
+message UpdateStorageSettingsRequest {
+  uint64 expected_revision = 1;
+  uint64 max_upload_bytes = 2;
+  uint64 r2_limit_bytes = 3;
+  uint64 rustfs_limit_bytes = 4;
+}
+message UpdateStorageSettingsResponse {
+  StorageSettings settings = 1;
+}
+message StorageSettings {
+  uint64 revision = 1;
+  uint64 max_upload_bytes = 2;
+  uint64 r2_limit_bytes = 3;
+  uint64 rustfs_limit_bytes = 4;
+  uint64 r2_max_capacity_bytes = 5;
+  uint64 rustfs_max_capacity_bytes = 6;
+  uint64 r2_used_bytes = 7;
+  uint64 rustfs_used_bytes = 8;
+}
+
+// Creation capability; existing sessions remain recoverable when disabled.
+message MultipartUploadCapabilities {
+  bool enabled = 1;
+  uint64 max_file_bytes = 2;
+  uint64 part_size_bytes = 3;
+  uint32 max_parallel_parts = 4;
+  string protocol = 5;
+}

@@ -1,7 +1,5 @@
 <script lang="ts">
-	import StoragePage from '$lib/components/files/StoragePage.svelte';
-
-	let { data } = $props();
+	import StoragePage from '#lib/components/StoragePage.svelte';
 </script>
 
-<StoragePage {data} titleRoot="Moje pliki" rootHref="?" />
+<StoragePage spaceKind="private" />

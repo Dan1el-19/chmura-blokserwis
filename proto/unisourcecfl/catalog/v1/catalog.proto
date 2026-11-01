@@ -1,0 +1,267 @@
+syntax = "proto3";
+
+package unisourcecfl.catalog.v1;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+
+service CatalogService {
+  rpc GetDownload(GetDownloadRequest) returns (GetDownloadResponse);
+  rpc GetPreview(GetPreviewRequest) returns (GetPreviewResponse);
+  rpc GetSpaces(GetSpacesRequest) returns (GetSpacesResponse);
+  rpc ListEntries(ListEntriesRequest) returns (ListEntriesResponse);
+  rpc CreateFolder(CreateFolderRequest) returns (CreateFolderResponse);
+  rpc GetEntry(GetEntryRequest) returns (GetEntryResponse);
+  rpc RenameEntry(RenameEntryRequest) returns (RenameEntryResponse);
+  rpc MoveEntry(MoveEntryRequest) returns (MoveEntryResponse);
+}
+
+service TrashService {
+  rpc TrashEntry(TrashEntryRequest) returns (TrashEntryResponse);
+  rpc ListTrash(ListTrashRequest) returns (ListTrashResponse);
+  rpc RestoreEntry(RestoreEntryRequest) returns (RestoreEntryResponse);
+  rpc DeletePermanently(DeletePermanentlyRequest) returns (DeletePermanentlyResponse);
+}
+
+service ShareService {
+  rpc ListShares(ListSharesRequest) returns (ListSharesResponse);
+  rpc CreateShare(CreateShareRequest) returns (CreateShareResponse);
+  rpc UpdateShare(UpdateShareRequest) returns (UpdateShareResponse);
+  rpc RevokeShare(RevokeShareRequest) returns (RevokeShareResponse);
+}
+
+message ListEntriesRequest {
+  string space_id = 1;
+  optional string parent_id = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+  CatalogSortBy sort_by = 5;
+  CatalogSortDirection sort_direction = 6;
+}
+
+message ListEntriesResponse {
+  repeated Entry entries = 1;
+  string next_page_token = 2;
+}
+
+message CreateFolderRequest {
+  string space_id = 1;
+  optional string parent_id = 2;
+  string name = 3;
+  string request_id = 4;
+}
+
+message CreateFolderResponse {
+  Entry entry = 1;
+}
+
+message GetEntryRequest {
+  string space_id = 1;
+  string entry_id = 2;
+}
+
+message GetEntryResponse {
+  Entry entry = 1;
+}
+
+message RenameEntryRequest {
+  string space_id = 1;
+  string entry_id = 2;
+  string name = 3;
+  uint32 expected_revision = 4;
+}
+
+message RenameEntryResponse {
+  Entry entry = 1;
+}
+
+message MoveEntryRequest {
+  string space_id = 1;
+  string entry_id = 2;
+  optional string parent_id = 3;
+  uint32 expected_revision = 4;
+}
+
+message MoveEntryResponse {
+  Entry entry = 1;
+}
+
+message TrashItem {
+  Entry entry = 1;
+  google.protobuf.Timestamp trashed_at = 2;
+  google.protobuf.Timestamp purge_at = 3;
+}
+message TrashEntryRequest {
+  string space_id = 1;
+  string entry_id = 2;
+  uint32 expected_revision = 3;
+}
+message TrashEntryResponse {
+  TrashItem item = 1;
+}
+message ListTrashRequest {
+  string space_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+message ListTrashResponse {
+  repeated TrashItem items = 1;
+  string next_page_token = 2;
+}
+message RestoreEntryRequest {
+  string space_id = 1;
+  string entry_id = 2;
+  uint32 expected_revision = 3;
+}
+message RestoreEntryResponse {
+  Entry entry = 1;
+}
+message DeletePermanentlyRequest {
+  string space_id = 1;
+  string entry_id = 2;
+  uint32 expected_revision = 3;
+}
+message DeletePermanentlyResponse {
+  bool accepted = 1;
+}
+
+message Entry {
+  string id = 1;
+  string space_id = 2;
+  optional string parent_id = 3;
+  string name = 4;
+  EntryKind kind = 5;
+  uint32 revision = 6;
+  optional uint64 size_bytes = 7;
+  optional string md5_base64 = 8;
+  StorageLocation storage_location = 9;
+  google.protobuf.Timestamp created_at = 10;
+}
+
+enum CatalogSortBy {
+  CATALOG_SORT_BY_UNSPECIFIED = 0;
+  CATALOG_SORT_BY_NAME = 1;
+  CATALOG_SORT_BY_CREATED_AT = 2;
+  CATALOG_SORT_BY_SIZE = 3;
+}
+
+enum CatalogSortDirection {
+  CATALOG_SORT_DIRECTION_UNSPECIFIED = 0;
+  CATALOG_SORT_DIRECTION_ASC = 1;
+  CATALOG_SORT_DIRECTION_DESC = 2;
+}
+
+enum StorageLocation {
+  STORAGE_LOCATION_UNSPECIFIED = 0;
+  STORAGE_LOCATION_R2 = 1;
+  STORAGE_LOCATION_RUSTFS = 2;
+}
+
+message CatalogErrorDetail {
+  string code = 1;
+  string request_id = 2;
+}
+
+enum EntryKind {
+  ENTRY_KIND_UNSPECIFIED = 0;
+  ENTRY_KIND_FOLDER = 1;
+  ENTRY_KIND_FILE = 2;
+}
+
+message GetSpacesRequest {}
+
+message GetSpacesResponse {
+  repeated Space spaces = 1;
+}
+
+message Space {
+  string id = 1;
+  SpaceKind kind = 2;
+}
+
+enum SpaceKind {
+  SPACE_KIND_UNSPECIFIED = 0;
+  SPACE_KIND_SHARED = 1;
+  SPACE_KIND_PRIVATE = 2;
+}
+
+message GetDownloadRequest {
+  string space_id = 1;
+  string entry_id = 2;
+}
+message GetDownloadResponse {
+  string url = 1;
+  google.protobuf.Timestamp expires_at = 2;
+}
+message GetPreviewRequest {
+  string space_id = 1;
+  string entry_id = 2;
+}
+message GetPreviewResponse {
+  string url = 1;
+  google.protobuf.Timestamp expires_at = 2;
+  string content_type = 3;
+  PreviewMediaKind media_kind = 4;
+}
+
+enum PreviewMediaKind {
+  PREVIEW_MEDIA_KIND_UNSPECIFIED = 0;
+  PREVIEW_MEDIA_KIND_IMAGE = 1;
+  PREVIEW_MEDIA_KIND_AUDIO = 2;
+  PREVIEW_MEDIA_KIND_VIDEO = 3;
+}
+
+message ShareLink {
+  string id = 1;
+  string address = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp expires_at = 4;
+  google.protobuf.Timestamp revoked_at = 5;
+  optional string label = 6;
+  bool has_password = 7;
+  optional uint64 max_downloads = 8;
+  uint64 download_count = 9;
+  uint64 view_count = 10;
+  uint32 revision = 11;
+}
+
+message ListSharesRequest {
+  string space_id = 1;
+  string entry_id = 2;
+}
+message ListSharesResponse {
+  repeated ShareLink shares = 1;
+}
+message CreateShareRequest {
+  string space_id = 1;
+  string entry_id = 2;
+  optional string slug = 3;
+  google.protobuf.Timestamp expires_at = 4;
+  string request_id = 5;
+  optional string label = 6;
+  optional string password = 7;
+  optional uint64 max_downloads = 8;
+}
+message CreateShareResponse {
+  ShareLink share = 1;
+}
+message UpdateShareRequest {
+  string space_id = 1;
+  string share_id = 2;
+  uint32 expected_revision = 3;
+  google.protobuf.FieldMask update_mask = 4;
+  optional string label = 5;
+  optional string password = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  optional uint64 max_downloads = 8;
+}
+message UpdateShareResponse {
+  ShareLink share = 1;
+}
+message RevokeShareRequest {
+  string space_id = 1;
+  string share_id = 2;
+}
+message RevokeShareResponse {
+  ShareLink share = 1;
+}
