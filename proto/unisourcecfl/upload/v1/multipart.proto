@@ -1,0 +1,211 @@
+syntax = "proto3";
+
+package unisourcecfl.upload.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unisourcecfl/catalog/v1/catalog.proto";
+import "unisourcecfl/upload/v1/upload.proto";
+
+// MultipartService is additive to UploadService. Existing upload RPCs retain
+// their single-PUT behavior and are not implicitly upgraded to multipart.
+service MultipartService {
+  rpc BeginMultipartUpload(BeginMultipartUploadRequest) returns (BeginMultipartUploadResponse);
+  rpc GetMultipartUpload(GetMultipartUploadRequest) returns (GetMultipartUploadResponse);
+  rpc GetMultipartPartTarget(GetMultipartPartTargetRequest) returns (GetMultipartPartTargetResponse);
+  rpc ConfirmMultipartPart(ConfirmMultipartPartRequest) returns (ConfirmMultipartPartResponse);
+  rpc CompleteMultipartUpload(CompleteMultipartUploadRequest) returns (CompleteMultipartUploadResponse);
+  rpc CancelMultipartUpload(CancelMultipartUploadRequest) returns (CancelMultipartUploadResponse);
+  rpc RetryMultipartUpload(RetryMultipartUploadRequest) returns (RetryMultipartUploadResponse);
+}
+
+message MultipartManifestPart {
+  uint32 part_number = 1;
+  uint64 size_bytes = 2;
+  string sha256_hex = 3;
+}
+
+message BeginMultipartUploadRequest {
+  string space_id = 1;
+  optional string parent_id = 2;
+  string name = 3;
+  uint64 size_bytes = 4;
+  string manifest_fingerprint_hex = 5;
+  repeated MultipartManifestPart manifest_parts = 6;
+  UploadMode upload_mode = 7;
+  string request_id = 8;
+}
+
+message BeginMultipartUploadResponse {
+  MultipartUploadSession session = 1;
+  uint64 part_size_bytes = 2;
+  uint32 max_parallel_parts = 3;
+}
+
+message GetMultipartUploadRequest {
+  string upload_id = 1;
+  uint32 page_size = 2;
+  uint32 part_number_cursor = 3;
+}
+
+message GetMultipartUploadResponse {
+  MultipartUploadSession session = 1;
+  repeated MultipartPart parts = 2;
+  uint32 next_part_number_cursor = 3;
+  bool has_more_parts = 4;
+  MultipartVerificationState verification_state = 5;
+}
+
+message GetMultipartPartTargetRequest {
+  string upload_id = 1;
+  string attempt_id = 2;
+  uint32 part_number = 3;
+  uint64 size_bytes = 4;
+  string sha256_hex = 5;
+  string md5_base64 = 6;
+  uint64 expected_revision = 7;
+  string request_id = 8;
+}
+
+message GetMultipartPartTargetResponse {
+  MultipartUploadSession session = 1;
+  MultipartPart part = 2;
+  MultipartPartTarget target = 3;
+}
+
+message ConfirmMultipartPartRequest {
+  string upload_id = 1;
+  string attempt_id = 2;
+  uint32 part_number = 3;
+  string operation_id = 4;
+  uint64 expected_revision = 5;
+  string request_id = 6;
+}
+
+message ConfirmMultipartPartResponse {
+  MultipartUploadSession session = 1;
+  MultipartPart part = 2;
+}
+
+message CompleteMultipartUploadRequest {
+  string upload_id = 1;
+  string attempt_id = 2;
+  uint64 expected_revision = 3;
+  string request_id = 4;
+}
+
+message CompleteMultipartUploadResponse {
+  MultipartUploadSession session = 1;
+  unisourcecfl.catalog.v1.Entry entry = 2;
+}
+
+message CancelMultipartUploadRequest {
+  string upload_id = 1;
+  uint64 expected_revision = 2;
+  string request_id = 3;
+}
+
+message CancelMultipartUploadResponse {
+  MultipartUploadSession session = 1;
+}
+
+message RetryMultipartUploadRequest {
+  string upload_id = 1;
+  string failed_attempt_id = 2;
+  UploadFailureKind failure_kind = 3;
+  uint64 expected_revision = 4;
+  string request_id = 5;
+}
+
+message RetryMultipartUploadResponse {
+  MultipartUploadSession session = 1;
+  uint64 part_size_bytes = 2;
+  uint32 max_parallel_parts = 3;
+}
+
+message MultipartUploadSession {
+  string id = 1;
+  string space_id = 2;
+  optional string parent_id = 3;
+  string name = 4;
+  uint64 size_bytes = 5;
+  MultipartProtocol protocol = 6;
+  string manifest_fingerprint_hex = 7;
+  MultipartUploadState state = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp expires_at = 10;
+  uint64 revision = 11;
+  string attempt_id = 12;
+  uint32 attempt_number = 13;
+  unisourcecfl.catalog.v1.StorageLocation storage_location = 14;
+  optional unisourcecfl.catalog.v1.Entry entry = 15;
+  bool cleanup_pending = 16;
+  // Trusted gateway/provider failure classification, never a browser assertion.
+  string failure_code = 17;
+  // Provider initialization is durable and asynchronous.
+  bool ready_for_parts = 18;
+}
+
+message MultipartPart {
+  uint32 part_number = 1;
+  MultipartPartState state = 2;
+  uint64 size_bytes = 3;
+  string sha256_hex = 4;
+  MultipartDigestOrigin sha256_origin = 5;
+  string md5_base64 = 6;
+  string etag = 7;
+  uint64 generation = 8;
+  string operation_id = 9;
+  google.protobuf.Timestamp target_expires_at = 10;
+  google.protobuf.Timestamp producer_deadline_at = 11;
+  google.protobuf.Timestamp producer_closed_at = 12;
+}
+
+message MultipartPartTarget {
+  string url = 1;
+  map<string, string> headers = 2;
+  google.protobuf.Timestamp expires_at = 3;
+}
+
+enum MultipartProtocol {
+  // Zero means the server did not report an available protocol.
+  MULTIPART_PROTOCOL_UNSPECIFIED = 0;
+  MULTIPART_PROTOCOL_V1 = 1;
+}
+
+enum MultipartUploadState {
+  // Zero means the server did not report an available session state.
+  MULTIPART_UPLOAD_STATE_UNSPECIFIED = 0;
+  MULTIPART_UPLOAD_STATE_OPEN = 1;
+  MULTIPART_UPLOAD_STATE_FINALIZING = 2;
+  MULTIPART_UPLOAD_STATE_VERIFYING = 3;
+  MULTIPART_UPLOAD_STATE_COMPLETED = 4;
+  MULTIPART_UPLOAD_STATE_CANCELLED = 5;
+  MULTIPART_UPLOAD_STATE_EXPIRED = 6;
+  MULTIPART_UPLOAD_STATE_FAILED = 7;
+}
+
+enum MultipartPartState {
+  // Zero means the server did not report an available part state.
+  MULTIPART_PART_STATE_UNSPECIFIED = 0;
+  MULTIPART_PART_STATE_MISSING = 1;
+  MULTIPART_PART_STATE_RECEIVING = 2;
+  MULTIPART_PART_STATE_CONFIRMED = 3;
+  MULTIPART_PART_STATE_UNKNOWN = 4;
+}
+
+enum MultipartDigestOrigin {
+  // Zero means the digest source is unavailable or unreported.
+  MULTIPART_DIGEST_ORIGIN_UNSPECIFIED = 0;
+  MULTIPART_DIGEST_ORIGIN_CLIENT_DECLARED = 1;
+  MULTIPART_DIGEST_ORIGIN_GATEWAY_RECEIPT = 2;
+  MULTIPART_DIGEST_ORIGIN_SERVER_VERIFIED = 3;
+}
+
+enum MultipartVerificationState {
+  // Zero means verification is unavailable or unreported.
+  MULTIPART_VERIFICATION_STATE_UNSPECIFIED = 0;
+  MULTIPART_VERIFICATION_STATE_PENDING = 1;
+  MULTIPART_VERIFICATION_STATE_VERIFYING = 2;
+  MULTIPART_VERIFICATION_STATE_VERIFIED = 3;
+  MULTIPART_VERIFICATION_STATE_FAILED = 4;
+}

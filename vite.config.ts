@@ -1,115 +1,40 @@
-import devtoolsJson from 'vite-plugin-devtools-json';
 import tailwindcss from '@tailwindcss/vite';
-import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { defineConfig } from 'vitest/config';
+import { playwright } from '@vitest/browser-playwright';
+import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { sveltePhosphorOptimize } from 'phosphor-svelte/vite';
 
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
-		sveltekit(),
-		SvelteKitPWA({
-			srcDir: 'src',
-			filename: 'service-worker.js',
-			strategies: 'injectManifest',
-			registerType: 'autoUpdate',
-			injectRegister: 'script-defer',
-			includeAssets: [
-				'favicon.svg',
-				'favicon.png',
-				'pwa-192.png',
-				'pwa-512.png',
-				'pwa-maskable-512.png',
-				'apple-touch-icon.png'
-			],
-			manifest: {
-				id: '/',
-				name: 'Chmura Blokserwis',
-				short_name: 'Blokserwis',
-				description: 'Bezpieczna chmura plikow Blokserwis',
-				lang: 'pl',
-				start_url: '/',
-				scope: '/',
-				display: 'standalone',
-				background_color: '#f9fafb',
-				theme_color: '#2d57b3',
-				icons: [
-					{
-						src: '/favicon.svg',
-						sizes: 'any',
-						type: 'image/svg+xml',
-						purpose: 'any'
-					},
-					{
-						src: '/pwa-192.png',
-						sizes: '192x192',
-						type: 'image/png',
-						purpose: 'any'
-					},
-					{
-						src: '/pwa-512.png',
-						sizes: '512x512',
-						type: 'image/png',
-						purpose: 'any'
-					},
-					{
-						src: '/pwa-maskable-512.png',
-						sizes: '512x512',
-						type: 'image/png',
-						purpose: 'maskable'
-					}
-				],
-				shortcuts: [
-					{
-						name: 'Pliki',
-						short_name: 'Pliki',
-						url: '/',
-						icons: [{ src: '/pwa-192.png', sizes: '192x192', type: 'image/png' }]
-					},
-					{
-						name: 'Kosz',
-						short_name: 'Kosz',
-						url: '/trash',
-						icons: [{ src: '/pwa-192.png', sizes: '192x192', type: 'image/png' }]
-					}
-				],
-				categories: ['productivity', 'utilities']
+		sveltekit({
+			compilerOptions: {
+				// Force runes mode for the project, except for libraries. Can be removed in svelte 6.
+				runes: ({ filename }) =>
+					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			injectManifest: {
-				globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
-				maximumFileSizeToCacheInBytes: 10 * 1024 * 1024
-			},
-			devOptions: {
-				enabled: true,
-				type: 'module'
-			}
-		}),
-		sveltePhosphorOptimize(),
-		devtoolsJson()
+			adapter: adapter()
+		})
 	],
-
 	test: {
 		expect: { requireAssertions: true },
-
 		projects: [
 			{
-				extends: true,
-				resolve: {
-					conditions: ['browser']
-				},
-
+				extends: './vite.config.ts',
 				test: {
 					name: 'client',
-					environment: 'jsdom',
+					browser: {
+						enabled: true,
+						provider: playwright(),
+						instances: [{ browser: 'chromium', headless: true }]
+					},
 					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
 					exclude: ['src/lib/server/**']
 				}
 			},
 
 			{
-				extends: true,
-
+				extends: './vite.config.ts',
 				test: {
 					name: 'server',
 					environment: 'node',

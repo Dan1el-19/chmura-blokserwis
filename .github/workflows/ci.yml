@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Buf CLI
+        uses: bufbuild/buf-action@v1
+        with:
+          version: 1.75.0
+          setup_only: true
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.14.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Install browsers for component and navigation tests
+        # Component tests run in Chromium through Vitest browser mode.
+        # Install the browser and Linux libraries on each fresh runner.
+        run: pnpm exec playwright install --with-deps chromium firefox
+
+      - name: Run unit and component tests
+        run: pnpm test
+
+      - name: Run browser navigation tests
+        run: pnpm test:e2e
+
+      - name: Check Proto snapshot
+        run: pnpm proto:check
+
+      - name: Build
+        run: pnpm build
