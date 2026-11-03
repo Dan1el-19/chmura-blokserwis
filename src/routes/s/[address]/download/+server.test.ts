@@ -74,3 +74,20 @@ it('asks the user to refresh when an idempotent download request has expired', a
 	expect(response.status).toBe(409);
 	expect(await response.text()).toContain('Odśwież stronę i rozpocznij pobieranie ponownie.');
 });
+
+
+it('preserves the GET form request id with the grant for a retryable download', async () => {
+	const fetch = vi.fn(async (_url: URL, init: RequestInit) => {
+		expect(new Headers(init.headers).get('X-Request-ID')).toBe('download-attempt-1');
+		expect(new Headers(init.headers).get('X-Share-Grant')).toBe('opaque-grant');
+		return new Response(null, { status: 302, headers: { Location: 'https://storage.example/signed' } });
+	});
+	const response = await GET({
+		params: { address: 'public-token' },
+		cookies: { get: () => 'opaque-grant' },
+		request: new Request('https://chmura.blokserwis.pl/s/public-token/download?requestId=download-attempt-1'),
+		fetch
+	} as unknown as Parameters<typeof GET>[0]);
+
+	expect(response.status).toBe(302);
+});

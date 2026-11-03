@@ -45,7 +45,7 @@ test('opens a public share without initializing Clerk', async ({ page }) => {
 	await expect(page.getByText('Chmura Blokserwis', { exact: true })).toBeVisible();
 	await expect(page.getByRole('heading', { name: 'shared-photo.png' })).toBeVisible();
 	await expect(page.getByRole('img', { name: 'shared-photo.png' })).toBeVisible();
-	await expect(page.locator('form[action="/s/public-token/download"]')).toBeVisible();
+	await expect(page.locator('form[action="/s/public-token/download"]')).toHaveAttribute('method', 'GET');
 	await expect(page.getByRole('button', { name: 'Pobierz' })).toBeVisible();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'pl');
 	expect(clerkRequest).toBe(false);

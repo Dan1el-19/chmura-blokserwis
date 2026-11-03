@@ -58,9 +58,13 @@ async function redirectToDownload(address: string, requestId: string, grant: str
 
 export const GET: RequestHandler = async ({ params, cookies, request, fetch }) => {
 	const address = params.address ?? '';
+	const suppliedId = new URL(request.url).searchParams.get('requestId');
+	const requestId = suppliedId && suppliedId.length >= 8 && suppliedId.length <= 100
+		? suppliedId
+		: request.headers.get('x-request-id') || crypto.randomUUID();
 	return redirectToDownload(
 		address,
-		request.headers.get('x-request-id') || crypto.randomUUID(),
+		requestId,
 		cookies.get(shareGrantCookieName(address)),
 		fetch
 	);

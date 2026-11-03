@@ -211,7 +211,7 @@
 						{/if}
 						{#if error}<div class="rounded-md bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200" role="status"><p>{error}</p><button type="button" onclick={() => void loadShare(true)} class="mt-2 font-semibold underline">Ponów odnowienie podglądu</button></div>{/if}
 						{#if share.downloadLimitReached}<p class="rounded-md bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200" role="status">Limit pobrań został wyczerpany. Nowe pobrania i podgląd są zablokowane.</p>
-						{:else}<form method="POST" action={resolve('/s/[address]/download', { address })}><input type="hidden" name="requestId" value={downloadRequestId} /><button type="submit" class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 sm:w-auto"><DownloadSimple class="h-5 w-5" />Pobierz</button></form>{/if}
+						{:else}<form method="GET" action={resolve('/s/[address]/download', { address })}><input type="hidden" name="requestId" value={downloadRequestId} /><button type="submit" class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 sm:w-auto"><DownloadSimple class="h-5 w-5" />Pobierz</button></form>{/if}
 					{/if}
 				</div>
 			{/if}
