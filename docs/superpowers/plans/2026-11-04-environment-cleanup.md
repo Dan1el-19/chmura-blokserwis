@@ -108,3 +108,7 @@ transferach lub niezależnym porównaniu checksum przez agenta. Stare repo jest
 zarchiwizowane z zachowaniem historii i tagów. Stary Worker został usunięty po
 kontroli zależności, harmonogramów i ruchu. Pozostały lokalny katalog i projekt
 źródłowy wymagają rozwiązania odwołań z czatów przez mechanizm zgody aplikacji.
+
+Ze zarchiwizowanego checkoutu źródłowego usunięto wyłącznie ignorowane
+`node_modules` i `.svelte-kit`; katalog zmniejszył się do około 3,4 MB. Pozostawiono
+kod, historię Git, zapisy prac i samą ścieżkę wymaganą przez aktywne narzędzia.

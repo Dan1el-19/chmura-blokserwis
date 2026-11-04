@@ -100,7 +100,10 @@ because the destination project does not include
 `/Users/daniel/Projects/unisource-cloud`. Current and historical chats and tool
 processes still depend on that source path. Keep the local source directory
 until those references are resolved; do not terminate the chat's tools to work
-around the source-access requirement.
+around the source-access requirement. After archival, its ignored `node_modules`
+and `.svelte-kit` outputs were removed after verifying that neither contained
+tracked files. The source directory shrank from approximately 821 MB to 3.4 MB;
+source code, Git history and task records remain available.
 
 No scheduled automations referencing either frontend repository were found in
 the local automation configuration inventory.
