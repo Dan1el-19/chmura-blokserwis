@@ -1,6 +1,6 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "unisource-cloud",
+	"name": "chmura-blokserwis",
 	"compatibility_date": "2026-10-22",
 	"compatibility_flags": [
 		"nodejs_als"

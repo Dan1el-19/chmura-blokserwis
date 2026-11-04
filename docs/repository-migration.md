@@ -67,3 +67,12 @@ recovery inputs.
 The local source checkout is still retained because existing Codex chats and
 tool processes depend on its path and the app requires source-folder consent
 for moving those chats. This is the remaining local retirement gate.
+
+## Production Worker name — 2026-11-05
+
+After migration and retirement, the user requested the production Worker name
+`chmura-blokserwis`. The active `unisource-cloud` Worker was renamed in place,
+preserving ID `1103ffc1eb1849d39269e130963830fa`, its history and domain. This
+supersedes references to the active `unisource-cloud` name in the historical
+migration steps above. The legacy service deleted on 2026-11-04 was a different
+Worker. Current deployment configuration is in `wrangler.jsonc`.
