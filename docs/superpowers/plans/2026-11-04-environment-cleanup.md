@@ -70,7 +70,7 @@
 
 - [x] Zastąpić instrukcję przyszłego przepinania Builds w README opisem faktycznego połączenia: `chmura-blokserwis/main` → Worker `unisource-cloud` → `chmura.blokserwis.pl`.
 - [x] Zapisać zakończone kroki migracji, lokalizację zachowanej pracy wycen i listę niewykonanych testów produkcyjnych. Odróżnić wcześniejszy sukces wdrożenia od nowej akceptacji transferów.
-- [ ] Sprawdzić aktywne GitHub Actions, webhooki, Deploy Hooks, integracje, zmienne i nazwy sekretów obu repo oraz ustawienia projektu w Codex. Usuwać stare połączenia dopiero po wskazaniu konkretnego nieużywanego odwołania. Nie usuwać wspólnej instalacji GitHub App ani współdzielonego tokena Builds.
+- [x] Sprawdzić aktywne GitHub Actions, webhooki, Deploy Hooks, integracje, zmienne i nazwy sekretów obu repo oraz ustawienia projektu w Codex. Usuwać stare połączenia dopiero po wskazaniu konkretnego nieużywanego odwołania. Nie usuwać wspólnej instalacji GitHub App ani współdzielonego tokena Builds.
 - [x] Potwierdzić jedno produkcyjne źródło Builds, brak legacy wyzwalaczy i wyłączone previews. Sprawdzić, czy są aktywne buildy przed archiwizacją lub usuwaniem gałęzi.
 - [ ] Zrobić oddzielny PR dokumentacyjny i sprawdzić diff. Zastosować istniejące kontrole repo. Nie dodawać nowego systemu release, deploy ani ochrony gałęzi w ramach sprzątania.
 

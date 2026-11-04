@@ -67,8 +67,13 @@ change was `cf030e7`, with successful CI and Workers Builds.
    obsolete source checkout after resolving all chat/tool path references.
 4. Before deleting the old Worker `chmura-blokserwis`, establish that no custom
    domains, routes, traffic or other consumers depend on it and identify the
-   necessary recovery configuration. Its empty Builds trigger list alone is
-   insufficient evidence. Keep the service until this audit is conclusive.
+   necessary recovery configuration. The read-only API inventory found no
+   custom domains, disabled workers.dev/previews, no routes across four account
+   zones, and no incoming service bindings among nine account Workers. The old
+   script still carries legacy secret bindings; their values were not read.
+   Traffic acceptance and recoverability are still open, so the service and its
+   secrets remain available. An empty Builds trigger list alone is insufficient
+   evidence for deletion.
 
 Production resources, backend storage and authentication configuration have not
 been removed by this cleanup. No scheduled automations referencing either
