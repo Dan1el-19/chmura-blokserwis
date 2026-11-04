@@ -11,8 +11,9 @@
   frontend Worker. Neither repository has repository-level Actions secrets,
   variables or repository webhooks at the time of inspection. The target still
   has legacy environment-level deployment secrets in `beta` and `production`;
-  these are retained pending legacy-service retirement, not used by current CI
-  or Workers Builds. Their values were not read or copied.
+  these are retained as inputs for rebuilding the historical application, not
+  used by current CI or Workers Builds. Their values were not read or copied,
+  and shared credentials were not revoked.
 
 ## Preserved history and local work
 
@@ -51,30 +52,55 @@ first request after cache regeneration exceeded a 30-second client timeout; a
 subsequent request completed successfully. The temporary dev server was stopped. The latest production commit inspected before this documentation
 change was `cf030e7`, with successful CI and Workers Builds.
 
-## Remaining gates
+## Production acceptance and remote retirement
 
-1. Sign in to the production frontend using an account authorized for testing.
-   Verify the private/shared catalog, a small upload and checksum-verified
-   download, preview, public link and revocation. Remove the test data.
-   The available browser currently shows the Clerk sign-in form.
-2. Move source-project chats to the canonical Codex project through the app's
-   consent flow. The app tool returned `confirmation_required` because the
-   destination project does not include `/Users/daniel/Projects/unisource-cloud`.
-   Current and historical chats still depend on that source path; do not delete
-   it or terminate their tool processes to work around this requirement.
-3. After acceptance, add a migration notice to the source repository and archive
-   `Dan1el-19/unisource-cloud`, preserving its history and tags. Then remove the
-   obsolete source checkout after resolving all chat/tool path references.
-4. Before deleting the old Worker `chmura-blokserwis`, establish that no custom
-   domains, routes, traffic or other consumers depend on it and identify the
-   necessary recovery configuration. The read-only API inventory found no
-   custom domains, disabled workers.dev/previews, no routes across four account
-   zones, and no incoming service bindings among nine account Workers. The old
-   script still carries legacy secret bindings; their values were not read.
-   Traffic acceptance and recoverability are still open, so the service and its
-   secrets remain available. An empty Builds trigger list alone is insufficient
-   evidence for deletion.
+On 2026-11-04 the user confirmed that the complete requested production scope
+works: sign-in, private/shared catalogs, upload/download, previews, public links
+and revocation. This is user-reported acceptance; the cleanup agent did not
+perform new authenticated production transfers or claim an independent checksum
+comparison.
 
-Production resources, backend storage and authentication configuration have not
-been removed by this cleanup. No scheduled automations referencing either
-frontend repository were found in the local automation configuration inventory.
+`Dan1el-19/unisource-cloud` was archived after a migration notice linking to
+`Dan1el-19/chmura-blokserwis` was committed as `b077826`. Its obsolete CI workflow
+was disabled before that notice was pushed. No open PR/issues or active runs
+were found. Application parity was checked before archival, and remote tag refs
+and the existing source ancestry were verified unchanged afterward.
+
+The old Worker `chmura-blokserwis` was deleted with Wrangler, without `--force`,
+after these checks:
+
+- no custom domains, disabled workers.dev and previews;
+- no routes across all four account zones;
+- no incoming service bindings among all nine account Workers;
+- no cron schedules and no Builds triggers or Deploy Hooks;
+- no recorded invocations between 2026-11-01 20:07 UTC and 2026-11-04 11:55 UTC;
+  the same Analytics query returned traffic for production as a positive control;
+- the script had static assets and legacy secret/configuration bindings, with no
+  database, bucket or Durable Object binding to delete.
+
+The last deployed legacy version was `13874d8f-5ffd-4dd2-90f7-c3f03be11951`.
+Recovery means rebuilding the historical source at `44a5bcf` using retained
+GitHub environment secrets, not restoring the deleted Worker's deployment
+history. The historical Wrangler config and deployment metadata were recorded
+in the local cleanup task directory. A recovery config must remove the old
+production route and keep public routing disabled before recreating an isolated
+legacy service; the historical config must not be deployed unchanged over the
+current domain.
+
+After deletion, the old script was absent from the Worker inventory, the active
+`unisource-cloud` Worker still followed `chmura-blokserwis/main`, and production
+returned HTTP 200. Current backend storage, authentication and shared tokens
+were not removed or revoked.
+
+## Remaining local gate
+
+Source-project chats still need to be moved to the canonical Codex project
+through the app's consent flow. The app tool returned `confirmation_required`
+because the destination project does not include
+`/Users/daniel/Projects/unisource-cloud`. Current and historical chats and tool
+processes still depend on that source path. Keep the local source directory
+until those references are resolved; do not terminate the chat's tools to work
+around the source-access requirement.
+
+No scheduled automations referencing either frontend repository were found in
+the local automation configuration inventory.
