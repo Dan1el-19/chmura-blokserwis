@@ -41,3 +41,23 @@ No existing cloud data or backend resources are migrated by this change.
 Use the existing Worker's deployment history to restore a previously verified
 version if runtime acceptance fails. Reverting the migration commit restores
 legacy workflow files too, so a Git revert is not a deployment rollback plan.
+
+## Verified migration status — 2026-11-04
+
+The repository replacement was merged in PR #3 as `c956869`. The existing
+`unisource-cloud` Worker is connected to `chmura-blokserwis/main`; source-repo
+production triggers and the legacy Worker's Builds triggers have been removed.
+Workers Previews are disabled. Commit `cf030e7` subsequently passed CI and was
+successfully deployed from the target repository on 2026-11-03.
+
+The local target checkout has been updated. The merged migration worktree and
+its local/remote branch were removed after verifying ancestry. Unfinished legacy
+quotation changes and audits are preserved as `66d806f` on
+`codex/preserve-legacy-local-work-2026-11-04`; the unmerged
+`codex/opencloud-evaluation` branch is also retained.
+
+Authenticated production acceptance remains open: the available browser has no
+signed-in Clerk session. HTTP availability and a successful deployment do not
+prove upload/download, preview and public-link behavior. Source repository
+archival and source checkout deletion remain gated on the checks documented in
+the [cleanup report](environment-cleanup.md).

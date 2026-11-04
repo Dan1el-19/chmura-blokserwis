@@ -69,10 +69,9 @@ URLs are disabled as part of the cutover.
 ## Automatic deployment from GitHub
 
 The production Worker keeps its existing `unisource-cloud` name and configuration.
-The canonical frontend repository is `Dan1el-19/chmura-blokserwis`. Cloudflare
-After the migration is merged into `main`, connect Workers Builds to that
-repository and disconnect `Dan1el-19/unisource-cloud` so it cannot deploy older
-code to the same Worker. Production follows `main` with these settings:
+Cloudflare Workers Builds is connected to `Dan1el-19/chmura-blokserwis`, production
+branch `main`. The former `Dan1el-19/unisource-cloud` repository no longer triggers
+production deployments. Production uses these settings:
 
 | Setting | Value |
 | --- | --- |
@@ -93,10 +92,9 @@ check the Worker's Builds history for the exact Git SHA and a successful
 production deployment. GitHub Actions runs quality checks separately and does
 not deploy the Worker.
 
-Non-main branch previews use the development Clerk publishable key and a
-reserved `.invalid` API hostname from the `previews` block. This keeps preview
-builds away from production API and storage data; preview pages that need API
-data are intentionally unavailable.
+Automatic non-main branch deployments and Workers Previews are disabled. The
+reserved `previews` settings in `wrangler.jsonc` use a development Clerk key and
+an `.invalid` API hostname; they do not represent an active preview environment.
 
 See the [Workers Builds configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/)
 and [build image/package manager selection](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/).
@@ -141,3 +139,11 @@ remain available. The old Appwrite stable/beta deployment workflows and semantic
 release workflow are replaced by the current frontend CI. Production continues
 to use Workers Builds; GitHub Actions does not need Cloudflare or backend secrets.
 See [migration checklist](docs/repository-migration.md) for the cutover checks.
+
+## Active local checkout
+
+Use `/Users/daniel/Projects/chmura-blokserwis` and the matching Codex project for
+new frontend work. See the [environment cleanup report](docs/environment-cleanup.md)
+for preserved legacy work and the remaining retirement gates. Historical
+quotation code and OpenCloud evaluations are kept on their own branches and
+are not part of the active frontend.
