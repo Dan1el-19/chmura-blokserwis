@@ -72,16 +72,16 @@
 - [x] Zapisać zakończone kroki migracji, lokalizację zachowanej pracy wycen i listę niewykonanych testów produkcyjnych. Odróżnić wcześniejszy sukces wdrożenia od nowej akceptacji transferów.
 - [x] Sprawdzić aktywne GitHub Actions, webhooki, Deploy Hooks, integracje, zmienne i nazwy sekretów obu repo oraz ustawienia projektu w Codex. Usuwać stare połączenia dopiero po wskazaniu konkretnego nieużywanego odwołania. Nie usuwać wspólnej instalacji GitHub App ani współdzielonego tokena Builds.
 - [x] Potwierdzić jedno produkcyjne źródło Builds, brak legacy wyzwalaczy i wyłączone previews. Sprawdzić, czy są aktywne buildy przed archiwizacją lub usuwaniem gałęzi.
-- [ ] Zrobić oddzielny PR dokumentacyjny i sprawdzić diff. Zastosować istniejące kontrole repo. Nie dodawać nowego systemu release, deploy ani ochrony gałęzi w ramach sprzątania.
+- [x] Zrobić oddzielny PR dokumentacyjny i sprawdzić diff. Zastosować istniejące kontrole repo. Nie dodawać nowego systemu release, deploy ani ochrony gałęzi w ramach sprzątania.
 
 **Rezultat:** Dokumentacja odpowiada konfiguracji, a zależności od starego repo są rozpoznane.
 
 ## Zadanie 4: Potwierdzić produkcję i zarchiwizować stare repo
 
-- [ ] Przeprowadzić krótki test produkcyjny na koncie i przestrzeni dopuszczonych do takich testów: logowanie, katalog prywatny i wspólny, upload małego pliku, download z kontrolą zawartości, podgląd oraz publiczny link i jego odwołanie. Posprzątać utworzone dane testowe. Jeśli brak takiego dostępu, zachować punkt jako jawnie otwarty i wstrzymać kroki uzależnione od akceptacji.
-- [ ] Potwierdzić najnowszy zielony CI i udane wdrożenie właściwego SHA z nowego repo. Sprawdzić HTTP 200 strony jako dodatkowy test dostępności.
-- [ ] Ponownie porównać śledzone drzewa obu repo i sprawdzić unikalne lokalne commity oraz otwarte PR/issues. Każdą nową różnicę sklasyfikować przed archiwizacją.
-- [ ] W `Dan1el-19/unisource-cloud` dodać krótką informację o przeniesieniu do `Dan1el-19/chmura-blokserwis`, z odnośnikiem do aktualnego repo. Następnie włączyć archiwizację repo. Pozostawić jego commity i tagi; nie usuwać repo.
+- [x] Przeprowadzić krótki test produkcyjny na koncie i przestrzeni dopuszczonych do takich testów: logowanie, katalog prywatny i wspólny, upload małego pliku, download z kontrolą zawartości, podgląd oraz publiczny link i jego odwołanie. Posprzątać utworzone dane testowe. Jeśli brak takiego dostępu, zachować punkt jako jawnie otwarty i wstrzymać kroki uzależnione od akceptacji.
+- [x] Potwierdzić najnowszy zielony CI i udane wdrożenie właściwego SHA z nowego repo. Sprawdzić HTTP 200 strony jako dodatkowy test dostępności.
+- [x] Ponownie porównać śledzone drzewa obu repo i sprawdzić unikalne lokalne commity oraz otwarte PR/issues. Każdą nową różnicę sklasyfikować przed archiwizacją.
+- [x] W `Dan1el-19/unisource-cloud` dodać krótką informację o przeniesieniu do `Dan1el-19/chmura-blokserwis`, z odnośnikiem do aktualnego repo. Następnie włączyć archiwizację repo. Pozostawić jego commity i tagi; nie usuwać repo.
 - [x] Usunąć lokalną i zdalną `codex/replace-with-unisource-cloud` dopiero po usunięciu korzystającego z niej worktree i potwierdzeniu, że jej commit jest w aktualnym `main`. Zachować `codex/opencloud-evaluation` i nową gałąź z wycenami.
 
 **Rezultat:** Stare repo stanowi czytelne archiwum; aktualny kod i wdrożenia mają jedno źródło.
@@ -90,7 +90,7 @@
 
 - [x] Po przeglądzie ignorowanych plików usunąć czysty worktree migracji przez `git worktree remove /Users/daniel/.codex/worktrees/chmura-repo-migration`. Worktree utworzono ręcznie; przed usunięciem potwierdzić, czy nie został później zarejestrowany w Codex, i w takim przypadku użyć właściwego mechanizmu aplikacji.
 - [ ] Po archiwizacji zdalnego źródła i przełączeniu narzędzi usunąć katalog `/Users/daniel/Projects/unisource-cloud` wraz z jego zbędnymi zależnościami i artefaktami. Najpierw potwierdzić brak unikalnej pracy, potrzebnych plików ignorowanych i aktywnych odwołań. Nie wykonywać kasowania z aktywnego katalogu tego czatu.
-- [ ] Przed usunięciem starego Workera `chmura-blokserwis` sprawdzić domeny/route'y, workers.dev, bieżące użycie i inne zależności. Brak wyzwalaczy Builds został potwierdzony, ale to za mało, by uznać usługę za nieużywaną. Usunięcie dopiero po udokumentowaniu braku odbiorców i możliwości odtworzenia potrzebnej konfiguracji; przy niepewności pozostawić ten punkt otwarty.
+- [x] Przed usunięciem starego Workera `chmura-blokserwis` sprawdzić domeny/route'y, workers.dev, bieżące użycie i inne zależności. Brak wyzwalaczy Builds został potwierdzony, ale to za mało, by uznać usługę za nieużywaną. Usunięcie dopiero po udokumentowaniu braku odbiorców i możliwości odtworzenia potrzebnej konfiguracji; przy niepewności pozostawić ten punkt otwarty.
 - [x] Nie usuwać produkcyjnego Workera `unisource-cloud`, współdzielonych zasobów i danych dawnych magazynów na podstawie samej podobnej nazwy.
 - [ ] Końcowo sprawdzić `git status`, `git worktree list`, gałęzie lokalne i zdalne, projekt Codex, stan archiwizacji repo, konfigurację Builds i dostępność produkcji. Zmierzyć odzyskane miejsce i odnotować faktyczne wyniki.
 
@@ -99,3 +99,16 @@
 ## Kolejność i granica wykonania
 
 Wykonywać 1 → 2 → 3 → 4 → 5. Każdy etap kończy się sprawdzeniem wyniku przed kolejną mutacją. Gałęzie z unikalną pracą i stare repo są materiałem historycznym, nie kandydatami do automatycznego usunięcia. Wykonanie rozpoczęto na polecenie użytkownika 2026-11-04. Stan wykonania i pozostałe warunki opisuje `docs/environment-cleanup.md`; otwartych warunków nie uznawać za spełnione.
+
+## Uzupełnienie wykonania — 2026-11-04
+
+Użytkownik potwierdził pełny zakres testów produkcyjnych z pytania kontrolnego.
+Akceptację zapisano jako zgłoszoną przez użytkownika, bez twierdzenia o nowych
+transferach lub niezależnym porównaniu checksum przez agenta. Stare repo jest
+zarchiwizowane z zachowaniem historii i tagów. Stary Worker został usunięty po
+kontroli zależności, harmonogramów i ruchu. Pozostały lokalny katalog i projekt
+źródłowy wymagają rozwiązania odwołań z czatów przez mechanizm zgody aplikacji.
+
+Ze zarchiwizowanego checkoutu źródłowego usunięto wyłącznie ignorowane
+`node_modules` i `.svelte-kit`; katalog zmniejszył się do około 3,4 MB. Pozostawiono
+kod, historię Git, zapisy prac i samą ścieżkę wymaganą przez aktywne narzędzia.

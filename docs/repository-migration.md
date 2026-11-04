@@ -56,8 +56,14 @@ quotation changes and audits are preserved as `66d806f` on
 `codex/preserve-legacy-local-work-2026-11-04`; the unmerged
 `codex/opencloud-evaluation` branch is also retained.
 
-Authenticated production acceptance remains open: the available browser has no
-signed-in Clerk session. HTTP availability and a successful deployment do not
-prove upload/download, preview and public-link behavior. Source repository
-archival and source checkout deletion remain gated on the checks documented in
-the [cleanup report](environment-cleanup.md).
+On 2026-11-04 the user confirmed the requested authenticated production test
+scope. The source repository was given a migration notice and archived with
+its history and tags preserved; its obsolete CI was disabled. The unused
+legacy Worker `chmura-blokserwis` was removed after dependency, scheduling and
+traffic checks. The active `unisource-cloud` Worker and production domain remain
+in use. See the [cleanup report](environment-cleanup.md) for the evidence and
+recovery inputs.
+
+The local source checkout is still retained because existing Codex chats and
+tool processes depend on its path and the app requires source-folder consent
+for moving those chats. This is the remaining local retirement gate.
