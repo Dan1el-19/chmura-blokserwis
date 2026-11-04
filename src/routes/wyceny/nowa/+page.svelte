@@ -322,7 +322,7 @@
 					createIdempotencyKey = null;
 					removeStorage(createKeyStorageKey);
 				}
-				throw new Error(readError(createdPayload, 'Nie udało się utworzyć szkicu.'));
+				throw new Error(readError(createdPayload, 'Nie udało się utworzyć szkicu.', createResponse.status));
 			}
 			const quotation = createdPayload.item ?? createdPayload.quotation ?? createdPayload;
 			createdQuotationId = quotation.id;
@@ -376,7 +376,7 @@
 				generationIdempotencyKey = null;
 				removeStorage(flowStorageKey);
 			}
-			throw new Error(readError(payload as Record<string, unknown>, 'Generowanie wyceny nie powiodło się.'));
+			throw new Error(readError(payload as Record<string, unknown>, 'Generowanie wyceny nie powiodło się.', response.status));
 		}
 		generationIdempotencyKey = null;
 		clearPendingFlow();
@@ -384,8 +384,12 @@
 		await goto(`/wyceny/${encodeURIComponent(createdQuotationId)}`);
 	}
 
-	function readError(payload: Record<string, unknown>, fallback: string): string {
+	function readError(payload: Record<string, unknown>, fallback: string, status: number): string {
+		if (status === 401) {
+			return 'Sesja logowania jest nieaktywna. Zaloguj się ponownie w drugiej karcie, a następnie wróć tutaj i spróbuj ponownie. Wpisane dane pozostają w tym formularzu.';
+		}
 		const nested = payload.error;
+		if (typeof nested === 'string' && nested.trim()) return nested;
 		if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
 			const message = (nested as { message?: unknown }).message;
 			if (typeof message === 'string' && message.trim()) return message;
