@@ -68,7 +68,8 @@ URLs are disabled as part of the cutover.
 
 ## Automatic deployment from GitHub
 
-The production Worker keeps its existing `unisource-cloud` name and configuration.
+The production Worker is named `chmura-blokserwis`. It was renamed from
+`unisource-cloud` on 2026-11-05, keeping its Worker ID and deployment history.
 Cloudflare Workers Builds is connected to `Dan1el-19/chmura-blokserwis`, production
 branch `main`. The former `Dan1el-19/unisource-cloud` repository no longer triggers
 production deployments. Production uses these settings:

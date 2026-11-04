@@ -5,7 +5,9 @@
 - Repository: `Dan1el-19/chmura-blokserwis`, production branch `main`.
 - Local checkout: `/Users/daniel/Projects/chmura-blokserwis`.
 - Codex project: `chmura-blokserwis` (already registered).
-- Production Worker: `unisource-cloud`; domain: `chmura.blokserwis.pl`.
+- Production Worker: `chmura-blokserwis`; domain: `chmura.blokserwis.pl`.
+  On 2026-11-05 the active `unisource-cloud` Worker was renamed in place; it is
+  distinct from the legacy Worker with that name deleted on 2026-11-04.
 - GitHub Actions validates code; Workers Builds deploys `main`.
 - Preview deployments are disabled. No Deploy Hooks are configured for either
   frontend Worker. Neither repository has repository-level Actions secrets,
@@ -122,3 +124,13 @@ source code, Git history and task records remain available.
 
 No scheduled automations referencing either frontend repository were found in
 the local automation configuration inventory.
+
+## Production Worker rename — 2026-11-05
+
+The active Worker was renamed from `unisource-cloud` to `chmura-blokserwis`
+using the partial Worker update API. Its immutable ID remains
+`1103ffc1eb1849d39269e130963830fa`. This keeps the existing deployment history,
+custom domain and Workers Builds association. `wrangler.jsonc` now uses the new
+name; the repository and production branch remain `chmura-blokserwis/main`.
+Workers.dev, Preview URLs and Workers Previews remain disabled. The old source
+repository, local source path and npm package name are separate identifiers.
