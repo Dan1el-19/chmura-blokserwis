@@ -52,6 +52,18 @@ first request after cache regeneration exceeded a 30-second client timeout; a
 subsequent request completed successfully. The temporary dev server was stopped. The latest production commit inspected before this documentation
 change was `cf030e7`, with successful CI and Workers Builds.
 
+## CI startup allowance
+
+Repeated clean-runner CI attempts failed the first catalog-selection test while
+waiting five seconds for the initial page heading; the other 31 browser tests
+passed. The initial heading assertion now has a 15-second deadline, matching
+existing multipart startup assertions. Its expected heading and all selection,
+folder-skipping and download assertions remain intact; no retries or fixed
+sleeps were added and application behavior is unchanged. The focused Chromium
+selection test and ESLint passed locally after installing the project's official
+Playwright Chromium/Firefox bundles (the local config loads the Firefox launcher
+even when only Chromium is selected).
+
 ## Production acceptance and remote retirement
 
 On 2026-11-04 the user confirmed that the complete requested production scope
@@ -62,7 +74,10 @@ comparison.
 
 `Dan1el-19/unisource-cloud` was archived after a migration notice linking to
 `Dan1el-19/chmura-blokserwis` was committed as `b077826`. Its obsolete CI workflow
-was disabled before that notice was pushed. No open PR/issues or active runs
+was disabled before that notice was pushed. The unused source repository
+connection in Workers Builds was removed after checking that none of the eight
+remaining account Workers referenced it; the shared GitHub App and build token
+were retained. No open PR/issues or active runs
 were found. Application parity was checked before archival, and remote tag refs
 and the existing source ancestry were verified unchanged afterward.
 

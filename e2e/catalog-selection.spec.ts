@@ -54,7 +54,8 @@ test('selects loaded rows, skips folders during bulk downloads, and supports mob
 
 	await page.emulateMedia({ colorScheme: 'dark' });
 	await page.goto('/');
-	await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeAttached();
+	// The first visit can still be compiling client modules on a fresh CI runner.
+	await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeAttached({ timeout: 15_000 });
 	const mainCheckbox = page.getByRole('checkbox', { name: 'Zaznacz wszystkie wczytane elementy' });
 	await expect(mainCheckbox).toBeVisible();
 	await expect.poll(() => mainCheckbox.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe('rgb(39, 39, 42)');
