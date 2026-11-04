@@ -99,10 +99,11 @@ The last deployed legacy version was `13874d8f-5ffd-4dd2-90f7-c3f03be11951`.
 Recovery means rebuilding the historical source at `44a5bcf` using retained
 GitHub environment secrets, not restoring the deleted Worker's deployment
 history. The historical Wrangler config and deployment metadata were recorded
-in the local cleanup task directory. A recovery config must remove the old
-production route and keep public routing disabled before recreating an isolated
-legacy service; the historical config must not be deployed unchanged over the
-current domain.
+in the local cleanup task directory. A recovery config must use a separate
+Worker name, such as `chmura-blokserwis-legacy-recovery`, remove the old production
+route and keep public routing disabled. The name `chmura-blokserwis` now belongs
+to the active production Worker; do not reuse it for legacy recovery. The
+historical config must not be deployed unchanged over the current domain.
 
 After deletion, the old script was absent from the Worker inventory, the active
 `unisource-cloud` Worker still followed `chmura-blokserwis/main`, and production
