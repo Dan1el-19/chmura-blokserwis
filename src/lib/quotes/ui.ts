@@ -20,3 +20,7 @@ export function quoteError(error: unknown): string {
 export function isMissing(error: unknown): boolean {
 	return error instanceof ConnectError && error.code === Code.NotFound;
 }
+
+export function shouldPollQuote(statuses: Array<string | undefined>, statusReadFailed: boolean): boolean {
+	return statusReadFailed || statuses.some((status) => status === 'queued' || status === 'running');
+}

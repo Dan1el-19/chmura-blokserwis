@@ -40,6 +40,8 @@ test('accepts live XLSX to PDF and rejects a valid session outside Blokserwis', 
 			minimumPDFBytes: 1000,
 			apiOrigin: api
 		});
+		await page.getByRole('button', { name: 'Archiwizuj' }).click();
+		await expect(page.getByText(/ · Archiwum$/)).toBeVisible();
 		const other = await outsider.newPage();
 		const rejected = other.waitForResponse((response) =>
 			response.url() === `${api}/unisource.v2.QuoteService/ListQuotes` && response.status() === 403

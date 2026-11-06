@@ -37,8 +37,6 @@ export async function runQuoteFlow(page: Page, {
 	await page.reload();
 	const imported = page.getByRole('group', { name: 'Import XLSX' });
 	await expect(imported.getByText(/Suma pozycji: 40\.00 PLN/)).toBeVisible();
-	await imported.getByRole('button', { name: 'Zaznacz wszystkie' }).click();
-	await imported.getByRole('button', { name: 'Ustaw VAT zaznaczonym' }).click();
 	await imported.getByRole('button', { name: 'Zastosuj sprawdzone pozycje' }).click();
 	await expect(imported.getByText('Import zapisany w szkicu.')).toBeVisible();
 	await expect(page.getByRole('group', { name: 'Dane wyceny' }).getByLabel('Nazwa')).toHaveValue('Kamera');
@@ -49,7 +47,7 @@ export async function runQuoteFlow(page: Page, {
 	await expect(page.frameLocator('iframe[title="Podgląd wyceny"]').getByText('SZKIC', { exact: true })).toBeVisible();
 
 	await page.getByRole('button', { name: 'Generuj PDF szkicu' }).click();
-	const draftLink = page.getByRole('link', { name: 'Pobierz PDF szkicu' });
+	const draftLink = page.getByRole('button', { name: 'Pobierz PDF szkicu' });
 	await expect(draftLink).toBeVisible({ timeout: 15_000 });
 	const draftDownload = page.waitForEvent('download');
 	await draftLink.click();

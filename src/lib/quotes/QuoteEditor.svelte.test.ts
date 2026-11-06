@@ -7,7 +7,7 @@ import QuoteEditor from './QuoteEditor.svelte';
 
 const api = vi.hoisted(() => ({
 	getQuote: vi.fn(), saveDraft: vi.fn(), getImportResult: vi.fn(), getQuoteOperation: vi.fn(),
-	getQuotePdf: vi.fn(), applyImport: vi.fn()
+	getQuotePdf: vi.fn(), applyImport: vi.fn(), listQuoteRevisions: vi.fn(), remapQuoteImport: vi.fn()
 }));
 vi.mock('#lib/api.js', () => ({ getQuoteClient: () => api }));
 vi.mock('$app/navigation', () => ({ beforeNavigate: vi.fn() }));
@@ -38,7 +38,34 @@ it('keeps typed values after a concurrent save conflict', async () => {
 	}));
 });
 
-it('recovers an import after opening the editor and applies the reviewed VAT', async () => {
+it('applies imported prices as gross even when the detected mapping says net', async () => {
+	api.getImportResult.mockResolvedValue({ result: create(QuoteImportResultSchema, {
+		id: 'import-net', status: 'succeeded', resultVersion: 1n,
+		mapping: { priceMode: QuotePriceMode.NET },
+		lines: [{ sourceRow: 2, line: { name: 'Kamera', quantity: '1', unitPrice: '100' } }]
+	}) });
+	api.applyImport.mockResolvedValue({ quote: original });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await view.getByRole('button', { name: 'Zastosuj sprawdzone pozycje' }).click();
+	await expect.poll(() => api.applyImport.mock.calls.length).toBe(1);
+	expect(api.applyImport).toHaveBeenCalledWith(expect.objectContaining({ priceMode: QuotePriceMode.GROSS }));
+});
+
+it('preserves the price mode of an existing net draft when saving edits', async () => {
+	api.getQuote.mockResolvedValue({ quote: create(QuoteSchema, {
+		id: 'quote-1', draftVersion: 1n, draft: { title: 'Wcześniejsza wycena', priceMode: QuotePriceMode.NET }
+	}) });
+	api.saveDraft.mockResolvedValue({ quote: original });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await view.getByLabelText('Tytuł').fill('Zmieniona wycena');
+	await view.getByRole('button', { name: 'Zapisz szkic' }).click();
+	await expect.poll(() => api.saveDraft.mock.calls.length).toBe(1);
+	expect(api.saveDraft).toHaveBeenCalledWith(expect.objectContaining({
+		draft: expect.objectContaining({ priceMode: QuotePriceMode.NET })
+	}));
+});
+
+it('recovers an import and applies edited gross prices without inventing VAT', async () => {
 	api.getImportResult.mockResolvedValue({ result: create(QuoteImportResultSchema, {
 		id: 'import-1', status: 'succeeded', resultVersion: 22n, baseTotal: '40.00',
 		lines: [{ sourceRow: 2, line: { name: 'Kamera', quantity: '2', unitPrice: '20' } }]
@@ -47,12 +74,68 @@ it('recovers an import after opening the editor and applies the reviewed VAT', a
 		id: 'quote-1', draftVersion: 2n, draft: { title: 'Pierwotny szkic', priceMode: QuotePriceMode.GROSS }
 	}) });
 	const view = await render(QuoteEditor, { id: 'quote-1' });
-	await view.getByRole('group', { name: 'Import XLSX' }).getByRole('button', { name: 'Zaznacz wszystkie' }).click();
-	await view.getByRole('group', { name: 'Import XLSX' }).getByRole('button', { name: 'Ustaw VAT zaznaczonym' }).click();
+	await view.getByRole('group', { name: 'Import XLSX' }).getByLabelText('Cena brutto').fill('21');
 	await view.getByRole('button', { name: 'Zastosuj sprawdzone pozycje' }).click();
 	await expect.poll(() => api.applyImport.mock.calls.length).toBe(1);
 	expect(api.applyImport).toHaveBeenCalledWith(expect.objectContaining({
 		importId: 'import-1', resultVersion: 22n, expectedVersion: 1n,
-		reviewedLines: [expect.objectContaining({ vatKind: QuoteVatKind.RATE, vatPercent: '23' })]
+		priceMode: QuotePriceMode.GROSS, reviewedLines: [expect.objectContaining({ unitPrice: '21', vatKind: QuoteVatKind.UNSPECIFIED, vatPercent: '' })]
 	}));
+});
+
+it('shows all import warnings and the source row', async () => {
+	api.getImportResult.mockResolvedValue({ result: create(QuoteImportResultSchema, {
+		id: 'import-1', status: 'succeeded', resultVersion: 1n, baseTotal: '40.00',
+		warnings: ['source_total_mismatch', 'other_warning'],
+		lines: [{ sourceRow: 4, line: { name: 'Kamera', quantity: '2', unitPrice: '20' } }]
+	}) });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await expect.element(view.getByText('other_warning')).toBeVisible();
+	await expect.element(view.getByText(/Wiersz 4/)).toBeVisible();
+});
+
+it('shows the PDF state for each published revision', async () => {
+	api.getQuote.mockResolvedValue({ quote: create(QuoteSchema, {
+		id: 'quote-1', draftVersion: 1n, currentRevision: 2n,
+		draft: { title: 'Oferta', priceMode: QuotePriceMode.GROSS }
+	}) });
+	api.listQuoteRevisions.mockResolvedValue({ revisions: [
+		{ revision: 2n, publishedAt: '2026-01-01T00:00:00Z' },
+		{ revision: 1n, publishedAt: '2026-01-01T00:00:00Z' }
+	] });
+	api.getQuotePdf.mockImplementation(async ({ revision }: { revision?: bigint }) => ({
+		status: revision === 2n ? 'failed' : 'succeeded', revision: revision ?? 1n
+	}));
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await expect.element(view.getByText('PDF: błąd')).toBeVisible();
+	await expect.element(view.getByText('PDF: gotowy')).toBeVisible();
+});
+
+
+it('reuses a remap key on retry but assigns a new key after changing the mapping', async () => {
+	api.getImportResult.mockResolvedValue({ result: create(QuoteImportResultSchema, {
+		id: 'import-1', status: 'failed', resultVersion: 1n
+	}) });
+	api.remapQuoteImport.mockRejectedValue(new ConnectError('unavailable', Code.Unavailable));
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await view.getByText('Ręczne mapowanie').click();
+	const remap = view.getByRole('button', { name: 'Przelicz mapowanie' });
+	await remap.click();
+	await expect.poll(() => api.remapQuoteImport.mock.calls.length).toBe(1);
+	await remap.click();
+	await expect.poll(() => api.remapQuoteImport.mock.calls.length).toBe(2);
+	const first = api.remapQuoteImport.mock.calls[0][0].idempotencyKey;
+	expect(api.remapQuoteImport.mock.calls[1][0].idempotencyKey).toBe(first);
+	await view.getByLabelText('Arkusz', { exact: true }).fill('Arkusz1');
+	await remap.click();
+	await expect.poll(() => api.remapQuoteImport.mock.calls.length).toBe(3);
+	expect(api.remapQuoteImport.mock.calls[2][0].idempotencyKey).not.toBe(first);
+});
+
+it('does not offer an outdated draft PDF after editing the draft', async () => {
+	api.getQuotePdf.mockResolvedValue({ status: 'succeeded', draftVersion: 1n, url: 'https://example.test/draft.pdf' });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await expect.element(view.getByRole('button', { name: 'Pobierz PDF szkicu' })).toBeVisible();
+	await view.getByLabelText('Tytuł').fill('Nowa treść');
+	await expect.element(view.getByRole('button', { name: 'Pobierz PDF szkicu' })).not.toBeInTheDocument();
 });

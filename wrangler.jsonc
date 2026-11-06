@@ -18,7 +18,7 @@
 	],
 	"vars": {
 		"PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuYXV0aC5ibG9rc2Vyd2lzLnBsJA",
-		"PUBLIC_QUOTES_API_URL": "",
+		"PUBLIC_QUOTES_API_URL": "https://api.unisource.pl",
 		"PUBLIC_CLOUD_API_URL": "https://api.blokserwis.pl"
 	},
 	"previews": {

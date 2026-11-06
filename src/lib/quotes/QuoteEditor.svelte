@@ -10,7 +10,7 @@
 		type Quote, type QuoteDraft, type QuoteLine, type QuoteImportResult,
 		type QuoteRevisionInfo, type GetQuoteOperationResponse, type GetQuotePdfResponse
 	} from '#lib/gen/unisource/v2/quotes_pb.js';
-	import { button, field, isMissing, panel, primary, quoteError } from './ui.js';
+	import { button, field, isMissing, panel, primary, quoteError, shouldPollQuote } from './ui.js';
 	import QuoteLines from './QuoteLines.svelte';
 
 	let { id }: { id: string } = $props();
@@ -19,9 +19,9 @@
 	let imported = $state<QuoteImportResult>();
 	let reviewed = $state<QuoteLine[]>([]);
 	let sourceRows = $state<number[]>([]);
-	let importMode = $state(QuotePriceMode.GROSS);
 	let mapping = $state(create(QuoteImportMappingSchema, { priceMode: QuotePriceMode.GROSS, firstRow: 2, lastRow: 2, nameColumn: 2, quantityColumn: 3, priceColumn: 4 }));
 	let revisions = $state<QuoteRevisionInfo[]>([]);
+	let revisionPdfs = $state<Record<string, GetQuotePdfResponse | undefined>>({});
 	let operation = $state<GetQuoteOperationResponse>();
 	let publishedPdf = $state<GetQuotePdfResponse>();
 	let currentPdf = $state<GetQuotePdfResponse>();
@@ -148,7 +148,6 @@
 					sourceRows = result.lines.map((line) => line.sourceRow);
 					if (result.mapping) {
 						mapping = result.mapping;
-						importMode = result.mapping.priceMode;
 					}
 				}
 				imported = result;
@@ -160,7 +159,17 @@
 			if (pdf.status === 'fulfilled') publishedPdf = pdf.value;
 			if (newestPdf.status === 'fulfilled') currentPdf = newestPdf.value;
 			if (currentDraftPdf.status === 'fulfilled' && quote?.draftVersion === version) draftPdf = currentDraftPdf.value;
-			const rejected = [imp, gen, pdf, currentDraftPdf, newestPdf].find((result) => result.status === 'rejected');
+			const checking = revisions.filter((revision) => revisionPdfs[String(revision.revision)]?.status !== 'succeeded');
+			const pdfs = await Promise.allSettled(checking.map((revision) => optional(api.getQuotePdf({ quoteId: id, revision: revision.revision }))));
+			if (!disposed) {
+				const next = { ...revisionPdfs };
+				for (let i = 0; i < checking.length; i++) {
+					const result = pdfs[i];
+					if (result?.status === 'fulfilled') next[String(checking[i].revision)] = result.value;
+				}
+				revisionPdfs = next;
+			}
+			const rejected = [imp, gen, pdf, currentDraftPdf, newestPdf, ...pdfs].find((result) => result.status === 'rejected');
 			extraError = rejected?.status === 'rejected' ? quoteError(rejected.reason) : '';
 		} finally {
 			polling = false;
@@ -181,7 +190,11 @@
 			catch (reason) { if (!disposed) error = quoteError(reason); }
 			finally { loaded = true; }
 		})();
-		const poll = setInterval(() => { if (!busy) refreshQuietly(); }, 2500);
+		const poll = setInterval(() => {
+			const statuses = [imported?.status, operation?.status, currentPdf?.status, draftPdf?.status,
+				...Object.values(revisionPdfs).map((pdf) => pdf?.status)];
+			if (!busy && shouldPollQuote(statuses, Boolean(extraError))) refreshQuietly();
+		}, 2500);
 		return () => { disposed = true; clearInterval(poll); clearTimeout(timer); };
 	});
 
@@ -192,9 +205,9 @@
 		} catch (reason) { error = quoteError(reason); }
 	}
 
-	async function download(revision: bigint) {
+	async function download(revision: bigint, draftVersion = 0n) {
 		try {
-			const result = await getQuoteClient().getQuotePdf({ quoteId: id, revision });
+			const result = await getQuoteClient().getQuotePdf({ quoteId: id, revision, draftVersion });
 			if (result.url) window.location.assign(result.url);
 			else if (result.status === 'failed') status = 'Eksport nie powiódł się. Możesz ponowić generowanie PDF.';
 			else status = 'PDF jest w przygotowaniu.';
@@ -236,16 +249,13 @@
 		{#if extraError}<p class="text-sm text-text-muted" role="status">{extraError}</p>{/if}
 		<fieldset class={panel} disabled={busy || quote.archived}>
 			<legend class="px-1 font-semibold">Dane wyceny</legend>
-			<div class="grid gap-3 sm:grid-cols-3">
+			<div class="grid gap-3 sm:grid-cols-2">
 				<label>Tytuł<input class={field} bind:value={draft.title} oninput={changed} /></label>
 				<label>Klient<input class={field} bind:value={draft.client} oninput={changed} /></label>
-				<label>Tryb cen
-					<select class={field} bind:value={draft.priceMode} onchange={changed}>
-						<option value={QuotePriceMode.GROSS}>Brutto</option><option value={QuotePriceMode.NET}>Netto</option>
-					</select>
-				</label>
 			</div>
-			<QuoteLines bind:lines={draft.lines} onchange={changed} />
+			<p class="text-sm text-text-muted">Ceny w tej wycenie: {draft.priceMode === QuotePriceMode.NET ? 'netto (zapisane wcześniej)' : 'brutto'}.</p>
+			<QuoteLines bind:lines={draft.lines} net={draft.priceMode === QuotePriceMode.NET} onchange={changed} />
+			{#if draft.priceMode === QuotePriceMode.NET}<p role="status">Ta starsza wycena ma ceny netto. Import pozycji zastąpi je cenami brutto.</p>{/if}
 		</fieldset>
 
 		<fieldset class={panel} disabled={busy || saving || quote.archived}>
@@ -267,18 +277,20 @@
 				{:else if imported.applied}<p>Import zapisany w szkicu.</p>
 				{:else}
 					{#if imported.status === 'succeeded'}
-						<p>Sprawdź pozycje i tryb cen. Zastosowanie importu zastąpi dotychczasowe pozycje szkicu.</p>
-						<p>Suma pozycji: {imported.baseTotal} PLN{imported.sourceTotal ? ` · Suma arkusza: ${imported.sourceTotal} PLN` : ''}</p>
-						{#if imported.warnings.includes('source_total_mismatch')}<p role="alert">Suma pozycji różni się od sumy podanej w pliku.</p>{/if}
-						<label>Tryb cen importu<select class={field} bind:value={importMode}>
-							<option value={QuotePriceMode.GROSS}>Brutto</option><option value={QuotePriceMode.NET}>Netto</option>
-						</select></label>
+						<div class="rounded-lg border border-border-line p-4">
+							<h2 class="font-semibold">Sprawdź pozycje z arkusza</h2>
+							<p class="mt-1 text-sm text-text-muted">Ceny są podane brutto. Możesz poprawić pozycje przed dodaniem ich do wyceny. Zastąpią one obecne pozycje.</p>
+							<p class="mt-3 text-sm">Suma pozycji: {imported.baseTotal} PLN{imported.sourceTotal ? ` · Suma arkusza: ${imported.sourceTotal} PLN` : ''}</p>
+						</div>
+						{#each imported.warnings as warning, index (index)}
+							<p role="alert">{warning === 'source_total_mismatch' ? 'Suma pozycji różni się od sumy podanej w pliku.' : warning}</p>
+						{/each}
 						<QuoteLines bind:lines={reviewed} bind:sourceRows onchange={() => keys.delete('apply')} />
 						<button class={primary} type="button" onclick={() => act('apply', async (key) => {
 							if (!quote || !imported) return;
 							const result = await getQuoteClient().applyImport({
 								quoteId: id, importId: imported.id, resultVersion: imported.resultVersion,
-								expectedVersion: quote.draftVersion, idempotencyKey: key, reviewedLines: reviewed, priceMode: importMode
+								expectedVersion: quote.draftVersion, idempotencyKey: key, reviewedLines: reviewed, priceMode: QuotePriceMode.GROSS
 							});
 							if (result.quote) adopt(result.quote);
 						})}>Zastosuj sprawdzone pozycje</button>
@@ -286,10 +298,10 @@
 						{#if imported.errorCode === 'unsupported_input_formula'}
 							<p role="status">Arkusz zawiera nieobsługiwaną formułę w danych wejściowych. Zastąp ją wartością w pliku i prześlij plik ponownie albo wskaż inne kolumny.</p>
 						{:else}
-							<p role="status">Nie udało się rozpoznać tabeli. Wskaż arkusz i kolumny ręcznie.</p>
+							<p role="status">Nie udało się rozpoznać tabeli. Wskaż arkusz i kolumny ręcznie.{imported.errorCode ? ` Kod błędu: ${imported.errorCode}.` : ''}</p>
 						{/if}
 					{/if}
-					<details class="space-y-3">
+					<details class="space-y-3" oninput={() => keys.delete('remap')} onchange={() => keys.delete('remap')}>
 						<summary class="cursor-pointer">Ręczne mapowanie</summary>
 						<div class="grid gap-2 sm:grid-cols-4">
 							<label>Arkusz<input class={field} bind:value={mapping.sheet} /></label>
@@ -299,13 +311,10 @@
 							<label>Kolumna ilości<input class={field} type="number" min="1" bind:value={mapping.quantityColumn} /></label>
 							<label>Kolumna ceny<input class={field} type="number" min="1" bind:value={mapping.priceColumn} /></label>
 							<label>Komórka sumy<input class={field} bind:value={mapping.totalCell} placeholder="np. E13" /></label>
-							<label>Tryb cen<select class={field} bind:value={mapping.priceMode}>
-								<option value={QuotePriceMode.GROSS}>Brutto</option><option value={QuotePriceMode.NET}>Netto</option>
-							</select></label>
 						</div>
 						<button class={button} type="button" onclick={() => act('remap', async (key) => {
 							if (!quote || !imported) return;
-							await getQuoteClient().remapQuoteImport({ quoteId: id, importId: imported.id, expectedVersion: quote.draftVersion, idempotencyKey: key, mapping });
+							await getQuoteClient().remapQuoteImport({ quoteId: id, importId: imported.id, expectedVersion: quote.draftVersion, idempotencyKey: key, mapping: { ...mapping, priceMode: QuotePriceMode.GROSS } });
 						})}>Przelicz mapowanie</button>
 					</details>
 				{/if}
@@ -319,7 +328,7 @@
 			{:else if operation?.status === 'conflict'}
 				<p role="status">Szkic zmienił się podczas generowania. AI nie nadpisało edycji.</p>
 			{:else if operation?.status === 'failed'}
-				<p role="status">Nie udało się wygenerować opisu. Możesz ponowić próbę.</p>
+				<p role="status">Nie udało się wygenerować opisu. Możesz ponowić próbę.{operation.errorCode ? ` Kod błędu: ${operation.errorCode}.` : ''}</p>
 			{/if}
 			<button class={button} type="button" disabled={pending(operation?.status)} onclick={() => act('generate', async (key) => {
 				if (!quote) return;
@@ -340,11 +349,10 @@
 					if (!quote) return;
 					await getQuoteClient().generateDraftPdf({ quoteId: id, expectedVersion: quote.draftVersion, idempotencyKey: key });
 				})}>Generuj PDF szkicu</button>
-				{#if draftPdf?.url}
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- Signed external R2 URL. -->
-					<a class={button} href={draftPdf.url} rel="noreferrer">Pobierz PDF szkicu</a>
-				{:else if pending(draftPdf?.status)}<span role="status">PDF szkicu w przygotowaniu…</span>
-				{:else if draftPdf?.status === 'failed'}
+				{#if !dirty && !saving && draftPdf?.draftVersion === quote.draftVersion && draftPdf?.url}
+					<button class={button} onclick={() => download(0n, draftPdf?.draftVersion)}>Pobierz PDF szkicu</button>
+				{:else if !dirty && !saving && draftPdf?.draftVersion === quote.draftVersion && pending(draftPdf?.status)}<span role="status">PDF szkicu w przygotowaniu…</span>
+				{:else if !dirty && !saving && draftPdf?.draftVersion === quote.draftVersion && draftPdf?.status === 'failed'}
 					<button class={button} disabled={busy} onclick={() => act('retry-draft', async (key) => {
 						if (!draftPdf) return;
 						await getQuoteClient().retryQuotePdf({ quoteId: id, draftVersion: draftPdf.draftVersion, idempotencyKey: key });
@@ -361,11 +369,14 @@
 					{#each revisions as revision (revision.revision)}
 						<li class="flex flex-wrap items-center gap-2 py-2">
 							<span class="mr-auto">v{revision.revision} · {new Date(revision.publishedAt).toLocaleString('pl-PL')}</span>
+							<span role="status">PDF: {revisionPdfs[String(revision.revision)]?.status === 'succeeded' ? 'gotowy' : revisionPdfs[String(revision.revision)]?.status === 'failed' ? 'błąd' : pending(revisionPdfs[String(revision.revision)]?.status) ? 'w przygotowaniu' : 'brak informacji'}</span>
 							<button class={button} onclick={() => showPreview(revision.revision)}>Podgląd</button>
-							<button class={button} onclick={() => download(revision.revision)}>Pobierz PDF</button>
-							<button class={button} disabled={busy} onclick={() => act(`retry:${revision.revision}`, async (key) => {
-								await getQuoteClient().retryQuotePdf({ quoteId: id, revision: revision.revision, idempotencyKey: key });
-							}, false)}>Ponów PDF</button>
+							<button class={button} disabled={revisionPdfs[String(revision.revision)]?.status !== 'succeeded'} onclick={() => download(revision.revision)}>Pobierz PDF</button>
+							{#if revisionPdfs[String(revision.revision)]?.status === 'failed'}
+								<button class={button} disabled={busy} onclick={() => act(`retry:${revision.revision}`, async (key) => {
+									await getQuoteClient().retryQuotePdf({ quoteId: id, revision: revision.revision, idempotencyKey: key });
+								}, false)}>Ponów PDF</button>
+							{/if}
 						</li>
 					{/each}
 				</ul>
