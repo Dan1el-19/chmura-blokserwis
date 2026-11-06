@@ -14,6 +14,7 @@ declare global {
 		ASSETS: Fetcher;
 		PUBLIC_CLERK_PUBLISHABLE_KEY: string;
 		PUBLIC_CLOUD_API_URL: string;
+		PUBLIC_QUOTES_API_URL: string;
 	}
 
 	namespace App {

@@ -5,6 +5,10 @@ export const variables = defineEnvVars({
 		public: true,
 		schema: (value) => value ?? ''
 	},
+	PUBLIC_QUOTES_API_URL: {
+		public: true,
+		schema: (value) => value ?? ''
+	},
 	PUBLIC_CLOUD_API_URL: {
 		public: true,
 		schema: (value) => value ?? 'https://api.blokserwis.pl'

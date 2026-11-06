@@ -18,11 +18,13 @@
 	],
 	"vars": {
 		"PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuYXV0aC5ibG9rc2Vyd2lzLnBsJA",
+		"PUBLIC_QUOTES_API_URL": "",
 		"PUBLIC_CLOUD_API_URL": "https://api.blokserwis.pl"
 	},
 	"previews": {
 		"vars": {
 			"PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_b3JnYW5pYy1nb3NoYXdrLTg2LmNsZXJrLmFjY291bnRzLmRldiQ",
+			"PUBLIC_QUOTES_API_URL": "",
 			"PUBLIC_CLOUD_API_URL": "https://api.preview.invalid"
 		}
 	},

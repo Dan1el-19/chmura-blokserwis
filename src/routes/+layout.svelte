@@ -6,10 +6,10 @@
 	import UploadPanel from '#lib/components/UploadPanel.svelte';
 	import { page } from '$app/state';
 	import { writable, readonly } from 'svelte/store';
-	import { Folder, Shield, Trash, GearSix } from 'phosphor-svelte';
+	import { Folder, Shield, Trash, GearSix, FileText } from 'phosphor-svelte';
 	import { Toaster } from 'svelte-sonner';
 	import type { Clerk } from '@clerk/clerk-js';
-	import { PUBLIC_CLERK_PUBLISHABLE_KEY } from '$app/env/public';
+	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_QUOTES_API_URL } from '$app/env/public';
 	import { loadClerk } from '#lib/clerk-ui.js';
 	import { getClerkPendingSessionMessage, resolveClerkAuthState } from '#lib/clerk-auth-state.js';
 	import { getPasskeyEnvironment, type PasskeyEnvironment } from '#lib/passkey-environment.js';
@@ -44,12 +44,14 @@
 		if (isPublicShare) return 'Chmura Blokserwis';
 		if (currentPath === '/main') return 'Main | Chmura Blokserwis';
 		if (currentPath === '/trash') return 'Kosz | Chmura Blokserwis';
+		if (currentPath === '/wyceny' || currentPath.startsWith('/wyceny/')) return 'Wyceny | Chmura Blokserwis';
 		if (currentPath === '/settings') return 'Ustawienia | Chmura Blokserwis';
 		return 'Pliki | Chmura Blokserwis';
 	});
 	const navItems: Array<{ href: AppRoute; label: string; icon: Component; color: string }> = [
 		{ href: '/', label: 'Pliki', icon: Folder, color: 'bg-blue-500' },
 		{ href: '/main', label: 'Main', icon: Shield, color: 'bg-emerald-500' },
+		...(PUBLIC_QUOTES_API_URL ? [{ href: '/wyceny' as const, label: 'Wyceny', icon: FileText, color: 'bg-blue-500' }] : []),
 		{ href: '/trash', label: 'Kosz', icon: Trash, color: 'bg-red-500' },
 		{ href: '/settings', label: 'Ustawienia', icon: GearSix, color: 'bg-violet-500' }
 	];
@@ -66,7 +68,14 @@
 		}
 	}
 
-	setContext(AUTH_CONTEXT, { state: readonly(authState), signOut });
+	setContext(AUTH_CONTEXT, {
+		state: readonly(authState),
+		signOut,
+		selectOrganization: async (organization: string) => {
+			if (!clerkInstance) throw new Error('Sesja Clerk jest niedostępna.');
+			await clerkInstance.setActive({ organization });
+		}
+	});
 
 	function startClerk(): void {
 		if (clerkStarted || disposed) return;

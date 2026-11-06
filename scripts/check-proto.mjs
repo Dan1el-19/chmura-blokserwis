@@ -31,13 +31,21 @@ function normalize(contents, extension) {
 }
 
 const args = process.argv.slice(2);
-if (args.length && (args.length !== 2 || args[0] !== '--backend')) {
-	throw new Error('Usage: node scripts/check-proto.mjs [--backend /path/to/UniSourceCFL]');
+if (args.length && (args.length !== 2 || !['--backend', '--quotes-backend'].includes(args[0]))) {
+	throw new Error('Usage: node scripts/check-proto.mjs [--backend /path/to/UniSourceCFL | --quotes-backend /path/to/UniSourceGO]');
 }
 
-if (args.length) {
-	await compare('proto', join(resolve(args[1]), 'proto'), '.proto');
-	console.log('Frontend Protobuf snapshot matches the backend.');
+if (args[0] === '--backend') {
+	await compare('proto/unisourcecfl', join(resolve(args[1]), 'proto/unisourcecfl'), '.proto');
+	console.log('Frontend storage Protobuf snapshot matches UniSourceCFL.');
+}
+if (args[0] === '--quotes-backend') {
+	const contract = 'proto/unisource/v2/quotes.proto';
+	const [actual, expected] = await Promise.all([
+		readFile(contract, 'utf8'), readFile(join(resolve(args[1]), contract), 'utf8')
+	]);
+	if (actual !== expected) throw new Error(`Protobuf mismatch: ${contract}`);
+	console.log('Frontend quotes Protobuf snapshot matches UniSourceGO.');
 }
 
 // Generate outside the checkout so a failed check cannot repair and hide drift.

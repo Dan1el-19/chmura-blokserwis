@@ -23,7 +23,8 @@ const fixture = vi.hoisted(() => ({
 }));
 vi.mock('$app/env/public', () => ({
 	PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_fixture',
-	PUBLIC_CLOUD_API_URL: 'http://localhost:8787'
+	PUBLIC_CLOUD_API_URL: 'http://localhost:8787',
+	PUBLIC_QUOTES_API_URL: ''
 }));
 vi.mock('$app/state', () => ({ page: { url: new URL('http://localhost/') } }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));

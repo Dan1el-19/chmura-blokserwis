@@ -1,0 +1,306 @@
+syntax = "proto3";
+
+package unisource.v2;
+
+option go_package = "github.com/Dan1el-19/UniSourceGO/gen/unisource/v2;unisourcev2";
+
+service QuoteService {
+  rpc GenerateQuoteText(GenerateQuoteTextRequest) returns (GenerateQuoteTextResponse);
+  rpc GetQuoteOperation(GetQuoteOperationRequest) returns (GetQuoteOperationResponse);
+  rpc GenerateDraftPdf(GenerateDraftPdfRequest) returns (GenerateDraftPdfResponse);
+  rpc GetQuotePdf(GetQuotePdfRequest) returns (GetQuotePdfResponse);
+  rpc RetryQuotePdf(RetryQuotePdfRequest) returns (RetryQuotePdfResponse);
+  rpc ApproveQuote(ApproveQuoteRequest) returns (ApproveQuoteResponse);
+  rpc PublishQuoteRevision(PublishQuoteRevisionRequest) returns (PublishQuoteRevisionResponse);
+  rpc ListQuoteRevisions(ListQuoteRevisionsRequest) returns (ListQuoteRevisionsResponse);
+  rpc GetQuotePreview(GetQuotePreviewRequest) returns (GetQuotePreviewResponse);
+  rpc UploadQuoteXlsx(UploadQuoteXlsxRequest) returns (UploadQuoteXlsxResponse);
+  rpc GetImportResult(GetImportResultRequest) returns (GetImportResultResponse);
+  rpc RemapQuoteImport(RemapQuoteImportRequest) returns (RemapQuoteImportResponse);
+  rpc ApplyImport(ApplyImportRequest) returns (ApplyImportResponse);
+  rpc CreateQuote(CreateQuoteRequest) returns (CreateQuoteResponse);
+  rpc GetQuote(GetQuoteRequest) returns (GetQuoteResponse);
+  rpc ListQuotes(ListQuotesRequest) returns (ListQuotesResponse);
+  rpc SaveDraft(SaveDraftRequest) returns (SaveDraftResponse);
+  rpc ArchiveQuote(ArchiveQuoteRequest) returns (ArchiveQuoteResponse);
+  rpc RestoreQuote(RestoreQuoteRequest) returns (RestoreQuoteResponse);
+}
+
+enum QuotePriceMode {
+  QUOTE_PRICE_MODE_UNSPECIFIED = 0;
+  QUOTE_PRICE_MODE_NET = 1;
+  QUOTE_PRICE_MODE_GROSS = 2;
+}
+
+enum QuoteVatKind {
+  QUOTE_VAT_KIND_UNSPECIFIED = 0;
+  QUOTE_VAT_KIND_RATE = 1;
+  QUOTE_VAT_KIND_EXEMPT = 2;
+  QUOTE_VAT_KIND_OUT_OF_SCOPE = 3;
+}
+
+message QuoteLine {
+  string name = 1;
+  string quantity = 2;
+  string unit_price = 3;
+  QuoteVatKind vat_kind = 4;
+  string vat_percent = 5;
+}
+
+message QuoteDraft {
+  string title = 1;
+  string client = 2;
+  QuotePriceMode price_mode = 3;
+  repeated QuoteLine lines = 4;
+  string introduction = 5;
+  string scope = 6;
+  string technical_description = 7;
+  string conclusion = 8;
+}
+
+message Quote {
+  string id = 1;
+  string number = 2;
+  int64 draft_version = 3;
+  int64 current_revision = 4;
+  bool archived = 5;
+  QuoteDraft draft = 6;
+}
+
+message CreateQuoteRequest {
+  string idempotency_key = 1;
+  QuoteDraft draft = 2;
+}
+
+message GetQuoteRequest {
+  string quote_id = 1;
+}
+
+message ListQuotesRequest {
+  bool archived = 1;
+  int32 page_size = 2;
+  int32 page_offset = 3;
+}
+
+message ListQuotesResponse {
+  repeated Quote quotes = 1;
+}
+
+message SaveDraftRequest {
+  string quote_id = 1;
+  int64 expected_version = 2;
+  string idempotency_key = 3;
+  QuoteDraft draft = 4;
+}
+
+message ArchiveQuoteRequest {
+  string quote_id = 1;
+  int64 expected_version = 2;
+  string idempotency_key = 3;
+}
+
+message RestoreQuoteRequest {
+  string quote_id = 1;
+  int64 expected_version = 2;
+  string idempotency_key = 3;
+}
+
+message CreateQuoteResponse {
+  Quote quote = 1;
+}
+
+message GetQuoteResponse {
+  Quote quote = 1;
+}
+
+message SaveDraftResponse {
+  Quote quote = 1;
+}
+
+message ArchiveQuoteResponse {
+  Quote quote = 1;
+}
+
+message RestoreQuoteResponse {
+  Quote quote = 1;
+}
+
+message QuoteImportMapping {
+  string sheet = 1;
+  int32 first_row = 2;
+  int32 last_row = 3;
+  int32 name_column = 4;
+  int32 quantity_column = 5;
+  int32 price_column = 6;
+  string total_cell = 7;
+  QuotePriceMode price_mode = 8;
+}
+
+message QuoteImportLine {
+  int32 source_row = 1;
+  QuoteLine line = 2;
+}
+
+message QuoteImportResult {
+  string id = 1;
+  string status = 2;
+  string error_code = 3;
+  QuoteImportMapping mapping = 4;
+  repeated QuoteImportLine lines = 5;
+  string base_total = 6;
+  optional string source_total = 7;
+  repeated string warnings = 8;
+  bool applied = 9;
+  int64 result_version = 10;
+}
+
+message UploadQuoteXlsxRequest {
+  string quote_id = 1;
+  int64 expected_version = 2;
+  string idempotency_key = 3;
+  bytes xlsx = 4;
+}
+
+message UploadQuoteXlsxResponse {
+  string import_id = 1;
+}
+
+message GetImportResultRequest {
+  string quote_id = 1;
+  string import_id = 2; // Empty selects the latest import.
+}
+
+message GetImportResultResponse {
+  QuoteImportResult result = 1;
+}
+
+message RemapQuoteImportRequest {
+  string quote_id = 1;
+  string import_id = 2;
+  int64 expected_version = 3;
+  string idempotency_key = 4;
+  QuoteImportMapping mapping = 5;
+}
+
+message RemapQuoteImportResponse {
+  string import_id = 1;
+}
+
+message ApplyImportRequest {
+  string quote_id = 1;
+  string import_id = 2;
+  int64 expected_version = 3;
+  string idempotency_key = 4;
+  QuotePriceMode price_mode = 5;
+  repeated QuoteLine reviewed_lines = 6;
+  int64 result_version = 7;
+}
+
+message ApplyImportResponse {
+  Quote quote = 1;
+}
+
+message ApproveQuoteRequest {
+  string quote_id = 1;
+  int64 expected_version = 2;
+  string idempotency_key = 3;
+}
+
+message ApproveQuoteResponse {
+  Quote quote = 1;
+}
+
+message PublishQuoteRevisionRequest {
+  string quote_id = 1;
+  int64 expected_version = 2;
+  string idempotency_key = 3;
+}
+
+message PublishQuoteRevisionResponse {
+  Quote quote = 1;
+}
+
+message ListQuoteRevisionsRequest {
+  string quote_id = 1;
+  int32 page_size = 2;
+  int32 page_offset = 3;
+}
+
+message QuoteRevisionInfo {
+  int64 revision = 1;
+  string published_at = 2;
+  string published_by = 3;
+  string template_version = 4;
+}
+
+message ListQuoteRevisionsResponse {
+  repeated QuoteRevisionInfo revisions = 1;
+}
+
+message GetQuotePreviewRequest {
+  string quote_id = 1;
+  int64 revision = 2;
+}
+
+message GetQuotePreviewResponse {
+  string html = 1;
+  int64 draft_version = 2;
+}
+
+message GenerateDraftPdfRequest {
+  string quote_id = 1;
+  int64 expected_version = 2;
+  string idempotency_key = 3;
+}
+
+message GenerateDraftPdfResponse {
+  Quote quote = 1;
+}
+
+message GetQuotePdfRequest {
+  string quote_id = 1;
+  int64 revision = 2;
+  int64 draft_version = 3;
+  string operation_id = 4;
+}
+
+message GetQuotePdfResponse {
+  string status = 1;
+  string url = 2;
+  string error_code = 3;
+  int64 revision = 4;
+  int64 draft_version = 5;
+}
+
+message RetryQuotePdfRequest {
+  string quote_id = 1;
+  int64 revision = 2;
+  int64 draft_version = 3;
+  string idempotency_key = 4;
+}
+
+message RetryQuotePdfResponse {
+  Quote quote = 1;
+}
+
+message GenerateQuoteTextRequest {
+  string quote_id = 1;
+  int64 expected_version = 2;
+  string idempotency_key = 3;
+}
+
+message GenerateQuoteTextResponse {
+  string operation_id = 1;
+}
+
+message GetQuoteOperationRequest {
+  string quote_id = 1;
+  string operation_id = 2; // Empty selects the latest text generation.
+}
+
+message GetQuoteOperationResponse {
+  string status = 1;
+  string error_code = 2;
+  int64 draft_version = 3;
+  string operation_id = 4;
+}

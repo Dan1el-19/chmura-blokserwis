@@ -12,4 +12,5 @@ export type AuthSnapshot = {
 export type AuthContext = {
 	state: Readable<AuthSnapshot>;
 	signOut: () => Promise<void>;
+	selectOrganization: (id: string) => Promise<void>;
 };
