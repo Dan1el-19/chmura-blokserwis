@@ -12,6 +12,7 @@
 	} from '#lib/gen/unisource/v2/quotes_pb.js';
 	import { button, field, isMissing, panel, primary, quoteError, shouldPollQuote } from './ui.js';
 	import QuoteLines from './QuoteLines.svelte';
+	import { partialDescription } from './ai-progress.js';
 
 	let { id }: { id: string } = $props();
 	let quote = $state<Quote>();
@@ -39,6 +40,8 @@
 	let extraError = $state('');
 	let loaded = $state(false);
 	let polling = false;
+	let watching = '';
+	let watchAbort: AbortController | undefined;
 	let disposed = false;
 	let revisionOffset = $state(0);
 	let edit = 0;
@@ -132,6 +135,27 @@
 		catch (reason) { if (!isMissing(reason)) throw reason; }
 	}
 
+	async function watchOperation(operationId: string) {
+		if (watching === operationId || disposed) return;
+		watchAbort?.abort();
+		const controller = new AbortController();
+		watchAbort = controller;
+		watching = operationId;
+		try {
+			for await (const message of getQuoteClient().watchQuoteOperation({ quoteId: id, operationId }, { signal: controller.signal })) {
+				if (disposed || controller.signal.aborted || watching !== operationId) return;
+				const update = message.operation;
+				if (!update) continue;
+				operation = update;
+				if (!pending(update.status)) { refreshQuietly(); return; }
+			}
+		} catch {
+			// Periodic status refresh reconnects after network interruptions.
+		} finally {
+			if (watchAbort === controller) { watching = ''; watchAbort = undefined; }
+		}
+	}
+
 	async function refresh() {
 		if (!quote || disposed || polling) return;
 		polling = true;
@@ -159,6 +183,7 @@
 			}
 			if (gen.status === 'fulfilled') {
 				operation = gen.value;
+				if (operation && pending(operation.status)) void watchOperation(operation.operationId);
 				if (operation?.status === 'succeeded' && operation.draftVersion >= version && !dirty && !saving) await loadQuote();
 			}
 			if (pdf.status === 'fulfilled') publishedPdf = pdf.value;
@@ -200,7 +225,7 @@
 				...Object.values(revisionPdfs).map((pdf) => pdf?.status)];
 			if (!busy && shouldPollQuote(statuses, Boolean(extraError))) refreshQuietly();
 		}, 2500);
-		return () => { disposed = true; clearInterval(poll); clearTimeout(timer); };
+		return () => { disposed = true; watchAbort?.abort(); clearInterval(poll); clearTimeout(timer); };
 	});
 
 	async function showPreview(revision = 0n) {
@@ -346,6 +371,23 @@
 				if (operation?.status === 'uncertain' && !window.confirm('Rozpocząć nowe, potencjalnie płatne generowanie?')) return;
 				await getQuoteClient().generateQuoteText({ quoteId: id, expectedVersion: quote.draftVersion, idempotencyKey: key });
 			})}>{pending(operation?.status) ? 'Generowanie opisu…' : 'Generuj opis AI'}</button>
+			{#if operation?.researchStatus === 'searching'}
+				<p role="status">Wyszukiwanie informacji o produktach w Brave…</p>
+			{:else if operation?.researchStatus === 'completed'}
+				<p>Uwzględniono informacje znalezione w Brave. Sprawdź ich zgodność z ofertą.</p>
+			{:else if operation?.researchStatus === 'disabled'}
+				<p>Wyszukiwanie Brave jest niedostępne - opis powstaje z nazw pozycji.</p>
+			{:else if operation?.researchStatus === 'no_results'}
+				<p>Brak wyników Brave lub wyszukiwanie było niedostępne.</p>
+			{/if}
+			{#if pending(operation?.status) && operation?.partialJson}
+				<div class="space-y-2 rounded-lg border border-slate-200 p-3 text-sm" aria-label="Powstający opis AI">
+					<p class="font-semibold">Powstający opis - podgląd</p>
+					{#each partialDescription(operation.partialJson) as section (section.label)}
+						<div><span class="font-medium">{section.label}: </span><span class="whitespace-pre-wrap">{section.text}</span></div>
+					{/each}
+				</div>
+			{/if}
 			<label class="block">Wstęp<textarea class={field} rows="3" bind:value={draft.introduction} oninput={changed}></textarea></label>
 			<label class="block">Zakres prac<textarea class={field} rows="3" bind:value={draft.scope} oninput={changed}></textarea></label>
 			<label class="block">Opis techniczny<textarea class={field} rows="3" bind:value={draft.technicalDescription} oninput={changed}></textarea></label>

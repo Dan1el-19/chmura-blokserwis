@@ -7,6 +7,7 @@ option go_package = "github.com/Dan1el-19/UniSourceGO/gen/unisource/v2;unisource
 service QuoteService {
   rpc GenerateQuoteText(GenerateQuoteTextRequest) returns (GenerateQuoteTextResponse);
   rpc GetQuoteOperation(GetQuoteOperationRequest) returns (GetQuoteOperationResponse);
+  rpc WatchQuoteOperation(WatchQuoteOperationRequest) returns (stream WatchQuoteOperationResponse);
   rpc GenerateDraftPdf(GenerateDraftPdfRequest) returns (GenerateDraftPdfResponse);
   rpc GetQuotePdf(GetQuotePdfRequest) returns (GetQuotePdfResponse);
   rpc RetryQuotePdf(RetryQuotePdfRequest) returns (RetryQuotePdfResponse);
@@ -303,4 +304,16 @@ message GetQuoteOperationResponse {
   string error_code = 2;
   int64 draft_version = 3;
   string operation_id = 4;
+  // Partial JSON is provisional and must never be applied to the draft.
+  string partial_json = 5;
+  string research_status = 6;
+}
+
+message WatchQuoteOperationRequest {
+  string quote_id = 1;
+  string operation_id = 2;
+}
+
+message WatchQuoteOperationResponse {
+  GetQuoteOperationResponse operation = 1;
 }
