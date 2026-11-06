@@ -340,7 +340,9 @@
 					if (!quote) return;
 					await getQuoteClient().generateDraftPdf({ quoteId: id, expectedVersion: quote.draftVersion, idempotencyKey: key });
 				})}>Generuj PDF szkicu</button>
-				{#if draftPdf?.url}<a class={button} href={draftPdf.url} rel="noreferrer">Pobierz PDF szkicu</a>
+				{#if draftPdf?.url}
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- Signed external R2 URL. -->
+					<a class={button} href={draftPdf.url} rel="noreferrer">Pobierz PDF szkicu</a>
 				{:else if pending(draftPdf?.status)}<span role="status">PDF szkicu w przygotowaniu…</span>
 				{:else if draftPdf?.status === 'failed'}
 					<button class={button} disabled={busy} onclick={() => act('retry-draft', async (key) => {
