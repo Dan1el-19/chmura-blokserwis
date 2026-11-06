@@ -27,6 +27,9 @@
 	let currentPdf = $state<GetQuotePdfResponse>();
 	let draftPdf = $state<GetQuotePdfResponse>();
 	let preview = $state('');
+	let previewRevision = $state(0n);
+	let previewError = $state('');
+	let previewRequest = 0;
 	let file = $state<File>();
 	let busy = $state(false);
 	let saving = $state(false);
@@ -54,6 +57,7 @@
 		quote = value;
 		draft = create(QuoteDraftSchema, value.draft);
 		dirty = false;
+		if (loaded && previewRevision === 0n) void showPreview();
 	}
 
 	function changed() {
@@ -81,6 +85,7 @@
 				if (!result.quote || disposed) return false;
 				quote = result.quote;
 				if (edit === start) dirty = false;
+				if (!dirty && previewRevision === 0n) void showPreview();
 				status = dirty ? 'Niezapisane zmiany' : 'Szkic zapisany';
 				return !dirty;
 			} catch (reason) {
@@ -186,7 +191,7 @@
 
 	onMount(() => {
 		void (async () => {
-			try { await loadQuote(); await loadRevisions(); refreshQuietly(); }
+			try { await loadQuote(); await loadRevisions(); refreshQuietly(); void showPreview(); }
 			catch (reason) { if (!disposed) error = quoteError(reason); }
 			finally { loaded = true; }
 		})();
@@ -199,10 +204,14 @@
 	});
 
 	async function showPreview(revision = 0n) {
+		if (revision !== previewRevision) preview = '';
+		previewRevision = revision;
+		const request = ++previewRequest;
+		previewError = '';
 		try {
 			const response = await getQuoteClient().getQuotePreview({ quoteId: id, revision });
-			if (!disposed) preview = response.html;
-		} catch (reason) { error = quoteError(reason); }
+			if (!disposed && request === previewRequest) preview = response.html;
+		} catch (reason) { if (!disposed && request === previewRequest) previewError = quoteError(reason); }
 	}
 
 	async function download(revision: bigint, draftVersion = 0n) {
@@ -247,6 +256,8 @@
 		</header>
 		{#if status || saving}<p role="status">{saving ? 'Zapisywanie szkicu…' : status}</p>{/if}
 		{#if extraError}<p class="text-sm text-text-muted" role="status">{extraError}</p>{/if}
+		<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,0.8fr)]">
+		<main class="min-w-0 space-y-4">
 		<fieldset class={panel} disabled={busy || quote.archived}>
 			<legend class="px-1 font-semibold">Dane wyceny</legend>
 			<div class="grid gap-3 sm:grid-cols-2">
@@ -362,7 +373,6 @@
 				{:else if currentPdf?.status === 'failed'}<span role="status">PDF najnowszej rewizji wymaga ponowienia.</span>{/if}
 				{#if publishedPdf?.url}<button class={primary} onclick={() => download(0n)}>Pobierz najnowszy gotowy PDF</button>{/if}
 			</div>
-			{#if preview}<iframe title="Podgląd wyceny" sandbox="" srcdoc={preview} class="h-[70vh] w-full rounded bg-white"></iframe>{/if}
 			{#if revisions.length}
 				<h3 class="font-semibold">Historia rewizji</h3>
 				<ul class="divide-y divide-border-line">
@@ -383,6 +393,18 @@
 				{#if revisionOffset > 0}<button class={button} onclick={() => loadRevisions(revisionOffset - 20)}>Nowsze</button>{/if}
 				{#if revisions.length === 20}<button class={button} onclick={() => loadRevisions(revisionOffset + 20)}>Starsze</button>{/if}
 			{/if}
+		</div>
+		</main>
+		<aside class="min-w-0 xl:sticky xl:top-4 xl:self-start">
+			<section class={panel}>
+				<div class="flex flex-wrap items-center justify-between gap-2">
+					<div><h2 class="font-semibold">Podgląd dokumentu{previewRevision ? ` · v${previewRevision}` : ''}</h2><p class="text-sm text-text-muted">{!previewRevision && (dirty || saving) ? 'Podgląd odświeży się po zapisaniu zmian.' : 'Odświeża się po zapisaniu szkicu.'}</p></div>
+					{#if previewRevision}<button class={button} onclick={() => showPreview()}>Podgląd szkicu</button>{/if}
+				</div>
+				{#if previewError}<p role="status" class="text-sm">Nie udało się odświeżyć podglądu: {previewError} <button class="underline" onclick={() => showPreview(previewRevision)}>Spróbuj ponownie</button></p>{/if}
+				{#if preview}<iframe title="Podgląd wyceny" sandbox="" srcdoc={preview} class="h-[70vh] w-full rounded bg-white"></iframe>{:else if !previewError}<p role="status">Wczytywanie podglądu…</p>{/if}
+			</section>
+		</aside>
 		</div>
 	{/if}
 </section>

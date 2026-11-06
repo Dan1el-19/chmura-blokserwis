@@ -43,8 +43,8 @@ export async function runQuoteFlow(page: Page, {
 
 	await page.getByRole('button', { name: 'Generuj opis AI' }).click();
 	await expect(page.getByLabel('Wstęp')).toHaveValue(expectedIntroduction, { timeout: 95_000 });
-	await page.getByRole('button', { name: 'Podgląd szkicu' }).click();
 	await expect(page.frameLocator('iframe[title="Podgląd wyceny"]').getByText('SZKIC', { exact: true })).toBeVisible();
+	await expect(page.frameLocator('iframe[title="Podgląd wyceny"]').getByText(expectedIntroduction, { exact: true })).toBeVisible();
 
 	await page.getByRole('button', { name: 'Generuj PDF szkicu' }).click();
 	const draftLink = page.getByRole('button', { name: 'Pobierz PDF szkicu' });
