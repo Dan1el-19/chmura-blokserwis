@@ -307,6 +307,18 @@ message GetQuoteOperationResponse {
   // Partial JSON is provisional and must never be applied to the draft.
   string partial_json = 5;
   string research_status = 6;
+  repeated QuoteResearchSearch searches = 7;
+}
+
+message QuoteResearchSource {
+  string title = 1;
+  string url = 2;
+}
+
+message QuoteResearchSearch {
+  string item = 1;
+  string status = 2; // searching, completed, or no_results
+  repeated QuoteResearchSource sources = 3;
 }
 
 message WatchQuoteOperationRequest {

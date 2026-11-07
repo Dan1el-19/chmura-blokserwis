@@ -12,7 +12,7 @@
 	} from '#lib/gen/unisource/v2/quotes_pb.js';
 	import { button, field, isMissing, panel, primary, quoteError, shouldPollQuote } from './ui.js';
 	import QuoteLines from './QuoteLines.svelte';
-	import { partialDescription } from './ai-progress.js';
+	import QuoteAiActivity from './QuoteAiActivity.svelte';
 
 	let { id }: { id: string } = $props();
 	let quote = $state<Quote>();
@@ -182,7 +182,7 @@
 				imported = result;
 			}
 			if (gen.status === 'fulfilled') {
-				operation = gen.value;
+				if (!(watching && operation?.operationId === gen.value?.operationId && pending(gen.value?.status))) operation = gen.value;
 				if (operation && pending(operation.status)) void watchOperation(operation.operationId);
 				if (operation?.status === 'succeeded' && operation.draftVersion >= version && !dirty && !saving) await loadQuote();
 			}
@@ -359,35 +359,12 @@
 
 		<fieldset class={panel} disabled={busy || quote.archived}>
 			<legend class="px-1 font-semibold">Treść oferty</legend>
-			{#if operation?.status === 'uncertain'}
-				<p role="alert">Wynik poprzedniej operacji AI jest niepewny. Nowa próba może zostać ponownie rozliczona.</p>
-			{:else if operation?.status === 'conflict'}
-				<p role="status">Szkic zmienił się podczas generowania. AI nie nadpisało edycji.</p>
-			{:else if operation?.status === 'failed'}
-				<p role="status">Nie udało się wygenerować opisu. Możesz ponowić próbę.{operation.errorCode ? ` Kod błędu: ${operation.errorCode}.` : ''}</p>
-			{/if}
 			<button class={button} type="button" disabled={pending(operation?.status)} onclick={() => act('generate', async (key) => {
 				if (!quote) return;
 				if (operation?.status === 'uncertain' && !window.confirm('Rozpocząć nowe, potencjalnie płatne generowanie?')) return;
 				await getQuoteClient().generateQuoteText({ quoteId: id, expectedVersion: quote.draftVersion, idempotencyKey: key });
 			})}>{pending(operation?.status) ? 'Generowanie opisu…' : 'Generuj opis AI'}</button>
-			{#if operation?.researchStatus === 'searching'}
-				<p role="status">Wyszukiwanie informacji o produktach w Brave…</p>
-			{:else if operation?.researchStatus === 'completed'}
-				<p>Uwzględniono informacje znalezione w Brave. Sprawdź ich zgodność z ofertą.</p>
-			{:else if operation?.researchStatus === 'disabled'}
-				<p>Wyszukiwanie Brave jest niedostępne - opis powstaje z nazw pozycji.</p>
-			{:else if operation?.researchStatus === 'no_results'}
-				<p>Brak wyników Brave lub wyszukiwanie było niedostępne.</p>
-			{/if}
-			{#if pending(operation?.status) && operation?.partialJson}
-				<div class="space-y-2 rounded-lg border border-slate-200 p-3 text-sm" aria-label="Powstający opis AI">
-					<p class="font-semibold">Powstający opis - podgląd</p>
-					{#each partialDescription(operation.partialJson) as section (section.label)}
-						<div><span class="font-medium">{section.label}: </span><span class="whitespace-pre-wrap">{section.text}</span></div>
-					{/each}
-				</div>
-			{/if}
+			{#if operation}<QuoteAiActivity {operation} />{/if}
 			<label class="block">Wstęp<textarea class={field} rows="3" bind:value={draft.introduction} oninput={changed}></textarea></label>
 			<label class="block">Zakres prac<textarea class={field} rows="3" bind:value={draft.scope} oninput={changed}></textarea></label>
 			<label class="block">Opis techniczny<textarea class={field} rows="3" bind:value={draft.technicalDescription} oninput={changed}></textarea></label>

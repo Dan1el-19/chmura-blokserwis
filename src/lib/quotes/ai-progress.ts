@@ -17,3 +17,17 @@ export function partialDescription(raw: string): { label: string; text: string }
 	}
 	return result;
 }
+
+export function researchSources(searches: { sources: { title: string; url: string }[] }[]) {
+	const sources: { title: string; url: string }[] = [];
+	const seen = new Set<string>();
+	for (const search of searches) for (const source of search.sources) {
+		try {
+			const url = new URL(source.url);
+			if (!['http:', 'https:'].includes(url.protocol) || seen.has(source.url)) continue;
+			seen.add(source.url);
+			sources.push({ title: source.title || url.hostname, url: source.url });
+		} catch { /* Ignore malformed provider links. */ }
+	}
+	return sources;
+}
