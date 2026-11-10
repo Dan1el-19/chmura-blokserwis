@@ -30,6 +30,8 @@ service TrashService {
 
 service ShareService {
   rpc ListShares(ListSharesRequest) returns (ListSharesResponse);
+  rpc ListSpaceShares(ListSpaceSharesRequest) returns (ListSpaceSharesResponse);
+  rpc DeleteShare(DeleteShareRequest) returns (DeleteShareResponse);
   rpc CreateShare(CreateShareRequest) returns (CreateShareResponse);
   rpc UpdateShare(UpdateShareRequest) returns (UpdateShareResponse);
   rpc RevokeShare(RevokeShareRequest) returns (RevokeShareResponse);
@@ -311,6 +313,7 @@ message ShareLink {
   uint64 download_count = 9;
   uint64 view_count = 10;
   uint32 revision = 11;
+  bool paused = 12;
 }
 
 message ListSharesRequest {
@@ -320,6 +323,27 @@ message ListSharesRequest {
 message ListSharesResponse {
   repeated ShareLink shares = 1;
 }
+message SpaceShare {
+  ShareLink share = 1;
+  string entry_id = 2;
+  string entry_name = 3;
+  EntryKind entry_kind = 4;
+}
+message ListSpaceSharesRequest {
+  string space_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+message ListSpaceSharesResponse {
+  repeated SpaceShare shares = 1;
+  string next_page_token = 2;
+}
+message DeleteShareRequest {
+  string space_id = 1;
+  string share_id = 2;
+  uint32 expected_revision = 3;
+}
+message DeleteShareResponse {}
 message CreateShareRequest {
   string space_id = 1;
   string entry_id = 2;
@@ -342,6 +366,8 @@ message UpdateShareRequest {
   optional string password = 6;
   google.protobuf.Timestamp expires_at = 7;
   optional uint64 max_downloads = 8;
+  optional bool paused = 9;
+  optional string slug = 10;
 }
 message UpdateShareResponse {
   ShareLink share = 1;

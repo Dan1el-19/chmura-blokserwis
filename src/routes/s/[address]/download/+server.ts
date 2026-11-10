@@ -29,9 +29,11 @@ function downloadError(status: number, address: string): Response {
 	);
 }
 
-async function redirectToDownload(address: string, requestId: string, grant: string | undefined, fetch: typeof globalThis.fetch): Promise<Response> {
+async function redirectToDownload(address: string, requestId: string, grant: string | undefined, fetch: typeof globalThis.fetch, file?: string): Promise<Response> {
 	try {
-		const response = await fetch(shareApiUrl(address, '/download'), {
+		const upstreamUrl = shareApiUrl(address, '/download');
+		if (file) upstreamUrl.searchParams.set('file', file);
+		const response = await fetch(upstreamUrl, {
 			method: 'GET',
 			redirect: 'manual',
 			cache: 'no-store',
@@ -66,7 +68,8 @@ export const GET: RequestHandler = async ({ params, cookies, request, fetch }) =
 		address,
 		requestId,
 		cookies.get(shareGrantCookieName(address)),
-		fetch
+		fetch,
+		new URL(request.url).searchParams.get('file') || undefined
 	);
 };
 

@@ -3,14 +3,17 @@ import { privateResponseHeaders, publicError, shareApiHeaders, shareApiUrl, shar
 
 export const prerender = false;
 
-export const GET: RequestHandler = async ({ params, cookies, fetch }) => {
+export const GET: RequestHandler = async ({ params, cookies, fetch, url }) => {
 	const address = params.address ?? '';
 	try {
-		const upstream = await fetch(shareApiUrl(address), {
+		const upstreamUrl = shareApiUrl(address);
+		const file = url.searchParams.get('file');
+		if (file) upstreamUrl.searchParams.set('file', file);
+		const upstream = await fetch(upstreamUrl, {
 			cache: 'no-store',
 			headers: shareApiHeaders(cookies.get(shareGrantCookieName(address)))
 		});
-		if (upstream.status === 404) cookies.delete(shareGrantCookieName(address), { path: `/s/${address}` });
+		if (upstream.status === 404 && !file) cookies.delete(shareGrantCookieName(address), { path: `/s/${address}` });
 		const contentType = upstream.headers.get('content-type') ?? 'application/json; charset=utf-8';
 		return new Response(await upstream.text(), { status: upstream.status, headers: privateResponseHeaders(contentType) });
 	} catch {

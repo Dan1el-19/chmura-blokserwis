@@ -2,7 +2,9 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { Code, ConnectError } from '@connectrpc/connect';
 import { page } from '$app/state';
+import { goto } from '$app/navigation';
 import {
+	CatalogFileType,
 	CatalogSortBy,
 	CatalogSortDirection,
 	EntryKind,
@@ -16,7 +18,10 @@ import {
 	UploadState
 } from '#lib/gen/unisourcecfl/upload/v1/upload_pb.js';
 import StoragePage from './StorageTestShell.svelte';
+import HomePage from './HomeTestShell.svelte';
 import { CloudState } from '#lib/cloud-state.svelte.js';
+import { UploadManager } from '#lib/upload-manager.svelte.js';
+import type { MultipartController } from '#lib/multipart/controller.js';
 import { UploadTargetError, UploadTransportError } from '#lib/upload.js';
 
 const api = vi.hoisted(() => ({
@@ -32,10 +37,14 @@ const api = vi.hoisted(() => ({
 	multipartUploads: {},
 	listTrash: vi.fn(),
 	listEntries: vi.fn(),
+	searchEntries: vi.fn(),
 	getEntry: vi.fn(),
 	moveEntry: vi.fn(),
 	trashEntry: vi.fn(),
+	restoreEntry: vi.fn(),
 	bulkTrashEntries: vi.fn(),
+	bulkDeletePermanently: vi.fn(),
+	bulkRestoreEntries: vi.fn(),
 	createUpload: vi.fn(),
 	retryUpload: vi.fn(),
 	getUpload: vi.fn(),
@@ -49,13 +58,14 @@ vi.mock('#lib/api.js', () => ({
 	catalog: {
 		getSpaces: api.getSpaces,
 		listEntries: api.listEntries,
+		searchEntries: api.searchEntries,
 		getEntry: api.getEntry,
 		getPreview: api.getPreview,
 		getDownload: api.getDownload,
 		moveEntry: api.moveEntry
 	},
 	shareLinks: { listShares: api.listShares, createShare: api.createShare, updateShare: api.updateShare, revokeShare: api.revokeShare },
-	trash: { listTrash: api.listTrash, trashEntry: api.trashEntry, bulkTrashEntries: api.bulkTrashEntries },
+	trash: { listTrash: api.listTrash, trashEntry: api.trashEntry, restoreEntry: api.restoreEntry, bulkTrashEntries: api.bulkTrashEntries, bulkDeletePermanently: api.bulkDeletePermanently, bulkRestoreEntries: api.bulkRestoreEntries },
 	uploads: {
 		retryUpload: api.retryUpload,
 		getUpload: api.getUpload,
@@ -84,7 +94,6 @@ vi.mock('$app/paths', () => ({
 	resolve: (path: string, params?: { address?: string }) =>
 		params?.address ? path.replace('[address]', params.address) : path
 }));
-vi.mock('$app/paths', () => ({ resolve: (path: string) => path }));
 
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -103,6 +112,7 @@ beforeEach(() => {
 	});
 	api.listTrash.mockResolvedValue({ items: [], nextPageToken: '' });
 	api.listEntries.mockResolvedValue({ entries: [], nextPageToken: '' });
+	api.searchEntries.mockResolvedValue({ results: [], nextPageToken: '' });
 	api.getEntry.mockResolvedValue({ entry: undefined });
 	api.getPreview.mockResolvedValue({
 		url: 'https://storage.example/preview',
@@ -293,6 +303,22 @@ it('canceling the move dialog does not call the move API', async () => {
 	await expect.element(screen.getByRole('dialog')).not.toBeInTheDocument();
 });
 
+it('moves a file to a folder in another accessible space', async () => {
+	const file = { id: 'cross-file', spaceId: 'personal-space', name: 'cross.txt', kind: EntryKind.FILE, revision: 2 };
+	const destination = { id: 'shared-folder', spaceId: 'main-space', name: 'Wspólny', kind: EntryKind.FOLDER, revision: 1 };
+	api.listEntries.mockImplementation(async (request) => ({ entries: request.spaceId === 'main-space' && !request.parentId ? [destination] : request.spaceId === 'personal-space' && !request.parentId ? [file] : [], nextPageToken: '' }));
+	api.moveEntry.mockResolvedValue({ entry: { ...file, spaceId: 'main-space', parentId: 'shared-folder', revision: 3 } });
+	const screen = await render(StoragePage);
+	await expect.poll(() => api.listEntries).toHaveBeenCalled();
+	await screen.getByRole('button', { name: 'Przenieś cross.txt', exact: true }).click();
+	const dialog = screen.getByRole('dialog', { name: 'Przenieś element' });
+	await dialog.getByRole('combobox', { name: 'Przestrzeń docelowa' }).selectOptions(['main-space']);
+	await dialog.getByRole('button', { name: 'Otwórz folder Wspólny' }).click();
+	await dialog.getByRole('button', { name: 'Przenieś tutaj' }).click();
+	await expect.poll(() => api.moveEntry).toHaveBeenCalledOnce();
+	expect(api.moveEntry.mock.calls[0]?.[0]).toMatchObject({ spaceId: 'personal-space', targetSpaceId: 'main-space', parentId: 'shared-folder', entryId: 'cross-file', expectedRevision: 2 });
+});
+
 it('changes the sort from the catalog control and renders the creation date', async () => {
 	const createdAt = { seconds: 1_740_787_200n, nanos: 0 };
 	const file = {
@@ -316,6 +342,45 @@ it('changes the sort from the catalog control and renders the creation date', as
 		sortDirection: CatalogSortDirection.DESC,
 		pageToken: ''
 	});
+});
+
+it('shows modification time and can sort by it', async () => {
+	const modifiedAt = { seconds: 1_700_000_000n, nanos: 0 };
+	api.listEntries.mockResolvedValue({ entries: [{ id: 'modified-file', spaceId: 'personal-space', name: 'modified.txt', kind: EntryKind.FILE, sizeBytes: 3n, revision: 1, modifiedAt }], nextPageToken: '' });
+	const screen = await render(StoragePage);
+	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
+	await expect.element(screen.getByRole('cell', { name: new Date(Number(modifiedAt.seconds) * 1000).toLocaleDateString('pl-PL') })).toBeVisible();
+	await screen.getByRole('combobox', { name: 'Sortowanie' }).selectOptions(['MODIFIED_AT:DESC']);
+	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(2);
+	expect(api.listEntries.mock.calls[1]?.[0]).toMatchObject({ sortBy: CatalogSortBy.MODIFIED_AT, sortDirection: CatalogSortDirection.DESC, pageToken: '' });
+});
+
+it('searches the selected space and shows the matching path', async () => {
+	api.searchEntries.mockResolvedValue({ results: [{ entry: { id: 'match', spaceId: 'personal-space', name: 'Raport.txt', kind: EntryKind.FILE, revision: 1 }, path: [{ id: 'folder', name: 'Dokumenty', kind: EntryKind.FOLDER }] }], nextPageToken: '' });
+	const screen = await render(StoragePage);
+	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
+	await screen.getByRole('textbox', { name: 'Szukaj w przestrzeni' }).fill('Raport');
+	await screen.getByRole('button', { name: 'Szukaj', exact: true }).click();
+	await expect.poll(() => api.searchEntries).toHaveBeenCalledTimes(1);
+	expect(api.searchEntries.mock.calls[0]?.[0]).toMatchObject({ spaceId: 'personal-space', query: 'Raport' });
+	await expect.element(screen.getByText('Raport.txt', { exact: true })).toBeVisible();
+	await expect.element(screen.getByText('Dokumenty', { exact: true })).toBeVisible();
+});
+
+it('filters a catalog before pagination and applies the same filter to search', async () => {
+	api.listEntries.mockResolvedValue({ entries: [], nextPageToken: 'old-cursor' });
+	const screen = await render(StoragePage);
+	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
+	await screen.getByRole('combobox', { name: 'Typ pliku' }).selectOptions(['1']);
+	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(2);
+	expect(api.listEntries.mock.calls[1]?.[0]).toMatchObject({ fileType: CatalogFileType.IMAGE, pageToken: '' });
+	await screen.getByRole('textbox', { name: 'Szukaj w przestrzeni' }).fill('raport');
+	await screen.getByRole('button', { name: 'Szukaj', exact: true }).click();
+	await expect.poll(() => api.searchEntries).toHaveBeenCalledTimes(1);
+	expect(api.searchEntries.mock.calls[0]?.[0]).toMatchObject({ fileType: CatalogFileType.IMAGE, query: 'raport' });
+	await screen.getByRole('combobox', { name: 'Typ pliku' }).selectOptions(['2']);
+	await expect.poll(() => api.searchEntries).toHaveBeenCalledTimes(2);
+	expect(api.searchEntries.mock.calls[1]?.[0]).toMatchObject({ fileType: CatalogFileType.PDF, query: 'raport', pageToken: '' });
 });
 
 it('selects only loaded rows and skips folders during bulk downloads', async () => {
@@ -407,6 +472,40 @@ it('opens supported images in a preview dialog with a separate download action',
 	});
 	await screen.getByRole('button', { name: 'Zamknij podgląd' }).click();
 	await expect.element(dialog).not.toBeInTheDocument();
+});
+
+it('renders code as inert text in the preview', async () => {
+	const file = { id: 'code', spaceId: 'personal-space', name: 'code.js', kind: EntryKind.FILE, sizeBytes: 30n, revision: 1 };
+	api.listEntries.mockResolvedValueOnce({ entries: [file], nextPageToken: '' });
+	api.getPreview.mockResolvedValueOnce({ url: 'data:text/plain,%3Cscript%3Ealert(1)%3C%2Fscript%3E', contentType: 'text/plain; charset=utf-8', mediaKind: 5, contentId: 'generation' });
+	const screen = await render(StoragePage);
+	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
+	await screen.getByRole('row', { name: /Podgląd code\.js/ }).getByRole('button', { name: 'Podgląd code.js' }).click();
+	const dialog = screen.getByRole('dialog', { name: 'code.js' });
+	await expect.element(dialog.getByText('<script>alert(1)</script>', { exact: true })).toBeVisible();
+	expect(dialog.element().querySelector('script')).toBeNull();
+});
+
+it('shows an empty text file without requesting an unsatisfiable byte range', async () => {
+	const file = { id: 'empty', spaceId: 'personal-space', name: 'empty.txt', kind: EntryKind.FILE, sizeBytes: 0n, revision: 1 };
+	api.listEntries.mockResolvedValueOnce({ entries: [file], nextPageToken: '' });
+	api.getPreview.mockResolvedValueOnce({ url: 'https://storage.example/empty', contentType: 'text/plain', mediaKind: 5, contentId: 'empty' });
+	const fetchSpy = vi.spyOn(globalThis, 'fetch');
+	const screen = await render(StoragePage);
+	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
+	await screen.getByRole('row', { name: /Podgląd empty\.txt/ }).getByRole('button', { name: 'Podgląd empty.txt' }).click();
+	await expect.poll(() => screen.getByRole('dialog', { name: 'empty.txt' }).element().querySelector('pre')).not.toBeNull();
+	expect(fetchSpy).not.toHaveBeenCalled();
+});
+
+it('uses a browser reader for PDF previews', async () => {
+	const file = { id: 'pdf', spaceId: 'personal-space', name: 'report.pdf', kind: EntryKind.FILE, sizeBytes: 30n, revision: 1 };
+	api.listEntries.mockResolvedValueOnce({ entries: [file], nextPageToken: '' });
+	api.getPreview.mockResolvedValueOnce({ url: 'https://storage.example/report.pdf', contentType: 'application/pdf', mediaKind: 4, contentId: 'generation' });
+	const screen = await render(StoragePage);
+	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
+	await screen.getByRole('row', { name: /Podgląd report\.pdf/ }).getByRole('button', { name: 'Podgląd report.pdf' }).click();
+	await expect.element(screen.getByTitle('Podgląd PDF: report.pdf')).toBeInTheDocument();
 });
 
 it('does not show media when a preview request finishes after the dialog closes', async () => {
@@ -590,16 +689,61 @@ it('disables upload and offers retry when the public upload limit cannot be load
 	await expect.poll(() => api.getUploadLimits).toHaveBeenCalledTimes(2);
 });
 
+it('bulk restores selected trash and retains collided selections', async () => {
+	const items = ['one', 'two'].map((id) => ({ entry: { id, name: `${id}.txt`, revision: 2, kind: EntryKind.FILE, spaceId: 'main-space' } }));
+	api.listTrash.mockResolvedValue({ items, nextPageToken: '' });
+	api.bulkRestoreEntries.mockImplementation(async () => {
+		api.listTrash.mockResolvedValue({ items: [items[1]], nextPageToken: '' });
+		return { results: [{ entryId: 'one', success: true, error: '' }, { entryId: 'two', success: false, error: 'ALREADY_EXISTS' }] };
+	});
+	const screen = await render(StoragePage, { props: { mode: 'trash' } });
+	await expect.poll(() => api.listTrash).toHaveBeenCalled();
+	await screen.getByRole('table').getByRole('checkbox', { name: 'Zaznacz one.txt' }).click();
+	await screen.getByRole('table').getByRole('checkbox', { name: 'Zaznacz two.txt' }).click();
+	await screen.getByRole('button', { name: 'Przywróć zaznaczone' }).click();
+	await expect.poll(() => api.bulkRestoreEntries).toHaveBeenCalledTimes(1);
+	await expect.element(screen.getByRole('alert').getByText(/nie udało się przywrócić 1/i)).toBeVisible();
+	await expect.element(screen.getByRole('table').getByRole('checkbox', { name: 'Zaznacz two.txt' })).toBeChecked();
+});
+
+it('bulk deletes selected trash and retains failed selections', async () => {
+	const items = ['one', 'two'].map((id) => ({ entry: { id, name: `${id}.txt`, revision: 2, kind: EntryKind.FILE, spaceId: 'main-space' } }));
+	api.listTrash.mockResolvedValue({ items, nextPageToken: '' });
+	api.bulkDeletePermanently.mockImplementation(async () => {
+		api.listTrash.mockResolvedValue({ items: [items[1]], nextPageToken: '' });
+		return { results: [{ entryId: 'one', success: true, error: '' }, { entryId: 'two', success: false, error: 'REVISION_CONFLICT' }] };
+	});
+	const screen = await render(StoragePage, { props: { mode: 'trash' } });
+	await expect.poll(() => api.listTrash).toHaveBeenCalled();
+	await screen.getByRole('table').getByRole('checkbox', { name: 'Zaznacz one.txt' }).click();
+	await screen.getByRole('table').getByRole('checkbox', { name: 'Zaznacz two.txt' }).click();
+	await screen.getByRole('button', { name: 'Usuń zaznaczone trwale' }).click();
+	await screen.getByRole('dialog').getByRole('button', { name: 'Zleć trwałe usunięcie' }).click();
+	await expect.poll(() => api.bulkDeletePermanently).toHaveBeenCalledTimes(1);
+	expect(api.bulkDeletePermanently.mock.calls[0][0].items).toHaveLength(2);
+	await expect.element(screen.getByRole('dialog').getByText(/nie udało się usunąć 1/i)).toBeVisible();
+	await expect.element(screen.getByRole('table').getByRole('checkbox', { name: 'Zaznacz two.txt' })).toBeChecked();
+	await expect.element(screen.getByRole('table').getByRole('checkbox', { name: 'Zaznacz one.txt' })).not.toBeInTheDocument();
+});
+
 it('loads the selected private or shared trash after switching the tabs', async () => {
 	const screen = await render(StoragePage, { props: { mode: 'trash' } });
 
 	await expect.poll(() => api.listTrash.mock.calls.at(-1)?.[0]?.spaceId).toBe('main-space');
+
 	await screen.getByRole('button', { name: 'Pliki prywatne' }).click();
 	await expect.poll(() => api.listTrash.mock.calls.at(-1)?.[0]?.spaceId).toBe('personal-space');
 	await expect
 		.element(screen.getByRole('button', { name: 'Pliki prywatne' }))
 		.toHaveAttribute('aria-pressed', 'true');
 	expect(api.listTrash).toHaveBeenCalledTimes(2);
+});
+
+it('redirects a legacy private folder bookmark to the personal route', async () => {
+	page.url = new URL('https://chmura.blokserwis.pl/?folder=private-folder&view=grid#selection');
+	api.getEntry.mockResolvedValue({ entry: { id: 'private-folder', spaceId: 'personal-space', kind: EntryKind.FOLDER } });
+	await render(HomePage);
+	await expect.poll(() => vi.mocked(goto)).toHaveBeenCalledWith('/personal?folder=private-folder&view=grid#selection', { replaceState: true });
 });
 
 it('lets the user select RustFS and shows the returned session location in status and file list', async () => {
@@ -1091,4 +1235,121 @@ it('finishes stale-entry reconciliation after a pending refresh even when the or
 	await refresh;
 	await expect.poll(() => root.dirty).toBe(false);
 	expect(root.entries).toHaveLength(0);
+});
+
+it('finds a conflict beyond the visible page and keeps both without replacing a folder', async () => {
+	const folder = { id: 'folder-collision', spaceId: 'personal-space', name: 'raport.pdf', kind: EntryKind.FOLDER, revision: 3 };
+	api.listEntries.mockImplementation(async (request) => {
+		if (request.pageSize === 100 && request.pageToken === '') return { entries: [], nextPageToken: 'more' };
+		if (request.pageSize === 100 && request.pageToken === 'more') return { entries: [folder], nextPageToken: '' };
+		return { entries: [], nextPageToken: '' };
+	});
+	api.createUpload.mockResolvedValue({ session: { id: 'upload-1', state: UploadState.OPEN, storageLocation: StorageLocation.R2 }, target: { url: 'https://storage.example/signed', headers: {} } });
+	const app = new CloudState();
+	const screen = await render(StoragePage, { props: { spaceKind: 'private', app } });
+	await screen.getByLabelText('Wybierz pliki do przesłania').upload(new File(['hello'], 'raport.pdf'));
+	await expect.element(screen.getByRole('button', { name: 'Zachowaj oba' })).toBeVisible();
+	expect(screen.getByRole('button', { name: 'Zastąp' }).query()).toBeNull();
+	await screen.getByRole('button', { name: 'Zachowaj oba' }).click();
+	await expect.poll(() => api.createUpload.mock.calls.at(-1)?.[0]?.name).toBe('raport (1).pdf');
+	expect(api.createUpload.mock.calls.at(-1)?.[0]?.replaceEntryId).toBeUndefined();
+});
+
+
+it('offers restoring both files or replacing the active file after a collision', async () => {
+	const source = { id: 'deleted', name: 'one.txt', revision: 2, kind: EntryKind.FILE, spaceId: 'main-space' };
+	const target = { id: 'existing', name: 'one.txt', revision: 4, kind: EntryKind.FILE, spaceId: 'main-space' };
+	api.listTrash.mockResolvedValue({ items: [{entry:source}], nextPageToken: '' });
+	api.listEntries.mockResolvedValue({ entries: [target], nextPageToken: '' });
+	api.restoreEntry.mockRejectedValueOnce(new ConnectError('ALREADY_EXISTS', Code.AlreadyExists)).mockResolvedValueOnce({entry:target});
+	const screen = await render(StoragePage, {props:{mode:'trash'}});
+	await screen.getByRole('table').getByRole('button',{name:'Przywróć',exact:true}).click();
+	await expect.element(screen.getByRole('dialog').getByText(/one \(1\)\.txt/)).toBeVisible();
+	await screen.getByRole('dialog').getByRole('button',{name:'Zastąp'}).click();
+	await expect.poll(() => api.restoreEntry.mock.calls.length).toBe(2);
+	expect(api.restoreEntry.mock.calls[1][0]).toMatchObject({entryId:'deleted',expectedRevision:2,replaceEntryId:'existing',replaceExpectedRevision:4});
+});
+
+
+it('keeps a queued file and its destination when a name is taken after the initial check', async () => {
+	const existing={id:'late-entry',spaceId:'personal-space',name:'late.txt',kind:EntryKind.FILE,revision:5};
+	api.createUpload.mockImplementationOnce(async () => {
+		api.listEntries.mockResolvedValue({entries:[existing],nextPageToken:''});
+		throw new ConnectError('ALREADY_EXISTS',Code.AlreadyExists);
+	});
+	api.createUpload.mockResolvedValueOnce({session:{id:'upload-1',state:UploadState.OPEN,storageLocation:StorageLocation.R2},target:{url:'https://storage.example/signed',headers:{}}});
+	const screen=await render(StoragePage,{props:{spaceKind:'private'}});
+	await screen.getByLabelText('Wybierz pliki do przesłania').upload(new File(['hello'],'late.txt'));
+	await expect.element(screen.getByRole('button',{name:'Zachowaj oba'})).toBeVisible();
+	await screen.getByRole('button',{name:'Zachowaj oba'}).click();
+	await expect.poll(() => api.createUpload.mock.calls.length).toBe(2);
+	expect(api.createUpload.mock.calls[1][0]).toMatchObject({spaceId:'personal-space',name:'late (1).txt'});
+});
+
+it('cancels a finished transfer session before resolving a publication name conflict', async () => {
+	const existing={id:'late-final',spaceId:'personal-space',name:'late.txt',kind:EntryKind.FILE,revision:6};
+	api.completeUpload.mockImplementationOnce(async () => {
+		api.listEntries.mockResolvedValue({entries:[existing],nextPageToken:''});
+		throw new ConnectError('ALREADY_EXISTS',Code.AlreadyExists);
+	}).mockRejectedValueOnce(new ConnectError('ALREADY_EXISTS',Code.AlreadyExists)).mockResolvedValue({});
+	api.getUpload.mockResolvedValue({session:{state:UploadState.OPEN,attemptId:'attempt-1'}});
+	api.cancelUpload.mockResolvedValue({session:{state:UploadState.CANCELLED}});
+	api.createUpload.mockResolvedValue({session:{id:'upload-1',state:UploadState.OPEN,storageLocation:StorageLocation.R2,attemptId:'attempt-1'},target:{url:'https://storage.example/signed',headers:{}}});
+	const screen=await render(StoragePage,{props:{spaceKind:'private'}});
+	await screen.getByLabelText('Wybierz pliki do przesłania').upload(new File(['hello'],'late.txt'));
+	await expect.element(screen.getByRole('button',{name:'Zastąp'})).toBeVisible();
+	expect(api.cancelUpload).toHaveBeenCalledTimes(1);
+	await screen.getByRole('button',{name:'Zastąp'}).click();
+	await expect.poll(()=>api.createUpload.mock.calls.length).toBe(2);
+	expect(api.createUpload.mock.calls[1][0]).toMatchObject({spaceId:'personal-space',name:'late.txt',replaceEntryId:'late-final',replaceExpectedRevision:6});
+});
+
+it('does not retry a conflicted upload if cancellation cannot be confirmed', async () => {
+	api.completeUpload.mockRejectedValue(new ConnectError('ALREADY_EXISTS',Code.AlreadyExists));
+	api.getUpload.mockResolvedValueOnce({session:{state:UploadState.OPEN,attemptId:'attempt-1'}}).mockRejectedValueOnce(new Error('Brak potwierdzenia sesji'));
+	api.cancelUpload.mockRejectedValueOnce(new Error('Brak odpowiedzi anulowania'));
+	api.createUpload.mockResolvedValue({session:{id:'upload-1',state:UploadState.OPEN,storageLocation:StorageLocation.R2,attemptId:'attempt-1'},target:{url:'https://storage.example/signed',headers:{}}});
+	const screen=await render(StoragePage,{props:{spaceKind:'private'}});
+	await screen.getByLabelText('Wybierz pliki do przesłania').upload(new File(['hello'],'late.txt'));
+	await expect.element(screen.getByText('Brak potwierdzenia sesji')).toBeVisible();
+	expect(api.createUpload).toHaveBeenCalledTimes(1);
+	expect(screen.getByRole('button',{name:'Zachowaj oba'}).query()).toBeNull();
+});
+
+
+it('preserves a multipart file across a terminal publication name conflict', async () => {
+	const existing={id:'destination',spaceId:'personal-space',name:'large.bin',kind:EntryKind.FILE,revision:9};
+	api.listEntries.mockResolvedValue({entries:[existing],nextPageToken:''});
+	const start=vi.fn().mockResolvedValueOnce({phase:'verifying'}).mockResolvedValueOnce({phase:'completed'});
+	const fake={subscribeProgress:()=>()=>{},setCapabilities:()=>{},start,refreshSession:vi.fn().mockResolvedValue({phase:'failed',failureCode:'NAME_CONFLICT'}),forgetNameConflict:vi.fn().mockResolvedValue(undefined)} as unknown as MultipartController;
+	const manager=new UploadManager(()=>{},fake);
+	manager.setMultipartCapabilities({enabled:true,maxFileBytes:10_000_000_000n,partSizeBytes:33_554_432n,maxParallelParts:2,protocol:'MULTIPART_V1'});
+	const file=new File(['x'],'large.bin');
+	Object.defineProperty(file,'size',{value:100_000_001});
+	manager.enqueue([file],{spaceId:'personal-space',mode:UploadMode.R2,label:'Pliki prywatne'},100_000_000);
+	await expect.poll(()=>manager.tasks[0]?.phase).toBe('conflict');
+	expect(manager.tasks[0].file).toBe(file);
+	expect(fake.forgetNameConflict).toHaveBeenCalledOnce();
+	await manager.resolveConflict(manager.tasks[0].id,'replace');
+	await expect.poll(()=>start.mock.calls.length).toBe(2);
+	expect(start.mock.calls[1][1]).toMatchObject({spaceId:'personal-space',replaceEntryId:'destination',replaceExpectedRevision:9});
+});
+
+it('asks for the original file after recovering a failed multipart conflict from storage', async () => {
+	const existing={id:'destination',spaceId:'personal-space',name:'large.bin',kind:EntryKind.FILE,revision:9};
+	api.listEntries.mockResolvedValue({entries:[existing],nextPageToken:''});
+	const persisted={ownerId:'user-1',localId:'old-local',spaceId:'personal-space',name:'large.bin',sizeBytes:100_000_001,uploadMode:UploadMode.R2,phase:'failed',failureCode:'NAME_CONFLICT'};
+	const start=vi.fn().mockResolvedValue({phase:'completed'});
+	const fake={subscribeProgress:()=>()=>{},setCapabilities:()=>{},setAccountId:()=>{},listSessions:vi.fn().mockResolvedValue([persisted]),start,refreshSession:vi.fn().mockResolvedValue({phase:'failed',failureCode:'NAME_CONFLICT'}),forgetNameConflict:vi.fn().mockResolvedValue(undefined)} as unknown as MultipartController;
+	const manager=new UploadManager(()=>{},fake);
+	manager.setMultipartCapabilities({enabled:true,maxFileBytes:10_000_000_000n,partSizeBytes:33_554_432n,maxParallelParts:2,protocol:'MULTIPART_V1'});
+	manager.setAccountId('user-1');
+	await expect.poll(()=>manager.tasks[0]?.phase).toBe('conflict');
+	await manager.resolveConflict('old-local','keep');
+	await expect.poll(()=>manager.tasks[0]?.phase).toBe('needsFile');
+	const file=new File(['x'],'large.bin');
+	Object.defineProperty(file,'size',{value:100_000_001});
+	manager.resume('old-local',file);
+	await expect.poll(()=>start.mock.calls.length).toBe(1);
+	expect(start.mock.calls[0][1]).toMatchObject({spaceId:'personal-space',name:'large (1).bin'});
 });

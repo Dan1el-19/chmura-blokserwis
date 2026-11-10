@@ -239,8 +239,8 @@ test('preserves folders, pages and uploads while navigating through the applicat
 		.getByRole('link');
 	expect((await links.allTextContents()).map((text) => text.trim())).toEqual(
 		mobile
-			? ['Main', 'Pliki prywatne', 'Kosz', 'Ustawienia']
-			: ['Chmura Blokserwis', 'Main', 'Pliki prywatne', 'Kosz', 'Ustawienia']
+			? ['Main', 'Pliki prywatne', 'Udostępnienia', 'Kosz', 'Ustawienia']
+			: ['Chmura Blokserwis', 'Main', 'Pliki prywatne', 'Udostępnienia', 'Kosz', 'Ustawienia']
 	);
 	if (mobile) {
 		await page.getByRole('button', { name: 'Przełącz menu' }).click();

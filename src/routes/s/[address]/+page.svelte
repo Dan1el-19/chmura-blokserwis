@@ -5,11 +5,13 @@
 	import { DownloadSimple, SpinnerGap } from 'phosphor-svelte';
 	import favicon from '#lib/assets/favicon.svg';
 	import TextPreview from '#lib/components/TextPreview.svelte';
+	import PublicFolder from '#lib/components/PublicFolder.svelte';
 	import { mediaKindForFilename, type BrowserMediaKind as MediaKind } from '#lib/media-preview.js';
 
 	type Preview = { url: string; expiresAt: string; contentType: string; mediaKind: MediaKind; contentId?: string };
 	type PublicShare = {
 		name: string;
+		kind?: 'FOLDER';
 		sizeBytes: number;
 		preview: Preview | null;
 		requiresPassword: boolean;
@@ -203,6 +205,9 @@
 				<div class="space-y-5 p-5 sm:p-8">
 					{#if share.requiresPassword}
 						<div class="mx-auto max-w-md py-8"><h1 class="text-center text-xl font-semibold">Udostępniony plik jest chroniony hasłem</h1><p class="mt-2 text-center text-sm text-text-muted">Wprowadź hasło, aby zobaczyć plik i pobrać go.</p><form onsubmit={unlockShare} class="mt-6 space-y-3"><label class="block space-y-1.5 text-sm"><span>Hasło</span><input type="password" bind:value={password} autocomplete="current-password" required disabled={unlockPending} class="w-full rounded-md border border-border-line bg-bg-app px-3 py-2.5 focus:border-primary focus:outline-none" /></label>{#if unlockError}<p class="text-sm text-red-600 dark:text-red-300" role="alert">{unlockError}</p>{/if}<button type="submit" disabled={unlockPending || !password} class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{#if unlockPending}<SpinnerGap class="h-4 w-4 animate-spin" />{:else}<DownloadSimple class="h-4 w-4" />{/if}Odblokuj</button></form></div>
+					{:else if share.kind === 'FOLDER'}
+						<div><h1 class="break-words text-xl font-semibold">{share.name}</h1><p class="mt-2 text-xs text-text-muted">Wejścia: {share.viewCount} · Pobrania: {share.downloadCount}{share.maxDownloads === null ? '' : ` / ${share.maxDownloads}`}</p></div>
+						<PublicFolder {address} />
 					{:else}
 						<div class="min-w-0"><h1 class="break-words text-xl font-semibold sm:text-2xl">{share.name}</h1><p class="mt-1 text-sm text-text-muted">{formatBytes(share.sizeBytes)}</p><p class="mt-2 text-xs text-text-muted">Wejścia: {share.viewCount} · Pobrania: {share.downloadCount}{share.maxDownloads === null ? '' : ` / ${share.maxDownloads}`}</p></div>
 						{#key `${share.preview?.contentId ?? ''}:${share.preview?.url ?? ''}`}
