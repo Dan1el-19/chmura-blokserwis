@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { UploadManager, UploadTask } from '../upload-manager.svelte.js';
-	import { StorageLocation } from '../gen/unisourcecfl/catalog/v1/catalog_pb.js';
+	import { EntryKind, StorageLocation } from '../gen/unisourcecfl/catalog/v1/catalog_pb.js';
 	let { manager }: { manager: UploadManager } = $props();
 	const locationLabel = (location: StorageLocation | undefined) =>
 		location === StorageLocation.R2 ? 'R2' : location === StorageLocation.RUSTFS ? 'RustFS' : '';
@@ -8,6 +8,8 @@
 		switch (task.phase) {
 			case 'queued':
 				return 'W kolejce';
+			case 'conflict':
+				return 'Nazwa jest już zajęta';
 			case 'needsFile':
 				return 'Wybierz plik, aby wznowić';
 			case 'paused':
@@ -113,6 +115,13 @@
 								></span>
 							</div>{/if}
 						{#if task.phase === 'done'}<p class="sr-only">Plik został przesłany.</p>{/if}
+						{#if task.phase === 'conflict'}
+							<div class="flex flex-wrap gap-2">
+								<button type="button" class="rounded border border-border-line px-2 py-1 text-xs" onclick={() => void manager.resolveConflict(task.id, 'keep')}>Zachowaj oba</button>
+								{#if task.conflictEntry?.kind === EntryKind.FILE}<button type="button" class="rounded border border-border-line px-2 py-1 text-xs" onclick={() => void manager.resolveConflict(task.id, 'replace')}>Zastąp</button>{/if}
+								<button type="button" class="rounded px-2 py-1 text-xs" onclick={() => void manager.resolveConflict(task.id, 'skip')}>Pomiń</button>
+							</div>
+						{/if}
 						{#if task.error}<p class="text-xs text-red-600 dark:text-red-300" role="alert">
 								{task.error}
 							</p>{/if}

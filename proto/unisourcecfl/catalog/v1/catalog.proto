@@ -182,6 +182,9 @@ message RestoreEntryRequest {
   string space_id = 1;
   string entry_id = 2;
   uint32 expected_revision = 3;
+  optional string new_name = 4;
+  optional string replace_entry_id = 5;
+  optional uint32 replace_expected_revision = 6;
 }
 message RestoreEntryResponse {
   Entry entry = 1;

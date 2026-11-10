@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onMount, untrack } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
 	import { getCloudState, type CatalogSort, type CatalogSortBy, type CatalogSortDirection } from '#lib/cloud-state.svelte.js';
 	import { storageErrorMessage as errorMessage } from '#lib/storage-error.js';
@@ -8,6 +9,7 @@
 	import FilePreviewDialog from './FilePreviewDialog.svelte';
 	import ShareLinksDialog from './ShareLinksDialog.svelte';
 	import { mediaKindForFilename } from '#lib/media-preview.js';
+	import { nextAvailableUploadName, uploadNameKey } from '#lib/upload-conflict.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { AppRouteWithQuery } from '#lib/routes.js';
@@ -35,13 +37,14 @@
 		Trash
 	} from 'phosphor-svelte';
 	import {
+		CatalogFileType,
 		BulkTrashEntriesRequestSchema,
 		BulkDeletePermanentlyRequestSchema,
 		BulkRestoreEntriesRequestSchema,
-		CatalogFileType,
 		CatalogSortBy as CatalogSortByProto,
 		CatalogSortDirection as CatalogSortDirectionProto,
 		SearchEntriesRequestSchema,
+		ListEntriesRequestSchema,
 		CreateFolderRequestSchema,
 		DeletePermanentlyRequestSchema,
 		EntryKind,
@@ -550,7 +553,8 @@
 		}
 	}
 
-	async function restoreTrashItem(item: TrashItem): Promise<void> {
+	let restoreConflict = $state<{ item: TrashItem; name: string; spaceId: string; target?: Entry } | null>(null);
+	async function restoreTrashItem(item: TrashItem, newName?: string, replacement?: Entry): Promise<void> {
 		if (!item.entry || pendingRestoreIds.includes(item.entry.id)) return;
 		const originList = currentList!;
 		const version = app.sessionVersion;
@@ -558,9 +562,11 @@
 		try {
 			const result = await trash.restoreEntry(
 				create(RestoreEntryRequestSchema, {
-					spaceId: activeSpaceId,
+					spaceId: originList.spaceId,
 					entryId: item.entry!.id,
-					expectedRevision: item.entry!.revision
+					expectedRevision: item.entry!.revision,
+					...(newName !== undefined ? { newName } : {}),
+					...(replacement ? {replaceEntryId: replacement.id, replaceExpectedRevision: replacement.revision} : {})
 				})
 			);
 			if (version !== app.sessionVersion) return;
@@ -569,10 +575,30 @@
 			notice = `„${item.entry!.name}” przywrócono.`;
 		} catch (error) {
 			if (version !== app.sessionVersion) return;
-			const message = errorMessage(error);
-			if (await refreshStaleEntry(error, originList, item.entry?.id)) {
+			if (error instanceof ConnectError && error.code === Code.AlreadyExists && item.entry) {
+				try {
+					const occupied = new SvelteSet<string>();
+					let target: Entry | undefined;
+					let token = '';
+					do {
+						const response = await catalog.listEntries(create(ListEntriesRequestSchema, {
+							spaceId: originList.spaceId,
+							...(item.entry.parentId ? {parentId: item.entry.parentId} : {}),
+							pageSize: 100, pageToken: token
+						}));
+						for (const entry of response.entries) {
+							occupied.add(uploadNameKey(entry.name));
+							if (uploadNameKey(entry.name) === uploadNameKey(item.entry.name)) target = entry;
+						}
+						token = response.nextPageToken;
+					} while (token);
+					if (version === app.sessionVersion) restoreConflict = { item, name: nextAvailableUploadName(item.entry.name, occupied), spaceId: originList.spaceId, ...(item.entry.kind === EntryKind.FILE && target?.kind === EntryKind.FILE ? {target} : {}) };
+				} catch (cause) { apiError = errorMessage(cause); }
+			} else {
+				const message = errorMessage(error);
+				await refreshStaleEntry(error, originList, item.entry?.id);
 				apiError = message;
-			} else apiError = message;
+			}
 		} finally {
 			pendingRestoreIds = pendingRestoreIds.filter((id) => id !== item.entry!.id);
 		}
@@ -862,21 +888,66 @@
 		else void downloadFile(entry);
 	}
 
-	function uploadFiles(files: File[]): void {
-		if (!accountReady || !routeFolderReady || uploadLimitBytes === null) return;
-		app.transfers.enqueue(
-			files,
-			{
-				spaceId: activeSpaceId,
-				...(currentParentId ? { parentId: currentParentId } : {}),
-				mode: app.defaultUploadMode,
-				label: [
-					isSharedSpace ? 'Main' : 'Pliki prywatne',
-					...folderPath.map((folder) => folder.name)
-				].join(' / ')
-			},
-			Number(uploadLimitBytes)
-		);
+	type UploadConflictChoice = 'keep' | 'replace' | 'skip';
+	let uploadConflict = $state<{ name: string; canReplace: boolean } | null>(null);
+	let uploadConflictResolve: ((choice: UploadConflictChoice) => void) | undefined;
+	let selectingUploads = false;
+	let uploadsViewDestroyed = false;
+	function chooseUploadConflict(choice: UploadConflictChoice): void {
+		const resolve = uploadConflictResolve;
+		uploadConflictResolve = undefined;
+		uploadConflict = null;
+		resolve?.(choice);
+	}
+	onDestroy(() => { uploadsViewDestroyed = true; chooseUploadConflict('skip'); });
+	async function uploadFiles(files: File[]): Promise<void> {
+		if (!accountReady || !routeFolderReady || uploadLimitBytes === null || selectingUploads) return;
+		selectingUploads = true;
+		const destination = {
+			spaceId: activeSpaceId,
+			...(currentParentId ? { parentId: currentParentId } : {}),
+			mode: app.defaultUploadMode,
+			label: [isSharedSpace ? 'Main' : 'Pliki prywatne', ...folderPath.map((folder) => folder.name)].join(' / ')
+		};
+		const maxBytes = Number(uploadLimitBytes);
+		try {
+			const occupied = new SvelteMap<string, Entry | null>();
+			let token = '';
+			do {
+				const page = await catalog.listEntries(create(ListEntriesRequestSchema, {
+					spaceId: destination.spaceId, ...(destination.parentId ? {parentId: destination.parentId} : {}),
+					pageSize: 100, pageToken: token
+				}));
+				for (const entry of page.entries) occupied.set(uploadNameKey(entry.name), entry);
+				token = page.nextPageToken;
+			} while (token);
+			for (const task of app.transfers.tasks) {
+				if (task.target.spaceId === destination.spaceId && (task.target.parentId ?? '') === (destination.parentId ?? '') && !['done', 'cancelled', 'error'].includes(task.phase)) occupied.set(uploadNameKey(task.name), null);
+			}
+			for (const file of files) {
+				if (uploadsViewDestroyed) break;
+				let name = file.name.normalize('NFC');
+				const key = uploadNameKey(name);
+				const existing = occupied.get(key);
+				let replacement: { replaceEntryId: string; replaceExpectedRevision: number } | undefined;
+				if (occupied.has(key)) {
+					const choice = await new Promise<UploadConflictChoice>((resolve) => {
+						uploadConflictResolve = resolve;
+						uploadConflict = { name, canReplace: existing?.kind === EntryKind.FILE };
+					});
+					if (uploadsViewDestroyed) break;
+					if (choice === 'skip') continue;
+					if (choice === 'replace' && existing?.kind === EntryKind.FILE) replacement = {replaceEntryId: existing.id, replaceExpectedRevision: existing.revision};
+					else name = nextAvailableUploadName(name, new Set(occupied.keys()));
+				}
+				occupied.set(uploadNameKey(name), null);
+				app.transfers.enqueue([file], { ...destination, name, ...replacement }, maxBytes);
+			}
+		} catch (error) {
+			apiError = errorMessage(error);
+		} finally {
+			selectingUploads = false;
+		}
 	}
 
 	function onFileSelected(event: Event): void {
@@ -1135,6 +1206,30 @@
 
 {#if sharingEntry && activeSpaceId}
 	<ShareLinksDialog file={sharingEntry} spaceId={activeSpaceId} onclose={() => (sharingEntry = null)} />
+{/if}
+
+{#if restoreConflict}
+	<AppDialog labelledby="restore-conflict-title" onclose={() => restoreConflict = null}>
+		<h2 id="restore-conflict-title" class="text-base font-semibold">Element o tej nazwie już istnieje</h2>
+		<p class="mt-2 break-words text-sm text-text-muted">Przywróć jako „{restoreConflict.name}” lub pomiń ten element.</p>
+		<div class="mt-5 flex flex-wrap justify-end gap-2">
+			<button type="button" class="min-h-10 rounded-md px-3 text-sm" onclick={() => restoreConflict = null}>Pomiń</button>
+			<button type="button" class="min-h-10 rounded-md border border-border-line px-3 text-sm" onclick={() => { const choice = restoreConflict; restoreConflict = null; if (choice && currentList?.spaceId === choice.spaceId) void restoreTrashItem(choice.item, choice.name); }}>Zachowaj oba</button>
+			{#if restoreConflict.target}<button type="button" class="min-h-10 rounded-md bg-red-600 px-3 text-sm text-white" onclick={() => { const choice = restoreConflict; restoreConflict = null; if (choice && currentList?.spaceId === choice.spaceId) void restoreTrashItem(choice.item, undefined, choice.target); }}>Zastąp</button>{/if}
+		</div>
+	</AppDialog>
+{/if}
+
+{#if uploadConflict}
+	<AppDialog labelledby="upload-conflict-title" onclose={() => chooseUploadConflict('skip')}>
+		<h2 id="upload-conflict-title" class="text-base font-semibold">Element o tej nazwie już istnieje</h2>
+		<p class="mt-2 break-words text-sm text-text-muted">{uploadConflict.name}</p>
+		<div class="mt-5 flex flex-wrap justify-end gap-2">
+			<button type="button" class="min-h-10 rounded-md px-3 text-sm" onclick={() => chooseUploadConflict('skip')}>Pomiń</button>
+			<button type="button" class="min-h-10 rounded-md border border-border-line px-3 text-sm" onclick={() => chooseUploadConflict('keep')}>Zachowaj oba</button>
+			{#if uploadConflict.canReplace}<button type="button" class="min-h-10 rounded-md bg-red-600 px-3 text-sm text-white" onclick={() => chooseUploadConflict('replace')}>Zastąp</button>{/if}
+		</div>
+	</AppDialog>
 {/if}
 
 {#if bulkTrashOpen}

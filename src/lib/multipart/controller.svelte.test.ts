@@ -11,7 +11,7 @@ import {
 } from '../gen/unisourcecfl/upload/v1/multipart_pb.js';
 import { UploadErrorDetailSchema, UploadMode } from '../gen/unisourcecfl/upload/v1/upload_pb.js';
 import { UploadTargetError, UploadTransportError } from '../upload.js';
-import { MultipartController, MultipartFileMismatchError, MultipartOfflineError, MultipartUnavailableError, type MultipartRpc } from './controller.js';
+import { MultipartController, MultipartNameConflictError, MultipartFileMismatchError, MultipartOfflineError, MultipartUnavailableError, type MultipartRpc } from './controller.js';
 import { MULTIPART_PART_BYTES } from './protocol.js';
 import type { MultipartSessionStore, PersistedMultipartSession } from './session-store.js';
 
@@ -414,7 +414,7 @@ it('retains the Begin idempotency record when cancel replay times out ambiguousl
 	const { rpc, methods } = createRpc();
 	const local: PersistedMultipartSession = {
 		ownerId: 'user-1', localId: 'begin-timeout-1', requestId: 'begin-request-stable',
-		spaceId: 'space-1', name: 'large.bin', sizeBytes: fileSize,
+		spaceId: 'space-1', name: 'large.bin', sizeBytes: fileSize, replaceEntryId: 'original-entry', replaceExpectedRevision: 7,
 		partSizeBytes: MULTIPART_PART_BYTES, fingerprintHex: manifest.fingerprintHex,
 		parts: manifest.parts.map(({ partNumber, sizeBytes, sha256Hex, md5Base64 }) => ({ partNumber, sizeBytes, sha256Hex, md5Base64 })),
 		uploadMode: UploadMode.R2, attemptNumber: 0, revision: 0n, phase: 'beginning'
@@ -424,7 +424,7 @@ it('retains the Begin idempotency record when cancel replay times out ambiguousl
 	const subject = controller(store, rpc);
 
 	await expect(subject.cancel(local.localId)).rejects.toMatchObject({ code: Code.DeadlineExceeded });
-	expect(methods.beginMultipartUpload).toHaveBeenCalledWith(expect.objectContaining({ requestId: local.requestId }));
+	expect(methods.beginMultipartUpload).toHaveBeenCalledWith(expect.objectContaining({ requestId: local.requestId, replaceEntryId: 'original-entry', replaceExpectedRevision: 7 }));
 	expect(methods.cancelMultipartUpload).not.toHaveBeenCalled();
 	expect(await store.get('user-1', local.localId)).toMatchObject({ requestId: local.requestId, phase: 'paused' });
 });
@@ -656,4 +656,30 @@ it('restarts every part on one Auto fallback and never sends more than two PUTs 
 	expect(put).toHaveBeenCalledTimes(6);
 	expect(methods.getMultipartPartTarget.mock.calls.map(([request]) => request.partNumber)).toEqual([1, 2, 1, 2, 3, 4]);
 	expect(maximum).toBeLessThanOrEqual(2);
+});
+
+
+it('discards a pending Begin only after a trusted definitive name conflict', async () => {
+	const store=new MemoryStore();
+	const {rpc,methods}=createRpc();
+	methods.beginMultipartUpload.mockRejectedValueOnce(new ConnectError('NAME_CONFLICT',Code.Aborted,undefined,[{desc:UploadErrorDetailSchema,value:create(UploadErrorDetailSchema,{code:'NAME_CONFLICT',requestId:'test'})}]));
+	const subject=controller(store,rpc);
+	await expect(subject.start(fakeFile(),{spaceId:'space-1'},UploadMode.R2,'local-conflict')).rejects.toBeInstanceOf(MultipartNameConflictError);
+	expect(methods.beginMultipartUpload).toHaveBeenCalledWith(expect.objectContaining({supportsNameConflict:true}));
+	expect(await store.get('user-1','local-conflict')).toBeUndefined();
+});
+
+it('forgets a failed name-conflict session only after a fresh terminal server response', async () => {
+	const store=new MemoryStore();
+	const {rpc,methods}=createRpc();
+	const local: PersistedMultipartSession={ownerId:'user-1',localId:'failed-conflict',requestId:'request-1',uploadId:'upload-1',spaceId:'space-1',name:'large.bin',sizeBytes:fileSize,partSizeBytes:MULTIPART_PART_BYTES,fingerprintHex:manifest.fingerprintHex,parts:manifest.parts.map(({partNumber,sizeBytes,sha256Hex,md5Base64})=>({partNumber,sizeBytes,sha256Hex,md5Base64})),uploadMode:UploadMode.R2,attemptNumber:1,attemptId:'attempt-1',revision:1n,phase:'verifying'};
+	await store.put(local);
+	methods.getMultipartUpload.mockResolvedValueOnce({session:remoteSession(local,{state:MultipartUploadState.OPEN,failureCode:''}),parts:[],nextPartNumberCursor:0,hasMoreParts:false} as never);
+	const subject=controller(store,rpc);
+	await expect(subject.forgetNameConflict(local.localId)).rejects.toThrow('Nie potwierdzono');
+	expect(await store.get('user-1',local.localId)).toBeDefined();
+	methods.getMultipartUpload.mockResolvedValueOnce({session:remoteSession(local,{state:MultipartUploadState.FAILED,failureCode:'NAME_CONFLICT'}),parts:[],nextPartNumberCursor:0,hasMoreParts:false} as never);
+	await subject.forgetNameConflict(local.localId);
+	expect(await store.get('user-1',local.localId)).toBeUndefined();
+	expect(methods.cancelMultipartUpload).not.toHaveBeenCalled();
 });

@@ -49,7 +49,11 @@ export type MultipartProgressEvent = {
 	reset?: boolean;
 };
 
-export type MultipartDestination = { spaceId: string; parentId?: string; name?: string };
+export type MultipartDestination = { spaceId: string; parentId?: string; name?: string; replaceEntryId?: string; replaceExpectedRevision?: number };
+
+export class MultipartNameConflictError extends Error {
+	constructor() { super('Nazwa jest już zajęta.'); this.name='MultipartNameConflictError'; }
+}
 
 export class MultipartUnavailableError extends Error {
 	constructor() {
@@ -217,6 +221,7 @@ export class MultipartController {
 				spaceId: destination.spaceId,
 				...(destination.parentId ? { parentId: destination.parentId } : {}),
 				name: destination.name ?? file.name,
+				...(destination.replaceEntryId !== undefined ? { replaceEntryId: destination.replaceEntryId, replaceExpectedRevision: destination.replaceExpectedRevision } : {}),
 				sizeBytes: file.size,
 				partSizeBytes: MULTIPART_PART_BYTES,
 				fingerprintHex: manifest.fingerprintHex,
@@ -321,10 +326,12 @@ export class MultipartController {
 			spaceId: session.spaceId,
 			...(session.parentId ? { parentId: session.parentId } : {}),
 			name: session.name,
+			...(session.replaceEntryId !== undefined ? { replaceEntryId: session.replaceEntryId, replaceExpectedRevision: session.replaceExpectedRevision } : {}),
 			sizeBytes: BigInt(session.sizeBytes),
 			manifestFingerprintHex: session.fingerprintHex,
 			manifestParts: session.parts.map((part) => ({ partNumber: part.partNumber, sizeBytes: BigInt(part.sizeBytes), sha256Hex: part.sha256Hex })),
 			uploadMode: session.uploadMode,
+			supportsNameConflict: true,
 			requestId: session.requestId
 		});
 		if (signal && generation !== undefined) this.assertCurrent(session.localId, generation, signal);
@@ -337,7 +344,17 @@ export class MultipartController {
 
 	private async beginAndTransfer(session: PersistedMultipartSession, file: File, signal: AbortSignal, generation: number): Promise<PersistedMultipartSession> {
 		this.assertCurrent(session.localId, generation, signal);
-		await this.openSession(session, signal, generation);
+		try {
+			await this.openSession(session, signal, generation);
+		} catch (error) {
+			if (error instanceof ConnectError && error.code === Code.Aborted && error.findDetails(UploadErrorDetailSchema).some(detail => detail.code === 'NAME_CONFLICT')) {
+				this.assertCurrent(session.localId, generation, signal);
+				await this.options.store.delete(session.ownerId, session.localId);
+				this.assertCurrent(session.localId, generation, signal);
+				throw new MultipartNameConflictError();
+			}
+			throw error;
+		}
 		return this.transfer(session, file, signal, generation);
 	}
 
@@ -723,6 +740,15 @@ export class MultipartController {
 		this.applyRemoteSession(session, response.session);
 		await this.options.store.put(session);
 		return session;
+	}
+
+	async forgetNameConflict(localId: string): Promise<void> {
+		const owner = this.ownerId, generation = this.ownerGeneration;
+		const session = await this.refreshSession(localId);
+		if (owner !== this.ownerId || generation !== this.ownerGeneration) throw new MultipartAccountChangedError();
+		if (!session.uploadId || session.phase !== 'failed' || session.failureCode !== 'NAME_CONFLICT') throw new Error('Nie potwierdzono zakończonej sesji z konfliktem nazwy.');
+		await this.options.store.delete(owner, localId);
+		if (owner !== this.ownerId || generation !== this.ownerGeneration) throw new MultipartAccountChangedError();
 	}
 
 	private reportProgress(localId: string, partNumber?: number, loaded?: number, total?: number, reset = false): void {

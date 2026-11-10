@@ -19,6 +19,8 @@ message CreateUploadRequest {
   string request_id = 6;
   UploadMode upload_mode = 7;
   bool supports_attempts = 8;
+  optional string replace_entry_id = 9;
+  optional uint32 replace_expected_revision = 10;
 }
 message CreateUploadResponse {
   UploadSession session = 1;

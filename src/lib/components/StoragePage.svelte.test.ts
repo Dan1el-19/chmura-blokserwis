@@ -628,6 +628,10 @@ it('lets the user select RustFS and shows the returned session location in statu
 		.getByLabelText('Wybierz pliki do przesłania')
 		.upload(new File(['hello'], 'raport.pdf'));
 
+	await screen.getByRole('button', { name: 'Zastąp' }).click();
+	await expect.poll(() => api.createUpload.mock.calls.at(-1)?.[0]?.replaceEntryId).toBe('file-rustfs');
+	await expect.poll(() => api.createUpload.mock.calls.at(-1)?.[0]?.replaceExpectedRevision).toBe(1);
+
 	await expect
 		.poll(() => api.createUpload.mock.calls.at(-1)?.[0]?.uploadMode)
 		.toBe(UploadMode.RUSTFS);
