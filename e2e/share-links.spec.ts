@@ -54,8 +54,8 @@ test('creates and copies a labelled public link without changing its address', a
 		await route.fulfill({ status: 200, headers, body: JSON.stringify(result) });
 	});
 
-	await page.goto('/');
-	await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeAttached();
+	await page.goto('/personal');
+	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached();
 	await page.getByRole('button', { name: 'Udostępnij shared.png' }).click();
 	const dialog = page.getByRole('dialog', { name: 'Udostępnij plik' });
 	await dialog.getByLabel('Własny slug (opcjonalnie)').fill('client-photo');

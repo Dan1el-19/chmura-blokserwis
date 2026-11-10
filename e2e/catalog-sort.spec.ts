@@ -51,8 +51,8 @@ test('applies catalog sorting from the UI and starts again at the first page', a
 		await route.fulfill({ status: 200, headers, body: JSON.stringify(result) });
 	});
 
-	await page.goto('/');
-	await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeAttached({ timeout: 15_000 });
+	await page.goto('/personal');
+	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached({ timeout: 15_000 });
 	await expect.poll(() => requests.filter((item) => item.method === 'ListEntries')).toHaveLength(1);
 	await page.getByRole('button', { name: 'Pokaż więcej' }).click();
 	await expect.poll(() => requests.filter((item) => item.method === 'ListEntries')).toHaveLength(2);

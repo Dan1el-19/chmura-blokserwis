@@ -52,7 +52,7 @@
 
 	type MainView = 'files' | 'trash';
 	let {
-		spaceKind = 'private',
+		spaceKind = 'shared',
 		mode = 'files'
 	}: {
 		spaceKind?: 'private' | 'shared';
@@ -65,7 +65,7 @@
 	const activeSpaceId = $derived(
 		(mode === 'trash' ? spaces.find((space) => space.id === app.trashSpaceId) : undefined)?.id ??
 			spaces.find(
-				(space) => space.kind === (spaceKind === 'shared' ? SpaceKind.SHARED : SpaceKind.PRIVATE)
+				(space) => space.kind === (mode === 'trash' || spaceKind === 'shared' ? SpaceKind.SHARED : SpaceKind.PRIVATE)
 			)?.id ??
 			''
 	);
@@ -328,7 +328,7 @@
 		untrack(() => {
 			const list = sort ? app.list(currentMode, spaceId, folderId, sort) : app.list(currentMode, spaceId, folderId);
 			app.activeListKey = list.key;
-			if (currentMode === 'files') app.lastFolders[spaceKind === 'shared' ? '/main' : '/'] = folderId;
+			if (currentMode === 'files') app.lastFolders[spaceKind === 'shared' ? '/' : '/personal'] = folderId;
 			void app.load(list);
 		});
 	});
@@ -361,7 +361,7 @@
 			? folderPath[folderPath.length - 2].name
 			: isSharedSpace
 				? 'Main'
-				: 'Moje pliki'
+				: 'Pliki prywatne'
 	);
 
 	async function createFolder(): Promise<void> {
@@ -702,7 +702,7 @@
 				...(currentParentId ? { parentId: currentParentId } : {}),
 				mode: app.defaultUploadMode,
 				label: [
-					isSharedSpace ? 'Main' : 'Moje pliki',
+					isSharedSpace ? 'Main' : 'Pliki prywatne',
 					...folderPath.map((folder) => folder.name)
 				].join(' / ')
 			},
@@ -748,13 +748,13 @@
 	ondrop={onPageDrop}
 />
 
-<h1 class="sr-only">{view === 'trash' ? 'Kosz' : isSharedSpace ? 'Pliki wspólne' : 'Moje pliki'}</h1>
+<h1 class="sr-only">{view === 'trash' ? 'Kosz' : isSharedSpace ? 'Pliki wspólne' : 'Pliki prywatne'}</h1>
 
 <div class="space-y-4">
 	{#if view === 'files'}
 		<div class="flex flex-col gap-3 border-b border-border-line pb-4">
 			<nav class="-mx-1 flex min-w-0 items-center gap-1 overflow-x-auto px-1 text-sm leading-none whitespace-nowrap" aria-label="Ścieżka">
-			<a href={resolve(folderHref())} ondragover={(event) => dragOverFolder(undefined, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(undefined, event)} class="inline-flex h-5 shrink-0 items-center font-semibold text-text-main hover:underline {dropTargetId === '__root__' ? 'rounded bg-primary/10' : ''}">{isSharedSpace ? 'Main' : 'Moje pliki'}</a>
+			<a href={resolve(folderHref())} ondragover={(event) => dragOverFolder(undefined, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(undefined, event)} class="inline-flex h-5 shrink-0 items-center font-semibold text-text-main hover:underline {dropTargetId === '__root__' ? 'rounded bg-primary/10' : ''}">{isSharedSpace ? 'Main' : 'Pliki prywatne'}</a>
 				{#each folderPath as folder, index (folder.id)}
 					<span class="inline-flex h-5 shrink-0 items-center text-text-muted" aria-hidden="true"><CaretRight class="h-3.5 w-3.5" /></span>
 					<a href={resolve(folderHref(folder.id))} ondragover={(event) => dragOverFolder(folder, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(folder, event)} class="inline-flex h-5 max-w-[45vw] shrink-0 items-center truncate text-text-muted hover:text-text-main hover:underline sm:max-w-[160px] {dropTargetId === folder.id ? 'rounded bg-primary/10' : ''}" aria-current={index === folderPath.length - 1 ? 'page' : undefined}>{folder.name}</a>
@@ -895,8 +895,8 @@
 					<div><h2 class="text-sm font-semibold text-text-main">Usunięte elementy</h2><p class="mt-0.5 text-xs text-text-muted">Elementy w koszu można przywrócić przed upływem retencji.</p></div>
 					<div class="flex items-center gap-2">
 						<div class="inline-flex rounded-md border border-border-line p-0.5" role="group" aria-label="Przestrzeń kosza">
-							<button type="button" aria-pressed={!isSharedSpace} disabled={!accountReady || !isSharedSpace} onclick={() => switchTrashSpace('private')} class="rounded px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 {!isSharedSpace ? 'bg-primary text-white' : 'text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800'}">Personal</button>
 							<button type="button" aria-pressed={isSharedSpace} disabled={!accountReady || isSharedSpace} onclick={() => switchTrashSpace('shared')} class="rounded px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 {isSharedSpace ? 'bg-primary text-white' : 'text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800'}">Main</button>
+							<button type="button" aria-pressed={!isSharedSpace} disabled={!accountReady || !isSharedSpace} onclick={() => switchTrashSpace('private')} class="rounded px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 {!isSharedSpace ? 'bg-primary text-white' : 'text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800'}">Pliki prywatne</button>
 						</div>
 						<button type="button" onclick={() => void refreshView()} disabled={listBusy || !activeSpaceId} class="flex h-9 w-9 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-zinc-800" aria-label="Odśwież" title="Odśwież">{#if listBusy}<SpinnerGap class="h-5 w-5 animate-spin" />{:else}<ArrowClockwise class="h-5 w-5" />{/if}</button>
 					</div>

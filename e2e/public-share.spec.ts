@@ -138,8 +138,8 @@ test('does not revalidate the private catalog while a public share is open', asy
 		});
 	});
 
-	await page.goto('/');
-	await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeAttached();
+	await page.goto('/personal');
+	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached();
 	await expect.poll(() => listEntriesCalls).toBeGreaterThan(0);
 	await page.evaluate(() => {
 		const link = document.createElement('a');

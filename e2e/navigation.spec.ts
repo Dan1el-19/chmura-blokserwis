@@ -179,12 +179,12 @@ test('preserves folders, pages and uploads while navigating through the applicat
 		waitForRpc('GetSpaces'),
 		waitForRpc('ListEntries', (body) => !body.parentId)
 	]);
-	await page.goto('/');
+	await page.goto('/personal');
 	for (const response of await startupResponses) {
 		expect(response.status()).toBe(200);
 		expect(response.request().headers()['authorization']).toBe('Bearer e2e-token');
 	}
-	await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeAttached();
+	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached();
 	await expect(page.getByRole('button', { name: 'Nowy folder' })).toBeEnabled();
 	await page.screenshot({ path: `.cache/e2e-files-${testInfo.project.name}.png` });
 	await page.getByRole('button', { name: 'Nowy folder' }).click();
@@ -214,7 +214,7 @@ test('preserves folders, pages and uploads while navigating through the applicat
 	await page.clock.setFixedTime(new Date(Date.now() + 14 * 60_000));
 	await navigate('Main');
 	await expect(page.getByRole('heading', { name: 'Pliki wspólne' })).toBeAttached();
-	await navigate('Pliki');
+	await navigate('Pliki prywatne');
 	await expect(page).toHaveURL(/folder=docs/);
 	await expect(contentFile('Plik 54.txt')).toBeVisible();
 	await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBeGreaterThan(100);
@@ -239,8 +239,8 @@ test('preserves folders, pages and uploads while navigating through the applicat
 		.getByRole('link');
 	expect((await links.allTextContents()).map((text) => text.trim())).toEqual(
 		mobile
-			? ['Pliki', 'Main', 'Kosz', 'Ustawienia']
-			: ['Chmura Blokserwis', 'Pliki', 'Main', 'Kosz', 'Ustawienia']
+			? ['Main', 'Pliki prywatne', 'Kosz', 'Ustawienia']
+			: ['Chmura Blokserwis', 'Main', 'Pliki prywatne', 'Kosz', 'Ustawienia']
 	);
 	if (mobile) {
 		await page.getByRole('button', { name: 'Przełącz menu' }).click();
@@ -265,7 +265,7 @@ test('preserves folders, pages and uploads while navigating through the applicat
 	await expect.poll(() => counts.CompleteUpload).toBe(2);
 	await transfer.getByRole('button', { name: 'Rozwiń', exact: true }).click();
 	await expect(transfer.getByText('Przesłano', { exact: true })).toHaveCount(2);
-	await navigate('Pliki');
+	await navigate('Pliki prywatne');
 	await expect(page).toHaveURL(/folder=docs/);
 	await expect(contentFile('pierwszy.txt')).toBeVisible();
 	await expect(contentFile('drugi.txt')).toBeVisible();

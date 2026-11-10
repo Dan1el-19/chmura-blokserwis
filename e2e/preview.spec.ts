@@ -75,8 +75,8 @@ test('opens a supported image preview and keeps downloading available', async ({
 		})
 	);
 
-	await page.goto('/');
-	await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeAttached();
+	await page.goto('/personal');
+	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached();
 	await page.getByRole('button', { name: 'Podgląd photo.png' }).first().click();
 	const dialog = page.getByRole('dialog', { name: 'photo.png' });
 	await expect(dialog.getByRole('img', { name: 'photo.png' })).toBeVisible();
@@ -90,7 +90,7 @@ test('opens a supported image preview and keeps downloading available', async ({
 	await expect.poll(() => requests.filter((request) => request.method === 'GetDownload')).toHaveLength(1);
 	await page.goBack();
 	await expect(dialog).toBeHidden();
-	await expect(page).toHaveURL('/');
+	await expect(page).toHaveURL('/personal');
 	const separateDownload = page.waitForEvent('download');
 	if (testInfo.project.name === 'mobile') {
 		await page.getByRole('button', { name: 'Akcje dla photo.png' }).click();

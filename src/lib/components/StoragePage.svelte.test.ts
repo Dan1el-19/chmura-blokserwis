@@ -601,13 +601,11 @@ it('disables upload and offers retry when the public upload limit cannot be load
 it('loads the selected private or shared trash after switching the tabs', async () => {
 	const screen = await render(StoragePage, { props: { mode: 'trash' } });
 
-	await expect.poll(() => api.listTrash.mock.calls.at(-1)?.[0]?.spaceId).toBe('personal-space');
-	await screen.getByRole('button', { name: 'Main' }).click();
 	await expect.poll(() => api.listTrash.mock.calls.at(-1)?.[0]?.spaceId).toBe('main-space');
-
-	await screen.getByRole('button', { name: 'Personal' }).click();
+	await screen.getByRole('button', { name: 'Pliki prywatne' }).click();
+	await expect.poll(() => api.listTrash.mock.calls.at(-1)?.[0]?.spaceId).toBe('personal-space');
 	await expect
-		.element(screen.getByRole('button', { name: 'Personal' }))
+		.element(screen.getByRole('button', { name: 'Pliki prywatne' }))
 		.toHaveAttribute('aria-pressed', 'true');
 	expect(api.listTrash).toHaveBeenCalledTimes(2);
 });

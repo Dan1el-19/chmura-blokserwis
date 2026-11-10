@@ -59,7 +59,7 @@ beforeEach(() => {
 		return () => {};
 	});
 	fixture.getMe.mockResolvedValue({});
-	fixture.getSpaces.mockResolvedValue({ spaces: [{ id: 'personal', kind: 2 }] });
+	fixture.getSpaces.mockResolvedValue({ spaces: [{ id: 'main', kind: 1 }, { id: 'personal', kind: 2 }] });
 	fixture.getUploadLimits.mockResolvedValue({ maxUploadBytes: 100_000_000n, canManage: false });
 	fixture.listEntries.mockResolvedValue({ entries: [], nextPageToken: '' });
 	fixture.createUpload.mockResolvedValue({
