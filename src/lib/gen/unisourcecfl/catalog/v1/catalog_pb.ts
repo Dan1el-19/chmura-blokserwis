@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file unisourcecfl/catalog/v1/catalog.proto.
  */
 export const file_unisourcecfl_catalog_v1_catalog: GenFile = /*@__PURE__*/
-  fileDesc("CiV1bmlzb3VyY2VjZmwvY2F0YWxvZy92MS9jYXRhbG9nLnByb3RvEhd1bmlzb3VyY2VjZmwuY2F0YWxvZy52MSLzAQoSTGlzdEVudHJpZXNSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhYKCXBhcmVudF9pZBgCIAEoCUgAiAEBEhEKCXBhZ2Vfc2l6ZRgDIAEoBRISCgpwYWdlX3Rva2VuGAQgASgJEjcKB3NvcnRfYnkYBSABKA4yJi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5DYXRhbG9nU29ydEJ5EkUKDnNvcnRfZGlyZWN0aW9uGAYgASgOMi0udW5pc291cmNlY2ZsLmNhdGFsb2cudjEuQ2F0YWxvZ1NvcnREaXJlY3Rpb25CDAoKX3BhcmVudF9pZCJfChNMaXN0RW50cmllc1Jlc3BvbnNlEi8KB2VudHJpZXMYASADKAsyHi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5FbnRyeRIXCg9uZXh0X3BhZ2VfdG9rZW4YAiABKAkibwoTQ3JlYXRlRm9sZGVyUmVxdWVzdBIQCghzcGFjZV9pZBgBIAEoCRIWCglwYXJlbnRfaWQYAiABKAlIAIgBARIMCgRuYW1lGAMgASgJEhIKCnJlcXVlc3RfaWQYBCABKAlCDAoKX3BhcmVudF9pZCJFChRDcmVhdGVGb2xkZXJSZXNwb25zZRItCgVlbnRyeRgBIAEoCzIeLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkVudHJ5IjUKD0dldEVudHJ5UmVxdWVzdBIQCghzcGFjZV9pZBgBIAEoCRIQCghlbnRyeV9pZBgCIAEoCSJBChBHZXRFbnRyeVJlc3BvbnNlEi0KBWVudHJ5GAEgASgLMh4udW5pc291cmNlY2ZsLmNhdGFsb2cudjEuRW50cnkiYQoSUmVuYW1lRW50cnlSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhAKCGVudHJ5X2lkGAIgASgJEgwKBG5hbWUYAyABKAkSGQoRZXhwZWN0ZWRfcmV2aXNpb24YBCABKA0iRAoTUmVuYW1lRW50cnlSZXNwb25zZRItCgVlbnRyeRgBIAEoCzIeLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkVudHJ5IncKEE1vdmVFbnRyeVJlcXVlc3QSEAoIc3BhY2VfaWQYASABKAkSEAoIZW50cnlfaWQYAiABKAkSFgoJcGFyZW50X2lkGAMgASgJSACIAQESGQoRZXhwZWN0ZWRfcmV2aXNpb24YBCABKA1CDAoKX3BhcmVudF9pZCJCChFNb3ZlRW50cnlSZXNwb25zZRItCgVlbnRyeRgBIAEoCzIeLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkVudHJ5IpgBCglUcmFzaEl0ZW0SLQoFZW50cnkYASABKAsyHi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5FbnRyeRIuCgp0cmFzaGVkX2F0GAIgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIsCghwdXJnZV9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiUgoRVHJhc2hFbnRyeVJlcXVlc3QSEAoIc3BhY2VfaWQYASABKAkSEAoIZW50cnlfaWQYAiABKAkSGQoRZXhwZWN0ZWRfcmV2aXNpb24YAyABKA0iRgoSVHJhc2hFbnRyeVJlc3BvbnNlEjAKBGl0ZW0YASABKAsyIi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5UcmFzaEl0ZW0iSwoQTGlzdFRyYXNoUmVxdWVzdBIQCghzcGFjZV9pZBgBIAEoCRIRCglwYWdlX3NpemUYAiABKAUSEgoKcGFnZV90b2tlbhgDIAEoCSJfChFMaXN0VHJhc2hSZXNwb25zZRIxCgVpdGVtcxgBIAMoCzIiLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlRyYXNoSXRlbRIXCg9uZXh0X3BhZ2VfdG9rZW4YAiABKAkiVAoTUmVzdG9yZUVudHJ5UmVxdWVzdBIQCghzcGFjZV9pZBgBIAEoCRIQCghlbnRyeV9pZBgCIAEoCRIZChFleHBlY3RlZF9yZXZpc2lvbhgDIAEoDSJFChRSZXN0b3JlRW50cnlSZXNwb25zZRItCgVlbnRyeRgBIAEoCzIeLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkVudHJ5IlkKGERlbGV0ZVBlcm1hbmVudGx5UmVxdWVzdBIQCghzcGFjZV9pZBgBIAEoCRIQCghlbnRyeV9pZBgCIAEoCRIZChFleHBlY3RlZF9yZXZpc2lvbhgDIAEoDSItChlEZWxldGVQZXJtYW5lbnRseVJlc3BvbnNlEhAKCGFjY2VwdGVkGAEgASgIIuECCgVFbnRyeRIKCgJpZBgBIAEoCRIQCghzcGFjZV9pZBgCIAEoCRIWCglwYXJlbnRfaWQYAyABKAlIAIgBARIMCgRuYW1lGAQgASgJEjAKBGtpbmQYBSABKA4yIi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5FbnRyeUtpbmQSEAoIcmV2aXNpb24YBiABKA0SFwoKc2l6ZV9ieXRlcxgHIAEoBEgBiAEBEhcKCm1kNV9iYXNlNjQYCCABKAlIAogBARJCChBzdG9yYWdlX2xvY2F0aW9uGAkgASgOMigudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuU3RvcmFnZUxvY2F0aW9uEi4KCmNyZWF0ZWRfYXQYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQgwKCl9wYXJlbnRfaWRCDQoLX3NpemVfYnl0ZXNCDQoLX21kNV9iYXNlNjQiNgoSQ2F0YWxvZ0Vycm9yRGV0YWlsEgwKBGNvZGUYASABKAkSEgoKcmVxdWVzdF9pZBgCIAEoCSISChBHZXRTcGFjZXNSZXF1ZXN0IkMKEUdldFNwYWNlc1Jlc3BvbnNlEi4KBnNwYWNlcxgBIAMoCzIeLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlNwYWNlIkUKBVNwYWNlEgoKAmlkGAEgASgJEjAKBGtpbmQYAiABKA4yIi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5TcGFjZUtpbmQiOAoSR2V0RG93bmxvYWRSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhAKCGVudHJ5X2lkGAIgASgJIlIKE0dldERvd25sb2FkUmVzcG9uc2USCwoDdXJsGAEgASgJEi4KCmV4cGlyZXNfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIjcKEUdldFByZXZpZXdSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhAKCGVudHJ5X2lkGAIgASgJIqYBChJHZXRQcmV2aWV3UmVzcG9uc2USCwoDdXJsGAEgASgJEi4KCmV4cGlyZXNfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhQKDGNvbnRlbnRfdHlwZRgDIAEoCRI9CgptZWRpYV9raW5kGAQgASgOMikudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuUHJldmlld01lZGlhS2luZCLYAgoJU2hhcmVMaW5rEgoKAmlkGAEgASgJEg8KB2FkZHJlc3MYAiABKAkSLgoKY3JlYXRlZF9hdBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoKZXhwaXJlc19hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoKcmV2b2tlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASEgoFbGFiZWwYBiABKAlIAIgBARIUCgxoYXNfcGFzc3dvcmQYByABKAgSGgoNbWF4X2Rvd25sb2FkcxgIIAEoBEgBiAEBEhYKDmRvd25sb2FkX2NvdW50GAkgASgEEhIKCnZpZXdfY291bnQYCiABKAQSEAoIcmV2aXNpb24YCyABKA1CCAoGX2xhYmVsQhAKDl9tYXhfZG93bmxvYWRzIjcKEUxpc3RTaGFyZXNSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhAKCGVudHJ5X2lkGAIgASgJIkgKEkxpc3RTaGFyZXNSZXNwb25zZRIyCgZzaGFyZXMYASADKAsyIi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5TaGFyZUxpbmsiiAIKEkNyZWF0ZVNoYXJlUmVxdWVzdBIQCghzcGFjZV9pZBgBIAEoCRIQCghlbnRyeV9pZBgCIAEoCRIRCgRzbHVnGAMgASgJSACIAQESLgoKZXhwaXJlc19hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASEgoKcmVxdWVzdF9pZBgFIAEoCRISCgVsYWJlbBgGIAEoCUgBiAEBEhUKCHBhc3N3b3JkGAcgASgJSAKIAQESGgoNbWF4X2Rvd25sb2FkcxgIIAEoBEgDiAEBQgcKBV9zbHVnQggKBl9sYWJlbEILCglfcGFzc3dvcmRCEAoOX21heF9kb3dubG9hZHMiSAoTQ3JlYXRlU2hhcmVSZXNwb25zZRIxCgVzaGFyZRgBIAEoCzIiLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlNoYXJlTGluayKkAgoSVXBkYXRlU2hhcmVSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhAKCHNoYXJlX2lkGAIgASgJEhkKEWV4cGVjdGVkX3JldmlzaW9uGAMgASgNEi8KC3VwZGF0ZV9tYXNrGAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLkZpZWxkTWFzaxISCgVsYWJlbBgFIAEoCUgAiAEBEhUKCHBhc3N3b3JkGAYgASgJSAGIAQESLgoKZXhwaXJlc19hdBgHIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASGgoNbWF4X2Rvd25sb2FkcxgIIAEoBEgCiAEBQggKBl9sYWJlbEILCglfcGFzc3dvcmRCEAoOX21heF9kb3dubG9hZHMiSAoTVXBkYXRlU2hhcmVSZXNwb25zZRIxCgVzaGFyZRgBIAEoCzIiLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlNoYXJlTGluayI4ChJSZXZva2VTaGFyZVJlcXVlc3QSEAoIc3BhY2VfaWQYASABKAkSEAoIc2hhcmVfaWQYAiABKAkiSAoTUmV2b2tlU2hhcmVSZXNwb25zZRIxCgVzaGFyZRgBIAEoCzIiLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlNoYXJlTGluayqEAQoNQ2F0YWxvZ1NvcnRCeRIfChtDQVRBTE9HX1NPUlRfQllfVU5TUEVDSUZJRUQQABIYChRDQVRBTE9HX1NPUlRfQllfTkFNRRABEh4KGkNBVEFMT0dfU09SVF9CWV9DUkVBVEVEX0FUEAISGAoUQ0FUQUxPR19TT1JUX0JZX1NJWkUQAyp/ChRDYXRhbG9nU29ydERpcmVjdGlvbhImCiJDQVRBTE9HX1NPUlRfRElSRUNUSU9OX1VOU1BFQ0lGSUVEEAASHgoaQ0FUQUxPR19TT1JUX0RJUkVDVElPTl9BU0MQARIfChtDQVRBTE9HX1NPUlRfRElSRUNUSU9OX0RFU0MQAippCg9TdG9yYWdlTG9jYXRpb24SIAocU1RPUkFHRV9MT0NBVElPTl9VTlNQRUNJRklFRBAAEhcKE1NUT1JBR0VfTE9DQVRJT05fUjIQARIbChdTVE9SQUdFX0xPQ0FUSU9OX1JVU1RGUxACKlMKCUVudHJ5S2luZBIaChZFTlRSWV9LSU5EX1VOU1BFQ0lGSUVEEAASFQoRRU5UUllfS0lORF9GT0xERVIQARITCg9FTlRSWV9LSU5EX0ZJTEUQAipWCglTcGFjZUtpbmQSGgoWU1BBQ0VfS0lORF9VTlNQRUNJRklFRBAAEhUKEVNQQUNFX0tJTkRfU0hBUkVEEAESFgoSU1BBQ0VfS0lORF9QUklWQVRFEAIqkAEKEFByZXZpZXdNZWRpYUtpbmQSIgoeUFJFVklFV19NRURJQV9LSU5EX1VOU1BFQ0lGSUVEEAASHAoYUFJFVklFV19NRURJQV9LSU5EX0lNQUdFEAESHAoYUFJFVklFV19NRURJQV9LSU5EX0FVRElPEAISHAoYUFJFVklFV19NRURJQV9LSU5EX1ZJREVPEAMyywYKDkNhdGFsb2dTZXJ2aWNlEmgKC0dldERvd25sb2FkEisudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuR2V0RG93bmxvYWRSZXF1ZXN0GiwudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuR2V0RG93bmxvYWRSZXNwb25zZRJlCgpHZXRQcmV2aWV3EioudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuR2V0UHJldmlld1JlcXVlc3QaKy51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5HZXRQcmV2aWV3UmVzcG9uc2USYgoJR2V0U3BhY2VzEikudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuR2V0U3BhY2VzUmVxdWVzdBoqLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkdldFNwYWNlc1Jlc3BvbnNlEmgKC0xpc3RFbnRyaWVzEisudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuTGlzdEVudHJpZXNSZXF1ZXN0GiwudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuTGlzdEVudHJpZXNSZXNwb25zZRJrCgxDcmVhdGVGb2xkZXISLC51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5DcmVhdGVGb2xkZXJSZXF1ZXN0Gi0udW5pc291cmNlY2ZsLmNhdGFsb2cudjEuQ3JlYXRlRm9sZGVyUmVzcG9uc2USXwoIR2V0RW50cnkSKC51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5HZXRFbnRyeVJlcXVlc3QaKS51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5HZXRFbnRyeVJlc3BvbnNlEmgKC1JlbmFtZUVudHJ5EisudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuUmVuYW1lRW50cnlSZXF1ZXN0GiwudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuUmVuYW1lRW50cnlSZXNwb25zZRJiCglNb3ZlRW50cnkSKS51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5Nb3ZlRW50cnlSZXF1ZXN0GioudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuTW92ZUVudHJ5UmVzcG9uc2UywgMKDFRyYXNoU2VydmljZRJlCgpUcmFzaEVudHJ5EioudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuVHJhc2hFbnRyeVJlcXVlc3QaKy51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5UcmFzaEVudHJ5UmVzcG9uc2USYgoJTGlzdFRyYXNoEikudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuTGlzdFRyYXNoUmVxdWVzdBoqLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkxpc3RUcmFzaFJlc3BvbnNlEmsKDFJlc3RvcmVFbnRyeRIsLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlJlc3RvcmVFbnRyeVJlcXVlc3QaLS51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5SZXN0b3JlRW50cnlSZXNwb25zZRJ6ChFEZWxldGVQZXJtYW5lbnRseRIxLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkRlbGV0ZVBlcm1hbmVudGx5UmVxdWVzdBoyLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkRlbGV0ZVBlcm1hbmVudGx5UmVzcG9uc2UyswMKDFNoYXJlU2VydmljZRJlCgpMaXN0U2hhcmVzEioudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuTGlzdFNoYXJlc1JlcXVlc3QaKy51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5MaXN0U2hhcmVzUmVzcG9uc2USaAoLQ3JlYXRlU2hhcmUSKy51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5DcmVhdGVTaGFyZVJlcXVlc3QaLC51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5DcmVhdGVTaGFyZVJlc3BvbnNlEmgKC1VwZGF0ZVNoYXJlEisudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuVXBkYXRlU2hhcmVSZXF1ZXN0GiwudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuVXBkYXRlU2hhcmVSZXNwb25zZRJoCgtSZXZva2VTaGFyZRIrLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlJldm9rZVNoYXJlUmVxdWVzdBosLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlJldm9rZVNoYXJlUmVzcG9uc2ViBnByb3RvMw", [file_google_protobuf_field_mask, file_google_protobuf_timestamp]);
+  fileDesc("CiV1bmlzb3VyY2VjZmwvY2F0YWxvZy92MS9jYXRhbG9nLnByb3RvEhd1bmlzb3VyY2VjZmwuY2F0YWxvZy52MSKwAgoSTGlzdEVudHJpZXNSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhYKCXBhcmVudF9pZBgCIAEoCUgAiAEBEhEKCXBhZ2Vfc2l6ZRgDIAEoBRISCgpwYWdlX3Rva2VuGAQgASgJEjcKB3NvcnRfYnkYBSABKA4yJi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5DYXRhbG9nU29ydEJ5EkUKDnNvcnRfZGlyZWN0aW9uGAYgASgOMi0udW5pc291cmNlY2ZsLmNhdGFsb2cudjEuQ2F0YWxvZ1NvcnREaXJlY3Rpb24SOwoJZmlsZV90eXBlGAcgASgOMigudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuQ2F0YWxvZ0ZpbGVUeXBlQgwKCl9wYXJlbnRfaWQiXwoTTGlzdEVudHJpZXNSZXNwb25zZRIvCgdlbnRyaWVzGAEgAygLMh4udW5pc291cmNlY2ZsLmNhdGFsb2cudjEuRW50cnkSFwoPbmV4dF9wYWdlX3Rva2VuGAIgASgJIpsCChRTZWFyY2hFbnRyaWVzUmVxdWVzdBIQCghzcGFjZV9pZBgBIAEoCRINCgVxdWVyeRgCIAEoCRIRCglwYWdlX3NpemUYAyABKAUSEgoKcGFnZV90b2tlbhgEIAEoCRI3Cgdzb3J0X2J5GAUgASgOMiYudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuQ2F0YWxvZ1NvcnRCeRJFCg5zb3J0X2RpcmVjdGlvbhgGIAEoDjItLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkNhdGFsb2dTb3J0RGlyZWN0aW9uEjsKCWZpbGVfdHlwZRgHIAEoDjIoLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkNhdGFsb2dGaWxlVHlwZSJwChFTZWFyY2hFbnRyeVJlc3VsdBItCgVlbnRyeRgBIAEoCzIeLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkVudHJ5EiwKBHBhdGgYAiADKAsyHi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5FbnRyeSJtChVTZWFyY2hFbnRyaWVzUmVzcG9uc2USOwoHcmVzdWx0cxgBIAMoCzIqLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlNlYXJjaEVudHJ5UmVzdWx0EhcKD25leHRfcGFnZV90b2tlbhgCIAEoCSJvChNDcmVhdGVGb2xkZXJSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhYKCXBhcmVudF9pZBgCIAEoCUgAiAEBEgwKBG5hbWUYAyABKAkSEgoKcmVxdWVzdF9pZBgEIAEoCUIMCgpfcGFyZW50X2lkIkUKFENyZWF0ZUZvbGRlclJlc3BvbnNlEi0KBWVudHJ5GAEgASgLMh4udW5pc291cmNlY2ZsLmNhdGFsb2cudjEuRW50cnkiNQoPR2V0RW50cnlSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhAKCGVudHJ5X2lkGAIgASgJIkEKEEdldEVudHJ5UmVzcG9uc2USLQoFZW50cnkYASABKAsyHi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5FbnRyeSJhChJSZW5hbWVFbnRyeVJlcXVlc3QSEAoIc3BhY2VfaWQYASABKAkSEAoIZW50cnlfaWQYAiABKAkSDAoEbmFtZRgDIAEoCRIZChFleHBlY3RlZF9yZXZpc2lvbhgEIAEoDSJEChNSZW5hbWVFbnRyeVJlc3BvbnNlEi0KBWVudHJ5GAEgASgLMh4udW5pc291cmNlY2ZsLmNhdGFsb2cudjEuRW50cnkidwoQTW92ZUVudHJ5UmVxdWVzdBIQCghzcGFjZV9pZBgBIAEoCRIQCghlbnRyeV9pZBgCIAEoCRIWCglwYXJlbnRfaWQYAyABKAlIAIgBARIZChFleHBlY3RlZF9yZXZpc2lvbhgEIAEoDUIMCgpfcGFyZW50X2lkIkIKEU1vdmVFbnRyeVJlc3BvbnNlEi0KBWVudHJ5GAEgASgLMh4udW5pc291cmNlY2ZsLmNhdGFsb2cudjEuRW50cnkimAEKCVRyYXNoSXRlbRItCgVlbnRyeRgBIAEoCzIeLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkVudHJ5Ei4KCnRyYXNoZWRfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEiwKCHB1cmdlX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJSChFUcmFzaEVudHJ5UmVxdWVzdBIQCghzcGFjZV9pZBgBIAEoCRIQCghlbnRyeV9pZBgCIAEoCRIZChFleHBlY3RlZF9yZXZpc2lvbhgDIAEoDSJGChJUcmFzaEVudHJ5UmVzcG9uc2USMAoEaXRlbRgBIAEoCzIiLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlRyYXNoSXRlbSJLChBMaXN0VHJhc2hSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhEKCXBhZ2Vfc2l6ZRgCIAEoBRISCgpwYWdlX3Rva2VuGAMgASgJIl8KEUxpc3RUcmFzaFJlc3BvbnNlEjEKBWl0ZW1zGAEgAygLMiIudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuVHJhc2hJdGVtEhcKD25leHRfcGFnZV90b2tlbhgCIAEoCSJUChNSZXN0b3JlRW50cnlSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhAKCGVudHJ5X2lkGAIgASgJEhkKEWV4cGVjdGVkX3JldmlzaW9uGAMgASgNIkUKFFJlc3RvcmVFbnRyeVJlc3BvbnNlEi0KBWVudHJ5GAEgASgLMh4udW5pc291cmNlY2ZsLmNhdGFsb2cudjEuRW50cnkiWQoYRGVsZXRlUGVybWFuZW50bHlSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhAKCGVudHJ5X2lkGAIgASgJEhkKEWV4cGVjdGVkX3JldmlzaW9uGAMgASgNIi0KGURlbGV0ZVBlcm1hbmVudGx5UmVzcG9uc2USEAoIYWNjZXB0ZWQYASABKAgikgMKBUVudHJ5EgoKAmlkGAEgASgJEhAKCHNwYWNlX2lkGAIgASgJEhYKCXBhcmVudF9pZBgDIAEoCUgAiAEBEgwKBG5hbWUYBCABKAkSMAoEa2luZBgFIAEoDjIiLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkVudHJ5S2luZBIQCghyZXZpc2lvbhgGIAEoDRIXCgpzaXplX2J5dGVzGAcgASgESAGIAQESFwoKbWQ1X2Jhc2U2NBgIIAEoCUgCiAEBEkIKEHN0b3JhZ2VfbG9jYXRpb24YCSABKA4yKC51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5TdG9yYWdlTG9jYXRpb24SLgoKY3JlYXRlZF9hdBgKIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLwoLbW9kaWZpZWRfYXQYCyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQgwKCl9wYXJlbnRfaWRCDQoLX3NpemVfYnl0ZXNCDQoLX21kNV9iYXNlNjQiNgoSQ2F0YWxvZ0Vycm9yRGV0YWlsEgwKBGNvZGUYASABKAkSEgoKcmVxdWVzdF9pZBgCIAEoCSISChBHZXRTcGFjZXNSZXF1ZXN0IkMKEUdldFNwYWNlc1Jlc3BvbnNlEi4KBnNwYWNlcxgBIAMoCzIeLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlNwYWNlIkUKBVNwYWNlEgoKAmlkGAEgASgJEjAKBGtpbmQYAiABKA4yIi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5TcGFjZUtpbmQiOAoSR2V0RG93bmxvYWRSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhAKCGVudHJ5X2lkGAIgASgJIlIKE0dldERvd25sb2FkUmVzcG9uc2USCwoDdXJsGAEgASgJEi4KCmV4cGlyZXNfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIjcKEUdldFByZXZpZXdSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhAKCGVudHJ5X2lkGAIgASgJIroBChJHZXRQcmV2aWV3UmVzcG9uc2USCwoDdXJsGAEgASgJEi4KCmV4cGlyZXNfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhQKDGNvbnRlbnRfdHlwZRgDIAEoCRI9CgptZWRpYV9raW5kGAQgASgOMikudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuUHJldmlld01lZGlhS2luZBISCgpjb250ZW50X2lkGAUgASgJItgCCglTaGFyZUxpbmsSCgoCaWQYASABKAkSDwoHYWRkcmVzcxgCIAEoCRIuCgpjcmVhdGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgpleHBpcmVzX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgpyZXZva2VkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBISCgVsYWJlbBgGIAEoCUgAiAEBEhQKDGhhc19wYXNzd29yZBgHIAEoCBIaCg1tYXhfZG93bmxvYWRzGAggASgESAGIAQESFgoOZG93bmxvYWRfY291bnQYCSABKAQSEgoKdmlld19jb3VudBgKIAEoBBIQCghyZXZpc2lvbhgLIAEoDUIICgZfbGFiZWxCEAoOX21heF9kb3dubG9hZHMiNwoRTGlzdFNoYXJlc1JlcXVlc3QSEAoIc3BhY2VfaWQYASABKAkSEAoIZW50cnlfaWQYAiABKAkiSAoSTGlzdFNoYXJlc1Jlc3BvbnNlEjIKBnNoYXJlcxgBIAMoCzIiLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlNoYXJlTGluayKIAgoSQ3JlYXRlU2hhcmVSZXF1ZXN0EhAKCHNwYWNlX2lkGAEgASgJEhAKCGVudHJ5X2lkGAIgASgJEhEKBHNsdWcYAyABKAlIAIgBARIuCgpleHBpcmVzX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBISCgpyZXF1ZXN0X2lkGAUgASgJEhIKBWxhYmVsGAYgASgJSAGIAQESFQoIcGFzc3dvcmQYByABKAlIAogBARIaCg1tYXhfZG93bmxvYWRzGAggASgESAOIAQFCBwoFX3NsdWdCCAoGX2xhYmVsQgsKCV9wYXNzd29yZEIQCg5fbWF4X2Rvd25sb2FkcyJIChNDcmVhdGVTaGFyZVJlc3BvbnNlEjEKBXNoYXJlGAEgASgLMiIudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuU2hhcmVMaW5rIqQCChJVcGRhdGVTaGFyZVJlcXVlc3QSEAoIc3BhY2VfaWQYASABKAkSEAoIc2hhcmVfaWQYAiABKAkSGQoRZXhwZWN0ZWRfcmV2aXNpb24YAyABKA0SLwoLdXBkYXRlX21hc2sYBCABKAsyGi5nb29nbGUucHJvdG9idWYuRmllbGRNYXNrEhIKBWxhYmVsGAUgASgJSACIAQESFQoIcGFzc3dvcmQYBiABKAlIAYgBARIuCgpleHBpcmVzX2F0GAcgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIaCg1tYXhfZG93bmxvYWRzGAggASgESAKIAQFCCAoGX2xhYmVsQgsKCV9wYXNzd29yZEIQCg5fbWF4X2Rvd25sb2FkcyJIChNVcGRhdGVTaGFyZVJlc3BvbnNlEjEKBXNoYXJlGAEgASgLMiIudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuU2hhcmVMaW5rIjgKElJldm9rZVNoYXJlUmVxdWVzdBIQCghzcGFjZV9pZBgBIAEoCRIQCghzaGFyZV9pZBgCIAEoCSJIChNSZXZva2VTaGFyZVJlc3BvbnNlEjEKBXNoYXJlGAEgASgLMiIudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuU2hhcmVMaW5rKqUBCg1DYXRhbG9nU29ydEJ5Eh8KG0NBVEFMT0dfU09SVF9CWV9VTlNQRUNJRklFRBAAEhgKFENBVEFMT0dfU09SVF9CWV9OQU1FEAESHgoaQ0FUQUxPR19TT1JUX0JZX0NSRUFURURfQVQQAhIYChRDQVRBTE9HX1NPUlRfQllfU0laRRADEh8KG0NBVEFMT0dfU09SVF9CWV9NT0RJRklFRF9BVBAEKt8BCg9DYXRhbG9nRmlsZVR5cGUSIQodQ0FUQUxPR19GSUxFX1RZUEVfVU5TUEVDSUZJRUQQABIbChdDQVRBTE9HX0ZJTEVfVFlQRV9JTUFHRRABEhkKFUNBVEFMT0dfRklMRV9UWVBFX1BERhACEhsKF0NBVEFMT0dfRklMRV9UWVBFX0FVRElPEAMSGwoXQ0FUQUxPR19GSUxFX1RZUEVfVklERU8QBBIaChZDQVRBTE9HX0ZJTEVfVFlQRV9URVhUEAUSGwoXQ0FUQUxPR19GSUxFX1RZUEVfT1RIRVIQBip/ChRDYXRhbG9nU29ydERpcmVjdGlvbhImCiJDQVRBTE9HX1NPUlRfRElSRUNUSU9OX1VOU1BFQ0lGSUVEEAASHgoaQ0FUQUxPR19TT1JUX0RJUkVDVElPTl9BU0MQARIfChtDQVRBTE9HX1NPUlRfRElSRUNUSU9OX0RFU0MQAippCg9TdG9yYWdlTG9jYXRpb24SIAocU1RPUkFHRV9MT0NBVElPTl9VTlNQRUNJRklFRBAAEhcKE1NUT1JBR0VfTE9DQVRJT05fUjIQARIbChdTVE9SQUdFX0xPQ0FUSU9OX1JVU1RGUxACKlMKCUVudHJ5S2luZBIaChZFTlRSWV9LSU5EX1VOU1BFQ0lGSUVEEAASFQoRRU5UUllfS0lORF9GT0xERVIQARITCg9FTlRSWV9LSU5EX0ZJTEUQAipWCglTcGFjZUtpbmQSGgoWU1BBQ0VfS0lORF9VTlNQRUNJRklFRBAAEhUKEVNQQUNFX0tJTkRfU0hBUkVEEAESFgoSU1BBQ0VfS0lORF9QUklWQVRFEAIqyQEKEFByZXZpZXdNZWRpYUtpbmQSIgoeUFJFVklFV19NRURJQV9LSU5EX1VOU1BFQ0lGSUVEEAASHAoYUFJFVklFV19NRURJQV9LSU5EX0lNQUdFEAESHAoYUFJFVklFV19NRURJQV9LSU5EX0FVRElPEAISHAoYUFJFVklFV19NRURJQV9LSU5EX1ZJREVPEAMSGgoWUFJFVklFV19NRURJQV9LSU5EX1BERhAEEhsKF1BSRVZJRVdfTUVESUFfS0lORF9URVhUEAUyuwcKDkNhdGFsb2dTZXJ2aWNlEmgKC0dldERvd25sb2FkEisudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuR2V0RG93bmxvYWRSZXF1ZXN0GiwudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuR2V0RG93bmxvYWRSZXNwb25zZRJlCgpHZXRQcmV2aWV3EioudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuR2V0UHJldmlld1JlcXVlc3QaKy51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5HZXRQcmV2aWV3UmVzcG9uc2USYgoJR2V0U3BhY2VzEikudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuR2V0U3BhY2VzUmVxdWVzdBoqLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkdldFNwYWNlc1Jlc3BvbnNlEmgKC0xpc3RFbnRyaWVzEisudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuTGlzdEVudHJpZXNSZXF1ZXN0GiwudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuTGlzdEVudHJpZXNSZXNwb25zZRJuCg1TZWFyY2hFbnRyaWVzEi0udW5pc291cmNlY2ZsLmNhdGFsb2cudjEuU2VhcmNoRW50cmllc1JlcXVlc3QaLi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5TZWFyY2hFbnRyaWVzUmVzcG9uc2USawoMQ3JlYXRlRm9sZGVyEiwudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuQ3JlYXRlRm9sZGVyUmVxdWVzdBotLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkNyZWF0ZUZvbGRlclJlc3BvbnNlEl8KCEdldEVudHJ5EigudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuR2V0RW50cnlSZXF1ZXN0GikudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuR2V0RW50cnlSZXNwb25zZRJoCgtSZW5hbWVFbnRyeRIrLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlJlbmFtZUVudHJ5UmVxdWVzdBosLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlJlbmFtZUVudHJ5UmVzcG9uc2USYgoJTW92ZUVudHJ5EikudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuTW92ZUVudHJ5UmVxdWVzdBoqLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLk1vdmVFbnRyeVJlc3BvbnNlMsIDCgxUcmFzaFNlcnZpY2USZQoKVHJhc2hFbnRyeRIqLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlRyYXNoRW50cnlSZXF1ZXN0GisudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuVHJhc2hFbnRyeVJlc3BvbnNlEmIKCUxpc3RUcmFzaBIpLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkxpc3RUcmFzaFJlcXVlc3QaKi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5MaXN0VHJhc2hSZXNwb25zZRJrCgxSZXN0b3JlRW50cnkSLC51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5SZXN0b3JlRW50cnlSZXF1ZXN0Gi0udW5pc291cmNlY2ZsLmNhdGFsb2cudjEuUmVzdG9yZUVudHJ5UmVzcG9uc2USegoRRGVsZXRlUGVybWFuZW50bHkSMS51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5EZWxldGVQZXJtYW5lbnRseVJlcXVlc3QaMi51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5EZWxldGVQZXJtYW5lbnRseVJlc3BvbnNlMrMDCgxTaGFyZVNlcnZpY2USZQoKTGlzdFNoYXJlcxIqLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLkxpc3RTaGFyZXNSZXF1ZXN0GisudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuTGlzdFNoYXJlc1Jlc3BvbnNlEmgKC0NyZWF0ZVNoYXJlEisudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuQ3JlYXRlU2hhcmVSZXF1ZXN0GiwudW5pc291cmNlY2ZsLmNhdGFsb2cudjEuQ3JlYXRlU2hhcmVSZXNwb25zZRJoCgtVcGRhdGVTaGFyZRIrLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlVwZGF0ZVNoYXJlUmVxdWVzdBosLnVuaXNvdXJjZWNmbC5jYXRhbG9nLnYxLlVwZGF0ZVNoYXJlUmVzcG9uc2USaAoLUmV2b2tlU2hhcmUSKy51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5SZXZva2VTaGFyZVJlcXVlc3QaLC51bmlzb3VyY2VjZmwuY2F0YWxvZy52MS5SZXZva2VTaGFyZVJlc3BvbnNlYgZwcm90bzM", [file_google_protobuf_field_mask, file_google_protobuf_timestamp]);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.ListEntriesRequest
@@ -47,6 +47,11 @@ export type ListEntriesRequest = Message<"unisourcecfl.catalog.v1.ListEntriesReq
    * @generated from field: unisourcecfl.catalog.v1.CatalogSortDirection sort_direction = 6;
    */
   sortDirection: CatalogSortDirection;
+
+  /**
+   * @generated from field: unisourcecfl.catalog.v1.CatalogFileType file_type = 7;
+   */
+  fileType: CatalogFileType;
 };
 
 /**
@@ -79,6 +84,97 @@ export const ListEntriesResponseSchema: GenMessage<ListEntriesResponse> = /*@__P
   messageDesc(file_unisourcecfl_catalog_v1_catalog, 1);
 
 /**
+ * @generated from message unisourcecfl.catalog.v1.SearchEntriesRequest
+ */
+export type SearchEntriesRequest = Message<"unisourcecfl.catalog.v1.SearchEntriesRequest"> & {
+  /**
+   * @generated from field: string space_id = 1;
+   */
+  spaceId: string;
+
+  /**
+   * @generated from field: string query = 2;
+   */
+  query: string;
+
+  /**
+   * @generated from field: int32 page_size = 3;
+   */
+  pageSize: number;
+
+  /**
+   * @generated from field: string page_token = 4;
+   */
+  pageToken: string;
+
+  /**
+   * @generated from field: unisourcecfl.catalog.v1.CatalogSortBy sort_by = 5;
+   */
+  sortBy: CatalogSortBy;
+
+  /**
+   * @generated from field: unisourcecfl.catalog.v1.CatalogSortDirection sort_direction = 6;
+   */
+  sortDirection: CatalogSortDirection;
+
+  /**
+   * @generated from field: unisourcecfl.catalog.v1.CatalogFileType file_type = 7;
+   */
+  fileType: CatalogFileType;
+};
+
+/**
+ * Describes the message unisourcecfl.catalog.v1.SearchEntriesRequest.
+ * Use `create(SearchEntriesRequestSchema)` to create a new message.
+ */
+export const SearchEntriesRequestSchema: GenMessage<SearchEntriesRequest> = /*@__PURE__*/
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 2);
+
+/**
+ * @generated from message unisourcecfl.catalog.v1.SearchEntryResult
+ */
+export type SearchEntryResult = Message<"unisourcecfl.catalog.v1.SearchEntryResult"> & {
+  /**
+   * @generated from field: unisourcecfl.catalog.v1.Entry entry = 1;
+   */
+  entry?: Entry | undefined;
+
+  /**
+   * @generated from field: repeated unisourcecfl.catalog.v1.Entry path = 2;
+   */
+  path: Entry[];
+};
+
+/**
+ * Describes the message unisourcecfl.catalog.v1.SearchEntryResult.
+ * Use `create(SearchEntryResultSchema)` to create a new message.
+ */
+export const SearchEntryResultSchema: GenMessage<SearchEntryResult> = /*@__PURE__*/
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 3);
+
+/**
+ * @generated from message unisourcecfl.catalog.v1.SearchEntriesResponse
+ */
+export type SearchEntriesResponse = Message<"unisourcecfl.catalog.v1.SearchEntriesResponse"> & {
+  /**
+   * @generated from field: repeated unisourcecfl.catalog.v1.SearchEntryResult results = 1;
+   */
+  results: SearchEntryResult[];
+
+  /**
+   * @generated from field: string next_page_token = 2;
+   */
+  nextPageToken: string;
+};
+
+/**
+ * Describes the message unisourcecfl.catalog.v1.SearchEntriesResponse.
+ * Use `create(SearchEntriesResponseSchema)` to create a new message.
+ */
+export const SearchEntriesResponseSchema: GenMessage<SearchEntriesResponse> = /*@__PURE__*/
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 4);
+
+/**
  * @generated from message unisourcecfl.catalog.v1.CreateFolderRequest
  */
 export type CreateFolderRequest = Message<"unisourcecfl.catalog.v1.CreateFolderRequest"> & {
@@ -108,7 +204,7 @@ export type CreateFolderRequest = Message<"unisourcecfl.catalog.v1.CreateFolderR
  * Use `create(CreateFolderRequestSchema)` to create a new message.
  */
 export const CreateFolderRequestSchema: GenMessage<CreateFolderRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 2);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 5);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.CreateFolderResponse
@@ -125,7 +221,7 @@ export type CreateFolderResponse = Message<"unisourcecfl.catalog.v1.CreateFolder
  * Use `create(CreateFolderResponseSchema)` to create a new message.
  */
 export const CreateFolderResponseSchema: GenMessage<CreateFolderResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 3);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 6);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.GetEntryRequest
@@ -147,7 +243,7 @@ export type GetEntryRequest = Message<"unisourcecfl.catalog.v1.GetEntryRequest">
  * Use `create(GetEntryRequestSchema)` to create a new message.
  */
 export const GetEntryRequestSchema: GenMessage<GetEntryRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 4);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 7);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.GetEntryResponse
@@ -164,7 +260,7 @@ export type GetEntryResponse = Message<"unisourcecfl.catalog.v1.GetEntryResponse
  * Use `create(GetEntryResponseSchema)` to create a new message.
  */
 export const GetEntryResponseSchema: GenMessage<GetEntryResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 5);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 8);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.RenameEntryRequest
@@ -196,7 +292,7 @@ export type RenameEntryRequest = Message<"unisourcecfl.catalog.v1.RenameEntryReq
  * Use `create(RenameEntryRequestSchema)` to create a new message.
  */
 export const RenameEntryRequestSchema: GenMessage<RenameEntryRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 6);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 9);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.RenameEntryResponse
@@ -213,7 +309,7 @@ export type RenameEntryResponse = Message<"unisourcecfl.catalog.v1.RenameEntryRe
  * Use `create(RenameEntryResponseSchema)` to create a new message.
  */
 export const RenameEntryResponseSchema: GenMessage<RenameEntryResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 7);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 10);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.MoveEntryRequest
@@ -245,7 +341,7 @@ export type MoveEntryRequest = Message<"unisourcecfl.catalog.v1.MoveEntryRequest
  * Use `create(MoveEntryRequestSchema)` to create a new message.
  */
 export const MoveEntryRequestSchema: GenMessage<MoveEntryRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 8);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 11);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.MoveEntryResponse
@@ -262,7 +358,7 @@ export type MoveEntryResponse = Message<"unisourcecfl.catalog.v1.MoveEntryRespon
  * Use `create(MoveEntryResponseSchema)` to create a new message.
  */
 export const MoveEntryResponseSchema: GenMessage<MoveEntryResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 9);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 12);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.TrashItem
@@ -289,7 +385,7 @@ export type TrashItem = Message<"unisourcecfl.catalog.v1.TrashItem"> & {
  * Use `create(TrashItemSchema)` to create a new message.
  */
 export const TrashItemSchema: GenMessage<TrashItem> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 10);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 13);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.TrashEntryRequest
@@ -316,7 +412,7 @@ export type TrashEntryRequest = Message<"unisourcecfl.catalog.v1.TrashEntryReque
  * Use `create(TrashEntryRequestSchema)` to create a new message.
  */
 export const TrashEntryRequestSchema: GenMessage<TrashEntryRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 11);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 14);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.TrashEntryResponse
@@ -333,7 +429,7 @@ export type TrashEntryResponse = Message<"unisourcecfl.catalog.v1.TrashEntryResp
  * Use `create(TrashEntryResponseSchema)` to create a new message.
  */
 export const TrashEntryResponseSchema: GenMessage<TrashEntryResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 12);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 15);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.ListTrashRequest
@@ -360,7 +456,7 @@ export type ListTrashRequest = Message<"unisourcecfl.catalog.v1.ListTrashRequest
  * Use `create(ListTrashRequestSchema)` to create a new message.
  */
 export const ListTrashRequestSchema: GenMessage<ListTrashRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 13);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 16);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.ListTrashResponse
@@ -382,7 +478,7 @@ export type ListTrashResponse = Message<"unisourcecfl.catalog.v1.ListTrashRespon
  * Use `create(ListTrashResponseSchema)` to create a new message.
  */
 export const ListTrashResponseSchema: GenMessage<ListTrashResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 14);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 17);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.RestoreEntryRequest
@@ -409,7 +505,7 @@ export type RestoreEntryRequest = Message<"unisourcecfl.catalog.v1.RestoreEntryR
  * Use `create(RestoreEntryRequestSchema)` to create a new message.
  */
 export const RestoreEntryRequestSchema: GenMessage<RestoreEntryRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 15);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 18);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.RestoreEntryResponse
@@ -426,7 +522,7 @@ export type RestoreEntryResponse = Message<"unisourcecfl.catalog.v1.RestoreEntry
  * Use `create(RestoreEntryResponseSchema)` to create a new message.
  */
 export const RestoreEntryResponseSchema: GenMessage<RestoreEntryResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 16);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 19);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.DeletePermanentlyRequest
@@ -453,7 +549,7 @@ export type DeletePermanentlyRequest = Message<"unisourcecfl.catalog.v1.DeletePe
  * Use `create(DeletePermanentlyRequestSchema)` to create a new message.
  */
 export const DeletePermanentlyRequestSchema: GenMessage<DeletePermanentlyRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 17);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 20);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.DeletePermanentlyResponse
@@ -470,7 +566,7 @@ export type DeletePermanentlyResponse = Message<"unisourcecfl.catalog.v1.DeleteP
  * Use `create(DeletePermanentlyResponseSchema)` to create a new message.
  */
 export const DeletePermanentlyResponseSchema: GenMessage<DeletePermanentlyResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 18);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 21);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.Entry
@@ -525,6 +621,11 @@ export type Entry = Message<"unisourcecfl.catalog.v1.Entry"> & {
    * @generated from field: google.protobuf.Timestamp created_at = 10;
    */
   createdAt?: Timestamp | undefined;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp modified_at = 11;
+   */
+  modifiedAt?: Timestamp | undefined;
 };
 
 /**
@@ -532,7 +633,7 @@ export type Entry = Message<"unisourcecfl.catalog.v1.Entry"> & {
  * Use `create(EntrySchema)` to create a new message.
  */
 export const EntrySchema: GenMessage<Entry> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 19);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 22);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.CatalogErrorDetail
@@ -554,7 +655,7 @@ export type CatalogErrorDetail = Message<"unisourcecfl.catalog.v1.CatalogErrorDe
  * Use `create(CatalogErrorDetailSchema)` to create a new message.
  */
 export const CatalogErrorDetailSchema: GenMessage<CatalogErrorDetail> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 20);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 23);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.GetSpacesRequest
@@ -567,7 +668,7 @@ export type GetSpacesRequest = Message<"unisourcecfl.catalog.v1.GetSpacesRequest
  * Use `create(GetSpacesRequestSchema)` to create a new message.
  */
 export const GetSpacesRequestSchema: GenMessage<GetSpacesRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 21);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 24);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.GetSpacesResponse
@@ -584,7 +685,7 @@ export type GetSpacesResponse = Message<"unisourcecfl.catalog.v1.GetSpacesRespon
  * Use `create(GetSpacesResponseSchema)` to create a new message.
  */
 export const GetSpacesResponseSchema: GenMessage<GetSpacesResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 22);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 25);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.Space
@@ -606,7 +707,7 @@ export type Space = Message<"unisourcecfl.catalog.v1.Space"> & {
  * Use `create(SpaceSchema)` to create a new message.
  */
 export const SpaceSchema: GenMessage<Space> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 23);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 26);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.GetDownloadRequest
@@ -628,7 +729,7 @@ export type GetDownloadRequest = Message<"unisourcecfl.catalog.v1.GetDownloadReq
  * Use `create(GetDownloadRequestSchema)` to create a new message.
  */
 export const GetDownloadRequestSchema: GenMessage<GetDownloadRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 24);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 27);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.GetDownloadResponse
@@ -650,7 +751,7 @@ export type GetDownloadResponse = Message<"unisourcecfl.catalog.v1.GetDownloadRe
  * Use `create(GetDownloadResponseSchema)` to create a new message.
  */
 export const GetDownloadResponseSchema: GenMessage<GetDownloadResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 25);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 28);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.GetPreviewRequest
@@ -672,7 +773,7 @@ export type GetPreviewRequest = Message<"unisourcecfl.catalog.v1.GetPreviewReque
  * Use `create(GetPreviewRequestSchema)` to create a new message.
  */
 export const GetPreviewRequestSchema: GenMessage<GetPreviewRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 26);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 29);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.GetPreviewResponse
@@ -697,6 +798,11 @@ export type GetPreviewResponse = Message<"unisourcecfl.catalog.v1.GetPreviewResp
    * @generated from field: unisourcecfl.catalog.v1.PreviewMediaKind media_kind = 4;
    */
   mediaKind: PreviewMediaKind;
+
+  /**
+   * @generated from field: string content_id = 5;
+   */
+  contentId: string;
 };
 
 /**
@@ -704,7 +810,7 @@ export type GetPreviewResponse = Message<"unisourcecfl.catalog.v1.GetPreviewResp
  * Use `create(GetPreviewResponseSchema)` to create a new message.
  */
 export const GetPreviewResponseSchema: GenMessage<GetPreviewResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 27);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 30);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.ShareLink
@@ -771,7 +877,7 @@ export type ShareLink = Message<"unisourcecfl.catalog.v1.ShareLink"> & {
  * Use `create(ShareLinkSchema)` to create a new message.
  */
 export const ShareLinkSchema: GenMessage<ShareLink> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 28);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 31);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.ListSharesRequest
@@ -793,7 +899,7 @@ export type ListSharesRequest = Message<"unisourcecfl.catalog.v1.ListSharesReque
  * Use `create(ListSharesRequestSchema)` to create a new message.
  */
 export const ListSharesRequestSchema: GenMessage<ListSharesRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 29);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 32);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.ListSharesResponse
@@ -810,7 +916,7 @@ export type ListSharesResponse = Message<"unisourcecfl.catalog.v1.ListSharesResp
  * Use `create(ListSharesResponseSchema)` to create a new message.
  */
 export const ListSharesResponseSchema: GenMessage<ListSharesResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 30);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 33);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.CreateShareRequest
@@ -862,7 +968,7 @@ export type CreateShareRequest = Message<"unisourcecfl.catalog.v1.CreateShareReq
  * Use `create(CreateShareRequestSchema)` to create a new message.
  */
 export const CreateShareRequestSchema: GenMessage<CreateShareRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 31);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 34);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.CreateShareResponse
@@ -879,7 +985,7 @@ export type CreateShareResponse = Message<"unisourcecfl.catalog.v1.CreateShareRe
  * Use `create(CreateShareResponseSchema)` to create a new message.
  */
 export const CreateShareResponseSchema: GenMessage<CreateShareResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 32);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 35);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.UpdateShareRequest
@@ -931,7 +1037,7 @@ export type UpdateShareRequest = Message<"unisourcecfl.catalog.v1.UpdateShareReq
  * Use `create(UpdateShareRequestSchema)` to create a new message.
  */
 export const UpdateShareRequestSchema: GenMessage<UpdateShareRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 33);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 36);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.UpdateShareResponse
@@ -948,7 +1054,7 @@ export type UpdateShareResponse = Message<"unisourcecfl.catalog.v1.UpdateShareRe
  * Use `create(UpdateShareResponseSchema)` to create a new message.
  */
 export const UpdateShareResponseSchema: GenMessage<UpdateShareResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 34);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 37);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.RevokeShareRequest
@@ -970,7 +1076,7 @@ export type RevokeShareRequest = Message<"unisourcecfl.catalog.v1.RevokeShareReq
  * Use `create(RevokeShareRequestSchema)` to create a new message.
  */
 export const RevokeShareRequestSchema: GenMessage<RevokeShareRequest> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 35);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 38);
 
 /**
  * @generated from message unisourcecfl.catalog.v1.RevokeShareResponse
@@ -987,7 +1093,7 @@ export type RevokeShareResponse = Message<"unisourcecfl.catalog.v1.RevokeShareRe
  * Use `create(RevokeShareResponseSchema)` to create a new message.
  */
 export const RevokeShareResponseSchema: GenMessage<RevokeShareResponse> = /*@__PURE__*/
-  messageDesc(file_unisourcecfl_catalog_v1_catalog, 36);
+  messageDesc(file_unisourcecfl_catalog_v1_catalog, 39);
 
 /**
  * @generated from enum unisourcecfl.catalog.v1.CatalogSortBy
@@ -1012,6 +1118,11 @@ export enum CatalogSortBy {
    * @generated from enum value: CATALOG_SORT_BY_SIZE = 3;
    */
   SIZE = 3,
+
+  /**
+   * @generated from enum value: CATALOG_SORT_BY_MODIFIED_AT = 4;
+   */
+  MODIFIED_AT = 4,
 }
 
 /**
@@ -1019,6 +1130,52 @@ export enum CatalogSortBy {
  */
 export const CatalogSortBySchema: GenEnum<CatalogSortBy> = /*@__PURE__*/
   enumDesc(file_unisourcecfl_catalog_v1_catalog, 0);
+
+/**
+ * @generated from enum unisourcecfl.catalog.v1.CatalogFileType
+ */
+export enum CatalogFileType {
+  /**
+   * @generated from enum value: CATALOG_FILE_TYPE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: CATALOG_FILE_TYPE_IMAGE = 1;
+   */
+  IMAGE = 1,
+
+  /**
+   * @generated from enum value: CATALOG_FILE_TYPE_PDF = 2;
+   */
+  PDF = 2,
+
+  /**
+   * @generated from enum value: CATALOG_FILE_TYPE_AUDIO = 3;
+   */
+  AUDIO = 3,
+
+  /**
+   * @generated from enum value: CATALOG_FILE_TYPE_VIDEO = 4;
+   */
+  VIDEO = 4,
+
+  /**
+   * @generated from enum value: CATALOG_FILE_TYPE_TEXT = 5;
+   */
+  TEXT = 5,
+
+  /**
+   * @generated from enum value: CATALOG_FILE_TYPE_OTHER = 6;
+   */
+  OTHER = 6,
+}
+
+/**
+ * Describes the enum unisourcecfl.catalog.v1.CatalogFileType.
+ */
+export const CatalogFileTypeSchema: GenEnum<CatalogFileType> = /*@__PURE__*/
+  enumDesc(file_unisourcecfl_catalog_v1_catalog, 1);
 
 /**
  * @generated from enum unisourcecfl.catalog.v1.CatalogSortDirection
@@ -1044,7 +1201,7 @@ export enum CatalogSortDirection {
  * Describes the enum unisourcecfl.catalog.v1.CatalogSortDirection.
  */
 export const CatalogSortDirectionSchema: GenEnum<CatalogSortDirection> = /*@__PURE__*/
-  enumDesc(file_unisourcecfl_catalog_v1_catalog, 1);
+  enumDesc(file_unisourcecfl_catalog_v1_catalog, 2);
 
 /**
  * @generated from enum unisourcecfl.catalog.v1.StorageLocation
@@ -1070,7 +1227,7 @@ export enum StorageLocation {
  * Describes the enum unisourcecfl.catalog.v1.StorageLocation.
  */
 export const StorageLocationSchema: GenEnum<StorageLocation> = /*@__PURE__*/
-  enumDesc(file_unisourcecfl_catalog_v1_catalog, 2);
+  enumDesc(file_unisourcecfl_catalog_v1_catalog, 3);
 
 /**
  * @generated from enum unisourcecfl.catalog.v1.EntryKind
@@ -1096,7 +1253,7 @@ export enum EntryKind {
  * Describes the enum unisourcecfl.catalog.v1.EntryKind.
  */
 export const EntryKindSchema: GenEnum<EntryKind> = /*@__PURE__*/
-  enumDesc(file_unisourcecfl_catalog_v1_catalog, 3);
+  enumDesc(file_unisourcecfl_catalog_v1_catalog, 4);
 
 /**
  * @generated from enum unisourcecfl.catalog.v1.SpaceKind
@@ -1122,7 +1279,7 @@ export enum SpaceKind {
  * Describes the enum unisourcecfl.catalog.v1.SpaceKind.
  */
 export const SpaceKindSchema: GenEnum<SpaceKind> = /*@__PURE__*/
-  enumDesc(file_unisourcecfl_catalog_v1_catalog, 4);
+  enumDesc(file_unisourcecfl_catalog_v1_catalog, 5);
 
 /**
  * @generated from enum unisourcecfl.catalog.v1.PreviewMediaKind
@@ -1147,13 +1304,23 @@ export enum PreviewMediaKind {
    * @generated from enum value: PREVIEW_MEDIA_KIND_VIDEO = 3;
    */
   VIDEO = 3,
+
+  /**
+   * @generated from enum value: PREVIEW_MEDIA_KIND_PDF = 4;
+   */
+  PDF = 4,
+
+  /**
+   * @generated from enum value: PREVIEW_MEDIA_KIND_TEXT = 5;
+   */
+  TEXT = 5,
 }
 
 /**
  * Describes the enum unisourcecfl.catalog.v1.PreviewMediaKind.
  */
 export const PreviewMediaKindSchema: GenEnum<PreviewMediaKind> = /*@__PURE__*/
-  enumDesc(file_unisourcecfl_catalog_v1_catalog, 5);
+  enumDesc(file_unisourcecfl_catalog_v1_catalog, 6);
 
 /**
  * @generated from service unisourcecfl.catalog.v1.CatalogService
@@ -1190,6 +1357,14 @@ export const CatalogService: GenService<{
     methodKind: "unary";
     input: typeof ListEntriesRequestSchema;
     output: typeof ListEntriesResponseSchema;
+  },
+  /**
+   * @generated from rpc unisourcecfl.catalog.v1.CatalogService.SearchEntries
+   */
+  searchEntries: {
+    methodKind: "unary";
+    input: typeof SearchEntriesRequestSchema;
+    output: typeof SearchEntriesResponseSchema;
   },
   /**
    * @generated from rpc unisourcecfl.catalog.v1.CatalogService.CreateFolder

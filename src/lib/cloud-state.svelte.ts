@@ -3,6 +3,7 @@ import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { create } from '@bufbuild/protobuf';
 import { catalog, identity, multipartUploads, storageSettings, trash } from './api.js';
 import {
+	CatalogFileType,
 	CatalogSortBy as CatalogSortByEnum,
 	CatalogSortDirection as CatalogSortDirectionEnum,
 	EntryKind,
@@ -29,13 +30,14 @@ import { UploadManager } from './upload-manager.svelte.js';
 
 export const CLOUD_CONTEXT = Symbol('cloud-state');
 const FRESH_MS = 15 * 60_000;
-export type CatalogSortBy = 'NAME' | 'CREATED_AT' | 'SIZE';
+export type CatalogSortBy = 'NAME' | 'CREATED_AT' | 'SIZE' | 'MODIFIED_AT';
 export type CatalogSortDirection = 'ASC' | 'DESC';
 export type CatalogSort = { by: CatalogSortBy; direction: CatalogSortDirection };
 const DEFAULT_SORT: CatalogSort = { by: 'NAME', direction: 'ASC' };
 const SORT_BY_PROTO = {
 	NAME: CatalogSortByEnum.NAME,
 	CREATED_AT: CatalogSortByEnum.CREATED_AT,
+	MODIFIED_AT: CatalogSortByEnum.MODIFIED_AT,
 	SIZE: CatalogSortByEnum.SIZE
 } satisfies Record<CatalogSortBy, CatalogSortByEnum>;
 const SORT_DIRECTION_PROTO = {
@@ -67,10 +69,11 @@ export class CatalogList {
 		readonly mode: 'files' | 'trash',
 		readonly spaceId: string,
 		readonly parentId: string,
-		readonly sort: CatalogSort
+		readonly sort: CatalogSort,
+		readonly fileType: CatalogFileType
 	) {}
 	get key(): string {
-		return JSON.stringify([this.mode, this.spaceId, this.parentId, this.sort.by, this.sort.direction]);
+		return JSON.stringify([this.mode, this.spaceId, this.parentId, this.sort.by, this.sort.direction, this.fileType]);
 	}
 }
 
@@ -88,6 +91,7 @@ export class CloudState {
 	trashSpaceId = $state('');
 	lastFolders = $state<Record<string, string>>({});
 	sortsBySpace = $state<Record<string, CatalogSort>>({});
+	fileTypesBySpace = $state<Record<string, CatalogFileType>>({});
 	activeListKey = $state('');
 	userId = '';
 	sessionId = '';
@@ -160,6 +164,7 @@ export class CloudState {
 		this.trashSpaceId = '';
 		this.lastFolders = {};
 		this.sortsBySpace = {};
+		this.fileTypesBySpace = {};
 		this.activeListKey = '';
 		this.userId = '';
 		this.sessionId = '';
@@ -237,7 +242,7 @@ export class CloudState {
 		return this.sortsBySpace[spaceId] ?? DEFAULT_SORT;
 	}
 	setSort(spaceId: string, sort: CatalogSort): void {
-		if (!spaceId || !['NAME', 'CREATED_AT', 'SIZE'].includes(sort.by) || !['ASC', 'DESC'].includes(sort.direction)) return;
+		if (!spaceId || !['NAME', 'CREATED_AT', 'SIZE', 'MODIFIED_AT'].includes(sort.by) || !['ASC', 'DESC'].includes(sort.direction)) return;
 		const current = this.sortFor(spaceId);
 		if (current.by === sort.by && current.direction === sort.direction) return;
 		const active = this.activeList;
@@ -257,24 +262,41 @@ export class CloudState {
 		if (active?.mode === 'files' && active.spaceId === spaceId)
 			this.activeListKey = this.list('files', spaceId, active.parentId, sort).key;
 	}
+	fileTypeFor(spaceId: string): CatalogFileType {
+		return this.fileTypesBySpace[spaceId] ?? CatalogFileType.UNSPECIFIED;
+	}
+	setFileType(spaceId: string, fileType: CatalogFileType): void {
+		if (!spaceId || !Number.isInteger(fileType) || fileType < 0 || fileType > 6 || this.fileTypeFor(spaceId) === fileType) return;
+		const active = this.activeList;
+		this.fileTypesBySpace = { ...this.fileTypesBySpace, [spaceId]: fileType };
+		for (const list of this.lists.values()) {
+			if (list.mode !== 'files' || list.spaceId !== spaceId) continue;
+			list.version++;
+			list.dirty = true;
+		}
+		if (active?.mode === 'files' && active.spaceId === spaceId)
+			this.activeListKey = this.list('files', spaceId, active.parentId, active.sort, fileType).key;
+	}
 	peekList(
 		mode: 'files' | 'trash',
 		spaceId: string,
 		parentId: string,
-		sort: CatalogSort = mode === 'files' ? this.sortFor(spaceId) : DEFAULT_SORT
+		sort: CatalogSort = mode === 'files' ? this.sortFor(spaceId) : DEFAULT_SORT,
+		fileType: CatalogFileType = mode === 'files' ? this.fileTypeFor(spaceId) : CatalogFileType.UNSPECIFIED
 	): CatalogList | undefined {
-		return this.lists.get(JSON.stringify([mode, spaceId, parentId, sort.by, sort.direction]));
+		return this.lists.get(JSON.stringify([mode, spaceId, parentId, sort.by, sort.direction, fileType]));
 	}
 	list(
 		mode: 'files' | 'trash',
 		spaceId: string,
 		parentId: string,
-		sort: CatalogSort = mode === 'files' ? this.sortFor(spaceId) : DEFAULT_SORT
+		sort: CatalogSort = mode === 'files' ? this.sortFor(spaceId) : DEFAULT_SORT,
+		fileType: CatalogFileType = mode === 'files' ? this.fileTypeFor(spaceId) : CatalogFileType.UNSPECIFIED
 	): CatalogList {
-		const key = JSON.stringify([mode, spaceId, parentId, sort.by, sort.direction]);
+		const key = JSON.stringify([mode, spaceId, parentId, sort.by, sort.direction, fileType]);
 		let list = this.lists.get(key);
 		if (!list) {
-			list = new CatalogList(mode, spaceId, parentId, sort);
+			list = new CatalogList(mode, spaceId, parentId, sort, fileType);
 			this.lists.set(key, list);
 		}
 		return list;
@@ -311,7 +333,8 @@ export class CloudState {
 								pageSize: 50,
 								pageToken: token,
 								sortBy: SORT_BY_PROTO[list.sort.by],
-								sortDirection: SORT_DIRECTION_PROTO[list.sort.direction]
+								sortDirection: SORT_DIRECTION_PROTO[list.sort.direction],
+								fileType: list.fileType
 							})
 						);
 						entries.push(...result.entries);
@@ -411,7 +434,7 @@ export class CloudState {
 			list.dirty = true;
 			if (list.mode === 'files' && list.parentId === parentId) {
 				if (removedId) list.entries = list.entries.filter((item) => item.id !== removedId);
-				if (entry)
+				if (entry && list.fileType === CatalogFileType.UNSPECIFIED)
 					list.entries = uniqueEntries([
 						...list.entries.filter((item) => item.id !== entry.id),
 						entry
@@ -422,7 +445,7 @@ export class CloudState {
 	}
 	entryMoved(spaceId: string, entry: Entry, oldParentId: string): void {
 		this.changed(spaceId, oldParentId, undefined, entry.id);
-		this.changed(spaceId, entry.parentId ?? '');
+		this.changed(entry.spaceId, entry.parentId ?? '');
 	}
 	revalidateActive(): void {
 		const list = this.lists.get(this.activeListKey);

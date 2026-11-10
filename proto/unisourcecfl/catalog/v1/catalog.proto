@@ -10,6 +10,7 @@ service CatalogService {
   rpc GetPreview(GetPreviewRequest) returns (GetPreviewResponse);
   rpc GetSpaces(GetSpacesRequest) returns (GetSpacesResponse);
   rpc ListEntries(ListEntriesRequest) returns (ListEntriesResponse);
+  rpc SearchEntries(SearchEntriesRequest) returns (SearchEntriesResponse);
   rpc CreateFolder(CreateFolderRequest) returns (CreateFolderResponse);
   rpc GetEntry(GetEntryRequest) returns (GetEntryResponse);
   rpc RenameEntry(RenameEntryRequest) returns (RenameEntryResponse);
@@ -37,10 +38,31 @@ message ListEntriesRequest {
   string page_token = 4;
   CatalogSortBy sort_by = 5;
   CatalogSortDirection sort_direction = 6;
+  CatalogFileType file_type = 7;
 }
 
 message ListEntriesResponse {
   repeated Entry entries = 1;
+  string next_page_token = 2;
+}
+
+message SearchEntriesRequest {
+  string space_id = 1;
+  string query = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+  CatalogSortBy sort_by = 5;
+  CatalogSortDirection sort_direction = 6;
+  CatalogFileType file_type = 7;
+}
+
+message SearchEntryResult {
+  Entry entry = 1;
+  repeated Entry path = 2;
+}
+
+message SearchEntriesResponse {
+  repeated SearchEntryResult results = 1;
   string next_page_token = 2;
 }
 
@@ -136,6 +158,7 @@ message Entry {
   optional string md5_base64 = 8;
   StorageLocation storage_location = 9;
   google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp modified_at = 11;
 }
 
 enum CatalogSortBy {
@@ -143,6 +166,17 @@ enum CatalogSortBy {
   CATALOG_SORT_BY_NAME = 1;
   CATALOG_SORT_BY_CREATED_AT = 2;
   CATALOG_SORT_BY_SIZE = 3;
+  CATALOG_SORT_BY_MODIFIED_AT = 4;
+}
+
+enum CatalogFileType {
+  CATALOG_FILE_TYPE_UNSPECIFIED = 0;
+  CATALOG_FILE_TYPE_IMAGE = 1;
+  CATALOG_FILE_TYPE_PDF = 2;
+  CATALOG_FILE_TYPE_AUDIO = 3;
+  CATALOG_FILE_TYPE_VIDEO = 4;
+  CATALOG_FILE_TYPE_TEXT = 5;
+  CATALOG_FILE_TYPE_OTHER = 6;
 }
 
 enum CatalogSortDirection {
@@ -202,6 +236,7 @@ message GetPreviewResponse {
   google.protobuf.Timestamp expires_at = 2;
   string content_type = 3;
   PreviewMediaKind media_kind = 4;
+  string content_id = 5;
 }
 
 enum PreviewMediaKind {
@@ -209,6 +244,8 @@ enum PreviewMediaKind {
   PREVIEW_MEDIA_KIND_IMAGE = 1;
   PREVIEW_MEDIA_KIND_AUDIO = 2;
   PREVIEW_MEDIA_KIND_VIDEO = 3;
+  PREVIEW_MEDIA_KIND_PDF = 4;
+  PREVIEW_MEDIA_KIND_TEXT = 5;
 }
 
 message ShareLink {

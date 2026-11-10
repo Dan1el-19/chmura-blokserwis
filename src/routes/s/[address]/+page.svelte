@@ -4,9 +4,10 @@
 	import { resolve } from '$app/paths';
 	import { DownloadSimple, SpinnerGap } from 'phosphor-svelte';
 	import favicon from '#lib/assets/favicon.svg';
+	import TextPreview from '#lib/components/TextPreview.svelte';
 	import { mediaKindForFilename, type BrowserMediaKind as MediaKind } from '#lib/media-preview.js';
 
-	type Preview = { url: string; expiresAt: string; contentType: string; mediaKind: MediaKind };
+	type Preview = { url: string; expiresAt: string; contentType: string; mediaKind: MediaKind; contentId?: string };
 	type PublicShare = {
 		name: string;
 		sizeBytes: number;
@@ -59,6 +60,7 @@
 		if (renewalTimer) clearTimeout(renewalTimer);
 		renewalTimer = undefined;
 		const previousUrl = share?.preview?.url ?? '';
+		const previousContentId = share?.preview?.contentId;
 		if (preservePlayback && mediaElement && !mediaElement.paused) {
 			pendingPlayback = { currentTime: mediaElement.currentTime, paused: false };
 		} else if (preservePlayback && mediaElement) {
@@ -77,11 +79,12 @@
 			}
 			const result = await response.json() as PublicShare;
 			if (version !== requestVersion) return;
+			if (!previousContentId || previousContentId !== result.preview?.contentId) pendingPlayback = undefined;
 			share = result;
 			error = '';
 			unlockError = '';
 			await tick();
-			if (previousUrl && previousUrl === result.preview?.url) {
+			if (previousUrl && previousUrl === result.preview?.url && previousContentId === result.preview?.contentId) {
 				error = 'Nie udało się odnowić podglądu. Plik nadal można pobrać.';
 				pendingPlayback = undefined;
 			} else if (!result.preview) pendingPlayback = undefined;
@@ -130,10 +133,11 @@
 
 	function renewAfterMediaError(): void {
 		const currentUrl = share?.preview?.url ?? '';
+		const currentContentId = share?.preview?.contentId;
 		if (!currentUrl || renewedUrl === currentUrl) return;
 		renewedUrl = currentUrl;
 		void loadShare(true).then(() => {
-			if (share?.preview?.url !== currentUrl) renewedUrl = '';
+			if (share?.preview?.url !== currentUrl || share?.preview?.contentId !== currentContentId) renewedUrl = '';
 		});
 	}
 
@@ -201,7 +205,12 @@
 						<div class="mx-auto max-w-md py-8"><h1 class="text-center text-xl font-semibold">Udostępniony plik jest chroniony hasłem</h1><p class="mt-2 text-center text-sm text-text-muted">Wprowadź hasło, aby zobaczyć plik i pobrać go.</p><form onsubmit={unlockShare} class="mt-6 space-y-3"><label class="block space-y-1.5 text-sm"><span>Hasło</span><input type="password" bind:value={password} autocomplete="current-password" required disabled={unlockPending} class="w-full rounded-md border border-border-line bg-bg-app px-3 py-2.5 focus:border-primary focus:outline-none" /></label>{#if unlockError}<p class="text-sm text-red-600 dark:text-red-300" role="alert">{unlockError}</p>{/if}<button type="submit" disabled={unlockPending || !password} class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{#if unlockPending}<SpinnerGap class="h-4 w-4 animate-spin" />{:else}<DownloadSimple class="h-4 w-4" />{/if}Odblokuj</button></form></div>
 					{:else}
 						<div class="min-w-0"><h1 class="break-words text-xl font-semibold sm:text-2xl">{share.name}</h1><p class="mt-1 text-sm text-text-muted">{formatBytes(share.sizeBytes)}</p><p class="mt-2 text-xs text-text-muted">Wejścia: {share.viewCount} · Pobrania: {share.downloadCount}{share.maxDownloads === null ? '' : ` / ${share.maxDownloads}`}</p></div>
-						{#if share.preview && mediaKindForFilename(share.name) === 'IMAGE'}
+						{#key `${share.preview?.contentId ?? ''}:${share.preview?.url ?? ''}`}
+						{#if share.preview && mediaKindForFilename(share.name) === 'PDF'}
+							<iframe title={`Podgląd PDF: ${share.name}`} src={share.preview.url} sandbox="allow-scripts allow-same-origin" referrerpolicy="no-referrer" class="h-[65dvh] w-full rounded-md border border-border-line"></iframe>
+						{:else if share.preview && mediaKindForFilename(share.name) === 'TEXT'}
+							<TextPreview url={share.preview.url} sizeBytes={share.sizeBytes} />
+						{:else if share.preview && mediaKindForFilename(share.name) === 'IMAGE'}
 							<div class="flex max-h-[65dvh] items-center justify-center overflow-hidden rounded-md bg-black/5 p-2 dark:bg-black/30"><img src={share.preview.url} alt={share.name} onerror={renewAfterMediaError} class="max-h-[62dvh] max-w-full object-contain" /></div>
 						{:else if share.preview && mediaKindForFilename(share.name) === 'AUDIO'}
 							<audio bind:this={mediaElement} src={share.preview.url} controls preload="metadata" onloadedmetadata={restorePosition} onerror={renewAfterMediaError} class="w-full" aria-label={`Odtwarzacz audio: ${share.name}`}></audio>
@@ -209,6 +218,7 @@
 							<!-- svelte-ignore a11y_media_has_caption -->
 							<video bind:this={mediaElement} src={share.preview.url} controls preload="metadata" onloadedmetadata={restorePosition} onerror={renewAfterMediaError} class="max-h-[65dvh] w-full rounded-md bg-black" aria-label={`Odtwarzacz wideo: ${share.name}`}></video>
 						{/if}
+						{/key}
 						{#if error}<div class="rounded-md bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200" role="status"><p>{error}</p><button type="button" onclick={() => void loadShare(true)} class="mt-2 font-semibold underline">Ponów odnowienie podglądu</button></div>{/if}
 						{#if share.downloadLimitReached}<p class="rounded-md bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200" role="status">Limit pobrań został wyczerpany. Nowe pobrania i podgląd są zablokowane.</p>
 						{:else}<form method="GET" action={resolve('/s/[address]/download', { address })}><input type="hidden" name="requestId" value={downloadRequestId} /><button type="submit" class="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 sm:w-auto"><DownloadSimple class="h-5 w-5" />Pobierz</button></form>{/if}

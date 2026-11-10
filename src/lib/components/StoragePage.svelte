@@ -35,6 +35,10 @@
 		Trash
 	} from 'phosphor-svelte';
 	import {
+		CatalogFileType,
+		CatalogSortBy as CatalogSortByProto,
+		CatalogSortDirection as CatalogSortDirectionProto,
+		SearchEntriesRequestSchema,
 		CreateFolderRequestSchema,
 		DeletePermanentlyRequestSchema,
 		EntryKind,
@@ -47,6 +51,7 @@
 		TrashEntryRequestSchema,
 		type CreateFolderRequest,
 		type Entry,
+		type SearchEntryResult,
 		type TrashItem
 	} from '#lib/gen/unisourcecfl/catalog/v1/catalog_pb.js';
 
@@ -71,9 +76,17 @@
 	);
 	const routeFolderId = $derived(mode === 'files' ? (page.url.searchParams.get('folder') ?? '') : '');
 	const currentSort = $derived(mode === 'files' ? app.sortFor(activeSpaceId) : { by: 'NAME', direction: 'ASC' } as CatalogSort);
+	const currentFileType = $derived(mode === 'files' ? app.fileTypeFor(activeSpaceId) : CatalogFileType.UNSPECIFIED);
 	const currentList = $derived(
-		accountReady && activeSpaceId ? app.peekList(mode, activeSpaceId, routeFolderId, currentSort) : undefined
+		accountReady && activeSpaceId ? app.peekList(mode, activeSpaceId, routeFolderId, currentSort, currentFileType) : undefined
 	);
+	let searchQuery = $state('');
+	let searchTerm = $state('');
+	let searchResults = $state<SearchEntryResult[]>([]);
+	let searchNext = $state('');
+	let searchBusy = $state(false);
+	let searchError = $state('');
+	let searchGeneration = 0;
 	let apiError = $state('');
 	const viewError = $derived(apiError || app.accountError || currentList?.error || '');
 	let notice = $state('');
@@ -145,6 +158,7 @@
 		const scope = `${mode}:${activeSpaceId}:${routeFolderId}:${app.sessionVersion}`;
 		untrack(() => {
 			void scope;
+			closeSearch();
 			selectedIds = [];
 			selectionMode = false;
 			lastSelectedIndex = -1;
@@ -264,6 +278,48 @@
 	function updateSort(value: string): void {
 		const [by, direction] = value.split(':') as [CatalogSortBy, CatalogSortDirection];
 		app.setSort(activeSpaceId, { by, direction });
+		if (searchTerm) void runSearch(false, { by, direction });
+	}
+
+	async function runSearch(next = false, sort: CatalogSort = currentSort, fileType: CatalogFileType = currentFileType): Promise<void> {
+		const query = next ? searchTerm : searchQuery.trim();
+		if (!query || !activeSpaceId || searchBusy && next) return;
+		const generation = ++searchGeneration;
+		const spaceId = activeSpaceId;
+		if (!next) { searchTerm = query; searchResults = []; searchNext = ''; }
+		searchBusy = true;
+		searchError = '';
+		try {
+			const response = await catalog.searchEntries(create(SearchEntriesRequestSchema, {
+				spaceId, query, pageSize: 50, pageToken: next ? searchNext : '',
+				sortBy: CatalogSortByProto[sort.by], sortDirection: CatalogSortDirectionProto[sort.direction], fileType
+			}));
+			if (generation !== searchGeneration || spaceId !== activeSpaceId) return;
+			searchResults = next ? [...searchResults, ...response.results] : response.results;
+			searchNext = response.nextPageToken;
+		} catch (error) {
+			if (generation === searchGeneration) searchError = errorMessage(error);
+		} finally {
+			if (generation === searchGeneration) searchBusy = false;
+		}
+	}
+	function updateFileType(value: string): void {
+		const fileType = Number(value) as CatalogFileType;
+		app.setFileType(activeSpaceId, fileType);
+		if (searchTerm) void runSearch(false, currentSort, fileType);
+	}
+	function closeSearch(): void {
+		searchGeneration++;
+		searchTerm = '';
+		searchQuery = '';
+		searchResults = [];
+		searchNext = '';
+		searchBusy = false;
+		searchError = '';
+	}
+	async function openSearchFolder(folderId?: string): Promise<void> {
+		closeSearch();
+		await goto(resolve(folderHref(folderId)));
 	}
 
 	function storageLocationLabel(location: StorageLocation | undefined): string {
@@ -325,8 +381,9 @@
 		const currentMode = mode;
 		if (!accountReady || !spaceId) return;
 		const sort = currentMode === 'files' ? app.sortFor(spaceId) : undefined;
+		const fileType = currentMode === 'files' ? app.fileTypeFor(spaceId) : CatalogFileType.UNSPECIFIED;
 		untrack(() => {
-			const list = sort ? app.list(currentMode, spaceId, folderId, sort) : app.list(currentMode, spaceId, folderId);
+			const list = sort ? app.list(currentMode, spaceId, folderId, sort, fileType) : app.list(currentMode, spaceId, folderId);
 			app.activeListKey = list.key;
 			if (currentMode === 'files') app.lastFolders[spaceKind === 'shared' ? '/' : '/personal'] = folderId;
 			void app.load(list);
@@ -336,6 +393,7 @@
 		void loadAccount();
 		void app.loadUploadLimit();
 		return () => {
+			searchGeneration++;
 			if (app.activeListKey === currentList?.key) app.activeListKey = '';
 		};
 	});
@@ -777,18 +835,47 @@
  </button>
 				</div>
 				<label class="flex items-center gap-2 text-sm text-text-muted">
+					<span>Typ</span><select aria-label="Typ pliku" value={String(currentFileType)} onchange={(event) => updateFileType(event.currentTarget.value)} disabled={!accountReady || !activeSpaceId} class="h-10 rounded-lg border border-border-line bg-bg-panel px-3 text-sm text-text-main">
+						<option value="0">Wszystkie</option><option value="1">Obrazy</option><option value="2">PDF</option><option value="3">Audio</option><option value="4">Wideo</option><option value="5">Tekst i kod</option><option value="6">Pozostałe</option>
+					</select>
+				</label>
+				<label class="flex items-center gap-2 text-sm text-text-muted">
 					<span>Sortuj</span>
 					<select aria-label="Sortowanie" value={`${currentSort.by}:${currentSort.direction}`} onchange={(event) => updateSort(event.currentTarget.value)} disabled={!accountReady || !activeSpaceId} class="h-10 rounded-lg border border-border-line bg-bg-panel px-3 text-sm text-text-main focus-visible:ring-2 focus-visible:ring-primary/50">
 						<option value="NAME:ASC">Nazwa (A–Z)</option>
 						<option value="NAME:DESC">Nazwa (Z–A)</option>
 						<option value="CREATED_AT:ASC">Data utworzenia (od najstarszych)</option>
 						<option value="CREATED_AT:DESC">Data utworzenia (od najnowszych)</option>
+						<option value="MODIFIED_AT:ASC">Data modyfikacji (od najstarszych)</option>
+						<option value="MODIFIED_AT:DESC">Data modyfikacji (od najnowszych)</option>
 						<option value="SIZE:ASC">Rozmiar (od najmniejszych)</option>
 						<option value="SIZE:DESC">Rozmiar (od największych)</option>
 					</select>
 				</label>
 			</div>
 		</div>
+		<form class="flex flex-wrap gap-2" onsubmit={(event) => { event.preventDefault(); void runSearch(); }}>
+			<input aria-label="Szukaj w przestrzeni" bind:value={searchQuery} placeholder="Szukaj w tej przestrzeni" class="h-10 min-w-0 flex-1 rounded-lg border border-border-line bg-bg-panel px-3 text-sm" />
+			<button type="submit" disabled={!accountReady || !searchQuery.trim()} class="rounded-lg border border-border-line px-4 text-sm disabled:opacity-50">Szukaj</button>
+			{#if searchTerm}<button type="button" onclick={closeSearch} class="rounded-lg border border-border-line px-4 text-sm">Wyczyść</button>{/if}
+		</form>
+		{#if searchTerm}
+			<section class="rounded-md border border-border-line bg-bg-panel p-4" aria-label="Wyniki wyszukiwania">
+				<h2 class="font-semibold">Wyniki wyszukiwania</h2>
+				{#if searchError}<p role="alert">{searchError}</p>{/if}
+				{#if searchBusy}<p role="status">Wyszukiwanie…</p>{/if}
+				{#if !searchBusy && !searchError && !searchResults.length}<p>Brak wyników</p>{/if}
+				<ul>{#each searchResults as result (result.entry?.id)}
+					{#if result.entry}
+					<li class="border-b border-border-line py-3">
+						<button type="button" class="font-medium hover:underline" onclick={() => result.entry?.kind === EntryKind.FOLDER ? void openSearchFolder(result.entry.id) : result.entry && openFile(result.entry)}>{result.entry.name}</button>
+						<div class="text-xs text-text-muted">{#if result.path.length}{#each result.path as folder, index (folder.id)}{#if index > 0} / {/if}<button type="button" class="hover:underline" onclick={() => void openSearchFolder(folder.id)}>{folder.name}</button>{/each}{:else}<button type="button" class="hover:underline" onclick={() => void openSearchFolder()}>{isSharedSpace ? 'Main' : 'Pliki prywatne'}</button>{/if}</div>
+					</li>
+					{/if}
+				{/each}</ul>
+				{#if searchNext}<button type="button" disabled={searchBusy} onclick={() => void runSearch(true)} class="mt-3 rounded border border-border-line px-4 py-2 text-sm">Pokaż więcej</button>{/if}
+			</section>
+		{:else}
 			<div class="flex flex-wrap items-center gap-2">
 				<button type="button" onclick={() => (selectionMode = !selectionMode)} class="min-h-9 rounded-md border border-border-line px-3 text-xs font-medium text-text-main hover:bg-gray-50 lg:hidden dark:hover:bg-zinc-800">{selectionMode ? 'Zamknij zaznaczanie' : 'Zaznacz elementy'}</button>
 				<label class="inline-flex min-h-11 items-center gap-2 text-xs font-medium text-text-main lg:hidden"><input type="checkbox" class="file-selection-checkbox" checked={allLoadedSelected} indeterminate={partiallySelected} disabled={!displayedEntries.length} onchange={toggleSelectAllLoaded} aria-label="Zaznacz wszystkie wczytane elementy" />Zaznacz wszystkie</label>
@@ -819,23 +906,23 @@
 			<div class="hidden overflow-x-auto lg:block">
 				<table class="w-full text-left text-sm">
 					<thead class="border-b border-border-line bg-gray-50/50 font-medium text-text-muted dark:bg-zinc-900/50">
-						<tr><th class="w-10 px-3 py-3"><input type="checkbox" class="file-selection-checkbox" checked={allLoadedSelected} indeterminate={partiallySelected} disabled={!displayedEntries.length} onchange={toggleSelectAllLoaded} aria-label="Zaznacz wszystkie wczytane elementy" /></th><th class="px-4 py-3">Nazwa</th><th class="w-36 px-4 py-3">Rozmiar</th><th class="w-40 px-4 py-3">Utworzono</th><th class="w-36 px-4 py-3 text-right">Akcje</th></tr>
+						<tr><th class="w-10 px-3 py-3"><input type="checkbox" class="file-selection-checkbox" checked={allLoadedSelected} indeterminate={partiallySelected} disabled={!displayedEntries.length} onchange={toggleSelectAllLoaded} aria-label="Zaznacz wszystkie wczytane elementy" /></th><th class="px-4 py-3">Nazwa</th><th class="w-36 px-4 py-3">Rozmiar</th><th class="w-40 px-4 py-3">Utworzono</th><th class="w-40 px-4 py-3">Zmodyfikowano</th><th class="w-36 px-4 py-3 text-right">Akcje</th></tr>
 					</thead>
 					<tbody class="divide-y divide-border-line">
 						{#if folderPath.length}
 								<tr class="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/50 {dropTargetId === (folderPath.length > 1 ? folderPath.at(-2)?.id : '__root__') ? 'bg-primary/10' : ''}" onclick={() => void goToBreadcrumb(folderPath.length - 2)} onkeydown={(event) => event.key === 'Enter' && void goToBreadcrumb(folderPath.length - 2)} ondragover={(event) => dragOverFolder(folderPath.length > 1 ? folderPath.at(-2) : undefined, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(folderPath.length > 1 ? folderPath.at(-2) : undefined, event)} tabindex="0" aria-label="Przejdź do folderu nadrzędnego">
-								<td colspan="5" class="px-4 py-3"><button type="button" onclick={(event) => { event.stopPropagation(); void goToBreadcrumb(folderPath.length - 2); }} class="flex items-center gap-3 text-text-muted"><ArrowUp class="h-5 w-5" />{parentFolderName}</button></td>
+								<td colspan="6" class="px-4 py-3"><button type="button" onclick={(event) => { event.stopPropagation(); void goToBreadcrumb(folderPath.length - 2); }} class="flex items-center gap-3 text-text-muted"><ArrowUp class="h-5 w-5" />{parentFolderName}</button></td>
 							</tr>
 						{/if}
 						{#if !entries.length && !loading}
-								<tr><td colspan="5" class="px-4 py-12 text-center text-text-muted"><div class="flex min-h-32 flex-col items-center justify-center gap-2"><Folder class="h-10 w-10 text-gray-300 dark:text-zinc-600" /><strong class="font-medium text-text-main">Folder jest pusty</strong><span class="text-xs">Dodaj plik albo utwórz folder, aby zacząć.</span></div></td></tr>
+								<tr><td colspan="6" class="px-4 py-12 text-center text-text-muted"><div class="flex min-h-32 flex-col items-center justify-center gap-2"><Folder class="h-10 w-10 text-gray-300 dark:text-zinc-600" /><strong class="font-medium text-text-main">Folder jest pusty</strong><span class="text-xs">Dodaj plik albo utwórz folder, aby zacząć.</span></div></td></tr>
 						{/if}
 						{#each folders as entry (entry.id)}
 							<tr class="group transition-colors {selectedIds.includes(entry.id) ? 'bg-primary/10 hover:bg-primary/15 dark:bg-primary/15 dark:hover:bg-primary/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800/50'} {dropTargetId === entry.id ? 'bg-primary/10' : ''}" aria-selected={selectedIds.includes(entry.id)} draggable="true" ondragstart={(event) => beginEntryDrag(entry, event)} ondragover={(event) => dragOverFolder(entry, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(entry, event)} ondragend={endFolderDrag}>
 								<td class="px-3 py-3"><input type="checkbox" checked={selectedIds.includes(entry.id)} onclick={(event) => changeSelection(entry, event.currentTarget.checked, event)} aria-label={`Zaznacz ${entry.name}`} class="file-selection-checkbox" /></td>
 								<td class="max-w-[420px] truncate px-4 py-3 text-text-main" title={entry.name}><div class="flex items-center gap-2"><Folder class="h-5 w-5 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400" /><button type="button" class="truncate text-left font-medium hover:underline" onclick={() => void openFolder(entry)}>{entry.name}</button></div></td>
 								<td class="px-4 py-3 font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</td>
-								<td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.createdAt)}</td>
+								<td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.createdAt)}</td><td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.modifiedAt)}</td>
 								<td class="px-4 py-3"><div class="flex justify-end gap-1"><button type="button" onclick={() => beginMove(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Przenieś ${entry.name}`} title="Przenieś"><Folder class="h-4 w-4" /></button><button type="button" onclick={() => beginRename(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Zmień nazwę ${entry.name}`} title="Zmień nazwę"><Pencil class="h-4 w-4" /></button><button type="button" onclick={() => requestTrashConfirmation(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" aria-label={`Przenieś ${entry.name} do kosza`} title="Przenieś do kosza"><Trash class="h-4 w-4" /></button></div></td>
 							</tr>
 						{/each}
@@ -844,11 +931,11 @@
 								<td class="px-3 py-3"><input type="checkbox" checked={selectedIds.includes(entry.id)} onclick={(event) => changeSelection(entry, event.currentTarget.checked, event)} aria-label={`Zaznacz ${entry.name}`} class="file-selection-checkbox" /></td>
 								<td class="max-w-[420px] truncate px-4 py-3 text-text-main" title={entry.name}><div class="flex items-center gap-2">{#if mediaKindForFilename(entry.name) === 'IMAGE'}<FileImage class="h-5 w-5 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'AUDIO'}<FileAudio class="h-5 w-5 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'VIDEO'}<FileVideo class="h-5 w-5 shrink-0 text-primary" />{:else}<FileIcon class="h-5 w-5 shrink-0 text-primary" />{/if}<span class="min-w-0"><button type="button" class="block truncate text-left hover:underline" onclick={() => openFile(entry)} aria-label={mediaKindForFilename(entry.name) ? `Podgląd ${entry.name}` : `Pobierz ${entry.name}`}>{entry.name}</button>{#if storageLocationLabel(entry.storageLocation)}<span class="block text-xs text-text-muted">{storageLocationLabel(entry.storageLocation)}</span>{/if}</span></div></td>
 								<td class="px-4 py-3 font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</td>
-								<td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.createdAt)}</td>
+								<td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.createdAt)}</td><td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.modifiedAt)}</td>
 								<td class="px-4 py-3"><div class="flex justify-end gap-1"><button type="button" onclick={() => void downloadFile(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Pobierz ${entry.name}`} title="Pobierz"><DownloadSimple class="h-4 w-4" /></button><button type="button" onclick={() => (sharingEntry = entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Udostępnij ${entry.name}`} title="Udostępnij"><ShareNetwork class="h-4 w-4" /></button><button type="button" onclick={() => beginMove(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Przenieś ${entry.name}`} title="Przenieś"><Folder class="h-4 w-4" /></button><button type="button" onclick={() => beginRename(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Zmień nazwę ${entry.name}`} title="Zmień nazwę"><Pencil class="h-4 w-4" /></button><button type="button" onclick={() => requestTrashConfirmation(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20" aria-label={`Przenieś ${entry.name} do kosza`} title="Przenieś do kosza"><Trash class="h-4 w-4" /></button></div></td>
 							</tr>
 						{/each}
-							{#if loading}<tr><td colspan="5" class="px-4 py-4"><div class="animate-pulse space-y-3" role="status" aria-label="Ładowanie plików">{#each [1,2,3] as row (row)}<div class="h-9 rounded bg-gray-100 dark:bg-zinc-800"></div>{/each}</div></td></tr>{/if}
+							{#if loading}<tr><td colspan="6" class="px-4 py-4"><div class="animate-pulse space-y-3" role="status" aria-label="Ładowanie plików">{#each [1,2,3] as row (row)}<div class="h-9 rounded bg-gray-100 dark:bg-zinc-800"></div>{/each}</div></td></tr>{/if}
 					</tbody>
 				</table>
 			</div>
@@ -866,7 +953,7 @@
 							{#if selectionMode}<label class="flex h-11 w-11 shrink-0 items-center justify-center" onpointerdown={(event) => event.stopPropagation()}><input type="checkbox" checked={selectedIds.includes(entry.id)} onclick={(event) => { event.stopPropagation(); changeSelection(entry, event.currentTarget.checked, event); }} aria-label={`Zaznacz ${entry.name}`} class="file-selection-checkbox" /></label>{/if}
 							<button type="button" class="flex min-w-0 flex-1 items-center gap-3 text-left" onclick={() => openOrSelectMobile(entry)} aria-label={selectionMode ? `Zaznacz lub odznacz ${entry.name}` : isFolder ? `Otwórz folder ${entry.name}` : mediaKindForFilename(entry.name) ? `Podgląd ${entry.name}` : `Pobierz ${entry.name}`}>
 								{#if isFolder}<Folder class="h-8 w-8 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400" />{:else if mediaKindForFilename(entry.name) === 'IMAGE'}<FileImage class="h-8 w-8 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'AUDIO'}<FileAudio class="h-8 w-8 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'VIDEO'}<FileVideo class="h-8 w-8 shrink-0 text-primary" />{:else}<FileIcon class="h-8 w-8 shrink-0 text-primary" />{/if}
-								<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-text-main">{entry.name}</span><span class="mt-0.5 block font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</span><span class="block text-xs text-text-muted">Utworzono: {formatCreatedAt(entry.createdAt)}</span>{#if !isFolder && storageLocationLabel(entry.storageLocation)}<span class="block text-xs text-text-muted">{storageLocationLabel(entry.storageLocation)}</span>{/if}</span>
+								<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-text-main">{entry.name}</span><span class="mt-0.5 block font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</span><span class="block text-xs text-text-muted">Utworzono: {formatCreatedAt(entry.createdAt)}</span><span class="block text-xs text-text-muted">Zmodyfikowano: {formatCreatedAt(entry.modifiedAt)}</span>{#if !isFolder && storageLocationLabel(entry.storageLocation)}<span class="block text-xs text-text-muted">{storageLocationLabel(entry.storageLocation)}</span>{/if}</span>
 							</button>
 							<button type="button" onpointerdown={(event) => event.stopPropagation()} class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800" onclick={() => (mobileActionEntryId = mobileActionEntryId === entry.id ? '' : entry.id)} aria-label={`Akcje dla ${entry.name}`}><DotsThreeVertical class="h-5 w-5" weight="bold" /></button>
 						</div>
@@ -887,6 +974,7 @@
 				<div class="flex justify-center border-t border-border-line p-4"><button type="button" onclick={loadNextPage} disabled={listBusy} class="rounded-md border border-border-line px-4 py-2 text-sm font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">Pokaż więcej</button></div>
 			{/if}
 		</div>
+		{/if}
 	{:else}
 		<div class="space-y-3">
 			{#if viewError}<div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300" role="alert">{viewError}</div>{/if}

@@ -171,7 +171,7 @@ test('preserves folders, pages and uploads while navigating through the applicat
 	}
 	function contentFile(name: string) {
 		return mobile
-			? page.getByRole('button', { name: `Pobierz ${name}`, exact: true })
+			? page.getByRole('button', { name: `Podgląd ${name}`, exact: true })
 			: page.getByRole('table').getByText(name, { exact: true });
 	}
 	const startupResponses = Promise.all([
