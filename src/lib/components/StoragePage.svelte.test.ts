@@ -35,6 +35,7 @@ const api = vi.hoisted(() => ({
 	getEntry: vi.fn(),
 	moveEntry: vi.fn(),
 	trashEntry: vi.fn(),
+	bulkTrashEntries: vi.fn(),
 	createUpload: vi.fn(),
 	retryUpload: vi.fn(),
 	getUpload: vi.fn(),
@@ -54,7 +55,7 @@ vi.mock('#lib/api.js', () => ({
 		moveEntry: api.moveEntry
 	},
 	shareLinks: { listShares: api.listShares, createShare: api.createShare, updateShare: api.updateShare, revokeShare: api.revokeShare },
-	trash: { listTrash: api.listTrash, trashEntry: api.trashEntry },
+	trash: { listTrash: api.listTrash, trashEntry: api.trashEntry, bulkTrashEntries: api.bulkTrashEntries },
 	uploads: {
 		retryUpload: api.retryUpload,
 		getUpload: api.getUpload,
@@ -357,7 +358,7 @@ it('keeps a singly selected file visibly checked and marks the main checkbox as 
 	await expect.element(mainCheckbox).not.toBeChecked();
 });
 
-it('bulk trashes at most four items at a time and keeps the failed item selected', async () => {
+it('sends one bulk trash request and keeps the failed item selected', async () => {
 	const files = Array.from({ length: 5 }, (_, index) => ({
 		id: `file-${index + 1}`,
 		spaceId: 'personal-space',
@@ -366,24 +367,15 @@ it('bulk trashes at most four items at a time and keeps the failed item selected
 		revision: 1
 	}));
 	api.listEntries.mockResolvedValue({ entries: files, nextPageToken: '' });
-	let inFlight = 0;
-	let maximumInFlight = 0;
-	api.trashEntry.mockImplementation(async (request) => {
-		inFlight++;
-		maximumInFlight = Math.max(maximumInFlight, inFlight);
-		await new Promise((resolve) => setTimeout(resolve, 5));
-		inFlight--;
-		if (request.entryId === 'file-5') throw new ConnectError('FAILED_PRECONDITION', Code.Aborted);
-		return {};
-	});
+	api.bulkTrashEntries.mockImplementation(async (request) => ({ results: request.items.map((item: { entryId: string }) => ({ entryId: item.entryId, success: item.entryId !== 'file-5', error: item.entryId === 'file-5' ? 'REVISION_CONFLICT' : '' })) }));
 	const screen = await render(StoragePage);
 	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
 	await screen.getByRole('table').getByRole('checkbox', { name: 'Zaznacz wszystkie wczytane elementy' }).click();
 	await screen.getByRole('button', { name: 'Do kosza', exact: true }).click();
 	await screen.getByRole('dialog').getByRole('button', { name: 'Przenieś do kosza', exact: true }).click();
-	await expect.poll(() => api.trashEntry).toHaveBeenCalledTimes(5);
+	await expect.poll(() => api.bulkTrashEntries).toHaveBeenCalledTimes(1);
+	expect(api.bulkTrashEntries.mock.calls[0][0].items).toHaveLength(5);
 	await expect.element(screen.getByRole('dialog').getByText(/nie udało się przenieść 1/i)).toBeVisible();
-	expect(maximumInFlight).toBeLessThanOrEqual(4);
 	await expect.element(screen.getByRole('toolbar').getByText('Zaznaczono: 1')).toBeVisible();
 	await expect.element(screen.getByRole('row', { name: /file-5.txt/ }).getByRole('checkbox', { name: 'Zaznacz file-5.txt' })).toBeChecked();
 });

@@ -15,13 +15,17 @@ service CatalogService {
   rpc GetEntry(GetEntryRequest) returns (GetEntryResponse);
   rpc RenameEntry(RenameEntryRequest) returns (RenameEntryResponse);
   rpc MoveEntry(MoveEntryRequest) returns (MoveEntryResponse);
+  rpc BulkMoveEntries(BulkMoveEntriesRequest) returns (BulkMoveEntriesResponse);
 }
 
 service TrashService {
   rpc TrashEntry(TrashEntryRequest) returns (TrashEntryResponse);
+  rpc BulkTrashEntries(BulkTrashEntriesRequest) returns (BulkTrashEntriesResponse);
   rpc ListTrash(ListTrashRequest) returns (ListTrashResponse);
   rpc RestoreEntry(RestoreEntryRequest) returns (RestoreEntryResponse);
+  rpc BulkRestoreEntries(BulkRestoreEntriesRequest) returns (BulkRestoreEntriesResponse);
   rpc DeletePermanently(DeletePermanentlyRequest) returns (DeletePermanentlyResponse);
+  rpc BulkDeletePermanently(BulkDeletePermanentlyRequest) returns (BulkDeletePermanentlyResponse);
 }
 
 service ShareService {
@@ -102,10 +106,21 @@ message MoveEntryRequest {
   string entry_id = 2;
   optional string parent_id = 3;
   uint32 expected_revision = 4;
+  optional string target_space_id = 5;
 }
 
 message MoveEntryResponse {
   Entry entry = 1;
+}
+message BulkMoveEntriesRequest {
+  string space_id = 1;
+  string request_id = 2;
+  repeated BulkEntryInput items = 3;
+  optional string parent_id = 4;
+  optional string target_space_id = 5;
+}
+message BulkMoveEntriesResponse {
+  repeated BulkEntryResult results = 1;
 }
 
 message TrashItem {
@@ -120,6 +135,39 @@ message TrashEntryRequest {
 }
 message TrashEntryResponse {
   TrashItem item = 1;
+}
+message BulkEntryInput {
+  string entry_id = 1;
+  uint32 expected_revision = 2;
+}
+message BulkEntryResult {
+  string entry_id = 1;
+  bool success = 2;
+  string error = 3;
+}
+message BulkTrashEntriesRequest {
+  string space_id = 1;
+  string request_id = 2;
+  repeated BulkEntryInput items = 3;
+}
+message BulkTrashEntriesResponse {
+  repeated BulkEntryResult results = 1;
+}
+message BulkDeletePermanentlyRequest {
+  string space_id = 1;
+  string request_id = 2;
+  repeated BulkEntryInput items = 3;
+}
+message BulkDeletePermanentlyResponse {
+  repeated BulkEntryResult results = 1;
+}
+message BulkRestoreEntriesRequest {
+  string space_id = 1;
+  string request_id = 2;
+  repeated BulkEntryInput items = 3;
+}
+message BulkRestoreEntriesResponse {
+  repeated BulkEntryResult results = 1;
 }
 message ListTrashRequest {
   string space_id = 1;

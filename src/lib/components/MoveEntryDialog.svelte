@@ -5,9 +5,13 @@
 	import { storageErrorMessage } from '#lib/storage-error.js';
 	import {
 		EntryKind,
+		SpaceKind,
 		ListEntriesRequestSchema,
 		MoveEntryRequestSchema,
-		type Entry
+		BulkMoveEntriesRequestSchema,
+		EntrySchema,
+		type Entry,
+		type Space
 	} from '#lib/gen/unisourcecfl/catalog/v1/catalog_pb.js';
 	import AppDialog from './AppDialog.svelte';
 	import { ArrowLeft, CaretRight, Folder, SpinnerGap } from 'phosphor-svelte';
@@ -16,6 +20,7 @@
 		entry,
 		entries = [],
 		spaceId,
+		spaces,
 		initialPath,
 		onclose,
 		onmoved
@@ -23,12 +28,14 @@
 		entry: Entry;
 		entries?: Entry[];
 		spaceId: string;
+		spaces: Space[];
 		initialPath: Entry[];
 		onclose: () => void;
 		onmoved: (moved: Entry[], failed: Entry[]) => void;
 	} = $props();
 	const moveEntries = $derived(entries.length ? entries : [entry]);
 
+	let targetSpaceId = $state('');
 	let path = $state<Entry[]>([]);
 	let folders = $state<Entry[]>([]);
 	let nextPageToken = $state('');
@@ -36,14 +43,16 @@
 	let busy = $state(false);
 	let error = $state('');
 	let loadVersion = 0;
+	let bulkBatches: { entries: Entry[]; requestId: string; parent: string; targetSpaceId: string }[] = [];
 	const parentId = $derived(path.at(-1)?.id ?? '');
-	const targetIsSource = $derived(moveEntries.every((item) => parentId === (item.parentId ?? '')));
-	const sourceAlreadyAtRoot = $derived(moveEntries.every((item) => !(item.parentId ?? '')));
+	const targetIsSource = $derived(targetSpaceId === spaceId && moveEntries.every((item) => parentId === (item.parentId ?? '')));
+	const sourceAlreadyAtRoot = $derived(targetSpaceId === spaceId && moveEntries.every((item) => !(item.parentId ?? '')));
 	const targetIsInsideSource = $derived(
-		moveEntries.some((item) => item.kind === EntryKind.FOLDER && path.some((folder) => folder.id === item.id))
+		targetSpaceId === spaceId && moveEntries.some((item) => item.kind === EntryKind.FOLDER && path.some((folder) => folder.id === item.id))
 	);
 
 	onMount(() => {
+		targetSpaceId = spaceId;
 		path = [...initialPath];
 		void loadFolders(false);
 	});
@@ -56,7 +65,7 @@
 		try {
 			const result = await catalog.listEntries(
 				create(ListEntriesRequestSchema, {
-					spaceId,
+					spaceId: targetSpaceId,
 					...(parentId ? { parentId } : {}),
 					pageSize: 50,
 					pageToken: next ? nextPageToken : ''
@@ -74,6 +83,17 @@
 		} finally {
 			if (version === loadVersion) loading = false;
 		}
+	}
+
+	function switchSpace(value: string): void {
+		if (busy || !spaces.some((space) => space.id === value)) return;
+		loadVersion++;
+		loading = false;
+		targetSpaceId = value;
+		path = [];
+		folders = [];
+		nextPageToken = '';
+		void loadFolders(false);
 	}
 
 	function openFolder(folder: Entry): void {
@@ -97,7 +117,7 @@
 	}
 
 	async function moveTo(parent: string): Promise<void> {
-		const parentIsSource = moveEntries.every((item) => parent === (item.parentId ?? ''));
+		const parentIsSource = targetSpaceId === spaceId && moveEntries.every((item) => parent === (item.parentId ?? ''));
 		const destinationIsInsideSource = Boolean(parent) && targetIsInsideSource;
 		if (busy || destinationIsInsideSource || parentIsSource) return;
 		busy = true;
@@ -106,7 +126,38 @@
 		const failed: Entry[] = [];
 		let firstFailure: unknown;
 		let nextIndex = 0;
-		const pending = moveEntries.filter((item) => (item.parentId ?? '') !== parent);
+		const pending = moveEntries.filter((item) => targetSpaceId !== spaceId || (item.parentId ?? '') !== parent);
+		if (pending.length > 1 || bulkBatches.length) {
+			const selectedKey = JSON.stringify(pending.map((item) => [item.id, item.revision]));
+			const pendingKey = JSON.stringify(bulkBatches.flatMap((batch) => batch.entries.map((item) => [item.id, item.revision])));
+			if (selectedKey !== pendingKey || bulkBatches.some((batch) => batch.parent !== parent || batch.targetSpaceId !== targetSpaceId)) {
+				bulkBatches = [];
+				for (let i = 0; i < pending.length; i += 100) bulkBatches.push({ entries: pending.slice(i, i + 100), requestId: crypto.randomUUID(), parent, targetSpaceId });
+			}
+			const remaining: typeof bulkBatches = [];
+			for (const batch of bulkBatches) {
+				try {
+					const response = await catalog.bulkMoveEntries(create(BulkMoveEntriesRequestSchema, { spaceId, requestId: batch.requestId, items: batch.entries.map((item) => ({ entryId: item.id, expectedRevision: item.revision })), ...(batch.parent ? { parentId: batch.parent } : {}), ...(batch.targetSpaceId !== spaceId ? { targetSpaceId: batch.targetSpaceId } : {}) }));
+					if (response.results.length !== batch.entries.length || response.results.some((result, index) => result.entryId !== batch.entries[index].id)) throw new Error('Nieprawidłowa odpowiedź serwera.');
+					const rejected: Entry[] = [];
+					response.results.forEach((result, index) => {
+						const item = batch.entries[index];
+						if (result.success) moved.push(create(EntrySchema, { ...item, spaceId: batch.targetSpaceId, parentId: batch.parent || undefined, revision: item.revision + 1 }));
+						else { rejected.push(item); failed.push(item); }
+					});
+					if (rejected.length) remaining.push({ ...batch, entries: rejected, requestId: crypto.randomUUID() });
+				} catch (cause) {
+					firstFailure ??= cause;
+					failed.push(...batch.entries);
+					remaining.push(batch);
+				}
+			}
+			bulkBatches = remaining;
+			if (failed.length) error = `Nie udało się przenieść ${failed.length} z ${moveEntries.length} elementów. Zaznaczenie zachowano dla ponowienia.`;
+			onmoved(moved, failed);
+			busy = false;
+			return;
+		}
 		const workers = Array.from({ length: Math.min(4, pending.length) }, async () => {
 			while (nextIndex < pending.length) {
 				const item = pending[nextIndex++];
@@ -114,6 +165,7 @@
 				try {
 					const result = await catalog.moveEntry(create(MoveEntryRequestSchema, {
 						spaceId,
+						...(targetSpaceId !== spaceId ? { targetSpaceId } : {}),
 						entryId: item.id,
 						...(parent ? { parentId: parent } : {}),
 						expectedRevision: item.revision
@@ -142,9 +194,13 @@
 			<p class="mt-1 break-words text-sm text-text-muted">Wybierz folder dla {moveEntries.length === 1 ? `„${entry.name}”` : `${moveEntries.length} zaznaczonych elementów`}.</p>
 		</div>
 
+		<label class="block space-y-1 text-sm"><span>Przestrzeń docelowa</span><select aria-label="Przestrzeń docelowa" value={targetSpaceId} disabled={busy} onchange={(event) => switchSpace(event.currentTarget.value)} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2">
+			{#each [...spaces].sort((a, b) => a.kind === SpaceKind.SHARED ? -1 : b.kind === SpaceKind.SHARED ? 1 : 0) as space (space.id)}<option value={space.id}>{space.kind === SpaceKind.SHARED ? 'Main' : 'Pliki prywatne'}</option>{/each}
+		</select></label>
+
 		<nav class="flex min-w-0 items-center gap-1 overflow-x-auto text-sm" aria-label="Miejsce docelowe">
 			<button type="button" disabled={busy} class="shrink-0 font-medium hover:underline" onclick={() => goTo(-1)}>
-				{spaceId === '' ? 'Katalog główny' : 'Katalog główny'}
+				{spaces.find((space) => space.id === targetSpaceId)?.kind === SpaceKind.SHARED ? 'Main' : 'Pliki prywatne'}
 			</button>
 			{#each path as folder, index (folder.id)}
 				<CaretRight class="h-3.5 w-3.5 shrink-0 text-text-muted" aria-hidden="true" />

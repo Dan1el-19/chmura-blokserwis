@@ -35,6 +35,9 @@
 		Trash
 	} from 'phosphor-svelte';
 	import {
+		BulkTrashEntriesRequestSchema,
+		BulkDeletePermanentlyRequestSchema,
+		BulkRestoreEntriesRequestSchema,
 		CatalogFileType,
 		CatalogSortBy as CatalogSortByProto,
 		CatalogSortDirection as CatalogSortDirectionProto,
@@ -102,10 +105,18 @@
 	let pendingDelete = $state<TrashItem | null>(null);
 	let deletePending = $state(false);
 	let deleteError = $state('');
+	let selectedTrashIds = $state<string[]>([]);
+	let bulkDeleteOpen = $state(false);
+	let bulkDeleteBusy = $state(false);
+	let bulkDeleteError = $state('');
+	let bulkDeleteBatches = $state<{ entries: Entry[]; requestId: string; spaceId: string }[]>([]);
+	let bulkRestoreBusy = $state(false);
+	let bulkRestoreBatches: { entries: Entry[]; requestId: string; spaceId: string }[] = [];
 	let view = $derived(mode);
 	const folderPath = $derived(currentList?.path ?? []);
 	const entries = $derived(currentList?.entries ?? []);
 	const trashItems = $derived(currentList?.items ?? []);
+	const selectedTrashEntries = $derived(trashItems.flatMap((item) => item.entry && selectedTrashIds.includes(item.entry.id) ? [item.entry] : []));
 	const nextPageToken = $derived(currentList?.nextPageToken ?? '');
 	const loading = $derived(!currentList?.initialized && !viewError);
 	const listBusy = $derived(loading || currentList?.refreshing || currentList?.loadingNext);
@@ -160,6 +171,7 @@
 			void scope;
 			closeSearch();
 			selectedIds = [];
+			selectedTrashIds = [];
 			selectionMode = false;
 			lastSelectedIndex = -1;
 			movingEntries = [];
@@ -570,6 +582,86 @@
 		pendingDelete = item;
 		deleteError = '';
 	}
+	function toggleTrashSelection(id: string, checked: boolean): void {
+		selectedTrashIds = checked ? [...selectedTrashIds.filter((value) => value !== id), id] : selectedTrashIds.filter((value) => value !== id);
+	}
+	function requestBulkDelete(): void {
+		bulkDeleteBatches = [];
+		for (let i = 0; i < selectedTrashEntries.length; i += 100) bulkDeleteBatches.push({ entries: selectedTrashEntries.slice(i, i + 100), requestId: crypto.randomUUID(), spaceId: activeSpaceId });
+		bulkDeleteError = '';
+		bulkDeleteOpen = true;
+	}
+	async function restoreSelectedTrash(): Promise<void> {
+		if (bulkRestoreBusy || !selectedTrashEntries.length || !currentList) return;
+		const selectedKey = JSON.stringify(selectedTrashEntries.map((entry) => [entry.id, entry.revision]));
+		const pendingKey = JSON.stringify(bulkRestoreBatches.flatMap((batch) => batch.entries.map((entry) => [entry.id, entry.revision])));
+		if (selectedKey !== pendingKey || bulkRestoreBatches.some((batch) => batch.spaceId !== activeSpaceId)) {
+			bulkRestoreBatches = [];
+			for (let i = 0; i < selectedTrashEntries.length; i += 100) bulkRestoreBatches.push({ entries: selectedTrashEntries.slice(i, i + 100), requestId: crypto.randomUUID(), spaceId: activeSpaceId });
+		}
+		bulkRestoreBusy = true;
+		apiError = '';
+		const originList = currentList;
+		const version = app.sessionVersion;
+		const pending: typeof bulkRestoreBatches = [];
+		const succeeded: Entry[] = [];
+		let failedCount = 0;
+		for (const batch of bulkRestoreBatches) {
+			try {
+				const response = await trash.bulkRestoreEntries(create(BulkRestoreEntriesRequestSchema, { spaceId: batch.spaceId, requestId: batch.requestId, items: batch.entries.map((entry) => ({ entryId: entry.id, expectedRevision: entry.revision })) }));
+				if (response.results.length !== batch.entries.length || response.results.some((result, index) => result.entryId !== batch.entries[index].id)) throw new Error('Nieprawidłowa odpowiedź serwera.');
+				const failed: Entry[] = [];
+				response.results.forEach((result, index) => { if (result.success) succeeded.push(batch.entries[index]); else failed.push(batch.entries[index]); });
+				if (failed.length) pending.push({ ...batch, entries: failed, requestId: crypto.randomUUID() });
+				failedCount += failed.length;
+			} catch {
+				pending.push(batch);
+				failedCount += batch.entries.length;
+			}
+		}
+		bulkRestoreBatches = pending;
+		if (version === app.sessionVersion) {
+			const ids = new Set(succeeded.map((entry) => entry.id));
+			originList.items = originList.items.filter((item) => !item.entry || !ids.has(item.entry.id));
+			for (const entry of succeeded) app.changed(originList.spaceId, entry.parentId ?? '');
+			if (activeSpaceId === originList.spaceId) selectedTrashIds = selectedTrashIds.filter((id) => !ids.has(id));
+			if (failedCount) apiError = `Przywrócono ${succeeded.length}; nie udało się przywrócić ${failedCount}. Zaznaczenie zachowano.`;
+			else notice = `Przywrócono ${succeeded.length} elementów.`;
+		}
+		bulkRestoreBusy = false;
+	}
+	async function confirmBulkDelete(): Promise<void> {
+		if (bulkDeleteBusy || !bulkDeleteBatches.length || !currentList) return;
+		bulkDeleteBusy = true;
+		const originList = currentList;
+		const version = app.sessionVersion;
+		const pending: typeof bulkDeleteBatches = [];
+		const succeeded: Entry[] = [];
+		let failedCount = 0;
+		for (const batch of bulkDeleteBatches) {
+			try {
+				const response = await trash.bulkDeletePermanently(create(BulkDeletePermanentlyRequestSchema, { spaceId: batch.spaceId, requestId: batch.requestId, items: batch.entries.map((entry) => ({ entryId: entry.id, expectedRevision: entry.revision })) }));
+				if (response.results.length !== batch.entries.length || response.results.some((result, index) => result.entryId !== batch.entries[index].id)) throw new Error('Nieprawidłowa odpowiedź serwera.');
+				const failed: Entry[] = [];
+				response.results.forEach((result, index) => { if (result.success) succeeded.push(batch.entries[index]); else failed.push(batch.entries[index]); });
+				if (failed.length) pending.push({ ...batch, entries: failed, requestId: crypto.randomUUID() });
+				failedCount += failed.length;
+			} catch {
+				pending.push(batch);
+				failedCount += batch.entries.length;
+			}
+		}
+		bulkDeleteBatches = pending;
+		if (version === app.sessionVersion) {
+			const ids = new Set(succeeded.map((entry) => entry.id));
+			originList.items = originList.items.filter((item) => !item.entry || !ids.has(item.entry.id));
+			for (const entry of succeeded) app.changed(originList.spaceId, entry.parentId ?? '');
+			if (activeSpaceId === originList.spaceId) selectedTrashIds = selectedTrashIds.filter((id) => !ids.has(id));
+			if (failedCount) bulkDeleteError = `Zlecono usunięcie ${succeeded.length}; nie udało się usunąć ${failedCount}. Zaznaczenie zachowano.`;
+			else { bulkDeleteOpen = false; notice = `Zlecono trwałe usunięcie: ${succeeded.length} elementów.`; }
+		}
+		bulkDeleteBusy = false;
+	}
 	async function confirmDelete(): Promise<void> {
 		const entry = pendingDelete?.entry;
 		if (!entry || deletePending) return;
@@ -663,27 +755,46 @@
 
 	function requestBulkTrash(): void {
 		bulkTrashTarget = [...selectedEntries];
+		bulkTrashBatches = [];
+		for (let i = 0; i < bulkTrashTarget.length; i += 100) bulkTrashBatches.push({ entries: bulkTrashTarget.slice(i, i + 100), requestId: crypto.randomUUID(), spaceId: activeSpaceId });
 		bulkTrashResults = [];
+		trashError = '';
 		bulkTrashOpen = true;
 	}
+	let bulkTrashBatches: { entries: Entry[]; requestId: string; spaceId: string }[] = [];
 
 	async function trashSelected(): Promise<void> {
 		if (bulkTrashBusy || !bulkTrashTarget.length) return;
 		bulkTrashBusy = true;
 		const version = app.sessionVersion;
+		const spaceId = bulkTrashBatches[0]?.spaceId ?? activeSpaceId;
 		const results: { entry: Entry; error?: string }[] = [];
-		await runWithConcurrency(bulkTrashTarget, 4, async (entry) => {
+		const pending: typeof bulkTrashBatches = [];
+		for (const batch of bulkTrashBatches) {
 			try {
-				await trash.trashEntry(create(TrashEntryRequestSchema, { spaceId: activeSpaceId, entryId: entry.id, expectedRevision: entry.revision }));
-				results.push({ entry });
+				const response = await trash.bulkTrashEntries(create(BulkTrashEntriesRequestSchema, { spaceId: batch.spaceId, requestId: batch.requestId, items: batch.entries.map((entry) => ({ entryId: entry.id, expectedRevision: entry.revision })) }));
+				if (response.results.length !== batch.entries.length || response.results.some((result, index) => result.entryId !== batch.entries[index].id)) throw new Error('Nieprawidłowa odpowiedź serwera.');
+				const failed: Entry[] = [];
+				response.results.forEach((result, index) => {
+					const entry = batch.entries[index];
+					if (result.success) results.push({ entry });
+					else {
+						failed.push(entry);
+						const code = result.error === 'REVISION_CONFLICT' ? Code.Aborted : result.error === 'NOT_FOUND' ? Code.NotFound : Code.Unknown;
+						results.push({ entry, error: errorMessage(new ConnectError(result.error || 'Nie udało się wykonać operacji.', code)) });
+					}
+				});
+				if (failed.length) pending.push({ ...batch, entries: failed, requestId: crypto.randomUUID() });
 			} catch (cause) {
-				results.push({ entry, error: errorMessage(cause) });
+				pending.push(batch);
+				for (const entry of batch.entries) results.push({ entry, error: errorMessage(cause) });
 			}
-		});
+		}
+		bulkTrashBatches = pending;
 		if (version === app.sessionVersion) {
 			const succeeded = results.filter((result) => !result.error);
 			const failed = results.filter((result) => result.error);
-			for (const result of succeeded) app.changed(activeSpaceId, result.entry.parentId ?? '', undefined, result.entry.id);
+			for (const result of succeeded) app.changed(spaceId, result.entry.parentId ?? '', undefined, result.entry.id);
 			selectedIds = failed.map((result) => result.entry.id);
 			bulkTrashTarget = failed.map((result) => result.entry);
 			bulkTrashResults = results;
@@ -982,6 +1093,7 @@
 				<div class="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-border-line px-4 py-3">
 					<div><h2 class="text-sm font-semibold text-text-main">Usunięte elementy</h2><p class="mt-0.5 text-xs text-text-muted">Elementy w koszu można przywrócić przed upływem retencji.</p></div>
 					<div class="flex items-center gap-2">
+						{#if selectedTrashEntries.length}<button type="button" disabled={bulkRestoreBusy} onclick={() => void restoreSelectedTrash()} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium">Przywróć zaznaczone</button><button type="button" disabled={bulkRestoreBusy} onclick={requestBulkDelete} class="rounded-md border border-red-200 px-3 py-2 text-xs font-medium text-red-600">Usuń zaznaczone trwale</button>{/if}
 						<div class="inline-flex rounded-md border border-border-line p-0.5" role="group" aria-label="Przestrzeń kosza">
 							<button type="button" aria-pressed={isSharedSpace} disabled={!accountReady || isSharedSpace} onclick={() => switchTrashSpace('shared')} class="rounded px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 {isSharedSpace ? 'bg-primary text-white' : 'text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800'}">Main</button>
 							<button type="button" aria-pressed={!isSharedSpace} disabled={!accountReady || !isSharedSpace} onclick={() => switchTrashSpace('private')} class="rounded px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 {!isSharedSpace ? 'bg-primary text-white' : 'text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800'}">Pliki prywatne</button>
@@ -992,7 +1104,7 @@
 				<div class="hidden overflow-x-auto lg:block"><table class="w-full text-left text-sm"><thead class="border-b border-border-line bg-gray-50/50 font-medium text-text-muted dark:bg-zinc-900/50"><tr><th class="px-4 py-3">Nazwa</th><th class="w-36 px-4 py-3">Usunięto do</th><th class="w-48 px-4 py-3 text-right">Akcje</th></tr></thead><tbody class="divide-y divide-border-line">
 					{#if !trashItems.length && !loading}<tr><td colspan="3" class="px-4 py-12 text-center text-text-muted"><div class="flex min-h-32 flex-col items-center justify-center gap-2"><Trash class="h-10 w-10 text-gray-300 dark:text-zinc-600" /><strong class="font-medium text-text-main">Kosz jest pusty</strong><span class="text-xs">Usunięte elementy pojawią się tutaj.</span></div></td></tr>{/if}
 					{#each trashItems as item (item.entry?.id)}
-						{#if item.entry}<tr><td class="px-4 py-3"><div class="flex items-center gap-3"><span class="flex h-9 w-9 items-center justify-center rounded-md bg-red-50 text-red-500 dark:bg-red-900/20"><Trash class="h-4 w-4" /></span><span><strong class="block font-medium text-text-main">{item.entry.name}</strong><span class="mt-0.5 block text-xs text-text-muted">{item.entry.kind === EntryKind.FOLDER ? 'Folder' : formatBytes(item.entry.sizeBytes)}</span></span></div></td><td class="px-4 py-3 font-mono text-xs text-text-muted">{item.purgeAt ? timestampDate(item.purgeAt).toLocaleDateString('pl-PL') : '—'}</td><td class="px-4 py-3"><div class="flex justify-end gap-2"><button type="button" disabled={pendingRestoreIds.includes(item.entry?.id ?? '')} onclick={() => void restoreTrashItem(item)} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800">Przywróć</button><button type="button" onclick={() => void permanentlyDelete(item)} class="rounded-md px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Zleć trwałe usunięcie</button></div></td></tr>{/if}
+						{#if item.entry}<tr><td class="px-4 py-3"><div class="flex items-center gap-3"><input type="checkbox" class="file-selection-checkbox" checked={selectedTrashIds.includes(item.entry.id)} aria-label={`Zaznacz ${item.entry.name}`} onchange={(event) => toggleTrashSelection(item.entry!.id, event.currentTarget.checked)} /><span class="flex h-9 w-9 items-center justify-center rounded-md bg-red-50 text-red-500 dark:bg-red-900/20"><Trash class="h-4 w-4" /></span><span><strong class="block font-medium text-text-main">{item.entry.name}</strong><span class="mt-0.5 block text-xs text-text-muted">{item.entry.kind === EntryKind.FOLDER ? 'Folder' : formatBytes(item.entry.sizeBytes)}</span></span></div></td><td class="px-4 py-3 font-mono text-xs text-text-muted">{item.purgeAt ? timestampDate(item.purgeAt).toLocaleDateString('pl-PL') : '—'}</td><td class="px-4 py-3"><div class="flex justify-end gap-2"><button type="button" disabled={pendingRestoreIds.includes(item.entry?.id ?? '')} onclick={() => void restoreTrashItem(item)} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800">Przywróć</button><button type="button" onclick={() => void permanentlyDelete(item)} class="rounded-md px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Zleć trwałe usunięcie</button></div></td></tr>{/if}
 					{/each}
 					{#if loading}<tr><td colspan="3" class="px-4 py-4"><div class="animate-pulse space-y-3" role="status" aria-label="Ładowanie kosza">{#each [1,2,3] as row (row)}<div class="h-9 rounded bg-gray-100 dark:bg-zinc-800"></div>{/each}</div></td></tr>{/if}
 				</tbody></table></div>
@@ -1000,7 +1112,7 @@
 					{#if loading}<div class="animate-pulse space-y-2" role="status" aria-label="Ładowanie kosza">{#each [1,2,3] as row (row)}<div class="h-16 rounded bg-gray-100 dark:bg-zinc-800"></div>{/each}</div>{/if}
 					{#if !trashItems.length && !loading}<p class="py-10 text-center text-sm text-text-muted">Kosz jest pusty</p>{/if}
 					{#each trashItems as item (item.entry?.id)}
-						{#if item.entry}<div class="rounded-md border border-border-line p-3"><div class="flex items-center gap-3"><span class="flex h-9 w-9 items-center justify-center rounded-md bg-red-50 text-red-500 dark:bg-red-900/20"><Trash class="h-4 w-4" /></span><span class="min-w-0 flex-1"><strong class="block truncate text-sm font-medium text-text-main">{item.entry.name}</strong><span class="mt-0.5 block text-xs text-text-muted">{item.purgeAt ? `Do ${timestampDate(item.purgeAt).toLocaleDateString('pl-PL')}` : 'Termin usunięcia nieznany'}</span></span></div><div class="mt-3 flex justify-end gap-2"><button type="button" disabled={pendingRestoreIds.includes(item.entry?.id ?? '')} onclick={() => void restoreTrashItem(item)} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium">Przywróć</button><button type="button" onclick={() => void permanentlyDelete(item)} class="rounded-md px-3 py-2 text-xs font-medium text-red-600">Zleć trwałe usunięcie</button></div></div>{/if}
+						{#if item.entry}<div class="rounded-md border border-border-line p-3"><div class="flex items-center gap-3"><input type="checkbox" class="file-selection-checkbox" checked={selectedTrashIds.includes(item.entry.id)} aria-label={`Zaznacz ${item.entry.name}`} onchange={(event) => toggleTrashSelection(item.entry!.id, event.currentTarget.checked)} /><span class="flex h-9 w-9 items-center justify-center rounded-md bg-red-50 text-red-500 dark:bg-red-900/20"><Trash class="h-4 w-4" /></span><span class="min-w-0 flex-1"><strong class="block truncate text-sm font-medium text-text-main">{item.entry.name}</strong><span class="mt-0.5 block text-xs text-text-muted">{item.purgeAt ? `Do ${timestampDate(item.purgeAt).toLocaleDateString('pl-PL')}` : 'Termin usunięcia nieznany'}</span></span></div><div class="mt-3 flex justify-end gap-2"><button type="button" disabled={pendingRestoreIds.includes(item.entry?.id ?? '')} onclick={() => void restoreTrashItem(item)} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium">Przywróć</button><button type="button" onclick={() => void permanentlyDelete(item)} class="rounded-md px-3 py-2 text-xs font-medium text-red-600">Zleć trwałe usunięcie</button></div></div>{/if}
 					{/each}
 				</div>
 				{#if nextPageToken}<div class="flex justify-center border-t border-border-line p-4"><button type="button" onclick={loadNextPage} disabled={listBusy} class="rounded-md border border-border-line px-4 py-2 text-sm font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">Pokaż więcej</button></div>{/if}
@@ -1036,11 +1148,23 @@
 	</AppDialog>
 {/if}
 
+{#if bulkDeleteOpen}
+	<AppDialog labelledby="bulk-delete-title" busy={bulkDeleteBusy} onclose={() => { if (!bulkDeleteBusy) bulkDeleteOpen = false; }}>
+		<section class="w-full max-w-lg space-y-4 rounded-md border border-border-line bg-bg-panel p-5 shadow-lg">
+			<h2 id="bulk-delete-title" class="text-base font-semibold text-text-main">Trwale usunąć zaznaczone elementy?</h2>
+			<p class="text-sm text-text-muted">Zlecenie obejmuje {bulkDeleteBatches.reduce((count, batch) => count + batch.entries.length, 0)} elementów wraz z zawartością folderów.</p>
+			{#if bulkDeleteError}<p role="alert" class="rounded-md bg-red-500/10 p-3 text-sm text-red-600">{bulkDeleteError}</p>{/if}
+			<div class="flex justify-end gap-2"><button type="button" disabled={bulkDeleteBusy} onclick={() => (bulkDeleteOpen = false)} class="min-h-10 rounded-md px-3 text-sm">Zamknij</button><button type="button" disabled={bulkDeleteBusy} onclick={() => void confirmBulkDelete()} class="min-h-10 rounded-md bg-red-600 px-4 text-sm font-medium text-white">Zleć trwałe usunięcie</button></div>
+		</section>
+	</AppDialog>
+{/if}
+
 {#if movingEntry && activeSpaceId}
 	<MoveEntryDialog
 		entry={movingEntry}
 		entries={movingEntries}
 		spaceId={activeSpaceId}
+		{spaces}
 		initialPath={folderPath}
 		onclose={() => (movingEntry = null)}
 		onmoved={(moved, failed) => {
