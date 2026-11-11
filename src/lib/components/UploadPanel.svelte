@@ -1,7 +1,13 @@
 <script lang="ts">
 	import type { UploadManager, UploadTask } from '../upload-manager.svelte.js';
-	import { EntryKind, StorageLocation } from '../gen/unisourcecfl/catalog/v1/catalog_pb.js';
-	let { manager }: { manager: UploadManager } = $props();
+	import { EntryKind, SpaceKind, StorageLocation, type Space } from '../gen/unisourcecfl/catalog/v1/catalog_pb.js';
+	let { manager, spaces = [] }: { manager: UploadManager; spaces?: Pick<Space, 'id' | 'kind'>[] } = $props();
+	function destinationLabel(task: UploadTask): string {
+		if (task.target.label !== task.target.spaceId) return task.target.label;
+		const space = spaces.find((item) => item.id === task.target.spaceId);
+		const name = space?.kind === SpaceKind.SHARED ? 'Main' : space?.kind === SpaceKind.PRIVATE ? 'Pliki prywatne' : 'Wybrana przestrzeń';
+		return task.target.parentId ? `${name} / Wybrany folder` : name;
+	}
 	const locationLabel = (location: StorageLocation | undefined) =>
 		location === StorageLocation.R2 ? 'R2' : location === StorageLocation.RUSTFS ? 'RustFS' : '';
 	function phaseLabel(task: UploadTask): string {
@@ -61,12 +67,12 @@
 			<div id="transfer-list" class="max-h-[45dvh] divide-y divide-border-line overflow-y-auto">
 				{#each manager.tasks as task (task.id)}
 					<div class="space-y-2 px-4 py-3">
-						<div class="flex items-start justify-between gap-2">
-							<strong class="min-w-0 truncate text-sm text-text-main" title={task.name}
+						<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+							<strong class="min-w-0 basis-full truncate text-sm text-text-main" title={task.name}
 								>{task.name}</strong
 							>
 							{#if task.multipartLocalId && task.phase === 'needsFile'}
-								<label class="cursor-pointer rounded px-2 py-1 text-xs text-primary underline">
+								<label class="cursor-pointer whitespace-nowrap rounded px-2 py-1 text-xs text-primary underline">
 									Wybierz plik
 									<input
 										type="file"
@@ -94,8 +100,8 @@
 									>Anuluj</button
 								>{/if}
 						</div>
-						<p class="truncate text-xs text-text-muted" title={task.target.label}>
-							{task.target.label}
+						<p class="truncate text-xs text-text-muted" title={destinationLabel(task)}>
+							{destinationLabel(task)}
 						</p>
 						<p class="text-xs {task.phase === 'done' ? 'font-medium text-emerald-600 dark:text-emerald-400' : 'text-text-muted'}" role="status">{phaseLabel(task)}</p>
 						{#if task.storageLocation}<p class="text-xs text-text-muted">

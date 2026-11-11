@@ -30,6 +30,7 @@ export type PersistedMultipartSession = {
 	requestId: string;
 	uploadId?: string;
 	spaceId: string;
+	targetLabel?: string;
 	parentId?: string;
 	name: string;
 	replaceEntryId?: string;
@@ -79,6 +80,7 @@ function copySafeFields(session: PersistedMultipartSession): PersistedMultipartS
 		requestId: session.requestId,
 		...(session.uploadId ? { uploadId: session.uploadId } : {}),
 		spaceId: session.spaceId,
+		...(session.targetLabel ? { targetLabel: session.targetLabel } : {}),
 		...(session.parentId ? { parentId: session.parentId } : {}),
 		name: session.name,
 		...(session.replaceEntryId !== undefined ? { replaceEntryId: session.replaceEntryId, replaceExpectedRevision: session.replaceExpectedRevision } : {}),

@@ -299,7 +299,7 @@ export class UploadManager {
 				spaceId: session.spaceId,
 				...(session.parentId ? { parentId: session.parentId } : {}),
 				mode: session.uploadMode,
-				label: session.spaceId,
+				label: session.targetLabel ?? session.spaceId,
 				name: session.name,
 				...(session.replaceEntryId !== undefined ? { replaceEntryId: session.replaceEntryId, replaceExpectedRevision: session.replaceExpectedRevision } : {})
 			},

@@ -20,4 +20,4 @@
 </script>
 
 {#if visible}{#key `${spaceKind}:${mode}`}<StoragePage {spaceKind} {mode} />{/key}{/if}
-<UploadPanel manager={app.transfers} />
+<UploadPanel manager={app.transfers} spaces={app.spaces} />

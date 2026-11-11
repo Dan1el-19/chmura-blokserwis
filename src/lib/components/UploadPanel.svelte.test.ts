@@ -8,7 +8,7 @@ import {
 	MultipartUploadState,
 	type MultipartPart
 } from '#lib/gen/unisourcecfl/upload/v1/multipart_pb.js';
-import { EntryKind, StorageLocation } from '#lib/gen/unisourcecfl/catalog/v1/catalog_pb.js';
+import { EntryKind, SpaceKind, StorageLocation } from '#lib/gen/unisourcecfl/catalog/v1/catalog_pb.js';
 import { CloudState } from '#lib/cloud-state.svelte.js';
 import type { MultipartControllerOptions, MultipartRpc } from '#lib/multipart/controller.js';
 import { MULTIPART_PART_BYTES } from '#lib/multipart/protocol.js';
@@ -303,6 +303,15 @@ it('restores an owner-scoped session, keeps it after a wrong file, and resumes o
 	expect(methods.getMultipartPartTarget.mock.calls.map(([request]) => request.partNumber)).toEqual([2, 3]);
 });
 
+it('shows the space name instead of its identifier for a restored transfer', async () => {
+	const store = new MemoryStore();
+	await store.put({ ownerId: 'alice', localId: 'saved-label', requestId: 'begin', spaceId: 'space-1', name: 'large.bin', sizeBytes: fileSize, partSizeBytes: MULTIPART_PART_BYTES, fingerprintHex: manifest.fingerprintHex, parts: [], uploadMode: UploadMode.AUTO, attemptNumber: 1, revision: 1n, phase: 'paused' });
+	const state = createState(store, makeRpc().rpc);
+	const screen = await render(UploadPanel, { props: { manager: state.transfers, spaces: [{ id: 'space-1', kind: SpaceKind.SHARED }] } });
+	await expect.element(screen.getByText('Main', { exact: true })).toBeVisible();
+	expect(screen.container.textContent).not.toContain('space-1');
+});
+
 it('shows verifying at 99 percent until the completed session publishes its catalog entry', async () => {
 	fixture.getUploadLimits.mockResolvedValue({ maxUploadBytes: 100_000_000n, canManage: false, multipart: multipartEnabled });
 	fixture.listEntries.mockResolvedValue({ entries: [], nextPageToken: '' });
@@ -344,6 +353,6 @@ it('aborts an active multipart upload on account change and retains the previous
 	state.activate('bob');
 	await expect.poll(() => state.transfers.tasks.length).toBe(0);
 	expect(state.transfers.tasks).toEqual([]);
-	expect(await store.get('alice', localId)).toMatchObject({ ownerId: 'alice', localId });
+	expect(await store.get('alice', localId)).toMatchObject({ ownerId: 'alice', localId, targetLabel: 'Personal' });
 	expect(await store.list('bob')).toEqual([]);
 });

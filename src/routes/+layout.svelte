@@ -316,7 +316,7 @@
 			<main bind:this={scrollHost} onscroll={rememberScroll} class="flex-1 overflow-y-auto overscroll-none p-4 pb-28 lg:p-10 lg:pb-28">
 				{@render children()}
 			</main>
-			<UploadPanel manager={cloud.transfers} />
+			<UploadPanel manager={cloud.transfers} spaces={cloud.spaces} />
 		</div>
 	</div>
 {/if}

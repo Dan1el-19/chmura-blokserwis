@@ -35,6 +35,7 @@ it('persists recoverable metadata by owner and omits secrets and file contents',
 	try {
 		const untrusted = {
 			...session('alice', 'local-1'),
+			targetLabel: 'Main / Dokumenty',
 			accessToken: 'never-store-me',
 			targetUrl: 'https://signed.example/secret',
 			file: new File(['secret file bytes'], 'archive.bin')
@@ -45,6 +46,7 @@ it('persists recoverable metadata by owner and omits secrets and file contents',
 		expect(saved).toMatchObject({
 			ownerId: 'alice',
 			localId: 'local-1',
+			targetLabel: 'Main / Dokumenty',
 			uploadId: 'upload-local-1',
 			replaceEntryId: 'entry-1',
 			replaceExpectedRevision: 4,

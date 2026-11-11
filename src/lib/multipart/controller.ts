@@ -49,7 +49,7 @@ export type MultipartProgressEvent = {
 	reset?: boolean;
 };
 
-export type MultipartDestination = { spaceId: string; parentId?: string; name?: string; replaceEntryId?: string; replaceExpectedRevision?: number };
+export type MultipartDestination = { spaceId: string; parentId?: string; label?: string; name?: string; replaceEntryId?: string; replaceExpectedRevision?: number };
 
 export class MultipartNameConflictError extends Error {
 	constructor() { super('Nazwa jest już zajęta.'); this.name='MultipartNameConflictError'; }
@@ -219,6 +219,7 @@ export class MultipartController {
 				localId,
 				requestId: this.makeId(),
 				spaceId: destination.spaceId,
+				...(destination.label ? { targetLabel: destination.label } : {}),
 				...(destination.parentId ? { parentId: destination.parentId } : {}),
 				name: destination.name ?? file.name,
 				...(destination.replaceEntryId !== undefined ? { replaceEntryId: destination.replaceEntryId, replaceExpectedRevision: destination.replaceExpectedRevision } : {}),
