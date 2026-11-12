@@ -107,7 +107,7 @@ it('recovers an import and applies edited gross prices without inventing VAT', a
 		id: 'quote-1', draftVersion: 2n, draft: { title: 'Pierwotny szkic', priceMode: QuotePriceMode.GROSS }
 	}) });
 	const view = await render(QuoteEditor, { id: 'quote-1' });
-	await view.getByRole('group', { name: 'Import XLSX' }).getByLabelText('Cena brutto').fill('21');
+	await view.getByRole('group', { name: 'Import XLSX' }).getByLabelText('Cena brutto pozycji 1').fill('21');
 	await view.getByRole('button', { name: 'Zastosuj sprawdzone pozycje' }).click();
 	await expect.poll(() => api.applyImport.mock.calls.length).toBe(1);
 	expect(api.applyImport).toHaveBeenCalledWith(expect.objectContaining({

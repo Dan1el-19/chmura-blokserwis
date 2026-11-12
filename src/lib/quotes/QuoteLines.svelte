@@ -24,15 +24,15 @@
 
 <div class="space-y-3">
 	{#each lines as line, index (line)}
-		<div class="space-y-3 rounded-lg border border-border-line p-4">
+		<div class="space-y-2 border-b border-border-line pb-3">
 			<div class="flex items-center justify-between gap-3">
 				<span class="text-sm text-text-muted">Pozycja {index + 1}{sourceRows[index] ? ` · Wiersz ${sourceRows[index]} w arkuszu` : ''}</span>
 				<button class={button} type="button" aria-label={`Usuń pozycję ${index + 1}`} onclick={() => remove(index)}>Usuń</button>
 			</div>
-			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[3fr_1fr_1fr]">
-				<label class="text-sm">Nazwa<input class={field} bind:value={line.name} oninput={onchange} /></label>
-				<label class="text-sm">Ilość<input class={field} bind:value={line.quantity} inputmode="decimal" oninput={onchange} /></label>
-				<label class="text-sm">Cena {net ? 'netto' : 'brutto'}<input class={field} bind:value={line.unitPrice} inputmode="decimal" oninput={onchange} /></label>
+			<div class="grid grid-cols-2 gap-3 lg:grid-cols-[3fr_1fr_1fr]">
+				<label class="col-span-2 text-sm lg:col-span-1">Nazwa<input class={field} aria-label={`Nazwa pozycji ${index + 1}`} bind:value={line.name} oninput={onchange} /></label>
+				<label class="text-sm">Ilość<input class={field} aria-label={`Ilość pozycji ${index + 1}`} bind:value={line.quantity} inputmode="decimal" oninput={onchange} /></label>
+				<label class="text-sm">Cena {net ? 'netto' : 'brutto'}<input class={field} aria-label={`Cena ${net ? 'netto' : 'brutto'} pozycji ${index + 1}`} bind:value={line.unitPrice} inputmode="decimal" oninput={onchange} /></label>
 			</div>
 		</div>
 	{/each}

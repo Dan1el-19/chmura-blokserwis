@@ -39,7 +39,7 @@ export async function runQuoteFlow(page: Page, {
 	await expect(imported.getByText(/Suma pozycji: 40\.00 PLN/)).toBeVisible();
 	await imported.getByRole('button', { name: 'Zastosuj sprawdzone pozycje' }).click();
 	await expect(imported.getByText('Import zapisany w szkicu.')).toBeVisible();
-	await expect(page.getByRole('group', { name: 'Dane wyceny' }).getByLabel('Nazwa')).toHaveValue('Kamera');
+	await expect(page.getByRole('group', { name: 'Dane wyceny' }).getByLabel('Nazwa pozycji 1')).toHaveValue('Kamera');
 
 	await page.getByRole('button', { name: 'Generuj opis AI' }).click();
 	await expect(page.getByLabel('Wstęp')).toHaveValue(expectedIntroduction, { timeout: 95_000 });
