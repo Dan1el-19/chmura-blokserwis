@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { UploadManager, UploadTask } from '../upload-manager.svelte.js';
 	import { EntryKind, SpaceKind, StorageLocation, type Space } from '../gen/unisourcecfl/catalog/v1/catalog_pb.js';
-	let { manager, spaces = [] }: { manager: UploadManager; spaces?: Pick<Space, 'id' | 'kind'>[] } = $props();
+	let { manager, spaces = [], height = $bindable(0) }: { manager: UploadManager; spaces?: Pick<Space, 'id' | 'kind'>[]; height?: number } = $props();
+	$effect(() => { if (!manager.tasks.length) height = 0; });
 	function destinationLabel(task: UploadTask): string {
 		if (task.target.label !== task.target.spaceId) return task.target.label;
 		const space = spaces.find((item) => item.id === task.target.spaceId);
@@ -44,6 +45,7 @@
 
 {#if manager.tasks.length}
 	<section
+		bind:offsetHeight={height}
 		class="fixed right-3 bottom-3 left-3 z-10 rounded-lg border border-border-line bg-bg-panel shadow-xl sm:left-auto sm:w-96"
 		aria-label="Transfery"
 	>

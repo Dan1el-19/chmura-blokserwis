@@ -232,6 +232,12 @@ test('preserves folders, pages and uploads while navigating through the applicat
 	]);
 	await expect.poll(() => putStarted).toBe(true);
 	await expect(page.getByRole('region', { name: 'Transfery' })).toBeVisible();
+	if (mobile) {
+		await scroll.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+		const lastFile = await contentFile('Plik 54.txt').boundingBox();
+		const panel = await page.getByRole('region', { name: 'Transfery' }).boundingBox();
+		expect(lastFile && panel && lastFile.y + lastFile.height <= panel.y).toBe(true);
+	}
 	await navigate('Pliki wspólne');
 	await expect(page.getByRole('region', { name: 'Transfery' })).toBeVisible();
 	await navigate('Kosz');

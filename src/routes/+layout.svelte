@@ -25,6 +25,7 @@
 	const cloud = new CloudState();
 	setContext(CLOUD_CONTEXT, cloud);
 	let scrollHost = $state<HTMLElement>();
+	let transferHeight = $state(0);
 	const authState = writable<AuthSnapshot>({ status: 'loading', user: null, error: null });
 	let clerkInstance = $state.raw<Clerk>();
 	let signInHost = $state<HTMLDivElement>();
@@ -321,10 +322,10 @@
 		<div class="flex min-h-0 min-w-0 flex-1 flex-col">
 			<MobileHeader bind:isDrawerOpen bind:menuButton />
 			<MobileDrawer {navItems} {currentPath} lastFolders={cloud.lastFolders} manager={cloud.transfers} bind:isDrawerOpen onSignOut={signOut} />
-			<main id="main-content" tabindex="-1" bind:this={scrollHost} onscroll={rememberScroll} class="flex-1 overflow-y-auto overscroll-none p-4 pb-28 md:px-6 xl:px-8">
+			<main id="main-content" tabindex="-1" bind:this={scrollHost} onscroll={rememberScroll} style:padding-bottom={transferHeight ? `${transferHeight + 28}px` : undefined} class="flex-1 overflow-y-auto overscroll-none p-4 pb-28 md:px-6 xl:px-8">
 				{@render children()}
 			</main>
-			<UploadPanel manager={cloud.transfers} spaces={cloud.spaces} />
+			<UploadPanel manager={cloud.transfers} spaces={cloud.spaces} bind:height={transferHeight} />
 		</div>
 	</div>
 {/if}
