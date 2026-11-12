@@ -65,10 +65,24 @@ it('keeps typed values after a concurrent save conflict', async () => {
 	await view.getByLabelText('Tytuł').fill('Moja lokalna zmiana');
 	await view.getByRole('button', { name: 'Zapisz szkic' }).click();
 	await expect.element(view.getByRole('alert')).toHaveTextContent('Twoje zmiany pozostają w formularzu');
+	await expect.element(view.getByText('Nie udało się zapisać', { exact: true })).toBeVisible();
 	await expect.element(view.getByLabelText('Tytuł')).toHaveValue('Moja lokalna zmiana');
 	expect(api.saveDraft).toHaveBeenCalledWith(expect.objectContaining({
 		expectedVersion: 1n, draft: expect.objectContaining({ title: 'Moja lokalna zmiana' })
 	}));
+});
+
+it('reports a clean draft and allows retry after a save error', async () => {
+	api.saveDraft.mockRejectedValueOnce(new Error('Brak połączenia'));
+	api.saveDraft.mockResolvedValueOnce({ quote: original });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await expect.element(view.getByText('Zapisano', { exact: true })).toBeVisible();
+	await view.getByLabelText('Tytuł').fill('Zmiana');
+	await expect.element(view.getByText('Niezapisane zmiany', { exact: true })).toBeVisible();
+	await view.getByRole('button', { name: 'Zapisz szkic' }).click();
+	await expect.element(view.getByText('Nie udało się zapisać', { exact: true })).toBeVisible();
+	await view.getByRole('button', { name: 'Ponów zapis' }).click();
+	await expect.element(view.getByText('Zapisano', { exact: true })).toBeVisible();
 });
 
 it('saves newer edits after an earlier delayed save completes', async () => {

@@ -35,6 +35,7 @@
 	let file = $state<File>();
 	let busy = $state(false);
 	let saving = $state(false);
+	let saveFailed = $state(false);
 	let dirty = $state(false);
 	let error = $state('');
 	let status = $state('');
@@ -67,7 +68,7 @@
 	function changed() {
 		edit++;
 		dirty = true;
-		status = 'Niezapisane zmiany';
+		status = '';
 		for (const key of keys.keys()) if (!key.startsWith('save:')) keys.delete(key);
 		clearTimeout(timer);
 		timer = setTimeout(() => { if (!busy) void save(); }, 800);
@@ -81,19 +82,24 @@
 		const payload = create(QuoteDraftSchema, $state.snapshot(draft));
 		const expectedVersion = quote.draftVersion;
 		saving = true;
+		saveFailed = false;
 		error = '';
 		inFlight = (async () => {
 			try {
 				const result = await getQuoteClient().saveDraft({ quoteId: id, draft: payload, expectedVersion, idempotencyKey: commandKey(keyScope) });
 				keys.delete(keyScope);
-				if (!result.quote || disposed) return false;
+				if (disposed) return false;
+				if (!result.quote) {
+					saveFailed = true;
+					error = 'Nie otrzymano potwierdzenia zapisu szkicu.';
+					return false;
+				}
 				quote = result.quote;
 				if (edit === start) dirty = false;
 				if (!dirty && previewRevision === 0n) void showPreview();
-				status = dirty ? 'Niezapisane zmiany' : 'Szkic zapisany';
 				return !dirty;
 			} catch (reason) {
-				if (!disposed) error = quoteError(reason);
+				if (!disposed) { saveFailed = true; error = quoteError(reason); }
 				return false;
 			} finally {
 				saving = false;
@@ -281,7 +287,11 @@
 				})}>{quote.currentRevision ? 'Zapisz zmiany' : 'Zatwierdź wycenę'}</button>
 			</div>
 		</header>
-		{#if status || saving}<p role="status">{saving ? 'Zapisywanie szkicu…' : status}</p>{/if}
+		<div class="flex flex-wrap items-center gap-2 text-sm" role="status" aria-live="polite">
+			<span>{saving ? 'Zapisywanie…' : saveFailed ? 'Nie udało się zapisać' : dirty ? 'Niezapisane zmiany' : 'Zapisano'}</span>
+			{#if saveFailed}<button type="button" class="underline" disabled={busy || saving} onclick={save}>Ponów zapis</button>{/if}
+		</div>
+		{#if status}<p role="status">{status}</p>{/if}
 		{#if extraError}<p class="text-sm text-text-muted" role="status">{extraError}</p>{/if}
 		<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,0.8fr)]">
 		<div class="min-w-0 space-y-4">
