@@ -584,7 +584,8 @@ it('creates and lists a custom public link from the file action', async () => {
 	await screen.getByRole('row', { name: /shared\.png/ }).getByRole('button', { name: 'Udostępnij shared.png' }).click();
 	const dialog = screen.getByRole('dialog', { name: 'Udostępnij plik' });
 	await expect.poll(() => api.listShares).toHaveBeenCalledTimes(1);
-	await dialog.getByLabelText(/Własny slug/).fill('my-picture');
+	await dialog.getByRole('button', { name: 'Utwórz link', exact: true }).click();
+	await dialog.getByLabelText(/Własny adres linku/).fill('my-picture');
 	await dialog.getByLabelText(/Etykieta/).fill('Dla klienta X');
 	await dialog.getByLabelText('Hasło').fill('secret');
 	await dialog.getByLabelText('Limit pobrań').fill('2');

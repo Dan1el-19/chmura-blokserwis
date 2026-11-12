@@ -3,6 +3,7 @@ import { expect, test } from 'playwright/test';
 for (const width of [320, 390]) {
 	test(`file actions fit the viewport at ${width}px`, async ({ page }) => {
 		await page.setViewportSize({ width, height: width === 390 ? 844 : 740 });
+		let creates = 0;
 		await page.addInitScript(() => Object.assign(window, {
 			__internal_ClerkUICtor: class {},
 			Clerk: { user: { id: 'ui-user' }, session: { id: 'ui-session', status: 'active', getToken: async () => 'token' }, load: async () => {}, addListener: () => () => {}, signOut: async () => {} }
@@ -11,8 +12,10 @@ for (const width of [320, 390]) {
 			const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'POST, OPTIONS', 'content-type': 'application/json' };
 			if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
 			const method = route.request().url().split('/').at(-1);
+			if (method === 'CreateShare') creates++;
 			const result = method === 'GetSpaces' ? { spaces: [{ id: 'personal', kind: 2 }] }
 				: method === 'ListEntries' ? { entries: [{ id: 'file', spaceId: 'personal', kind: 2, name: 'Bardzo dluga nazwa pliku testowego.txt', revision: 1, sizeBytes: '10', storageLocation: 2 }], nextPageToken: '' }
+				: method === 'ListShares' ? { shares: [{ id: 'link', address: 'existing-link', revision: 1, viewCount: '0', downloadCount: '0' }] }
 				: method === 'GetDownload' ? { url: 'https://storage.example/file' } : {};
 			return route.fulfill({ status: 200, headers, json: result });
 		});
@@ -45,6 +48,13 @@ for (const width of [320, 390]) {
 		await expect(page.getByRole('dialog')).toContainText('Bardzo dluga nazwa pliku testowego.txt');
 		await expect(page.getByRole('dialog')).toContainText('Zmodyfikowano');
 		await expect(page.getByRole('dialog')).toContainText('RustFS');
+		await page.keyboard.press('Escape');
+		await trigger.click();
+		await page.getByRole('button', { name: 'Udostępnij', exact: true }).click();
+		const shareDialog = page.getByRole('dialog', { name: 'Udostępnij plik' });
+		await expect(shareDialog.getByRole('button', { name: 'Kopiuj link' })).toBeInViewport();
+		await expect(shareDialog.getByLabel('Etykieta (opcjonalnie)')).toHaveCount(0);
+		expect(creates).toBe(0);
 		await page.keyboard.press('Escape');
 		await trigger.click();
 		await page.setViewportSize({ width: 1024, height: 740 });

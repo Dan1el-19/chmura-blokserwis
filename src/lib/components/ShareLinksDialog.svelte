@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { create } from '@bufbuild/protobuf';
 	import { FieldMaskSchema } from '@bufbuild/protobuf/wkt';
 	import { timestampDate, timestampFromDate } from '@bufbuild/protobuf/wkt';
@@ -32,6 +32,7 @@
 	let clearPassword = $state(false);
 	let editMaxDownloads = $state<string | number>('');
 	let editExpiry = $state('');
+	let showCreate = $state(false);
 	let loading = $state(true);
 	let pending = $state(false);
 	let error = $state('');
@@ -40,7 +41,7 @@
 	let pendingCreateRequestId = '';
 	let requestVersion = 0;
 	const titleId = $derived(`share-title-${file.id}`);
-	const previewUrl = $derived(`${origin}/s/${encodeURIComponent(slug.trim() || '<token>')}`);
+	const previewUrl = $derived(`${origin}/s/${encodeURIComponent(slug.trim() || 'moj-link')}`);
 
 	function sharePath(address: string, download = false): string {
 		const path = download
@@ -50,8 +51,8 @@
 	}
 
 	function message(cause: unknown): string {
-		if (cause instanceof ConnectError && cause.code === Code.AlreadyExists) return 'Ten adres jest już zajęty. Wybierz inny slug.';
-		if (cause instanceof ConnectError && cause.code === Code.InvalidArgument) return 'Slug musi mieć 3–64 znaki: małe litery, cyfry i myślniki; początek i koniec muszą być literą lub cyfrą.';
+		if (cause instanceof ConnectError && cause.code === Code.AlreadyExists) return 'Ten adres jest już zajęty. Wybierz inny adres.';
+		if (cause instanceof ConnectError && cause.code === Code.InvalidArgument) return 'Własny adres musi mieć 3–64 znaki: małe litery, cyfry i myślniki; początek i koniec muszą być literą lub cyfrą.';
 		return storageErrorMessage(cause);
 	}
 
@@ -134,6 +135,9 @@
 				expiryInput = '';
 				pendingCreateRequestId = '';
 				notice = 'Link został utworzony.';
+				showCreate = false;
+				await tick();
+				document.getElementById(`share-result-${result.share.id}`)?.focus();
 			}
 		} catch (cause) {
 			error = message(cause);
@@ -220,17 +224,8 @@
 				<h2 id={titleId} class="text-base font-semibold text-text-main">{file.kind === EntryKind.FOLDER ? 'Udostępnij folder' : 'Udostępnij plik'}</h2>
 				<p class="mt-1 truncate text-xs text-text-muted">{file.name}</p>
 			</div>
-			<button type="button" onclick={onclose} class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-800" aria-label="Zamknij udostępnianie"><X class="h-5 w-5" /></button>
+			<button type="button" onclick={onclose} disabled={pending} class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main disabled:opacity-50 dark:hover:bg-zinc-800" aria-label="Zamknij udostępnianie"><X class="h-5 w-5" /></button>
 		</header>
-
-		<form onsubmit={createLink} class="grid gap-3 rounded-md border border-border-line bg-bg-app p-4 md:grid-cols-2">
-			<label class="block space-y-1.5 text-sm text-text-main"><span>Etykieta <span class="font-normal text-text-muted">(opcjonalnie)</span></span><input bind:value={labelInput} oninput={() => pendingCreateRequestId = ''} maxlength="200" placeholder="np. Dla klienta X" disabled={pending} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm focus:border-primary focus:outline-none" /></label>
-			<label class="block space-y-1.5 text-sm text-text-main"><span>Własny slug <span class="font-normal text-text-muted">(opcjonalnie)</span></span><input bind:value={slug} oninput={() => pendingCreateRequestId = ''} maxlength="64" autocomplete="off" placeholder="np. moje-zdjecie" disabled={pending} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm focus:border-primary focus:outline-none" /><span class="block text-xs text-text-muted">Małe litery a–z, cyfry i myślniki. {previewUrl}</span></label>
-			<label class="block space-y-1.5 text-sm text-text-main"><span>Hasło <span class="font-normal text-text-muted">(opcjonalnie)</span></span><input type="password" bind:value={passwordInput} oninput={() => pendingCreateRequestId = ''} autocomplete="new-password" maxlength="256" disabled={pending} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm focus:border-primary focus:outline-none" /></label>
-			<label class="block space-y-1.5 text-sm text-text-main"><span>Limit pobrań <span class="font-normal text-text-muted">(opcjonalnie)</span></span><input type="number" min="1" step="1" bind:value={maxDownloadsInput} oninput={() => pendingCreateRequestId = ''} disabled={pending} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm focus:border-primary focus:outline-none" /><span class="block text-xs text-text-muted">Puste pole oznacza brak limitu.</span></label>
-			<label class="block space-y-1.5 text-sm text-text-main"><span>Termin ważności</span><input type="datetime-local" bind:value={expiryInput} oninput={() => pendingCreateRequestId = ''} disabled={pending} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm focus:border-primary focus:outline-none" /><span class="block text-xs text-text-muted">Puste pole oznacza link bezterminowy.</span></label>
-			<div class="flex items-end"><button type="submit" disabled={pending} class="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">{#if pending}<SpinnerGap class="h-4 w-4 animate-spin" />{:else}<LinkSimple class="h-4 w-4" />{/if}Utwórz link</button></div>
-		</form>
 
 		{#if notice}<p class="text-sm text-emerald-700 dark:text-emerald-300" role="status">{notice}</p>{/if}
 		{#if error}<p class="rounded-md bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-300" role="alert">{error}</p>{/if}
@@ -242,7 +237,7 @@
 			{:else}<ul class="max-h-[55dvh] space-y-2 overflow-y-auto">
 				{#each links as link (link.id)}
 					{@const status = statusFor(link)}
-					<li class="rounded-md border border-border-line p-3 {status === 'active' || status === 'limit' ? 'bg-bg-panel' : 'bg-bg-app opacity-75'}">
+					<li id={`share-result-${link.id}`} tabindex="-1" class="rounded-md border border-border-line p-3 {status === 'active' || status === 'limit' ? 'bg-bg-panel' : 'bg-bg-app opacity-75'}">
 						<div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
 							<div class="min-w-0">{#if status === 'active' || status === 'limit'}<a class="block truncate font-mono text-sm text-primary hover:underline" href={resolve('/s/[address]', { address: link.address })} target="_blank" rel="noreferrer">{urlFor(link.address)}</a>{:else}<span class="block truncate font-mono text-sm text-text-muted">{urlFor(link.address)}</span>{/if}<p class="mt-1 break-words text-sm font-medium text-text-main">{link.label || 'Bez etykiety'}</p><p class="mt-1 text-xs text-text-muted">{status === 'active' ? 'Aktywny' : status === 'expired' ? 'Wygasły' : status === 'limit' ? 'Limit wyczerpany' : status === 'paused' ? 'Wstrzymany' : 'Unieważniony'} · {expiryLabel(link)}</p><p class="mt-1 text-xs text-text-muted">Wejścia: {link.viewCount.toString()} · Pobrania: {link.downloadCount.toString()}{link.maxDownloads === undefined ? '' : ` / ${link.maxDownloads.toString()}`} · {link.hasPassword ? 'Chroniony hasłem' : 'Bez hasła'}</p></div>
 							{#if status === 'active' || status === 'limit'}<div class="flex shrink-0 flex-wrap gap-1">
@@ -263,5 +258,19 @@
 				{/each}
 			</ul>{/if}
 		</div>
+		<div>
+			{#if !links.length && !loading}<p class="mb-2 text-sm text-text-muted">Domyślnie link nie ma hasła, terminu ani limitu pobrań.</p>{/if}
+			<button type="button" disabled={loading || pending} class="min-h-11 rounded-md border border-border-line px-4 text-sm font-medium disabled:opacity-50" onclick={() => showCreate = !showCreate}>{showCreate ? 'Zamknij formularz' : links.length ? 'Utwórz kolejny link' : 'Utwórz link'}</button>
+		</div>
+		{#if showCreate}
+			<form onsubmit={createLink} class="grid gap-3 rounded-md border border-border-line bg-bg-app p-4 md:grid-cols-2">
+				<label class="block space-y-1.5 text-sm text-text-main"><span>Etykieta <span class="font-normal text-text-muted">(opcjonalnie)</span></span><input bind:value={labelInput} oninput={() => pendingCreateRequestId = ''} maxlength="200" placeholder="np. Dla klienta X" disabled={pending} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm focus:border-primary focus:outline-none" /></label>
+				<label class="block space-y-1.5 text-sm text-text-main"><span>Własny adres linku <span class="font-normal text-text-muted">(opcjonalnie)</span></span><input bind:value={slug} oninput={() => pendingCreateRequestId = ''} maxlength="64" autocomplete="off" placeholder="np. moje-zdjecie" disabled={pending} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm focus:border-primary focus:outline-none" /><span class="block text-xs text-text-muted">Małe litery a–z, cyfry i myślniki. {previewUrl}</span></label>
+				<label class="block space-y-1.5 text-sm text-text-main"><span>Hasło <span class="font-normal text-text-muted">(opcjonalnie)</span></span><input type="password" bind:value={passwordInput} oninput={() => pendingCreateRequestId = ''} autocomplete="new-password" maxlength="256" disabled={pending} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm focus:border-primary focus:outline-none" /></label>
+				<label class="block space-y-1.5 text-sm text-text-main"><span>Limit pobrań <span class="font-normal text-text-muted">(opcjonalnie)</span></span><input type="number" min="1" step="1" bind:value={maxDownloadsInput} oninput={() => pendingCreateRequestId = ''} disabled={pending} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm focus:border-primary focus:outline-none" /><span class="block text-xs text-text-muted">Puste pole oznacza brak limitu.</span></label>
+				<label class="block space-y-1.5 text-sm text-text-main"><span>Termin ważności</span><input type="datetime-local" bind:value={expiryInput} oninput={() => pendingCreateRequestId = ''} disabled={pending} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm focus:border-primary focus:outline-none" /><span class="block text-xs text-text-muted">Puste pole oznacza link bezterminowy.</span></label>
+				<div class="flex items-end"><button type="submit" disabled={pending} class="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">{#if pending}<SpinnerGap class="h-4 w-4 animate-spin" />{:else}<LinkSimple class="h-4 w-4" />{/if}Utwórz link</button></div>
+			</form>
+		{/if}
 	</section>
 </AppDialog>
