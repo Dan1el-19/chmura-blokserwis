@@ -42,6 +42,7 @@
 	let loading = $state(false);
 	let busy = $state(false);
 	let error = $state('');
+	let failures = $state<{ id: string; name: string; message: string }[]>([]);
 	let loadVersion = 0;
 	let bulkBatches: { entries: Entry[]; requestId: string; parent: string; targetSpaceId: string }[] = [];
 	const parentId = $derived(path.at(-1)?.id ?? '');
@@ -122,6 +123,7 @@
 		if (busy || destinationIsInsideSource || parentIsSource) return;
 		busy = true;
 		error = '';
+		failures = [];
 		const moved: Entry[] = [];
 		const failed: Entry[] = [];
 		let firstFailure: unknown;
@@ -143,12 +145,18 @@
 					response.results.forEach((result, index) => {
 						const item = batch.entries[index];
 						if (result.success) moved.push(create(EntrySchema, { ...item, spaceId: batch.targetSpaceId, parentId: batch.parent || undefined, revision: item.revision + 1 }));
-						else { rejected.push(item); failed.push(item); }
+						else {
+							rejected.push(item);
+							failed.push(item);
+							const message = result.error === 'ALREADY_EXISTS' ? 'Element o tej nazwie już istnieje.' : result.error === 'REVISION_CONFLICT' ? 'Element zmienił się w międzyczasie.' : result.error || 'Nie udało się przenieść elementu.';
+							failures.push({ id: item.id, name: item.name, message });
+						}
 					});
 					if (rejected.length) remaining.push({ ...batch, entries: rejected, requestId: crypto.randomUUID() });
 				} catch (cause) {
 					firstFailure ??= cause;
 					failed.push(...batch.entries);
+					for (const item of batch.entries) failures.push({ id: item.id, name: item.name, message: storageErrorMessage(cause) });
 					remaining.push(batch);
 				}
 			}
@@ -171,10 +179,11 @@
 						expectedRevision: item.revision
 					}));
 					if (result.entry) moved.push(result.entry);
-					else failed.push(item);
+					else { failed.push(item); failures.push({ id: item.id, name: item.name, message: 'Usługa nie potwierdziła przeniesienia.' }); }
 				} catch (cause) {
 					firstFailure ??= cause;
 					failed.push(item);
+					failures.push({ id: item.id, name: item.name, message: storageErrorMessage(cause) });
 				}
 			}
 		});
@@ -188,19 +197,19 @@
 </script>
 
 <AppDialog labelledby="move-entry-title" busy={busy} onclose={onclose}>
-	<section class="w-full max-w-lg space-y-4 rounded-md border border-border-line bg-bg-panel p-5 shadow-lg">
+	<section class="space-y-4">
 		<div>
 			<h2 id="move-entry-title" class="text-base font-semibold text-text-main">Przenieś element</h2>
 			<p class="mt-1 break-words text-sm text-text-muted">Wybierz folder dla {moveEntries.length === 1 ? `„${entry.name}”` : `${moveEntries.length} zaznaczonych elementów`}.</p>
 		</div>
 
 		<label class="block space-y-1 text-sm"><span>Przestrzeń docelowa</span><select aria-label="Przestrzeń docelowa" value={targetSpaceId} disabled={busy} onchange={(event) => switchSpace(event.currentTarget.value)} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2">
-			{#each [...spaces].sort((a, b) => a.kind === SpaceKind.SHARED ? -1 : b.kind === SpaceKind.SHARED ? 1 : 0) as space (space.id)}<option value={space.id}>{space.kind === SpaceKind.SHARED ? 'Main' : 'Pliki prywatne'}</option>{/each}
+			{#each [...spaces].sort((a, b) => a.kind === SpaceKind.SHARED ? -1 : b.kind === SpaceKind.SHARED ? 1 : 0) as space (space.id)}<option value={space.id}>{space.kind === SpaceKind.SHARED ? 'Pliki wspólne' : 'Pliki prywatne'}</option>{/each}
 		</select></label>
 
 		<nav class="flex min-w-0 items-center gap-1 overflow-x-auto text-sm" aria-label="Miejsce docelowe">
 			<button type="button" disabled={busy} class="shrink-0 font-medium hover:underline" onclick={() => goTo(-1)}>
-				{spaces.find((space) => space.id === targetSpaceId)?.kind === SpaceKind.SHARED ? 'Main' : 'Pliki prywatne'}
+				{spaces.find((space) => space.id === targetSpaceId)?.kind === SpaceKind.SHARED ? 'Pliki wspólne' : 'Pliki prywatne'}
 			</button>
 			{#each path as folder, index (folder.id)}
 				<CaretRight class="h-3.5 w-3.5 shrink-0 text-text-muted" aria-hidden="true" />
@@ -242,11 +251,12 @@
 		{/if}
 
 		{#if error}<p class="rounded-md bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-300" role="alert">{error}</p>{/if}
+		{#if failures.length}<ul class="max-h-36 space-y-2 overflow-y-auto text-sm" aria-label="Nieprzeniesione elementy">{#each failures as failure (failure.id)}<li class="break-words"><span class="font-medium">{failure.name}</span><span class="block text-red-600 dark:text-red-300">{failure.message}</span></li>{/each}</ul>{/if}
 		{#if targetIsInsideSource}<p class="text-sm text-red-600" role="alert">Folderu nie można przenieść do niego samego ani do jego podfolderu.</p>{/if}
 
 		<div class="flex flex-wrap justify-end gap-2 border-t border-border-line pt-3">
 			<button type="button" disabled={busy} onclick={onclose} class="rounded-md px-3 py-2 text-sm text-text-muted hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-zinc-800">Anuluj</button>
-			<button type="button" disabled={busy || loading || targetIsSource || targetIsInsideSource} onclick={() => void moveTo(parentId)} class="rounded-md border border-border-line px-3 py-2 text-sm font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">Przenieś tutaj</button>
+			<button type="button" disabled={busy || loading || targetIsSource || targetIsInsideSource} onclick={() => void moveTo(parentId)} class="rounded-md border border-border-line px-3 py-2 text-sm font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">{failures.length ? 'Ponów nieudane' : 'Przenieś tutaj'}</button>
 			<button type="button" disabled={busy || sourceAlreadyAtRoot} onclick={() => void moveTo('')} class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
 				{#if busy}<SpinnerGap class="h-4 w-4 animate-spin" />Przenoszenie…{:else}Przenieś do korzenia{/if}
 			</button>

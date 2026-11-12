@@ -30,8 +30,10 @@ test('retries uncertain bulk move with its original request id and keeps failure
 	await page.getByRole('dialog').getByRole('button', { name: 'Przenieś tutaj' }).click();
 	await expect.poll(() => requests.length).toBe(1);
 	await expect(page.getByRole('dialog').getByRole('alert')).toBeVisible();
-	await page.getByRole('dialog').getByRole('button', { name: 'Przenieś tutaj' }).click();
+	await page.getByRole('dialog').getByRole('button', { name: 'Ponów nieudane' }).click();
 	await expect.poll(() => requests.length).toBe(2);
 	expect(requests[1]).toEqual(requests[0]);
 	await expect(page.getByRole('dialog').getByRole('alert')).toContainText('Nie udało się przenieść 1');
+	await expect(page.getByRole('dialog').getByText('two.txt', { exact: true })).toBeVisible();
+	await expect(page.getByRole('dialog').getByText('Element o tej nazwie już istnieje.')).toBeVisible();
 });
