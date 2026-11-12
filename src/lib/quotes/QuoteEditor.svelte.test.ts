@@ -71,6 +71,25 @@ it('keeps typed values after a concurrent save conflict', async () => {
 	}));
 });
 
+it('saves newer edits after an earlier delayed save completes', async () => {
+	let completeFirst!: (value: { quote: typeof original }) => void;
+	api.saveDraft.mockImplementationOnce(() => new Promise((resolve) => { completeFirst = resolve; }));
+	api.saveDraft.mockResolvedValue({ quote: create(QuoteSchema, {
+		id: 'quote-1', draftVersion: 3n, draft: { title: 'Druga zmiana', priceMode: QuotePriceMode.GROSS }
+	}) });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await view.getByLabelText('Tytuł').fill('Pierwsza zmiana');
+	await view.getByRole('button', { name: 'Zapisz szkic' }).click();
+	await expect.poll(() => api.saveDraft.mock.calls.length).toBe(1);
+	await view.getByLabelText('Tytuł').fill('Druga zmiana');
+	completeFirst({ quote: create(QuoteSchema, {
+		id: 'quote-1', draftVersion: 2n, draft: { title: 'Pierwsza zmiana', priceMode: QuotePriceMode.GROSS }
+	}) });
+	await expect.poll(() => api.saveDraft.mock.calls.length).toBe(2);
+	expect(api.saveDraft.mock.calls[1]?.[0]).toMatchObject({ expectedVersion: 2n, draft: { title: 'Druga zmiana' } });
+	await expect.element(view.getByLabelText('Tytuł')).toHaveValue('Druga zmiana');
+});
+
 it('applies imported prices as gross even when the detected mapping says net', async () => {
 	api.getImportResult.mockResolvedValue({ result: create(QuoteImportResultSchema, {
 		id: 'import-net', status: 'succeeded', resultVersion: 1n,
@@ -82,6 +101,17 @@ it('applies imported prices as gross even when the detected mapping says net', a
 	await view.getByRole('button', { name: 'Zastosuj sprawdzone pozycje' }).click();
 	await expect.poll(() => api.applyImport.mock.calls.length).toBe(1);
 	expect(api.applyImport).toHaveBeenCalledWith(expect.objectContaining({ priceMode: QuotePriceMode.GROSS }));
+});
+
+it('keeps imported source rows aligned when a result has no line', async () => {
+	api.getImportResult.mockResolvedValue({ result: create(QuoteImportResultSchema, {
+		id: 'import-rows', status: 'succeeded', resultVersion: 1n,
+		lines: [{ sourceRow: 3 }, { sourceRow: 8, line: { name: 'Kamera', quantity: '1', unitPrice: '100' } }]
+	}) });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	const imported = view.getByRole('group', { name: 'Import XLSX' });
+	await expect.element(imported.getByLabelText('Nazwa pozycji 1')).toHaveValue('Kamera');
+	await expect.element(imported.getByText(/Wiersz 8 w arkuszu/)).toBeVisible();
 });
 
 it('preserves the price mode of an existing net draft when saving edits', async () => {

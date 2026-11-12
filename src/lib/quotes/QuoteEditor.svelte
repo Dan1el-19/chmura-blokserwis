@@ -174,8 +174,9 @@
 			if (imp.status === 'fulfilled' && imp.value?.result) {
 				const result = imp.value.result;
 				if (result.id !== imported?.id || result.resultVersion !== imported?.resultVersion || result.status !== imported?.status) {
-					reviewed = result.lines.flatMap((line) => line.line ? [line.line] : []);
-					sourceRows = result.lines.map((line) => line.sourceRow);
+					const availableLines = result.lines.filter((line) => line.line);
+					reviewed = availableLines.flatMap((line) => line.line ? [line.line] : []);
+					sourceRows = availableLines.map((line) => line.sourceRow);
 					if (result.mapping) {
 						mapping = result.mapping;
 					}
