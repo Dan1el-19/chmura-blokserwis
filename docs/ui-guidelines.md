@@ -15,8 +15,9 @@ Dokument roboczy dla planu `docs/superpowers/plans/2026-11-12-ui-ux-polish.md`. 
 ## Baza i stan rozpoznania
 
 - Baza izolowanej gałęzi: frontend `bd6b2dcd74bc5d681224a4c8d2078f245fb57da3` (lokalnie zapisany `origin/main`). Główny checkout `8a4d7c8` zawiera wcześniejsze niezapisane zmiany wycen, skopiowane do worktree bez usuwania oryginałów.
-- Lokalna poprawka A4 dodaje ekranowe marginesy na podstawie `@page`, skaluje opakowanie i zachowuje pusty sandbox iframe. To ciągły HTML, nie potwierdzone odwzorowanie podziałów stron i stopek PDF. Jest niezacommitowana i nie ma dowodu wdrożenia.
+- Lokalna poprawka A4 dodaje ekranowe marginesy na podstawie `@page`, skaluje opakowanie i zachowuje pusty sandbox iframe. To ciągły HTML, nie potwierdzone odwzorowanie podziałów stron i stopek PDF. Została zapisana lokalnie w commicie `d5d1898`; nie ma dowodu wdrożenia.
 - Autosave edytora korzysta z istniejącego timera, rewizji i ponowienia po kolejnej edycji. Dalsze zmiany wyglądu muszą zachować ten mechanizm; opóźnienia, konflikty i odświeżanie podglądu wymagają testów wymienionych w planie.
 - Raport odbioru z 12 listopada potwierdza na produkcji mobilne menu z przyciskiem „Pobierz” poza ekranem przy 320 px oraz nadmierną wysokość narzędzi katalogu. Raport obejmował 320, 390 i 1440 px, nie fizyczne urządzenia ani pełny audyt dostępności.
+- Lokalnie menu działań zastąpiono pionowym panelem: testy z atrapą API sprawdzają wszystkie przyciski, pobieranie, Escape, fokus i zmianę szerokości przy 320 oraz 390 px. Nie jest to jeszcze dowód zachowania na produkcji ani na fizycznym telefonie. Pasek narzędzi katalogu nadal wymaga przebudowy.
 - Katalog i menu: **do zmiany**. Dialogi, transfery, podglądy, udostępnienia, publiczne linki, wyceny, kosz, ustawienia i stany sesji: **do sprawdzenia** dla pełnej macierzy planu; sam brak dowodu nie oznacza wykrytej usterki.
 - Próby wizualne obu motywów, 768–1024 px, makiety katalogu i edytora, dane testowe oraz urządzenia fizyczne pozostają do wykonania. Wyniki z mocków, produkcji i urządzeń należy podawać oddzielnie.

@@ -8,6 +8,7 @@
 	import MoveEntryDialog from './MoveEntryDialog.svelte';
 	import FilePreviewDialog from './FilePreviewDialog.svelte';
 	import ShareLinksDialog from './ShareLinksDialog.svelte';
+	import ActionMenu from './ui/ActionMenu.svelte';
 	import { mediaKindForFilename } from '#lib/media-preview.js';
 	import { nextAvailableUploadName, uploadNameKey } from '#lib/upload-conflict.js';
 	import { goto } from '$app/navigation';
@@ -24,7 +25,6 @@
 		CaretRight,
 		CloudArrowUp,
 		DownloadSimple,
-		DotsThreeVertical,
 		File as FileIcon,
 		FileAudio,
 		FileImage,
@@ -137,7 +137,6 @@
 	let sharingEntry = $state<Entry | null>(null);
 
 	let fileInput = $state<HTMLInputElement>();
-	let mobileActionEntryId = $state('');
 	const uploadLimitBytes = $derived(app.uploadLimitBytes);
 	const uploadLimitError = $derived(app.uploadLimitError);
 
@@ -1137,17 +1136,14 @@
 								{#if isFolder}<Folder class="h-8 w-8 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400" />{:else if mediaKindForFilename(entry.name) === 'IMAGE'}<FileImage class="h-8 w-8 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'AUDIO'}<FileAudio class="h-8 w-8 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'VIDEO'}<FileVideo class="h-8 w-8 shrink-0 text-primary" />{:else}<FileIcon class="h-8 w-8 shrink-0 text-primary" />{/if}
 								<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-text-main">{entry.name}</span><span class="mt-0.5 block font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</span><span class="block text-xs text-text-muted">Utworzono: {formatCreatedAt(entry.createdAt)}</span><span class="block text-xs text-text-muted">Zmodyfikowano: {formatCreatedAt(entry.modifiedAt)}</span>{#if !isFolder && storageLocationLabel(entry.storageLocation)}<span class="block text-xs text-text-muted">{storageLocationLabel(entry.storageLocation)}</span>{/if}</span>
 							</button>
-							<button type="button" onpointerdown={(event) => event.stopPropagation()} class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800" onclick={() => (mobileActionEntryId = mobileActionEntryId === entry.id ? '' : entry.id)} aria-label={`Akcje dla ${entry.name}`}><DotsThreeVertical class="h-5 w-5" weight="bold" /></button>
+							<ActionMenu label={entry.name} triggerLabel={`Akcje dla ${entry.name}`} items={[
+								...(!isFolder ? [{ id: 'download', label: 'Pobierz', run: () => void downloadFile(entry) }] : []),
+								{ id: 'share', label: 'Udostępnij', run: () => sharingEntry = entry },
+								{ id: 'move', label: 'Przenieś', run: () => beginMove(entry) },
+								{ id: 'rename', label: 'Zmień nazwę', run: () => beginRename(entry) },
+								{ id: 'trash', label: 'Do kosza', destructive: true, run: () => requestTrashConfirmation(entry) }
+							]} />
 						</div>
-						{#if mobileActionEntryId === entry.id}
-							<div class="flex justify-end gap-1 border-t border-border-line p-2">
-								{#if !isFolder}<button type="button" onclick={() => void downloadFile(entry)} class="rounded px-3 py-2 text-xs text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"><DownloadSimple class="mr-1 inline h-4 w-4" />Pobierz</button>{/if}
-								<button type="button" onclick={() => (sharingEntry = entry)} class="rounded px-3 py-2 text-xs text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"><ShareNetwork class="mr-1 inline h-4 w-4" />Udostępnij</button>
-								<button type="button" onclick={() => beginMove(entry)} class="rounded px-3 py-2 text-xs text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"><Folder class="mr-1 inline h-4 w-4" />Przenieś</button>
-								<button type="button" onclick={() => beginRename(entry)} class="rounded px-3 py-2 text-xs text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"><Pencil class="mr-1 inline h-4 w-4" />Zmień nazwę</button>
-								<button type="button" onclick={() => requestTrashConfirmation(entry)} class="rounded px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"><Trash class="mr-1 inline h-4 w-4" />Do kosza</button>
-							</div>
-						{/if}
 					</div>
 				{/each}
 			</div>
