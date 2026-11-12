@@ -92,6 +92,13 @@ test('selects loaded rows, skips folders during bulk downloads, and supports mob
 	if (testInfo.project.name === 'mobile') await expect(mainCheckbox).toHaveCount(0);
 	else await expect(mainCheckbox).not.toBeChecked();
 	await expect(page.getByRole('toolbar', { name: 'Operacje dla zaznaczonych elementów' })).toHaveCount(0);
+	if (testInfo.project.name === 'mobile') {
+		await page.getByRole('button', { name: 'Zaznacz elementy' }).click();
+		await page.getByRole('button', { name: 'Zaznacz lub odznacz jeden.txt' }).click();
+		await expect(page.getByRole('toolbar', { name: 'Operacje dla zaznaczonych elementów' })).toBeVisible();
+		await page.getByRole('button', { name: 'Zamknij zaznaczanie' }).click();
+		await expect(page.getByRole('toolbar', { name: 'Operacje dla zaznaczonych elementów' })).toHaveCount(0);
+	}
 });
 
 test('mobile long press selects without firing on scroll, and a horizontal swipe opens sharing', async ({ page }, testInfo) => {
