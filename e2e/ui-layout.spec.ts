@@ -2,7 +2,7 @@ import { expect, test } from 'playwright/test';
 
 for (const width of [320, 390]) {
 	test(`file actions fit the viewport at ${width}px`, async ({ page }) => {
-		await page.setViewportSize({ width, height: 740 });
+		await page.setViewportSize({ width, height: width === 390 ? 844 : 740 });
 		await page.addInitScript(() => Object.assign(window, {
 			__internal_ClerkUICtor: class {},
 			Clerk: { user: { id: 'ui-user' }, session: { id: 'ui-session', status: 'active', getToken: async () => 'token' }, load: async () => {}, addListener: () => () => {}, signOut: async () => {} }
@@ -12,15 +12,21 @@ for (const width of [320, 390]) {
 			if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
 			const method = route.request().url().split('/').at(-1);
 			const result = method === 'GetSpaces' ? { spaces: [{ id: 'personal', kind: 2 }] }
-				: method === 'ListEntries' ? { entries: [{ id: 'file', spaceId: 'personal', kind: 2, name: 'Bardzo dluga nazwa pliku testowego.txt', revision: 1, sizeBytes: '10' }], nextPageToken: '' }
+				: method === 'ListEntries' ? { entries: [{ id: 'file', spaceId: 'personal', kind: 2, name: 'Bardzo dluga nazwa pliku testowego.txt', revision: 1, sizeBytes: '10', storageLocation: 2 }], nextPageToken: '' }
 				: method === 'GetDownload' ? { url: 'https://storage.example/file' } : {};
 			return route.fulfill({ status: 200, headers, json: result });
 		});
 		await page.route('https://storage.example/**', (route) => route.fulfill({ status: 200, headers: { 'content-disposition': 'attachment; filename="file.txt"' }, body: 'file' }));
 		await page.goto('/personal');
 		const trigger = page.getByRole('button', { name: 'Akcje dla Bardzo dluga nazwa pliku testowego.txt' });
+		if (width === 390) {
+			const row = page.getByRole('group', { name: 'Bardzo dluga nazwa pliku testowego.txt' });
+			await expect(row).toBeVisible();
+			const box = await row.boundingBox();
+			expect(box?.y).toBeLessThanOrEqual(300);
+		}
 		await trigger.click();
-		for (const name of ['Pobierz', 'Udostępnij', 'Przenieś', 'Zmień nazwę', 'Do kosza']) {
+		for (const name of ['Pobierz', 'Udostępnij', 'Przenieś', 'Zmień nazwę', 'Szczegóły', 'Do kosza']) {
 			const action = page.getByRole('button', { name, exact: true });
 			await expect(action).toBeInViewport();
 			const box = await action.boundingBox();
@@ -33,6 +39,12 @@ for (const width of [320, 390]) {
 		await page.getByRole('button', { name: 'Zmień nazwę', exact: true }).click();
 		await expect(page.getByRole('dialog')).toHaveCount(1);
 		await expect(page.getByRole('dialog')).toContainText('Zmień nazwę');
+		await page.keyboard.press('Escape');
+		await trigger.click();
+		await page.getByRole('button', { name: 'Szczegóły', exact: true }).click();
+		await expect(page.getByRole('dialog')).toContainText('Bardzo dluga nazwa pliku testowego.txt');
+		await expect(page.getByRole('dialog')).toContainText('Zmodyfikowano');
+		await expect(page.getByRole('dialog')).toContainText('RustFS');
 		await page.keyboard.press('Escape');
 		await trigger.click();
 		await page.setViewportSize({ width: 1024, height: 740 });

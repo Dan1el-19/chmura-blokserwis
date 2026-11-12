@@ -56,12 +56,12 @@ test('selects loaded rows, skips folders during bulk downloads, and supports mob
 	await page.goto('/personal');
 	// The first visit can still be compiling client modules on a fresh CI runner.
 	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached({ timeout: 15_000 });
+	if (testInfo.project.name === 'mobile') await page.getByRole('button', { name: 'Zaznacz elementy' }).click();
 	const mainCheckbox = page.getByRole('checkbox', { name: 'Zaznacz wszystkie wczytane elementy' });
 	await expect(mainCheckbox).toBeVisible();
 	await expect.poll(() => mainCheckbox.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe('rgb(39, 39, 42)');
 	await expect.poll(() => mainCheckbox.evaluate((element) => getComputedStyle(element).borderTopColor)).toBe('rgb(113, 113, 122)');
 	if (testInfo.project.name === 'mobile') {
-		await page.getByRole('button', { name: 'Zaznacz elementy' }).click();
 		await page.getByRole('group', { name: 'Raporty' }).getByRole('checkbox', { name: 'Zaznacz Raporty' }).click();
 		await expect(page.getByRole('group', { name: 'Raporty' }).getByRole('checkbox', { name: 'Zaznacz Raporty' })).toBeChecked();
 		await expect.poll(() => page.getByRole('group', { name: 'Raporty' }).evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe('rgb(24, 24, 27)');
@@ -89,7 +89,8 @@ test('selects loaded rows, skips folders during bulk downloads, and supports mob
 	await mainCheckbox.click();
 	await expect(mainCheckbox).toBeChecked();
 	await mainCheckbox.click();
-	await expect(mainCheckbox).not.toBeChecked();
+	if (testInfo.project.name === 'mobile') await expect(mainCheckbox).toHaveCount(0);
+	else await expect(mainCheckbox).not.toBeChecked();
 	await expect(page.getByRole('toolbar', { name: 'Operacje dla zaznaczonych elementów' })).toHaveCount(0);
 });
 

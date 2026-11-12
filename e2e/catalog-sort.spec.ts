@@ -1,6 +1,6 @@
 import { expect, test } from 'playwright/test';
 
-test('applies catalog sorting from the UI and starts again at the first page', async ({ page }) => {
+test('applies catalog sorting from the UI and starts again at the first page', async ({ page }, testInfo) => {
 	const requests: Array<{ method: string; body: Record<string, unknown> }> = [];
 	await page.addInitScript(() => {
 		Object.assign(window, {
@@ -56,6 +56,7 @@ test('applies catalog sorting from the UI and starts again at the first page', a
 	await expect.poll(() => requests.filter((item) => item.method === 'ListEntries')).toHaveLength(1);
 	await page.getByRole('button', { name: 'Pokaż więcej' }).click();
 	await expect.poll(() => requests.filter((item) => item.method === 'ListEntries')).toHaveLength(2);
+	if (testInfo.project.name === 'mobile') await page.getByRole('button', { name: 'Filtry i sortowanie', exact: true }).click();
 	await page.getByRole('combobox', { name: 'Sortowanie' }).selectOption('SIZE:DESC');
 	await expect.poll(() => requests.filter((item) => item.method === 'ListEntries')).toHaveLength(3);
 

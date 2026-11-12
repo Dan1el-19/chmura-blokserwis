@@ -783,7 +783,6 @@ it('lets the user select RustFS and shows the returned session location in statu
 	await expect
 		.element(screen.getByRole('table').getByText('RustFS', { exact: true }))
 		.toBeVisible();
-	await expect.element(screen.getByText('RustFS', { exact: true }).nth(1)).toBeInTheDocument();
 	await expect
 		.element(screen.getByRole('table').getByText('raport.pdf', { exact: true }))
 		.toBeVisible();

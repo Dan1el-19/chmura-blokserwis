@@ -1,6 +1,6 @@
 import { expect, test } from 'playwright/test';
 
-test('searches one space and loads the next page with its cursor', async ({ page }) => {
+test('searches one space and loads the next page with its cursor', async ({ page }, testInfo) => {
 	const requests: Array<Record<string, unknown>> = [];
 	const listings: Array<Record<string, unknown>> = [];
 	await page.addInitScript(() => Object.assign(window, {
@@ -24,6 +24,7 @@ test('searches one space and loads the next page with its cursor', async ({ page
 		await route.fulfill({ status: 200, headers, body: JSON.stringify(result) });
 	});
 	await page.goto('/');
+	if (testInfo.project.name === 'mobile') await page.getByRole('button', { name: 'Filtry i sortowanie', exact: true }).click();
 	await page.getByRole('combobox', { name: 'Typ pliku' }).selectOption('1');
 	await expect.poll(() => listings.some((body) => body.fileType === 'CATALOG_FILE_TYPE_IMAGE')).toBe(true);
 	await page.getByRole('textbox', { name: 'Szukaj w przestrzeni' }).fill('żółć_');
@@ -35,4 +36,8 @@ test('searches one space and loads the next page with its cursor', async ({ page
 	expect(requests).toHaveLength(2);
 	expect(requests[0]).toMatchObject({ spaceId: 'main', query: 'żółć_', fileType: 'CATALOG_FILE_TYPE_IMAGE' });
 	expect(requests[1]).toMatchObject({ spaceId: 'main', query: 'żółć_', fileType: 'CATALOG_FILE_TYPE_IMAGE', pageToken: 'cursor' });
+	await page.getByRole('button', { name: 'Wyczyść filtry i sortowanie' }).click();
+	await expect.poll(() => requests.length).toBe(3);
+	expect(requests[2]).toMatchObject({ spaceId: 'main', query: 'żółć_' });
+	expect(requests[2].fileType ?? 'CATALOG_FILE_TYPE_UNSPECIFIED').toBe('CATALOG_FILE_TYPE_UNSPECIFIED');
 });

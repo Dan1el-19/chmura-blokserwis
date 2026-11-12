@@ -9,6 +9,7 @@
 	import FilePreviewDialog from './FilePreviewDialog.svelte';
 	import ShareLinksDialog from './ShareLinksDialog.svelte';
 	import ActionMenu from './ui/ActionMenu.svelte';
+	import EntryDetailsDialog from './storage/EntryDetailsDialog.svelte';
 	import { mediaKindForFilename } from '#lib/media-preview.js';
 	import { nextAvailableUploadName, uploadNameKey } from '#lib/upload-conflict.js';
 	import { goto } from '$app/navigation';
@@ -87,6 +88,7 @@
 		accountReady && activeSpaceId ? app.peekList(mode, activeSpaceId, routeFolderId, currentSort, currentFileType) : undefined
 	);
 	let searchQuery = $state('');
+	let showFilters = $state(false);
 	let searchTerm = $state('');
 	let searchResults = $state<SearchEntryResult[]>([]);
 	let searchNext = $state('');
@@ -135,6 +137,7 @@
 	let movingEntry = $state<Entry | null>(null);
 	let previewEntry = $state<Entry | null>(null);
 	let sharingEntry = $state<Entry | null>(null);
+	let detailsEntry = $state<Entry | null>(null);
 
 	let fileInput = $state<HTMLInputElement>();
 	const uploadLimitBytes = $derived(app.uploadLimitBytes);
@@ -321,6 +324,12 @@
 		const fileType = Number(value) as CatalogFileType;
 		app.setFileType(activeSpaceId, fileType);
 		if (searchTerm) void runSearch(false, currentSort, fileType);
+	}
+	function resetFilters(): void {
+		const sort: CatalogSort = { by: 'NAME', direction: 'ASC' };
+		app.setFileType(activeSpaceId, CatalogFileType.UNSPECIFIED);
+		app.setSort(activeSpaceId, sort);
+		if (searchTerm) void runSearch(false, sort, CatalogFileType.UNSPECIFIED);
 	}
 	function closeSearch(): void {
 		searchGeneration++;
@@ -993,14 +1002,14 @@
 	{#if view === 'files'}
 		<div class="flex flex-col gap-3 border-b border-border-line pb-4">
 			<nav class="-mx-1 flex min-w-0 items-center gap-1 overflow-x-auto px-1 text-sm leading-none whitespace-nowrap" aria-label="Ścieżka">
-			<a href={resolve(folderHref())} ondragover={(event) => dragOverFolder(undefined, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(undefined, event)} class="inline-flex h-5 shrink-0 items-center font-semibold text-text-main hover:underline {dropTargetId === '__root__' ? 'rounded bg-primary/10' : ''}">{isSharedSpace ? 'Main' : 'Pliki prywatne'}</a>
+			<a href={resolve(folderHref())} ondragover={(event) => dragOverFolder(undefined, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(undefined, event)} class="inline-flex h-5 shrink-0 items-center font-semibold text-text-main hover:underline {dropTargetId === '__root__' ? 'rounded bg-primary/10' : ''}">{isSharedSpace ? 'Pliki wspólne' : 'Pliki prywatne'}</a>
 				{#each folderPath as folder, index (folder.id)}
 					<span class="inline-flex h-5 shrink-0 items-center text-text-muted" aria-hidden="true"><CaretRight class="h-3.5 w-3.5" /></span>
 					<a href={resolve(folderHref(folder.id))} ondragover={(event) => dragOverFolder(folder, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(folder, event)} class="inline-flex h-5 max-w-[45vw] shrink-0 items-center truncate text-text-muted hover:text-text-main hover:underline sm:max-w-[160px] {dropTargetId === folder.id ? 'rounded bg-primary/10' : ''}" aria-current={index === folderPath.length - 1 ? 'page' : undefined}>{folder.name}</a>
 				{/each}
 			</nav>
 
-			<div class="flex flex-wrap items-center justify-between gap-3">
+			<div class="flex flex-wrap items-center gap-3">
 				<div class="flex flex-wrap items-center gap-2">
 					<label class="relative inline-flex h-10 cursor-pointer items-center gap-2 overflow-hidden rounded-lg bg-primary px-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus-within:ring-2 focus-within:ring-primary/50 focus-within:ring-offset-2 ">
 						<CloudArrowUp class="h-4 w-4" />
@@ -1015,6 +1024,7 @@
  {#if listBusy}<SpinnerGap class="h-5 w-5 animate-spin" />{:else}<ArrowClockwise class="h-5 w-5" />{/if}
  </button>
 				</div>
+				<div class="{showFilters ? 'flex' : 'hidden'} w-full flex-wrap items-center gap-3 lg:flex lg:w-auto">
 				<label class="flex items-center gap-2 text-sm text-text-muted">
 					<span>Typ</span><select aria-label="Typ pliku" value={String(currentFileType)} onchange={(event) => updateFileType(event.currentTarget.value)} disabled={!accountReady || !activeSpaceId} class="h-10 rounded-lg border border-border-line bg-bg-panel px-3 text-sm text-text-main">
 						<option value="0">Wszystkie</option><option value="1">Obrazy</option><option value="2">PDF</option><option value="3">Audio</option><option value="4">Wideo</option><option value="5">Tekst i kod</option><option value="6">Pozostałe</option>
@@ -1033,11 +1043,17 @@
 						<option value="SIZE:DESC">Rozmiar (od największych)</option>
 					</select>
 				</label>
+				{#if currentFileType !== CatalogFileType.UNSPECIFIED || currentSort.by !== 'NAME' || currentSort.direction !== 'ASC'}
+					<button type="button" class="min-h-11 rounded-md px-3 text-sm text-primary underline" onclick={resetFilters}>Wyczyść filtry i sortowanie</button>
+				{/if}
+				</div>
 			</div>
 		</div>
 		<form class="flex flex-wrap gap-2" onsubmit={(event) => { event.preventDefault(); void runSearch(); }}>
 			<input aria-label="Szukaj w przestrzeni" bind:value={searchQuery} placeholder="Szukaj w tej przestrzeni" class="h-10 min-w-0 flex-1 rounded-lg border border-border-line bg-bg-panel px-3 text-sm" />
 			<button type="submit" disabled={!accountReady || !searchQuery.trim()} class="rounded-lg border border-border-line px-4 text-sm disabled:opacity-50">Szukaj</button>
+			<button type="button" aria-label={currentFileType !== CatalogFileType.UNSPECIFIED || currentSort.by !== 'NAME' || currentSort.direction !== 'ASC' ? 'Filtry i sortowanie, aktywne' : 'Filtry i sortowanie'} aria-expanded={showFilters} onclick={() => showFilters = !showFilters} class="min-h-11 rounded-lg border border-border-line px-3 text-sm lg:hidden">Filtry{currentFileType !== CatalogFileType.UNSPECIFIED || currentSort.by !== 'NAME' || currentSort.direction !== 'ASC' ? ' •' : ''}</button>
+			{#if !searchTerm}<button type="button" aria-label={selectionMode ? 'Zamknij zaznaczanie' : 'Zaznacz elementy'} onclick={() => (selectionMode = !selectionMode)} class="min-h-11 rounded-lg border border-border-line px-3 text-sm lg:hidden">{selectionMode ? 'Gotowe' : 'Zaznacz'}</button>{/if}
 			{#if searchTerm}<button type="button" onclick={closeSearch} class="rounded-lg border border-border-line px-4 text-sm">Wyczyść</button>{/if}
 		</form>
 		{#if searchTerm}
@@ -1057,11 +1073,7 @@
 				{#if searchNext}<button type="button" disabled={searchBusy} onclick={() => void runSearch(true)} class="mt-3 rounded border border-border-line px-4 py-2 text-sm">Pokaż więcej</button>{/if}
 			</section>
 		{:else}
-			<div class="flex flex-wrap items-center gap-2">
-				<button type="button" onclick={() => (selectionMode = !selectionMode)} class="min-h-9 rounded-md border border-border-line px-3 text-xs font-medium text-text-main hover:bg-gray-50 lg:hidden dark:hover:bg-zinc-800">{selectionMode ? 'Zamknij zaznaczanie' : 'Zaznacz elementy'}</button>
-				<label class="inline-flex min-h-11 items-center gap-2 text-xs font-medium text-text-main lg:hidden"><input type="checkbox" class="file-selection-checkbox" checked={allLoadedSelected} indeterminate={partiallySelected} disabled={!displayedEntries.length} onchange={toggleSelectAllLoaded} aria-label="Zaznacz wszystkie wczytane elementy" />Zaznacz wszystkie</label>
-				<span class="text-xs text-text-muted lg:hidden">Przytrzymaj, aby zaznaczyć. Przesuń plik w prawo, aby udostępnić, albo w lewo, aby przenieść do kosza.</span>
-			</div>
+			{#if selectionMode}<label class="inline-flex min-h-11 items-center gap-2 text-xs font-medium text-text-main lg:hidden"><input type="checkbox" class="file-selection-checkbox" checked={allLoadedSelected} indeterminate={partiallySelected} disabled={!displayedEntries.length} onchange={toggleSelectAllLoaded} aria-label="Zaznacz wszystkie wczytane elementy" />Zaznacz wszystkie wczytane</label>{/if}
 			{#if selectedEntries.length}
 				<div class="flex flex-wrap items-center gap-2 rounded-md border border-primary/20 bg-primary/5 p-3" role="toolbar" aria-label="Operacje dla zaznaczonych elementów">
 					<strong class="mr-2 text-sm">Zaznaczono: {selectedEntries.length}</strong>
@@ -1134,13 +1146,14 @@
 							{#if selectionMode}<label class="flex h-11 w-11 shrink-0 items-center justify-center" onpointerdown={(event) => event.stopPropagation()}><input type="checkbox" checked={selectedIds.includes(entry.id)} onclick={(event) => { event.stopPropagation(); changeSelection(entry, event.currentTarget.checked, event); }} aria-label={`Zaznacz ${entry.name}`} class="file-selection-checkbox" /></label>{/if}
 							<button type="button" class="flex min-w-0 flex-1 items-center gap-3 text-left" onclick={() => openOrSelectMobile(entry)} aria-label={selectionMode ? `Zaznacz lub odznacz ${entry.name}` : isFolder ? `Otwórz folder ${entry.name}` : mediaKindForFilename(entry.name) ? `Podgląd ${entry.name}` : `Pobierz ${entry.name}`}>
 								{#if isFolder}<Folder class="h-8 w-8 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400" />{:else if mediaKindForFilename(entry.name) === 'IMAGE'}<FileImage class="h-8 w-8 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'AUDIO'}<FileAudio class="h-8 w-8 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'VIDEO'}<FileVideo class="h-8 w-8 shrink-0 text-primary" />{:else}<FileIcon class="h-8 w-8 shrink-0 text-primary" />{/if}
-								<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-text-main">{entry.name}</span><span class="mt-0.5 block font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</span><span class="block text-xs text-text-muted">Utworzono: {formatCreatedAt(entry.createdAt)}</span><span class="block text-xs text-text-muted">Zmodyfikowano: {formatCreatedAt(entry.modifiedAt)}</span>{#if !isFolder && storageLocationLabel(entry.storageLocation)}<span class="block text-xs text-text-muted">{storageLocationLabel(entry.storageLocation)}</span>{/if}</span>
+								<span class="min-w-0 flex-1"><span class="line-clamp-2 text-sm font-medium text-text-main">{entry.name}</span><span class="mt-0.5 block text-xs text-text-muted">{formatBytes(entry.sizeBytes)} · {formatCreatedAt(entry.modifiedAt)}</span></span>
 							</button>
 							<ActionMenu label={entry.name} triggerLabel={`Akcje dla ${entry.name}`} items={[
 								...(!isFolder ? [{ id: 'download', label: 'Pobierz', run: () => void downloadFile(entry) }] : []),
 								{ id: 'share', label: 'Udostępnij', run: () => sharingEntry = entry },
 								{ id: 'move', label: 'Przenieś', run: () => beginMove(entry) },
 								{ id: 'rename', label: 'Zmień nazwę', run: () => beginRename(entry) },
+								{ id: 'details', label: 'Szczegóły', run: () => detailsEntry = entry },
 								{ id: 'trash', label: 'Do kosza', destructive: true, run: () => requestTrashConfirmation(entry) }
 							]} />
 						</div>
@@ -1202,6 +1215,9 @@
 
 {#if sharingEntry && activeSpaceId}
 	<ShareLinksDialog file={sharingEntry} spaceId={activeSpaceId} onclose={() => (sharingEntry = null)} />
+{/if}
+{#if detailsEntry}
+	<EntryDetailsDialog entry={detailsEntry} path={[isSharedSpace ? 'Pliki wspólne' : 'Pliki prywatne', ...folderPath.map(folder => folder.name)].join(' / ')} onclose={() => detailsEntry = null} />
 {/if}
 
 {#if restoreConflict}
