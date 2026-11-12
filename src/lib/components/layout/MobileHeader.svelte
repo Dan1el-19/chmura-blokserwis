@@ -2,7 +2,7 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import { List, X } from 'phosphor-svelte';
 
-	let { isDrawerOpen = $bindable() }: { isDrawerOpen: boolean } = $props();
+	let { isDrawerOpen = $bindable(), menuButton = $bindable() }: { isDrawerOpen: boolean; menuButton?: HTMLButtonElement } = $props();
 </script>
 
 <header class="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border-line bg-bg-panel px-4 lg:hidden">
@@ -11,6 +11,7 @@
 		<span class="truncate font-mono text-sm font-bold text-text-main">Chmura Blokserwis</span>
 	</div>
 	<button
+		bind:this={menuButton}
 		type="button"
 		onclick={() => (isDrawerOpen = !isDrawerOpen)}
 		class="relative flex h-11 w-11 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-gray-100 dark:hover:bg-zinc-800"

@@ -29,7 +29,7 @@
 	);
 </script>
 
-<aside class="sticky top-0 hidden h-dvh w-65 shrink-0 flex-col border-r border-border-line bg-bg-panel lg:flex">
+<aside class="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border-line bg-bg-panel lg:flex">
 	<div class="flex h-16 items-center border-b border-border-line px-6">
 		<a href={resolve('/')} class="flex items-center" aria-label="Chmura Blokserwis — strona główna">
 			<img src={favicon} alt="" class="h-6 w-6" />
@@ -40,6 +40,7 @@
 	<nav class="flex-1 space-y-1.5 overflow-y-auto p-5" aria-label="Nawigacja główna">
 		{#each primaryNavItems as item (item.href)}
 			<a
+				aria-current={currentPath === item.href || (item.href !== '/' && currentPath.startsWith(`${item.href}/`)) ? 'page' : undefined}
 				href={resolve((lastFolders[item.href] ? `${item.href}?folder=${encodeURIComponent(lastFolders[item.href])}` : item.href) as AppRouteWithQuery)}
 				class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors
 					{currentPath === item.href || currentPath.startsWith(`${item.href}/`)
@@ -56,6 +57,7 @@
 		<UploadNavigation {manager} />
 		{#each secondaryNavItems as item (item.href)}
 			<a
+				aria-current={currentPath === item.href ? 'page' : undefined}
 				href={resolve(item.href)}
 				class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors
 					{currentPath === item.href

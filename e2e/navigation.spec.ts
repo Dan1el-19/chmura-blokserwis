@@ -166,6 +166,8 @@ test('preserves folders, pages and uploads while navigating through the applicat
 			)
 			.getByRole('link', { name: label, exact: true })
 			.click();
+		const paths: Record<string, string> = { 'Pliki wspólne': '/', 'Pliki prywatne': '/personal', Kosz: '/trash', Ustawienia: '/settings' };
+		await expect.poll(() => new URL(page.url()).pathname).toBe(paths[label]);
 		if (mobile)
 			await expect(page.getByRole('navigation', { name: 'Nawigacja mobilna' })).toBeHidden();
 	}
@@ -212,7 +214,7 @@ test('preserves folders, pages and uploads while navigating through the applicat
 	await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBeGreaterThan(100);
 	const listCalls = counts.ListEntries;
 	await page.clock.setFixedTime(new Date(Date.now() + 14 * 60_000));
-	await navigate('Main');
+	await navigate('Pliki wspólne');
 	await expect(page.getByRole('heading', { name: 'Pliki wspólne' })).toBeAttached();
 	await navigate('Pliki prywatne');
 	await expect(page).toHaveURL(/folder=docs/);
@@ -225,7 +227,7 @@ test('preserves folders, pages and uploads while navigating through the applicat
 	]);
 	await expect.poll(() => putStarted).toBe(true);
 	await expect(page.getByRole('region', { name: 'Transfery' })).toBeVisible();
-	await navigate('Main');
+	await navigate('Pliki wspólne');
 	await expect(page.getByRole('region', { name: 'Transfery' })).toBeVisible();
 	await navigate('Kosz');
 	await expect(page.getByRole('region', { name: 'Transfery' })).toBeVisible();
@@ -239,8 +241,8 @@ test('preserves folders, pages and uploads while navigating through the applicat
 		.getByRole('link');
 	expect((await links.allTextContents()).map((text) => text.trim())).toEqual(
 		mobile
-			? ['Main', 'Pliki prywatne', 'Udostępnienia', 'Kosz', 'Ustawienia']
-			: ['Chmura Blokserwis', 'Main', 'Pliki prywatne', 'Udostępnienia', 'Kosz', 'Ustawienia']
+			? ['Pliki wspólne', 'Pliki prywatne', 'Udostępnienia', 'Kosz', 'Ustawienia']
+			: ['Chmura Blokserwis', 'Pliki wspólne', 'Pliki prywatne', 'Udostępnienia', 'Kosz', 'Ustawienia']
 	);
 	if (mobile) {
 		await page.getByRole('button', { name: 'Przełącz menu' }).click();

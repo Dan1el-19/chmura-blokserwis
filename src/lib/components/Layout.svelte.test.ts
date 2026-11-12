@@ -69,11 +69,21 @@ beforeEach(() => {
 	fixture.cancelUpload.mockResolvedValue({});
 	fixture.completeUpload.mockResolvedValue({});
 });
-it('offers Main as the home page and personal files under their own route', async () => {
+it('offers shared files as the home page and personal files under their own route', async () => {
 	const screen = await render(LayoutTestShell);
 	await screen.getByRole('button', { name: 'Przełącz menu' }).click();
-	await expect.element(screen.getByRole('navigation', { name: 'Nawigacja mobilna' }).getByRole('link', { name: 'Main', exact: true })).toHaveAttribute('href', '/');
+	await expect.element(screen.getByRole('navigation', { name: 'Nawigacja mobilna' }).getByRole('link', { name: 'Pliki wspólne', exact: true })).toHaveAttribute('href', '/');
+	await expect.element(screen.getByRole('navigation', { name: 'Nawigacja mobilna' }).getByRole('link', { name: 'Pliki wspólne', exact: true })).toHaveAttribute('aria-current', 'page');
 	await expect.element(screen.getByRole('navigation', { name: 'Nawigacja mobilna' }).getByRole('link', { name: 'Pliki prywatne', exact: true })).toHaveAttribute('href', '/personal');
+});
+it('closes mobile navigation with Escape and restores focus to its trigger', async () => {
+	const screen = await render(LayoutTestShell);
+	const trigger = screen.getByRole('button', { name: 'Przełącz menu' });
+	await trigger.click();
+	await expect.element(screen.getByRole('navigation', { name: 'Nawigacja mobilna' })).toBeVisible();
+	document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+	await expect.element(screen.getByRole('navigation', { name: 'Nawigacja mobilna' })).not.toBeInTheDocument();
+	await expect.element(trigger).toHaveFocus();
 });
 it('aborts the old session queue immediately while a new Clerk token is still being verified', async () => {
 	let finishPut!: () => void;

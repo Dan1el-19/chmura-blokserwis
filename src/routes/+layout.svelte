@@ -38,11 +38,18 @@
 	let refreshTimer: ReturnType<typeof setInterval> | undefined;
 	let passkeyEnvironment = $state<PasskeyEnvironment>(null);
 	let isDrawerOpen = $state(false);
+	let menuButton = $state<HTMLButtonElement>();
+	function handleMenuKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && isDrawerOpen) {
+			isDrawerOpen = false;
+			menuButton?.focus();
+		}
+	}
 	let currentPath = $derived(page.url.pathname);
 	const isPublicShare = $derived(currentPath === '/s' || currentPath.startsWith('/s/'));
 	let pageTitle = $derived.by(() => {
 		if (isPublicShare) return 'Chmura Blokserwis';
-		if (currentPath === '/' || currentPath === '/main') return 'Main | Chmura Blokserwis';
+		if (currentPath === '/' || currentPath === '/main') return 'Pliki wspólne | Chmura Blokserwis';
 		if (currentPath === '/personal') return 'Pliki prywatne | Chmura Blokserwis';
 		if (currentPath === '/trash') return 'Kosz | Chmura Blokserwis';
 		if (currentPath === '/shares') return 'Udostępnienia | Chmura Blokserwis';
@@ -51,7 +58,7 @@
 		return 'Pliki | Chmura Blokserwis';
 	});
 	const navItems: Array<{ href: AppRoute; label: string; icon: Component; color: string }> = [
-		{ href: '/', label: 'Main', icon: Folder, color: 'bg-blue-500' },
+		{ href: '/', label: 'Pliki wspólne', icon: Folder, color: 'bg-blue-500' },
 		{ href: '/personal', label: 'Pliki prywatne', icon: Shield, color: 'bg-emerald-500' },
 		...(PUBLIC_QUOTES_API_URL ? [{ href: '/wyceny' as const, label: 'Wyceny', icon: FileText, color: 'bg-blue-500' }] : []),
 		{ href: '/shares', label: 'Udostępnienia', icon: ShareNetwork, color: 'bg-indigo-500' },
@@ -248,7 +255,7 @@
 	}
 </script>
 
-<svelte:window onbeforeunload={guardUnload} onfocus={()=>cloud.revalidateActive()} />
+<svelte:window onbeforeunload={guardUnload} onfocus={()=>cloud.revalidateActive()} onkeydown={handleMenuKeydown} />
 <svelte:document onvisibilitychange={()=>{if(document.visibilityState==='visible') cloud.revalidateActive();}} />
 
 <svelte:head>
@@ -311,7 +318,7 @@
 	<div class="flex h-dvh w-full flex-col overflow-hidden lg:flex-row">
 		<DesktopSidebar {navItems} {currentPath} lastFolders={cloud.lastFolders} manager={cloud.transfers} onSignOut={signOut} />
 		<div class="flex min-h-0 min-w-0 flex-1 flex-col">
-			<MobileHeader bind:isDrawerOpen />
+			<MobileHeader bind:isDrawerOpen bind:menuButton />
 			<MobileDrawer {navItems} {currentPath} lastFolders={cloud.lastFolders} manager={cloud.transfers} bind:isDrawerOpen onSignOut={signOut} />
 			<main bind:this={scrollHost} onscroll={rememberScroll} class="flex-1 overflow-y-auto overscroll-none p-4 pb-28 lg:p-10 lg:pb-28">
 				{@render children()}
