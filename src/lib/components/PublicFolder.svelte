@@ -9,6 +9,7 @@
 	type Preview={url:string;contentId?:string;expiresAt:string};
 	let entries=$state<Item[]>([]), breadcrumbs=$state<{id:string;name:string}[]>([]), next=$state(''), error=$state(''), busy=$state(false);
 	let folderId=$state(''), selected=$state<Item>(), preview=$state<Preview | null>(null);
+	let previewLoading=$state(false);
 	let generation=0;
 	let previewGeneration=0;
 	let timer:ReturnType<typeof setTimeout> | undefined;
@@ -26,7 +27,7 @@
 	}
 	async function openFile(item:Item) {
 		const current=++previewGeneration;
-		selected=item; preview=null; error=''; if(timer) clearTimeout(timer);
+		selected=item; preview=null; error=''; previewLoading=true; if(timer) clearTimeout(timer);
 		try {
 			const response=await fetch(`/s/${encodeURIComponent(address)}/info?file=${encodeURIComponent(item.id)}`,{cache:'no-store'});
 			if (!response.ok) throw new Error('Nie można otworzyć pliku.');
@@ -35,19 +36,21 @@
 			preview=result.preview;
 			if(preview) {const remaining=new Date(preview.expiresAt).getTime()-Date.now(); if(remaining>10000) timer=setTimeout(()=>void openFile(item),remaining-10000);}
 		} catch(e) {if(current===previewGeneration) error=e instanceof Error?e.message:'Błąd połączenia.';}
+		finally {if(current===previewGeneration) previewLoading=false;}
 	}
 	onMount(()=>{void load();});
 	onDestroy(()=>{generation++;previewGeneration++;if(timer) clearTimeout(timer);});
 </script>
 {#if error}<p role="alert" class="rounded bg-red-500/10 p-3 text-sm text-red-600">{error}</p>{/if}
 {#if selected}
-	<button type="button" class="text-sm underline" onclick={() => {previewGeneration++;selected=undefined;preview=null;if(timer)clearTimeout(timer);}}>Wróć do folderu</button>
+	<button type="button" class="text-sm underline" onclick={() => {previewGeneration++;selected=undefined;preview=null;previewLoading=false;if(timer)clearTimeout(timer);}}>Wróć do folderu</button>
 	<h2 class="break-all font-semibold">{selected.name}</h2>
+	{#if previewLoading}<p role="status" class="text-sm text-text-muted">Wczytywanie podglądu…</p>{:else if !error && (!preview || !mediaKindForFilename(selected.name))}<p role="status" class="text-sm text-text-muted">Podgląd jest niedostępny. Możesz pobrać plik.</p>{/if}
 	{#key `${preview?.contentId ?? ''}:${preview?.url ?? ''}`}
 		{#if preview && mediaKindForFilename(selected.name)==='PDF'}<iframe title={`Podgląd PDF: ${selected.name}`} src={preview.url} sandbox="allow-scripts allow-same-origin" referrerpolicy="no-referrer" class="h-[65dvh] w-full rounded border border-border-line"></iframe>
 		{:else if preview && mediaKindForFilename(selected.name)==='TEXT'}<TextPreview url={preview.url} sizeBytes={selected.sizeBytes ?? 0}/>
 		{:else if preview && mediaKindForFilename(selected.name)==='IMAGE'}<img src={preview.url} alt={selected.name} class="max-h-[65dvh] max-w-full object-contain"/>
-		{:else if preview && mediaKindForFilename(selected.name)==='AUDIO'}<audio src={preview.url} controls aria-label={`Odtwarzacz audio: ${selected.name}`}></audio>
+		{:else if preview && mediaKindForFilename(selected.name)==='AUDIO'}<audio src={preview.url} controls class="w-full max-w-full" aria-label={`Odtwarzacz audio: ${selected.name}`}></audio>
 		{:else if preview && mediaKindForFilename(selected.name)==='VIDEO'}<!-- svelte-ignore a11y_media_has_caption --><video src={preview.url} controls class="max-h-[65dvh] w-full" aria-label={`Odtwarzacz wideo: ${selected.name}`}></video>{/if}
 	{/key}
 	<form method="GET" action={`/s/${encodeURIComponent(address)}/download`}><input type="hidden" name="file" value={selected.id}/><button class="rounded bg-primary px-4 py-2 text-white">Pobierz</button></form>

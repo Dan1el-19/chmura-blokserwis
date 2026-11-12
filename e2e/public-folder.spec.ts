@@ -46,3 +46,29 @@ test('does not replace a newer preview with an older delayed response', async ({
 	await oldDelivered;
 	await expect(page.getByRole('img',{name:'image.png'})).toHaveAttribute('src','https://preview.example/2.png');
 });
+
+test('keeps a public audio preview and its actions inside a narrow viewport', async ({ page }) => {
+	await page.setViewportSize({ width: 320, height: 740 });
+	let visits = 0;
+	await page.route('**/s/audio-folder/visit', route => { visits++; return route.fulfill({ status: 200, json: { viewCount: 1 } }); });
+	await page.route('**/s/audio-folder/folder*', route => route.fulfill({ status: 200, json: {
+		breadcrumbs: [{ id: 'root', name: 'Bardzo długa nazwa folderu publicznego' }],
+		entries: [{ id: 'audio-1', name: 'bardzo-dluga-nazwa-nagrania-testowego.mp3', kind: 'FILE', sizeBytes: 3 }], nextPageToken: ''
+	} }));
+	await page.route('**/s/audio-folder/info*', route => {
+		const url = new URL(route.request().url());
+		return route.fulfill({ status: 200, json: url.searchParams.has('file')
+			? { preview: { url: 'https://preview.example/audio.mp3', expiresAt: new Date(Date.now() + 60_000).toISOString() } }
+			: { kind: 'FOLDER', name: 'Folder publiczny', requiresPassword: false, maxDownloads: null, downloadCount: 0, viewCount: 1 } });
+	});
+	await page.route('https://preview.example/**', route => route.fulfill({ status: 200, contentType: 'audio/mpeg', body: '' }));
+	await page.goto('/s/audio-folder');
+	await page.getByRole('button', { name: /bardzo-dluga-nazwa-nagrania/ }).click();
+	const audio = page.getByLabel('Odtwarzacz audio: bardzo-dluga-nazwa-nagrania-testowego.mp3');
+	await expect(audio).toBeVisible();
+	const box = await audio.boundingBox();
+	expect(box && box.x >= 0 && box.x + box.width <= 320).toBe(true);
+	expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+	await expect(page.getByRole('button', { name: 'Pobierz', exact: true })).toBeInViewport();
+	expect(visits).toBe(1);
+});
