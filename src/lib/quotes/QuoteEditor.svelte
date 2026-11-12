@@ -283,7 +283,7 @@
 		{#if status || saving}<p role="status">{saving ? 'Zapisywanie szkicu…' : status}</p>{/if}
 		{#if extraError}<p class="text-sm text-text-muted" role="status">{extraError}</p>{/if}
 		<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,0.8fr)]">
-		<main class="min-w-0 space-y-4">
+		<div class="min-w-0 space-y-4">
 		<fieldset class={panel} disabled={busy || quote.archived}>
 			<legend class="px-1 font-semibold">Dane wyceny</legend>
 			<div class="grid gap-3 sm:grid-cols-2">
@@ -414,7 +414,7 @@
 				{#if revisions.length === 20}<button class={button} onclick={() => loadRevisions(revisionOffset + 20)}>Starsze</button>{/if}
 			{/if}
 		</div>
-		</main>
+		</div>
 		<aside class="min-w-0 xl:sticky xl:top-4 xl:self-start">
 			<section class={panel}>
 				<div class="flex flex-wrap items-center justify-between gap-2">

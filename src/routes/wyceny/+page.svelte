@@ -7,6 +7,7 @@
 	import { getQuoteClient } from '#lib/api.js';
 	import { QuotePriceMode, type Quote } from '#lib/gen/unisource/v2/quotes_pb.js';
 	import { button, panel, primary, quoteError } from '#lib/quotes/ui.js';
+	import PageHeader from '#lib/components/ui/PageHeader.svelte';
 
 	let items = $state<Quote[]>([]);
 	let archived = $state(false);
@@ -68,10 +69,11 @@
 </script>
 
 <section class="mx-auto max-w-5xl space-y-4">
-	<header class="flex flex-wrap items-center justify-between gap-4">
-		<h1 class="text-2xl font-semibold">Wyceny</h1>
+	<PageHeader title="Wyceny">
+		{#snippet actions()}
 		<button type="button" class={primary} disabled={creating} onclick={createQuote}>Nowa wycena</button>
-	</header>
+		{/snippet}
+	</PageHeader>
 	<div class="flex gap-2">
 		<button type="button" class={button} disabled={loading} aria-pressed={!archived} onclick={() => load(0, false)}>Aktywne</button>
 		<button type="button" class={button} disabled={loading} aria-pressed={archived} onclick={() => load(0, true)}>Archiwum</button>

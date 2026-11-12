@@ -85,6 +85,12 @@ it('closes mobile navigation with Escape and restores focus to its trigger', asy
 	await expect.element(screen.getByRole('navigation', { name: 'Nawigacja mobilna' })).not.toBeInTheDocument();
 	await expect.element(trigger).toHaveFocus();
 });
+it('provides a skip link to the main scrolling content', async () => {
+	const screen = await render(LayoutTestShell);
+	const link = screen.getByRole('link', { name: 'Przejdź do treści' });
+	await expect.element(link).toHaveAttribute('href', '#main-content');
+	await expect.element(screen.getByRole('main')).toHaveAttribute('id', 'main-content');
+});
 it('aborts the old session queue immediately while a new Clerk token is still being verified', async () => {
 	let finishPut!: () => void;
 	fixture.uploadToTarget.mockImplementation(

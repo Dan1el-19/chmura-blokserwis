@@ -187,6 +187,11 @@ test('preserves folders, pages and uploads while navigating through the applicat
 		expect(response.request().headers()['authorization']).toBe('Bearer e2e-token');
 	}
 	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached();
+	const skipLink = page.getByRole('link', { name: 'Przejdź do treści' });
+	await skipLink.focus();
+	await expect(skipLink).toBeVisible();
+	await page.keyboard.press('Enter');
+	await expect(page.locator('#main-content')).toBeFocused();
 	await expect(page.getByRole('button', { name: 'Nowy folder' })).toBeEnabled();
 	await page.screenshot({ path: `.cache/e2e-files-${testInfo.project.name}.png` });
 	await page.getByRole('button', { name: 'Nowy folder' }).click();

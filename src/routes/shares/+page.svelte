@@ -5,6 +5,7 @@
 	import { shareLinks } from '#lib/api.js';
 	import { getCloudState } from '#lib/cloud-state.svelte.js';
 	import { storageErrorMessage } from '#lib/storage-error.js';
+	import PageHeader from '#lib/components/ui/PageHeader.svelte';
 	import { DeleteShareRequestSchema, ListSpaceSharesRequestSchema, SpaceKind, UpdateShareRequestSchema, type SpaceShare } from '#lib/gen/unisourcecfl/catalog/v1/catalog_pb.js';
 
 	const app = getCloudState();
@@ -77,11 +78,12 @@
 	}
 </script>
 
-<section class="mx-auto max-w-5xl space-y-5 p-4 sm:p-6">
-	<header class="flex flex-wrap items-end justify-between gap-3">
-		<div><h1 class="text-xl font-semibold">Udostępnienia</h1><p class="mt-1 text-sm text-text-muted">Linki i statystyki wybranej przestrzeni.</p></div>
-		<label class="text-sm">Przestrzeń <select bind:value={spaceId} class="ml-2 rounded-md border border-border-line bg-bg-panel p-2">{#each app.spaces as space (space.id)}<option value={space.id}>{space.kind === SpaceKind.SHARED ? 'Main' : 'Pliki prywatne'}</option>{/each}</select></label>
-	</header>
+<section class="space-y-5">
+	<PageHeader title="Udostępnienia" description="Linki i statystyki wybranej przestrzeni.">
+		{#snippet actions()}
+			<label class="text-sm">Przestrzeń <select bind:value={spaceId} class="ml-2 rounded-md border border-border-line bg-bg-panel p-2">{#each app.spaces as space (space.id)}<option value={space.id}>{space.kind === SpaceKind.SHARED ? 'Pliki wspólne' : 'Pliki prywatne'}</option>{/each}</select></label>
+		{/snippet}
+	</PageHeader>
 	{#if error || app.accountError}<p role="alert" class="rounded-md bg-red-500/10 p-3 text-sm text-red-600">{error || app.accountError}</p>{/if}
 	{#if !items.length && !busy}<p class="rounded-md border border-border-line p-6 text-sm text-text-muted">Brak linków w tej przestrzeni.</p>{/if}
 	<div class="space-y-3">

@@ -316,11 +316,12 @@
 	</main>
 {:else}
 	<div class="flex h-dvh w-full flex-col overflow-hidden lg:flex-row">
+		<a href="#main-content" class="sr-only z-50 rounded-md bg-bg-panel p-3 text-text-main shadow-lg focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Przejdź do treści</a>
 		<DesktopSidebar {navItems} {currentPath} lastFolders={cloud.lastFolders} manager={cloud.transfers} onSignOut={signOut} />
 		<div class="flex min-h-0 min-w-0 flex-1 flex-col">
 			<MobileHeader bind:isDrawerOpen bind:menuButton />
 			<MobileDrawer {navItems} {currentPath} lastFolders={cloud.lastFolders} manager={cloud.transfers} bind:isDrawerOpen onSignOut={signOut} />
-			<main bind:this={scrollHost} onscroll={rememberScroll} class="flex-1 overflow-y-auto overscroll-none p-4 pb-28 lg:p-10 lg:pb-28">
+			<main id="main-content" tabindex="-1" bind:this={scrollHost} onscroll={rememberScroll} class="flex-1 overflow-y-auto overscroll-none p-4 pb-28 md:px-6 xl:px-8">
 				{@render children()}
 			</main>
 			<UploadPanel manager={cloud.transfers} spaces={cloud.spaces} />

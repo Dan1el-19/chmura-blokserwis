@@ -18,7 +18,7 @@
 		aria-label="Przełącz menu"
 		aria-expanded={isDrawerOpen}
 	>
-		<div class="transition-transform duration-300 {isDrawerOpen ? 'rotate-90' : 'rotate-0'}">
+		<div class="transition-transform duration-150 motion-reduce:transition-none {isDrawerOpen ? 'rotate-90' : 'rotate-0'}">
 			{#if isDrawerOpen}<X class="h-6 w-6" weight="bold" />{:else}<List class="h-6 w-6" />{/if}
 		</div>
 	</button>
