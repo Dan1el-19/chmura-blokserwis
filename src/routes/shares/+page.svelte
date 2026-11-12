@@ -5,8 +5,9 @@
 	import { shareLinks } from '#lib/api.js';
 	import { getCloudState } from '#lib/cloud-state.svelte.js';
 	import { storageErrorMessage } from '#lib/storage-error.js';
+	import { resolve } from '$app/paths';
 	import PageHeader from '#lib/components/ui/PageHeader.svelte';
-	import { DeleteShareRequestSchema, ListSpaceSharesRequestSchema, SpaceKind, UpdateShareRequestSchema, type SpaceShare } from '#lib/gen/unisourcecfl/catalog/v1/catalog_pb.js';
+	import { DeleteShareRequestSchema, EntryKind, ListSpaceSharesRequestSchema, SpaceKind, UpdateShareRequestSchema, type SpaceShare } from '#lib/gen/unisourcecfl/catalog/v1/catalog_pb.js';
 
 	const app = getCloudState();
 	onMount(() => { void app.ensureAccount(); });
@@ -15,6 +16,7 @@
 	let next = $state('');
 	let busy = $state(false);
 	let error = $state('');
+	let notice = $state('');
 	let editingId = $state('');
 	let slug = $state('');
 	let generation = 0;
@@ -26,6 +28,7 @@
 		const current = ++generation;
 		items = [];
 		next = '';
+		notice = '';
 		if (selected) void load(selected, '', current);
 		return () => { generation++; };
 	});
@@ -45,14 +48,17 @@
 		const selected = spaceId, current = generation;
 		busy = true;
 		error = '';
+		notice = '';
 		try {
 			const response = await shareLinks.updateShare(create(UpdateShareRequestSchema, {
 				spaceId:selected,shareId:item.share.id,expectedRevision:item.share.revision,
 				updateMask:create(FieldMaskSchema,{paths:Object.keys(changes)}),...changes
 			}));
 			if (current !== generation) return;
-			if (response.share) item.share = response.share;
+			if (!response.share) throw new Error('Usługa nie potwierdziła zmian linku.');
+			item.share = response.share;
 			editingId = '';
+			notice = changes.paused === true ? 'Link został wstrzymany.' : changes.paused === false ? 'Link został wznowiony.' : 'Adres linku został zapisany.';
 		} catch (cause) { if (current === generation) error = storageErrorMessage(cause); }
 		finally { if (current === generation) busy = false; }
 	}
@@ -61,9 +67,10 @@
 		const selected = spaceId, current = generation;
 		busy = true;
 		error = '';
+		notice = '';
 		try {
 			await shareLinks.deleteShare(create(DeleteShareRequestSchema,{spaceId:selected,shareId:item.share.id,expectedRevision:item.share.revision}));
-			if (current === generation) items = items.filter(value => value.share?.id !== item.share?.id);
+			if (current === generation) { items = items.filter(value => value.share?.id !== item.share?.id); notice = 'Link został usunięty.'; }
 		} catch (cause) { if (current === generation) error = storageErrorMessage(cause); }
 		finally { if (current === generation) busy = false; }
 	}
@@ -76,6 +83,18 @@
 		if (share.maxDownloads !== undefined && share.downloadCount >= share.maxDownloads) return 'Limit pobrań';
 		return 'Aktywny';
 	}
+	async function copyLink(item: SpaceShare, download = false): Promise<void> {
+		if (!item.share) return;
+		try {
+			const path = download ? resolve('/s/[address]/download', { address: item.share.address }) : resolve('/s/[address]', { address: item.share.address });
+			await navigator.clipboard.writeText(new URL(path, window.location.origin).toString());
+			error = '';
+			notice = download ? 'Skopiowano adres pobierania.' : 'Skopiowano link.';
+		} catch (cause) {
+			notice = '';
+			error = `Nie udało się skopiować linku: ${storageErrorMessage(cause)}`;
+		}
+	}
 </script>
 
 <section class="space-y-5">
@@ -85,6 +104,7 @@
 		{/snippet}
 	</PageHeader>
 	{#if error || app.accountError}<p role="alert" class="rounded-md bg-red-500/10 p-3 text-sm text-red-600">{error || app.accountError}</p>{/if}
+	{#if notice}<p role="status" class="text-sm text-emerald-700 dark:text-emerald-300">{notice}</p>{/if}
 	{#if !items.length && !busy}<p class="rounded-md border border-border-line p-6 text-sm text-text-muted">Brak linków w tej przestrzeni.</p>{/if}
 	<div class="space-y-3">
 		{#each items as item (item.share?.id)}
@@ -95,7 +115,7 @@
 					{#if editingId === item.share.id}
 						<form class="flex flex-wrap gap-2" onsubmit={(event) => {event.preventDefault(); void update(item,{slug});}}><label class="sr-only" for="slug-{item.share.id}">Nowy adres</label><input id="slug-{item.share.id}" bind:value={slug} required pattern="[a-z0-9]([a-z0-9-]*[a-z0-9])" minlength="3" maxlength="64" class="min-w-0 flex-1 rounded border border-border-line bg-bg-panel p-2 text-sm"/><button disabled={busy} class="rounded border border-border-line px-3 text-sm">Zapisz adres</button><button type="button" onclick={() => editingId = ''} class="px-2 text-sm">Anuluj</button></form>
 					{/if}
-					<div class="flex flex-wrap gap-2 text-sm"><button disabled={busy || !!item.share.revokedAt} class="rounded border border-border-line px-3 py-2 disabled:opacity-50" onclick={() => void update(item,{paused:!item.share!.paused})}>{item.share.paused ? 'Wznów' : 'Wstrzymaj'}</button><button disabled={busy || !!item.share.revokedAt} class="rounded border border-border-line px-3 py-2 disabled:opacity-50" onclick={() => {editingId=item.share!.id;slug=item.share!.address;}}>Zmień adres</button><button disabled={busy} class="rounded px-3 py-2 text-red-600 disabled:opacity-50" onclick={() => void remove(item)}>Usuń link</button></div>
+					<div class="flex flex-wrap gap-2 text-sm">{#if linkState(item) === 'Aktywny' || linkState(item) === 'Limit pobrań'}<button type="button" class="rounded border border-border-line px-3 py-2" onclick={() => void copyLink(item)}>Kopiuj link</button>{#if item.entryKind === EntryKind.FILE}<button type="button" class="rounded border border-border-line px-3 py-2" onclick={() => void copyLink(item, true)}>Kopiuj adres pobierania</button>{/if}{/if}<button disabled={busy || !!item.share.revokedAt} class="rounded border border-border-line px-3 py-2 disabled:opacity-50" onclick={() => void update(item,{paused:!item.share!.paused})}>{item.share.paused ? 'Wznów' : 'Wstrzymaj'}</button><button disabled={busy || !!item.share.revokedAt} class="rounded border border-border-line px-3 py-2 disabled:opacity-50" onclick={() => {editingId=item.share!.id;slug=item.share!.address;}}>Zmień adres</button><button disabled={busy} class="rounded px-3 py-2 text-red-600 disabled:opacity-50" onclick={() => void remove(item)}>Usuń link</button></div>
 				</article>
 			{/if}
 		{/each}
