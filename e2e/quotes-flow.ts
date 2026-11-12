@@ -29,7 +29,7 @@ export async function runQuoteFlow(page: Page, {
 	await page.getByLabel('Tytuł').fill(title);
 	await page.getByLabel('Klient', { exact: true }).fill('Przykładowy klient');
 	await page.getByRole('button', { name: 'Zapisz szkic' }).click();
-	await expect(page.getByText('Szkic zapisany')).toBeVisible();
+	await expect(page.getByText('Zapisano', { exact: true })).toBeVisible();
 
 	await page.getByLabel('Plik XLSX').setInputFiles(fixture);
 	await page.getByRole('button', { name: 'Prześlij arkusz' }).click();

@@ -31,6 +31,7 @@
 	let preview = $state('');
 	let previewRevision = $state(0n);
 	let previewError = $state('');
+	let viewMode = $state<'editing' | 'preview'>('editing');
 	let previewRequest = 0;
 	let file = $state<File>();
 	let busy = $state(false);
@@ -293,8 +294,12 @@
 		</div>
 		{#if status}<p role="status">{status}</p>{/if}
 		{#if extraError}<p class="text-sm text-text-muted" role="status">{extraError}</p>{/if}
+		<div class="flex gap-2 xl:hidden" role="group" aria-label="Widok wyceny">
+			<button type="button" class={button} aria-label="Pokaż edycję wyceny" aria-pressed={viewMode === 'editing'} onclick={() => viewMode = 'editing'}>Edycja</button>
+			<button type="button" class={button} aria-label="Pokaż podgląd wyceny" aria-pressed={viewMode === 'preview'} onclick={() => viewMode = 'preview'}>Podgląd</button>
+		</div>
 		<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,0.8fr)]">
-		<div class="min-w-0 space-y-4">
+		<div class="min-w-0 space-y-4 xl:block {viewMode === 'preview' ? 'hidden' : ''}">
 		<fieldset class={panel} disabled={busy || quote.archived}>
 			<legend class="px-1 font-semibold">Dane wyceny</legend>
 			<div class="grid gap-3 sm:grid-cols-2">
@@ -426,7 +431,7 @@
 			{/if}
 		</div>
 		</div>
-		<aside class="min-w-0 xl:sticky xl:top-4 xl:self-start">
+		<aside class="min-w-0 xl:sticky xl:top-4 xl:block xl:self-start {viewMode === 'editing' ? 'hidden' : ''}">
 			<section class={panel}>
 				<div class="flex flex-wrap items-center justify-between gap-2">
 					<div><h2 class="font-semibold">Podgląd dokumentu{previewRevision ? ` · v${previewRevision}` : ''}</h2><p class="text-sm text-text-muted">{!previewRevision && (dirty || saving) ? 'Podgląd odświeży się po zapisaniu zmian.' : 'Odświeża się po zapisaniu szkicu.'}</p></div>

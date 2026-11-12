@@ -24,7 +24,7 @@
 
 <div class="space-y-3">
 	{#each lines as line, index (line)}
-		<div class="space-y-2 border-b border-border-line pb-3">
+		<div class="space-y-2 border-b border-border-line pb-1.5">
 			<div class="flex items-center justify-between gap-3">
 				<span class="text-sm text-text-muted">Pozycja {index + 1}{sourceRows[index] ? ` · Wiersz ${sourceRows[index]} w arkuszu` : ''}</span>
 				<button class={button} type="button" aria-label={`Usuń pozycję ${index + 1}`} onclick={() => remove(index)}>Usuń</button>

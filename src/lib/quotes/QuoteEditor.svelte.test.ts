@@ -116,6 +116,20 @@ it('saves newer edits after an earlier delayed save completes', async () => {
 	await expect.element(view.getByLabelText('Tytuł')).toHaveValue('Druga zmiana');
 });
 
+it('keeps the same editor and draft when switching to preview and back', async () => {
+	api.getQuotePreview.mockResolvedValue({ html: '<html><body>Podgląd szkicu</body></html>' });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await view.getByLabelText('Tytuł').fill('Tekst zachowany');
+	const input = view.getByLabelText('Tytuł').element();
+	const showPreview = document.querySelector<HTMLButtonElement>('button[aria-label="Pokaż podgląd wyceny"]');
+	expect(showPreview).not.toBeNull();
+	showPreview!.click();
+	await expect.poll(() => showPreview!.getAttribute('aria-pressed')).toBe('true');
+	document.querySelector<HTMLButtonElement>('button[aria-label="Pokaż edycję wyceny"]')!.click();
+	await expect.element(view.getByLabelText('Tytuł')).toHaveValue('Tekst zachowany');
+	expect(view.getByLabelText('Tytuł').element()).toBe(input);
+});
+
 it('applies imported prices as gross even when the detected mapping says net', async () => {
 	api.getImportResult.mockResolvedValue({ result: create(QuoteImportResultSchema, {
 		id: 'import-net', status: 'succeeded', resultVersion: 1n,

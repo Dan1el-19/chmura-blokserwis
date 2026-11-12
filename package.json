@@ -21,7 +21,8 @@
 		"proto:format": "buf format --diff --exit-code",
 		"proto:check": "pnpm proto:lint && pnpm proto:format && node scripts/check-proto.mjs",
 		"proto:check:backend": "node scripts/check-proto.mjs --backend",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"test:e2e:quotes-layout": "playwright test --config=playwright.quotes-layout.config.ts"
 	},
 	"devDependencies": {
 		"@bufbuild/protoc-gen-es": "2.16.0",

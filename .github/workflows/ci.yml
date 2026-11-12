@@ -51,6 +51,9 @@ jobs:
       - name: Run browser navigation tests
         run: pnpm test:e2e
 
+      - name: Run quote layout tests with mocked API
+        run: pnpm test:e2e:quotes-layout
+
       - name: Check Proto snapshot
         run: pnpm proto:check
 
