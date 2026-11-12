@@ -36,7 +36,7 @@ it.each([
 		@page{size:A4;margin:${margin};@bottom-left{content:"BLOKSERWIS"}}
 		body{margin:0;font:9.5pt Arial}header{height:20mm}p{margin:0;height:10mm}
 		</style></head><body><header>SZKIC</header>${'<p>Pozycja oferty</p>'.repeat(100)}<footer>Koniec oferty</footer></body></html>` });
-	await render(QuoteEditor, { id: 'quote-1' });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
 	await expect.poll(() => document.querySelector('iframe[title="Podgląd wyceny"]')).not.toBeNull();
 	const frame = document.querySelector<HTMLIFrameElement>('iframe[title="Podgląd wyceny"]')!;
 	expect(frame.getAttribute('sandbox')).toBe('');
@@ -55,6 +55,18 @@ it.each([
 	await expect.poll(() => frame.getBoundingClientRect().width).toBeLessThanOrEqual(320);
 	expect(Math.round(doc.body.getBoundingClientRect().width)).toBe(794);
 	expect(doc.scrollingElement!.scrollWidth).toBeLessThanOrEqual(doc.scrollingElement!.clientWidth);
+	await view.getByRole('button', { name: '100%' }).click();
+	const viewport = frame.parentElement!.parentElement!;
+	await expect.poll(() => viewport.scrollWidth).toBeGreaterThan(viewport.clientWidth);
+	await view.getByRole('button', { name: 'Dopasuj do szerokości' }).click();
+	await expect.poll(() => viewport.scrollWidth).toBeLessThanOrEqual(viewport.clientWidth);
+	const popup = { opener: window, document: document.implementation.createHTMLDocument('') };
+	const open = vi.spyOn(window, 'open').mockReturnValue(popup as unknown as Window);
+	await view.getByRole('button', { name: 'Otwórz podgląd' }).click();
+	expect(popup.opener).toBeNull();
+	expect(popup.document.querySelector('iframe')?.getAttribute('sandbox')).toBe('');
+	expect(popup.document.querySelector('iframe')?.srcdoc).toContain('SZKIC');
+	open.mockRestore();
 	doc.scrollingElement!.scrollTop = doc.scrollingElement!.scrollHeight;
 	expect(doc.querySelector('footer')!.getBoundingClientRect().bottom).toBeLessThanOrEqual(frame.contentWindow!.innerHeight);
 });
