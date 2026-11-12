@@ -1247,7 +1247,7 @@
 
 {#if bulkTrashOpen}
 	<AppDialog labelledby="bulk-trash-title" busy={bulkTrashBusy} onclose={() => { if (!bulkTrashBusy) bulkTrashOpen = false; }}>
-		<section class="w-full max-w-lg space-y-4 rounded-md border border-border-line bg-bg-panel p-5 shadow-lg">
+		<section class="space-y-4">
 			<div><h2 id="bulk-trash-title" class="text-base font-semibold text-text-main">Przenieść zaznaczone elementy do kosza?</h2><p class="mt-2 text-sm text-text-muted">Operacja obejmie {bulkTrashTarget.length || selectedEntries.length} elementów. Foldery pozostaną w całości w koszu.</p></div>
 			{#if trashError}<p class="rounded-md bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-300" role="alert">{trashError}</p>{/if}
 			{#if bulkTrashResults.length}<ul class="max-h-48 space-y-1 overflow-y-auto rounded border border-border-line p-3 text-sm">{#each bulkTrashResults as result (result.entry.id)}<li class="flex items-start justify-between gap-3"><span class="min-w-0 truncate">{result.entry.name}</span>{#if result.error}<span class="shrink-0 text-xs text-red-600">Niepowodzenie: {result.error}</span>{:else}<span class="shrink-0 text-xs text-emerald-700">W koszu</span>{/if}</li>{/each}</ul>{/if}
@@ -1258,7 +1258,7 @@
 
 {#if bulkDeleteOpen}
 	<AppDialog labelledby="bulk-delete-title" busy={bulkDeleteBusy} onclose={() => { if (!bulkDeleteBusy) bulkDeleteOpen = false; }}>
-		<section class="w-full max-w-lg space-y-4 rounded-md border border-border-line bg-bg-panel p-5 shadow-lg">
+		<section class="space-y-4">
 			<h2 id="bulk-delete-title" class="text-base font-semibold text-text-main">Trwale usunąć zaznaczone elementy?</h2>
 			<p class="text-sm text-text-muted">Zlecenie obejmuje {bulkDeleteBatches.reduce((count, batch) => count + batch.entries.length, 0)} elementów wraz z zawartością folderów.</p>
 			{#if bulkDeleteError}<p role="alert" class="rounded-md bg-red-500/10 p-3 text-sm text-red-600">{bulkDeleteError}</p>{/if}
@@ -1294,20 +1294,18 @@
 
 {#if showCreateFolder}
 	<AppDialog labelledby="create-folder-title" busy={folderBusy} onclose={()=>showCreateFolder=false}>
-		<section class="w-full max-w-sm rounded-md border border-border-line bg-bg-panel p-5 shadow-lg">
 			<form onsubmit={(event) => { event.preventDefault(); void createFolder(); }} class="space-y-4">
 				<h2 id="create-folder-title" class="text-base font-semibold text-text-main">Nowy folder</h2>
 				<label class="block space-y-1.5 text-sm text-text-main"><span>Nazwa</span><input bind:value={folderName} placeholder="Nazwa folderu" required disabled={folderBusy || Boolean(pendingFolderRequest)} class="w-full rounded-md border border-border-line bg-bg-app px-3 py-2 text-sm text-text-main focus:border-primary focus:outline-none" /></label>
 				{#if folderError}<div class="rounded-md bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-300" role="alert">{folderError}{#if pendingFolderRequest}<p class="mt-1 text-xs">Ponowienie użyje tego samego identyfikatora żądania.</p>{/if}</div>{/if}
 				<div class="flex justify-end gap-2 pt-2"><button type="button" disabled={folderBusy} onclick={() => (showCreateFolder = false)} class="rounded-md px-3 py-2 text-sm text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800">Anuluj</button><button type="submit" disabled={folderBusy || (!folderName.trim() && !pendingFolderRequest)} class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">{pendingFolderRequest ? 'Ponów' : 'Utwórz'}</button></div>
 			</form>
-		</section>
 	</AppDialog>
 {/if}
 
 {#if pendingTrashEntry}
 	<AppDialog labelledby="trash-entry-title" describedby="trash-entry-description" alert busy={trashRequestPending} onclose={()=>pendingTrashEntry=null}>
-		<section class="w-full max-w-sm space-y-4 rounded-md border border-border-line bg-bg-panel p-5 shadow-lg">
+		<section class="space-y-4">
 			<div>
 				<h2 id="trash-entry-title" class="text-base font-semibold text-text-main">Przenieść do kosza?</h2>
 				<p id="trash-entry-description" class="mt-2 break-words text-sm text-text-muted">Element „{pendingTrashEntry.name}” będzie można później przywrócić.</p>
@@ -1325,14 +1323,12 @@
 
 {#if renamingEntry}
 	<AppDialog labelledby="rename-entry-title" busy={renameBusy} onclose={()=>renamingEntry=null}>
-		<section class="w-full max-w-sm rounded-md border border-border-line bg-bg-panel p-5 shadow-lg">
 			<form onsubmit={saveRename} class="space-y-4">
 				<h2 id="rename-entry-title" class="text-base font-semibold text-text-main">Zmień nazwę</h2>
 				<label class="block space-y-1.5 text-sm text-text-main"><span>Nazwa</span><input bind:value={renameValue} disabled={renameBusy} required class="w-full rounded-md border border-border-line bg-bg-app px-3 py-2 text-sm text-text-main focus:border-primary focus:outline-none" /></label>
 				{#if viewError}<p class="rounded-md bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-300" role="alert">{viewError}</p>{/if}
 				<div class="flex justify-end gap-2 pt-2"><button type="button" disabled={renameBusy} onclick={() => (renamingEntry = null)} class="rounded-md px-3 py-2 text-sm text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800">Anuluj</button><button type="submit" disabled={renameBusy || !renameValue.trim()} class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">Zapisz</button></div>
 			</form>
-		</section>
 	</AppDialog>
 {/if}
 
