@@ -129,6 +129,18 @@ it('rejects an administrator limit above the 10 GB multipart maximum', async () 
 	expect(api.updateStorageSettings).not.toHaveBeenCalled();
 });
 
+it('identifies an invalid field without falsely warning that it is below usage', async () => {
+	const screen = await render(StorageSettingsPage);
+	const limit = screen.getByLabelText('Limit R2 (GB)');
+	await limit.fill('');
+	await expect.element(screen.getByText(/Ustawiony limit jest niższy/)).not.toBeInTheDocument();
+	await screen.getByRole('button', { name: 'Zapisz ustawienia' }).click();
+	await expect.element(limit).toHaveAttribute('aria-invalid', 'true');
+	await expect.element(limit).toHaveAttribute('aria-describedby', expect.stringContaining('r2-limit-error'));
+	await expect.element(screen.getByText('Wprowadź limit R2 w dozwolonym zakresie.')).toBeVisible();
+	expect(api.updateStorageSettings).not.toHaveBeenCalled();
+});
+
 it('keeps byte-precise storage limits when changing only the upload limit', async () => {
 	api.getStorageSettings.mockResolvedValue({
 		settings: {
