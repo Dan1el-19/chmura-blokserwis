@@ -77,7 +77,7 @@ const terminal = (task: UploadTask) => ['done', 'cancelled', 'error'].includes(t
 
 export class UploadManager {
 	tasks = $state<UploadTask[]>([]);
-	collapsed = $state(false);
+	collapsed = $state(true);
 	private processing = false;
 	private generation = 0;
 	private restoreVersion = 0;
@@ -137,7 +137,6 @@ export class UploadManager {
 			}
 		}
 		this.tasks.push(...tasks);
-		this.collapsed = false;
 		void this.process();
 	}
 	private async destinationEntries(target: UploadDestination): Promise<Entry[]> {

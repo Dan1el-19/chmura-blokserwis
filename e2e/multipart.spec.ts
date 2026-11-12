@@ -300,6 +300,7 @@ test.describe('multipart transfer UI over the browser RPC and XHR flow', () => {
 		await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeVisible({ timeout: 15_000 });
 		await page.getByLabel('Wybierz pliki do przesłania').setInputFiles(correct);
 		await mock.putStarted;
+		await page.getByRole('region', { name: 'Transfery' }).getByRole('button', { name: 'Rozwiń' }).click();
 		await expect(page.getByRole('region', { name: 'Transfery' })).toContainText('sparse.bin');
 		await expect(page.getByRole('progressbar', { name: 'Postęp sparse.bin' })).toBeVisible();
 		await expect.poll(() => mock.events.includes('confirmed:1:1')).toBe(true);
@@ -339,6 +340,7 @@ test.describe('multipart transfer UI over the browser RPC and XHR flow', () => {
 		await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeVisible({ timeout: 15_000 });
 		await page.getByLabel('Wybierz pliki do przesłania').setInputFiles(file);
 		await mock.putStarted;
+		await page.getByRole('region', { name: 'Transfery' }).getByRole('button', { name: 'Rozwiń' }).click();
 		await expect(page.getByRole('status')).toContainText('Przesłano', { timeout: 45_000 });
 		const firstTarget = mock.events.findIndex((event) => event.startsWith('target:1:'));
 		const readyPoll = mock.events.findIndex((event) => event === 'session:ready');
@@ -362,6 +364,7 @@ test.describe('multipart transfer UI over the browser RPC and XHR flow', () => {
 		await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeVisible({ timeout: 15_000 });
 		await page.getByLabel('Wybierz pliki do przesłania').setInputFiles(file);
 		await mock.putStarted;
+		await page.getByRole('region', { name: 'Transfery' }).getByRole('button', { name: 'Rozwiń' }).click();
 		await expect(page.getByRole('alert')).toContainText('HTTP 503', { timeout: 45_000 });
 		expect(mock.events).not.toContain('retry');
 		expect(mock.getState().retryCount).toBe(0);

@@ -17,6 +17,9 @@
 	// The session provider is intentionally fixed for the lifetime of this shell.
 	// svelte-ignore state_referenced_locally
 	setContext(CLOUD_CONTEXT, app);
+	// Storage interaction tests inspect individual transfer details.
+	// svelte-ignore state_referenced_locally
+	app.transfers.collapsed = false;
 </script>
 
 {#if visible}{#key `${spaceKind}:${mode}`}<StoragePage {spaceKind} {mode} />{/key}{/if}

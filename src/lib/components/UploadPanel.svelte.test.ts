@@ -213,6 +213,25 @@ function createState(
 	return state;
 }
 
+it('starts with a compact summary and reports transfers requiring attention', async () => {
+	const state = createState(new MemoryStore(), makeRpc().rpc);
+	await state.loadUploadLimit();
+	const screen = await render(UploadPanel, { props: { manager: state.transfers } });
+	state.transfers.enqueue([fakeFile()], { spaceId: 'space-1', mode: UploadMode.AUTO, label: 'Pliki prywatne' }, 100_000_000);
+	await expect.element(screen.getByRole('button', { name: /1 wymaga uwagi/ })).toBeVisible();
+	await expect.element(screen.getByText('Wystąpił błąd')).not.toBeInTheDocument();
+	await screen.getByRole('button', { name: 'Rozwiń' }).click();
+	await expect.element(screen.getByText('Wystąpił błąd')).toBeVisible();
+});
+
+it('shows the target of a retry in the compact summary', async () => {
+	const state = createState(new MemoryStore(), makeRpc().rpc);
+	const screen = await render(UploadPanel, { props: { manager: state.transfers } });
+	state.transfers.tasks.push({ id: 'retry', name: 'plik.pdf', sizeBytes: 1, progress: 20,
+		target: { spaceId: 'space-1', mode: UploadMode.AUTO, label: 'Pliki prywatne' }, phase: 'retrying', storageLocation: StorageLocation.R2 });
+	await expect.element(screen.getByRole('button', { name: /Ponawianie: R2/ })).toBeVisible();
+});
+
 it('keeps small files on legacy single PUT even when multipart capability is enabled', async () => {
 	fixture.getUploadLimits.mockResolvedValue({ maxUploadBytes: 100_000_000n, canManage: false, multipart: multipartEnabled });
 	fixture.createUpload.mockResolvedValue({ session: { id: 'legacy-1', state: 1, attemptId: 'attempt-1', storageLocation: StorageLocation.R2 }, target: { url: 'https://legacy.example', headers: {} } });
@@ -324,6 +343,7 @@ it('shows verifying at 99 percent until the completed session publishes its cata
 	fixture.listEntries.mockResolvedValue({ entries: [{ id: 'entry-1', name: 'large.bin', kind: EntryKind.FILE }], nextPageToken: '' });
 	const screen = await render(UploadPanel, { props: { manager: state.transfers } });
 	state.transfers.enqueue([fakeFile()], { spaceId: 'space-1', mode: UploadMode.AUTO, label: 'Personal' }, 100_000_000);
+	await screen.getByRole('button', { name: 'Rozwiń' }).click();
 	await expect.poll(() => state.transfers.tasks[0]?.phase).toBe('verifying');
 	const progress = screen.getByRole('progressbar', { name: 'Postęp large.bin' });
 	expect(progress.element().getAttribute('aria-valuenow')).toBe('99');

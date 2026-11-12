@@ -150,7 +150,7 @@ test.describe('isolated live multipart acceptance', () => {
 			return clerk?.loaded === true && clerk.user?.id === expectedUserId &&
 				clerk.session?.id === expectedSessionId && clerk.session.status === 'active';
 		}, { expectedUserId: userId, expectedSessionId: exchanged.sessionId }, { timeout: 30_000 });
-		await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Pliki wspólne' })).toBeAttached();
 	}
 
 	function observeRpc(page: Page, userId: string, uploadName: string, provider: 'R2' | 'RustFS') {
@@ -267,8 +267,8 @@ test.describe('isolated live multipart acceptance', () => {
 		await expect(selector).toBeVisible();
 		await selector.selectOption(String(mode));
 		await expect(selector).toHaveValue(String(mode));
-		await page.getByRole('link', { name: 'Main', exact: true }).click();
-		await expect(page.getByRole('heading', { name: 'Pliki wspólne' })).toBeVisible();
+		await page.getByRole('complementary').getByRole('link', { name: 'Pliki wspólne', exact: true }).click();
+		await expect(page.getByRole('heading', { name: 'Pliki wspólne' })).toBeAttached();
 	}
 
 	function makeUniqueFixtureLink(name: string, directory: string): { linked: string; wrong: string } {
@@ -655,11 +655,12 @@ test.describe('isolated live multipart acceptance', () => {
 			await attachSignIn(page, userId);
 			await expect.poll(() => observer!.hasVerifiedGetMe(), { timeout: 30_000 }).toBe(true);
 			observer.assertValid();
-			await page.getByRole('link', { name: 'Main', exact: true }).click();
-			await expect(page.getByRole('heading', { name: 'Pliki wspólne' })).toBeVisible();
+			await page.getByRole('complementary').getByRole('link', { name: 'Pliki wspólne', exact: true }).click();
+			await expect(page.getByRole('heading', { name: 'Pliki wspólne' })).toBeAttached();
 			await selectManualProvider(page, provider === 'R2' ? UploadMode.R2 : UploadMode.RUSTFS);
 			await expect(page.getByLabel('Wybierz pliki do przesłania')).toBeEnabled();
 			await page.getByLabel('Wybierz pliki do przesłania').setInputFiles(fixture);
+			await page.getByRole('region', { name: 'Transfery' }).getByRole('button', { name: 'Rozwiń' }).click();
 			if (restartDuringDataPlane) {
 				await laterPartTargetHeld;
 				uploaded = observer.uploadRecord;
@@ -716,9 +717,7 @@ test.describe('isolated live multipart acceptance', () => {
 				({ context, page } = await launchProfile(profilePath));
 				observer.attach(page);
 				await page.goto(config.baseUrl);
-				await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeVisible();
-				await page.getByRole('link', { name: 'Main', exact: true }).click();
-				await expect(page.getByRole('heading', { name: 'Pliki wspólne' })).toBeVisible();
+				await expect(page.getByRole('heading', { name: 'Pliki wspólne' })).toBeAttached();
 				const resumeInput = page.getByLabel(`Wybierz plik do wznowienia: ${filename}`);
 				await expect(resumeInput).toBeVisible();
 				const targetsBeforeMismatch = observer.targets.count;

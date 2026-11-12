@@ -3,6 +3,7 @@
 	import { EntryKind, SpaceKind, StorageLocation, type Space } from '../gen/unisourcecfl/catalog/v1/catalog_pb.js';
 	let { manager, spaces = [], height = $bindable(0) }: { manager: UploadManager; spaces?: Pick<Space, 'id' | 'kind'>[]; height?: number } = $props();
 	$effect(() => { if (!manager.tasks.length) height = 0; });
+	const attentionCount = $derived(manager.tasks.filter((task) => ['error', 'needsFile', 'conflict'].includes(task.phase)).length);
 	function destinationLabel(task: UploadTask): string {
 		if (task.target.label !== task.target.spaceId) return task.target.label;
 		const space = spaces.find((item) => item.id === task.target.spaceId);
@@ -11,6 +12,7 @@
 	}
 	const locationLabel = (location: StorageLocation | undefined) =>
 		location === StorageLocation.R2 ? 'R2' : location === StorageLocation.RUSTFS ? 'RustFS' : '';
+	const retryLocations = $derived([...new Set(manager.tasks.filter((task) => task.phase === 'retrying').map((task) => locationLabel(task.storageLocation) || 'magazyn'))]);
 	function phaseLabel(task: UploadTask): string {
 		switch (task.phase) {
 			case 'queued':
@@ -22,7 +24,7 @@
 			case 'paused':
 				return 'Wstrzymano';
 			case 'checksum':
-				return `Obliczanie sumy kontrolnej · ${task.progress}%`;
+				return 'Obliczanie sumy kontrolnej';
 			case 'preparing':
 				return 'Przygotowanie transferu';
 			case 'uploading':
@@ -46,7 +48,7 @@
 {#if manager.tasks.length}
 	<section
 		bind:offsetHeight={height}
-		class="fixed right-3 bottom-3 left-3 z-10 rounded-lg border border-border-line bg-bg-panel shadow-xl sm:left-auto sm:w-96"
+		class="fixed right-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 z-10 rounded-lg border border-border-line bg-bg-panel shadow-xl sm:left-auto sm:w-96"
 		aria-label="Transfery"
 	>
 		<div class="flex items-center justify-between gap-2 border-b border-border-line px-4 py-3">
@@ -54,9 +56,9 @@
 				type="button"
 				class="font-semibold text-text-main"
 				aria-expanded={!manager.collapsed}
-				aria-controls="transfer-list"
+				aria-controls={manager.collapsed ? undefined : 'transfer-list'}
 				onclick={() => (manager.collapsed = !manager.collapsed)}
-				>Transfery {manager.pendingCount ? `(${manager.pendingCount})` : '— zakończone'}</button
+				>Transfery{manager.pendingCount ? ` · ${manager.pendingCount} w toku` : attentionCount ? '' : ' — zakończone'}{attentionCount ? ` · ${attentionCount} wymaga uwagi` : ''}{retryLocations.length ? ` · Ponawianie: ${retryLocations.join(', ')}` : ''}</button
 			>
 			<button
 				type="button"
@@ -118,7 +120,7 @@
 								aria-valuemax="100"
 							>
 								<span
-									class="block h-full transition-[width] {task.phase === 'done' ? 'bg-emerald-500' : 'bg-primary'}"
+									class="block h-full transition-[width] motion-reduce:transition-none {task.phase === 'done' ? 'bg-emerald-500' : 'bg-primary'}"
 									style={`width:${task.progress}%`}
 								></span>
 							</div>{/if}

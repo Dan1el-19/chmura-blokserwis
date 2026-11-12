@@ -132,6 +132,7 @@ it('keeps the current page and transfer when Clerk repeats the same active sessi
 	fixture.listener();
 	expect(signal.aborted).toBe(false);
 	await expect.element(screen.getByRole('region', { name: 'Transfery' })).toBeVisible();
+	await screen.getByRole('region', { name: 'Transfery' }).getByRole('button', { name: 'Rozwiń' }).click();
 	expect(fixture.getMe).toHaveBeenCalledTimes(1);
 	finishPut();
 	await expect.element(screen.getByText('Przesłano', { exact: true })).toBeVisible();
