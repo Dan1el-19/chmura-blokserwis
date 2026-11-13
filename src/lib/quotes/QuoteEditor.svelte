@@ -32,6 +32,7 @@
 	let preview = $state('');
 	let previewRevision = $state(0n);
 	let previewError = $state('');
+	let previewLoading = $state(false);
 	let viewMode = $state<'editing' | 'preview'>('editing');
 	let previewRequest = 0;
 	let file = $state<File>();
@@ -257,10 +258,12 @@
 		previewRevision = revision;
 		const request = ++previewRequest;
 		previewError = '';
+		previewLoading = true;
 		try {
 			const response = await getQuoteClient().getQuotePreview({ quoteId: id, revision });
 			if (!disposed && request === previewRequest) preview = response.html;
 		} catch (reason) { if (!disposed && request === previewRequest) previewError = quoteError(reason); }
+		finally { if (!disposed && request === previewRequest) previewLoading = false; }
 	}
 
 	async function download(revision: bigint, draftVersion = 0n) {
@@ -453,9 +456,10 @@
 		<aside class="min-w-0 xl:sticky xl:top-4 xl:block xl:self-start {viewMode === 'editing' ? 'hidden' : ''}">
 			<section class={panel}>
 				<div class="flex flex-wrap items-center justify-between gap-2">
-					<div><h2 class="font-semibold">Podgląd dokumentu{previewRevision ? ` · v${previewRevision}` : ''}</h2><p class="text-sm text-text-muted">{!previewRevision && (dirty || saving) ? 'Podgląd odświeży się po zapisaniu zmian.' : 'Odświeża się po zapisaniu szkicu.'}</p></div>
+					<div><h2 class="font-semibold">Podgląd dokumentu{previewRevision ? ` · v${previewRevision}` : ' · szkic'}</h2><p class="text-sm text-text-muted">{previewRevision ? 'Podgląd zapisanej rewizji.' : dirty || saving ? 'Podgląd odświeży się po zapisaniu zmian.' : previewLoading || previewError ? 'Podgląd może nie zawierać ostatnio zapisanych zmian.' : 'Podgląd ostatnio zapisanego szkicu.'}</p></div>
 					{#if previewRevision}<button class={button} onclick={() => showPreview()}>Podgląd szkicu</button>{/if}
 				</div>
+				{#if previewLoading && preview}<p role="status" class="text-sm">Odświeżanie podglądu…</p>{/if}
 				{#if previewError}<p role="status" class="text-sm">Nie udało się odświeżyć podglądu: {previewError} <button class="underline" onclick={() => showPreview(previewRevision)}>Spróbuj ponownie</button></p>{/if}
 				{#if preview}<QuotePreview html={preview} />{:else if !previewError}<p role="status">Wczytywanie podglądu…</p>{/if}
 			</section>

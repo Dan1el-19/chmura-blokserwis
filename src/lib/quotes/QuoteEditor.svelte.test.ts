@@ -138,6 +138,23 @@ it('keeps the same editor and draft when switching to preview and back', async (
 	expect(view.getByLabelText('Tytuł').element()).toBe(input);
 });
 
+it('shows when the saved draft preview is still refreshing', async () => {
+	let finishPreview!: (result: { html: string }) => void;
+	api.getQuotePreview.mockResolvedValueOnce({ html: '<p>Poprzedni podgląd</p>' });
+	api.getQuotePreview.mockImplementationOnce(() => new Promise((resolve) => { finishPreview = resolve; }));
+	api.saveDraft.mockResolvedValue({ quote: create(QuoteSchema, {
+		id: 'quote-1', draftVersion: 2n, draft: { title: 'Nowy szkic', priceMode: QuotePriceMode.GROSS }
+	}) });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await expect.poll(() => api.getQuotePreview.mock.calls.length).toBe(1);
+	await view.getByLabelText('Tytuł').fill('Nowy szkic');
+	await view.getByRole('button', { name: 'Zapisz szkic' }).first().click();
+	await expect.poll(() => api.getQuotePreview.mock.calls.length).toBe(2);
+	await expect.element(view.getByText('Odświeżanie podglądu…')).toBeVisible();
+	finishPreview({ html: '<p>Nowy podgląd</p>' });
+	await expect.element(view.getByText('Odświeżanie podglądu…')).not.toBeInTheDocument();
+});
+
 it('starts with import collapsed and allows opening its file controls', async () => {
 	const view = await render(QuoteEditor, { id: 'quote-1' });
 	const imported = view.getByRole('group', { name: 'Import XLSX' });
