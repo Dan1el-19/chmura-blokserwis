@@ -36,6 +36,9 @@
 		</div>
 	</div>
 
+	{#if operation.searches.length || operation.researchStatus === 'disabled' || operation.researchStatus === 'no_results'}
+	<details open={active} class="space-y-3 border-t border-primary/15 pt-3">
+		<summary class="cursor-pointer text-xs font-medium text-text-main">Szczegóły aktywności</summary>
 	{#if operation.searches.length}
 		<div class="space-y-2 border-t border-primary/15 pt-3">
 			<p class="flex items-center gap-2 text-xs font-semibold text-text-main"><Globe size={16} /> Wyszukiwanie w internecie</p>
@@ -64,6 +67,8 @@
 				{/each}
 			</ul>
 		</details>
+	{/if}
+	</details>
 	{/if}
 
 	{#if active && sections.length}
