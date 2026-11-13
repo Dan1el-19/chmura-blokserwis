@@ -5,6 +5,21 @@ export const primary = 'rounded-md bg-blue-700 px-3 py-2 text-sm font-medium tex
 export const field = 'w-full rounded-md border border-border-line bg-bg-panel px-3 py-2 text-sm';
 export const panel = 'space-y-4 rounded-lg border border-border-line bg-bg-panel p-4 sm:p-6';
 
+export function formatQuoteLineValue(quantity: string, unitPrice: string): string {
+	function parse(value: string): { amount: bigint; scale: bigint } | null {
+		const match = /^([0-9]{1,12})(?:[.,]([0-9]{1,8}))?$/.exec(value);
+		if (!match) return null;
+		const fraction = match[2] ?? '';
+		return { amount: BigInt(match[1] + fraction), scale: 10n ** BigInt(fraction.length) };
+	}
+	const count = parse(quantity);
+	const price = parse(unitPrice);
+	if (!count || count.amount === 0n || !price) return '—';
+	const divisor = count.scale * price.scale;
+	const grosze = (count.amount * price.amount * 100n + divisor / 2n) / divisor;
+	return `${(grosze / 100n).toLocaleString('pl-PL')},${String(grosze % 100n).padStart(2, '0')} zł`;
+}
+
 export function quoteError(error: unknown): string {
 	if (error instanceof ConnectError) {
 		switch (error.code) {

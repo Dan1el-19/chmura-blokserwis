@@ -18,3 +18,14 @@ it('keeps source rows with their lines and numbers labels after removal', async 
 	await expect.element(screen.getByLabelText('Ilość pozycji 1')).toHaveValue('0.5');
 	expect(onchange).toHaveBeenCalledTimes(1);
 });
+
+it('shows an exact line value while keeping the editable input strings', async () => {
+	const lines = $state([create(QuoteLineSchema, { name: 'Kamera', quantity: '2.5', unitPrice: '19.99' })]);
+	const screen = await render(QuoteLines, { lines, onchange: vi.fn() });
+	const table = screen.getByRole('table', { name: 'Pozycje wyceny' });
+	await expect.element(table.getByText('49,98 zł')).toBeInTheDocument();
+	await expect.element(table.getByLabelText('Ilość pozycji 1')).toHaveValue('2.5');
+	await expect.element(table.getByLabelText('Cena brutto pozycji 1')).toHaveValue('19.99');
+	await table.getByLabelText('Ilość pozycji 1').fill('');
+	await expect.element(table.getByText('—', { exact: true })).toBeInTheDocument();
+});

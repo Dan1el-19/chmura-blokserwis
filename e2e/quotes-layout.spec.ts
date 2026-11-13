@@ -55,7 +55,7 @@ for (const width of [320, 390]) {
 			const bar = await actionBar.boundingBox();
 			return !!field && !!bar && field.y + field.height <= bar.y;
 		}).toBe(true);
-		const line = page.getByText('Pozycja 1', { exact: true }).locator('..').locator('..');
+		const line = page.getByRole('table', { name: 'Pozycje wyceny' }).locator('tbody tr').first();
 		const lineBox = await line.boundingBox();
 		expect(lineBox?.height).toBeLessThanOrEqual(200);
 		expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
