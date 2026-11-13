@@ -14,6 +14,7 @@
 	import QuoteLines from './QuoteLines.svelte';
 	import QuoteAiActivity from './QuoteAiActivity.svelte';
 	import QuotePreview from './QuotePreview.svelte';
+	import QuoteActionBar from './QuoteActionBar.svelte';
 
 	let { id }: { id: string } = $props();
 	let quote = $state<Quote>();
@@ -37,6 +38,7 @@
 	let busy = $state(false);
 	let saving = $state(false);
 	let saveFailed = $state(false);
+	let actionBarHeight = $state(0);
 	let dirty = $state(false);
 	let error = $state('');
 	let status = $state('');
@@ -52,6 +54,7 @@
 	let inFlight: Promise<boolean> | undefined;
 	const keys = new SvelteMap<string, string>();
 	const pending = (value?: string) => value === 'running' || value === 'queued';
+	const saveState = $derived(saving ? 'saving' : saveFailed ? 'error' : dirty ? 'dirty' : 'clean');
 
 	function commandKey(operation: string) {
 		let key = keys.get(operation);
@@ -125,6 +128,18 @@
 		} finally {
 			busy = false;
 		}
+	}
+
+	function publish(): void {
+		void act('publish', async (key) => {
+			if (!quote) return;
+			const request = { quoteId: id, expectedVersion: quote.draftVersion, idempotencyKey: key };
+			const result = quote.currentRevision ? await getQuoteClient().publishQuoteRevision(request) : await getQuoteClient().approveQuote(request);
+			if (!result.quote) throw new Error('Nie otrzymano potwierdzenia zatwierdzenia wyceny.');
+			adopt(result.quote);
+			status = 'Opublikowano rewizję. PDF jest w przygotowaniu.';
+			await loadRevisions(0);
+		});
 	}
 
 	async function loadQuote() {
@@ -260,7 +275,7 @@
 
 <svelte:window onbeforeunload={(event) => { if (dirty || saving) { event.preventDefault(); event.returnValue = ''; } }} />
 
-<section class="mx-auto max-w-6xl space-y-4">
+<section class="quote-editor mx-auto max-w-6xl space-y-4" style:--quote-action-height="{actionBarHeight}px">
 	<a class="text-sm underline" href={resolve('/wyceny')}>Wróć do wycen</a>
 	{#if error}<p role="alert" class="rounded border border-red-400 p-3">{error}</p>{/if}
 	{#if !loaded}<p role="status">Wczytywanie szkicu…</p>{/if}
@@ -277,18 +292,11 @@
 					const result = quote.archived ? await getQuoteClient().restoreQuote(request) : await getQuoteClient().archiveQuote(request);
 					if (result.quote) adopt(result.quote);
 				})}>{quote.archived ? 'Przywróć' : 'Archiwizuj'}</button>
-				<button type="button" class={button} disabled={busy || saving || quote.archived} onclick={save}>Zapisz szkic</button>
-				<button type="button" class={primary} disabled={busy || saving || quote.archived} onclick={() => act('publish', async (key) => {
-					if (!quote) return;
-					const request = { quoteId: id, expectedVersion: quote.draftVersion, idempotencyKey: key };
-					const result = quote.currentRevision ? await getQuoteClient().publishQuoteRevision(request) : await getQuoteClient().approveQuote(request);
-					if (result.quote) adopt(result.quote);
-					status = 'Opublikowano rewizję. PDF jest w przygotowaniu.';
-					await loadRevisions(0);
-				})}>{quote.currentRevision ? 'Zapisz zmiany' : 'Zatwierdź wycenę'}</button>
+				<button type="button" class="{button} hidden xl:inline-flex" disabled={busy || saving || quote.archived} onclick={save}>Zapisz szkic</button>
+				<button type="button" class="{primary} hidden xl:inline-flex" disabled={busy || saving || quote.archived} onclick={publish}>{quote.currentRevision ? 'Zapisz zmiany' : 'Zatwierdź wycenę'}</button>
 			</div>
 		</header>
-		<div class="flex flex-wrap items-center gap-2 text-sm" role="status" aria-live="polite">
+		<div class="hidden flex-wrap items-center gap-2 text-sm xl:flex" role="status" aria-live="polite">
 			<span>{saving ? 'Zapisywanie…' : saveFailed ? 'Nie udało się zapisać' : dirty ? 'Niezapisane zmiany' : 'Zapisano'}</span>
 			{#if saveFailed}<button type="button" class="underline" disabled={busy || saving} onclick={save}>Ponów zapis</button>{/if}
 		</div>
@@ -442,5 +450,12 @@
 			</section>
 		</aside>
 		</div>
+		<QuoteActionBar {saveState} disabled={busy || saving || quote.archived} approveLabel={quote.currentRevision ? 'Zapisz zmiany' : 'Zatwierdź wycenę'} onsave={save} onapprove={publish} bind:height={actionBarHeight} />
 	{/if}
 </section>
+
+<style>
+	.quote-editor :global(input), .quote-editor :global(textarea), .quote-editor :global(select) {
+		scroll-margin-bottom: calc(var(--quote-action-height, 0px) + var(--transfer-offset, 0px) + 1rem);
+	}
+</style>

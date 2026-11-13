@@ -322,7 +322,7 @@
 		<div class="flex min-h-0 min-w-0 flex-1 flex-col">
 			<MobileHeader bind:isDrawerOpen bind:menuButton />
 			<MobileDrawer {navItems} {currentPath} lastFolders={cloud.lastFolders} manager={cloud.transfers} bind:isDrawerOpen onSignOut={signOut} />
-			<main id="main-content" tabindex="-1" bind:this={scrollHost} onscroll={rememberScroll} style:padding-bottom={transferHeight ? `calc(${transferHeight}px + max(1.75rem, env(safe-area-inset-bottom) + 1rem))` : undefined} class="flex-1 overflow-y-auto overscroll-none p-4 pb-28 md:px-6 xl:px-8">
+			<main id="main-content" tabindex="-1" bind:this={scrollHost} onscroll={rememberScroll} style:--transfer-offset={transferHeight ? `calc(${transferHeight}px + max(1.75rem, env(safe-area-inset-bottom) + 1rem))` : '0px'} style:padding-bottom={transferHeight ? 'var(--transfer-offset)' : undefined} class="flex-1 overflow-y-auto overscroll-none p-4 pb-28 md:px-6 xl:px-8">
 				{@render children()}
 			</main>
 			<UploadPanel manager={cloud.transfers} spaces={cloud.spaces} bind:height={transferHeight} />

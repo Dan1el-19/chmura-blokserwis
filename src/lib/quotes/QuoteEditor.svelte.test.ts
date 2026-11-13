@@ -6,7 +6,7 @@ import { QuoteImportResultSchema, QuotePriceMode, QuoteSchema, QuoteVatKind } fr
 import QuoteEditor from './QuoteEditor.svelte';
 
 const api = vi.hoisted(() => ({
-	getQuote: vi.fn(), saveDraft: vi.fn(), getImportResult: vi.fn(), getQuoteOperation: vi.fn(),
+	getQuote: vi.fn(), saveDraft: vi.fn(), approveQuote: vi.fn(), getImportResult: vi.fn(), getQuoteOperation: vi.fn(),
 	getQuotePdf: vi.fn(), applyImport: vi.fn(), listQuoteRevisions: vi.fn(), remapQuoteImport: vi.fn(),
 	getQuotePreview: vi.fn()
 }));
@@ -75,9 +75,9 @@ it('keeps typed values after a concurrent save conflict', async () => {
 	api.saveDraft.mockRejectedValue(new ConnectError('draft changed', Code.Aborted));
 	const view = await render(QuoteEditor, { id: 'quote-1' });
 	await view.getByLabelText('Tytuł').fill('Moja lokalna zmiana');
-	await view.getByRole('button', { name: 'Zapisz szkic' }).click();
+	await view.getByRole('button', { name: 'Zapisz szkic' }).first().click();
 	await expect.element(view.getByRole('alert')).toHaveTextContent('Twoje zmiany pozostają w formularzu');
-	await expect.element(view.getByText('Nie udało się zapisać', { exact: true })).toBeVisible();
+	await expect.element(view.getByText('Nie udało się zapisać', { exact: true }).first()).toBeVisible();
 	await expect.element(view.getByLabelText('Tytuł')).toHaveValue('Moja lokalna zmiana');
 	expect(api.saveDraft).toHaveBeenCalledWith(expect.objectContaining({
 		expectedVersion: 1n, draft: expect.objectContaining({ title: 'Moja lokalna zmiana' })
@@ -88,13 +88,21 @@ it('reports a clean draft and allows retry after a save error', async () => {
 	api.saveDraft.mockRejectedValueOnce(new Error('Brak połączenia'));
 	api.saveDraft.mockResolvedValueOnce({ quote: original });
 	const view = await render(QuoteEditor, { id: 'quote-1' });
-	await expect.element(view.getByText('Zapisano', { exact: true })).toBeVisible();
+	await expect.element(view.getByText('Zapisano', { exact: true }).first()).toBeVisible();
 	await view.getByLabelText('Tytuł').fill('Zmiana');
-	await expect.element(view.getByText('Niezapisane zmiany', { exact: true })).toBeVisible();
-	await view.getByRole('button', { name: 'Zapisz szkic' }).click();
-	await expect.element(view.getByText('Nie udało się zapisać', { exact: true })).toBeVisible();
-	await view.getByRole('button', { name: 'Ponów zapis' }).click();
-	await expect.element(view.getByText('Zapisano', { exact: true })).toBeVisible();
+	await expect.element(view.getByText('Niezapisane zmiany', { exact: true }).first()).toBeVisible();
+	await view.getByRole('button', { name: 'Zapisz szkic' }).first().click();
+	await expect.element(view.getByText('Nie udało się zapisać', { exact: true }).first()).toBeVisible();
+	await view.getByRole('button', { name: 'Ponów zapis' }).first().click();
+	await expect.element(view.getByText('Zapisano', { exact: true }).first()).toBeVisible();
+});
+
+it('does not report publication when the service returns no quote', async () => {
+	api.approveQuote.mockResolvedValue({});
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await view.getByRole('button', { name: 'Zatwierdź wycenę' }).first().click();
+	await expect.element(view.getByRole('alert')).toHaveTextContent('Nie otrzymano potwierdzenia zatwierdzenia wyceny.');
+	await expect.element(view.getByText('Opublikowano rewizję. PDF jest w przygotowaniu.')).not.toBeInTheDocument();
 });
 
 it('saves newer edits after an earlier delayed save completes', async () => {
@@ -105,7 +113,7 @@ it('saves newer edits after an earlier delayed save completes', async () => {
 	}) });
 	const view = await render(QuoteEditor, { id: 'quote-1' });
 	await view.getByLabelText('Tytuł').fill('Pierwsza zmiana');
-	await view.getByRole('button', { name: 'Zapisz szkic' }).click();
+	await view.getByRole('button', { name: 'Zapisz szkic' }).first().click();
 	await expect.poll(() => api.saveDraft.mock.calls.length).toBe(1);
 	await view.getByLabelText('Tytuł').fill('Druga zmiana');
 	completeFirst({ quote: create(QuoteSchema, {
@@ -161,7 +169,7 @@ it('preserves the price mode of an existing net draft when saving edits', async 
 	api.saveDraft.mockResolvedValue({ quote: original });
 	const view = await render(QuoteEditor, { id: 'quote-1' });
 	await view.getByLabelText('Tytuł').fill('Zmieniona wycena');
-	await view.getByRole('button', { name: 'Zapisz szkic' }).click();
+	await view.getByRole('button', { name: 'Zapisz szkic' }).first().click();
 	await expect.poll(() => api.saveDraft.mock.calls.length).toBe(1);
 	expect(api.saveDraft).toHaveBeenCalledWith(expect.objectContaining({
 		draft: expect.objectContaining({ priceMode: QuotePriceMode.NET })
