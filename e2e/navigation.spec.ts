@@ -192,13 +192,15 @@ test('preserves folders, pages and uploads while navigating through the applicat
 	await expect(skipLink).toBeVisible();
 	await page.keyboard.press('Enter');
 	await expect(page.locator('#main-content')).toBeFocused();
-	await expect(page.getByRole('button', { name: 'Nowy folder' })).toBeEnabled();
+	const folderAction = mobile ? page.getByRole('button', { name: 'Dodatkowe akcje katalogu' }) : page.getByRole('button', { name: 'Nowy folder' });
+	await expect(folderAction).toBeEnabled();
 	await page.screenshot({ path: `.cache/e2e-files-${testInfo.project.name}.png` });
-	await page.getByRole('button', { name: 'Nowy folder' }).click();
+	await folderAction.click();
+	if (mobile) await page.getByRole('dialog').getByRole('button', { name: 'Nowy folder' }).click();
 	await expect(page.getByRole('dialog')).toBeVisible();
 	await page.keyboard.press('Escape');
 	await expect(page.getByRole('dialog')).toBeHidden();
-	await expect(page.getByRole('button', { name: 'Nowy folder' })).toBeFocused();
+	await expect(folderAction).toBeFocused();
 	if (mobile) await page.getByRole('button', { name: 'Otwórz folder Dokumenty' }).click();
 	else await page.getByRole('button', { name: 'Dokumenty', exact: true }).click();
 	await expect(page).toHaveURL(/folder=docs/);

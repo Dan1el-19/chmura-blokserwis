@@ -388,6 +388,27 @@ it('filters a catalog before pagination and applies the same filter to search', 
 	expect(api.searchEntries.mock.calls[1]?.[0]).toMatchObject({ fileType: CatalogFileType.PDF, query: 'raport', pageToken: '' });
 });
 
+it('keeps the submitted search when filters change while a new query is being typed', async () => {
+	const screen = await render(StoragePage);
+	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
+	const input = screen.getByRole('textbox', { name: 'Szukaj w przestrzeni' });
+	await input.fill('raport');
+	await screen.getByRole('button', { name: 'Szukaj', exact: true }).click();
+	await expect.poll(() => api.searchEntries).toHaveBeenCalledTimes(1);
+	await input.fill('nowe zapytanie');
+	await screen.getByRole('combobox', { name: 'Typ pliku' }).selectOptions(['2']);
+	await expect.poll(() => api.searchEntries).toHaveBeenCalledTimes(2);
+	expect(api.searchEntries.mock.calls[1]?.[0]).toMatchObject({ query: 'raport', fileType: CatalogFileType.PDF });
+	await screen.getByRole('combobox', { name: 'Sortowanie' }).selectOptions(['NAME:DESC']);
+	await expect.poll(() => api.searchEntries).toHaveBeenCalledTimes(3);
+	expect(api.searchEntries.mock.calls[2]?.[0]).toMatchObject({ query: 'raport', sortDirection: CatalogSortDirection.DESC });
+	await screen.getByRole('button', { name: 'Wyczyść filtry i sortowanie' }).click();
+	await expect.poll(() => api.searchEntries).toHaveBeenCalledTimes(4);
+	expect(api.searchEntries.mock.calls[3]?.[0]).toMatchObject({ query: 'raport', fileType: CatalogFileType.UNSPECIFIED, sortDirection: CatalogSortDirection.ASC });
+	await expect.element(screen.getByText('Wyniki dla: raport')).toBeVisible();
+	await expect.element(input).toHaveValue('nowe zapytanie');
+});
+
 it('selects only loaded rows and skips folders during bulk downloads', async () => {
 	vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
 	const folder = { id: 'folder-1', spaceId: 'personal-space', name: 'Reports', kind: EntryKind.FOLDER, revision: 1 };

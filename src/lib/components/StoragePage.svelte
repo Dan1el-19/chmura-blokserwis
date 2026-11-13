@@ -294,11 +294,11 @@
 	function updateSort(value: string): void {
 		const [by, direction] = value.split(':') as [CatalogSortBy, CatalogSortDirection];
 		app.setSort(activeSpaceId, { by, direction });
-		if (searchTerm) void runSearch(false, { by, direction });
+		if (searchTerm) void runSearch(false, { by, direction }, currentFileType, searchTerm);
 	}
 
-	async function runSearch(next = false, sort: CatalogSort = currentSort, fileType: CatalogFileType = currentFileType): Promise<void> {
-		const query = next ? searchTerm : searchQuery.trim();
+	async function runSearch(next = false, sort: CatalogSort = currentSort, fileType: CatalogFileType = currentFileType, submittedQuery?: string): Promise<void> {
+		const query = submittedQuery ?? (next ? searchTerm : searchQuery.trim());
 		if (!query || !activeSpaceId || searchBusy && next) return;
 		const generation = ++searchGeneration;
 		const spaceId = activeSpaceId;
@@ -322,13 +322,13 @@
 	function updateFileType(value: string): void {
 		const fileType = Number(value) as CatalogFileType;
 		app.setFileType(activeSpaceId, fileType);
-		if (searchTerm) void runSearch(false, currentSort, fileType);
+		if (searchTerm) void runSearch(false, currentSort, fileType, searchTerm);
 	}
 	function resetFilters(): void {
 		const sort: CatalogSort = { by: 'NAME', direction: 'ASC' };
 		app.setFileType(activeSpaceId, CatalogFileType.UNSPECIFIED);
 		app.setSort(activeSpaceId, sort);
-		if (searchTerm) void runSearch(false, sort, CatalogFileType.UNSPECIFIED);
+		if (searchTerm) void runSearch(false, sort, CatalogFileType.UNSPECIFIED, searchTerm);
 	}
 	function closeSearch(): void {
 		searchGeneration++;
@@ -1021,15 +1021,16 @@
 
 			<div class="flex flex-wrap items-center gap-3">
 				<div class="flex flex-wrap items-center gap-2">
-					<label class="relative inline-flex h-10 cursor-pointer items-center gap-2 overflow-hidden rounded-lg bg-primary px-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus-within:ring-2 focus-within:ring-primary/50 focus-within:ring-offset-2 ">
+					<label class="relative inline-flex h-11 cursor-pointer items-center gap-2 overflow-hidden rounded-lg bg-primary px-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus-within:ring-2 focus-within:ring-primary/50 focus-within:ring-offset-2 lg:h-10">
 						<CloudArrowUp class="h-4 w-4" />
 						<span>Prześlij plik</span>
 						<input bind:this={fileInput} type="file" multiple class="absolute inset-0 h-full w-full cursor-pointer opacity-0" disabled={uploadLimitBytes === null || !accountReady || !routeFolderReady} onchange={onFileSelected} aria-label="Wybierz pliki do przesłania" />
 					</label>
-					<button type="button" disabled={!routeFolderReady || !accountReady} onclick={() => (showCreateFolder = true)} class="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border-line bg-transparent px-3 text-sm font-medium text-text-main transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2">
+					<button type="button" disabled={!routeFolderReady || !accountReady} onclick={() => (showCreateFolder = true)} class="hidden h-10 items-center gap-1.5 rounded-lg border border-border-line bg-transparent px-3 text-sm font-medium text-text-main transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 lg:inline-flex">
 						<FolderPlus class="h-4 w-4" />
 						<span>Nowy folder</span>
 					</button>
+					<div class="lg:hidden"><ActionMenu label="Akcje katalogu" triggerLabel="Dodatkowe akcje katalogu" items={[{ id: 'create-folder', label: 'Nowy folder', disabled: !routeFolderReady || !accountReady, run: () => showCreateFolder = true }]} /></div>
 <button type="button" onclick={() => void refreshView()} disabled={listBusy || !activeSpaceId} class="flex h-10 w-10 items-center justify-center rounded-lg border border-border-line text-text-muted hover:bg-gray-100 hover:text-text-main disabled:opacity-50 dark:hover:bg-zinc-800" aria-label="Odśwież" title="Odśwież">
  {#if listBusy}<SpinnerGap class="h-5 w-5 animate-spin" />{:else}<ArrowClockwise class="h-5 w-5" />{/if}
  </button>
@@ -1069,6 +1070,7 @@
 		{#if searchTerm}
 			<section class="rounded-md border border-border-line bg-bg-panel p-4" aria-label="Wyniki wyszukiwania">
 				<h2 class="font-semibold">Wyniki wyszukiwania</h2>
+				<p class="break-words text-sm text-text-muted">Wyniki dla: {searchTerm}</p>
 				{#if searchError}<p role="alert">{searchError}</p>{/if}
 				{#if searchBusy}<p role="status">Wyszukiwanie…</p>{/if}
 				{#if !searchBusy && !searchError && !searchResults.length}<p>Brak wyników</p>{/if}

@@ -41,6 +41,13 @@ for (const width of [320, 390, 1280]) {
 			await expect(row).toBeVisible();
 			const box = await row.boundingBox();
 			expect(box?.y).toBeLessThanOrEqual(300);
+			await expect(page.getByRole('button', { name: 'Nowy folder', exact: true })).toHaveCount(0);
+			const headerActions = page.getByRole('button', { name: 'Dodatkowe akcje katalogu' });
+			await headerActions.click();
+			await page.getByRole('dialog').getByRole('button', { name: 'Nowy folder', exact: true }).click();
+			await expect(page.getByRole('dialog', { name: 'Nowy folder' })).toBeVisible();
+			await page.keyboard.press('Escape');
+			await expect(headerActions).toBeFocused();
 		}
 		await trigger.click();
 		for (const name of ['Pobierz', 'Udostępnij', 'Przenieś', 'Zmień nazwę', 'Szczegóły', 'Do kosza']) {
