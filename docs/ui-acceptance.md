@@ -7,6 +7,8 @@ Stan z 13 listopada 2026, frontend `e881b3cadbd3c9973829d1939a69c6fa9ec1647c`, N
 - `CI=1 pnpm exec playwright test --workers=3`: 89 testów przeszło, 25 pominięto. Projekty: Chromium, Firefox i mobilny Chromium. Aplikacja i większość usług korzystały z lokalnych atrap; konfiguracja pomija osobny plik `quotes-layout.spec.ts`.
 - `pnpm test:e2e:quotes-layout`: 5 testów przeszło; atrapa RPC, szerokości 320, 390, 1280 i 1440 px. Próba obejmuje edycję ośmiu pozycji, zapis, przełączanie widoku, prawą kolumnę długiego podglądu A4 i panel transferu.
 - `pnpm test`: 240 testów przeszło; `pnpm check`, `pnpm lint`, `pnpm build` i `pnpm proto:check` przeszły przy poprzedniej kontroli kodu. W testach pojawia się ostrzeżenie Svelte `derived_inert`, a w teście przeglądarkowym również ostrzeżenie o przestarzałej opcji `goto`.
+- `TestQuoteDraftTransactions` w lokalnym UniSourceGO przeszedł z osobną bazą PostgreSQL i Chromium: import XLSX, wznowienie po przeładowaniu, generowanie, PDF, rewizje i archiwizacja. Usługi AI i renderowania były atrapami; nie jest to porównanie z rzeczywistym PDF ani test usług produkcyjnych.
+- Po poprawce klawiatury i okien `e2e/ui-layout.spec.ts`: 9 testów przeszło w Chromium, Firefox i mobilnym Chromium; `pnpm check` nie zgłosił błędów ani ostrzeżeń.
 - Snapshot proto frontendu odpowiadał zdalnemu `main` UniSourceCFL `96fcc4a` poprzez lokalny checkout referencyjny. Wskazany w planie checkout `/Users/daniel/Projects/UniSourceCFL` był starszy i porównanie z nim wykazało różnice w trzech plikach. Nie sprawdzono na tej podstawie wersji produkcji.
 
 ### Powody pominięć Playwright
@@ -21,7 +23,7 @@ Stan z 13 listopada 2026, frontend `e881b3cadbd3c9973829d1939a69c6fa9ec1647c`, N
 ## Nierozstrzygnięty odbiór
 
 - Brak pełnego porównania podglądu z rzeczywistym wielostronicowym PDF, w tym marginesów, podziałów, stopek i kwot. Lokalny podgląd to ciągły HTML, a nie paginowany PDF.
-- Brak aktualnego dowodu pełnego przepływu wycen z izolowanym UniSourceGO oraz prób transferów na rzeczywistych R2 i RustFS. Wyniki z atrap nie dowodzą zachowania tych usług.
-- Samsung SM-S931B był widoczny przez ADB, ale w chwili sporządzania raportu nie wykonano na nim próby interfejsu. Brak także próby na iPhonie/Safari. Emulacja nie zastępuje klawiatury ekranowej, obrotu, safe-area, pobierania i mediów na urządzeniach.
+- Brak prób transferów na rzeczywistych R2 i RustFS. Wyniki z atrap nie dowodzą zachowania tych usług.
+- Samsung SM-S931B, Chrome: na lokalnych danych testowych sprawdzono menu pliku i zmianę nazwy z klawiaturą. W pionie pole i przyciski mieszczą się nad klawiaturą. Po obrocie aktywne pole jest widoczne, a do przycisków można przewinąć okno; przyciski i pole nie mieszczą się jednocześnie w pozostałej przestrzeni. Przywrócono wcześniejsze ustawienie orientacji telefonu. Nie zakończono prób pobierania, mediów ani formularza wyceny. Brak próby na iPhonie/Safari.
 - Nie zakończono pełnego przeglądu obu motywów, wszystkich rozmiarów z macierzy, powiększenia tekstu, reduced-motion i pomiarów kontrastu. Screenshoty nie stanowią zatwierdzonych wizualnie wzorców.
 - Nie wykonano wdrożenia ani produkcyjnego smoke testu dla tego zestawu zmian; nie potwierdzono wersji produkcyjnej ani ścieżki rollbacku dla wydania.

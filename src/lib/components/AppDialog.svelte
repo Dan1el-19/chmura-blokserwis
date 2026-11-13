@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, type Snippet } from 'svelte';
+	import type { Snippet } from 'svelte';
 	let {
 		labelledby,
 		describedby,
@@ -26,19 +26,29 @@
 		children: Snippet;
 	} = $props();
 	const widthClass = $derived(size === 'sm' ? 'max-w-[440px]' : size === 'md' ? 'max-w-[640px]' : size === 'lg' ? 'max-w-[880px]' : wide ? 'max-w-5xl' : 'max-w-sm');
-	let dialog: HTMLDialogElement;
-	onMount(() => {
+	function mountDialog(dialog: HTMLDialogElement) {
 		const previous = document.activeElement;
+		let resizeFrame = 0;
+		const keepFocusVisible = () => {
+			cancelAnimationFrame(resizeFrame);
+			resizeFrame = requestAnimationFrame(() => {
+				const active = document.activeElement;
+				if (active instanceof HTMLElement && dialog.contains(active)) active.scrollIntoView({ block: 'nearest' });
+			});
+		};
+		window.visualViewport?.addEventListener('resize', keepFocusVisible);
 		dialog.showModal();
 		return () => {
+			window.visualViewport?.removeEventListener('resize', keepFocusVisible);
+			cancelAnimationFrame(resizeFrame);
 			dialog.close();
 			if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
 		};
-	});
+	}
 </script>
 
 <dialog
-	bind:this={dialog}
+	{@attach mountDialog}
 	role={alert ? 'alertdialog' : 'dialog'}
 	aria-labelledby={labelledby}
 	aria-describedby={describedby}

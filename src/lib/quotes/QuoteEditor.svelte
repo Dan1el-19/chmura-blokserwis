@@ -20,6 +20,7 @@
 	let quote = $state<Quote>();
 	let draft = $state<QuoteDraft>();
 	let imported = $state<QuoteImportResult>();
+	let importOpen = $state(false);
 	let reviewed = $state<QuoteLine[]>([]);
 	let sourceRows = $state<number[]>([]);
 	let mapping = $state(create(QuoteImportMappingSchema, { priceMode: QuotePriceMode.GROSS, firstRow: 2, lastRow: 2, nameColumn: 2, quantityColumn: 3, priceColumn: 4 }));
@@ -196,6 +197,9 @@
 			if (disposed) return;
 			if (imp.status === 'fulfilled' && imp.value?.result) {
 				const result = imp.value.result;
+				if (result.id !== imported?.id || result.applied !== imported?.applied) {
+					importOpen = !result.applied;
+				}
 				if (result.id !== imported?.id || result.resultVersion !== imported?.resultVersion || result.status !== imported?.status) {
 					const availableLines = result.lines.filter((line) => line.line);
 					reviewed = availableLines.flatMap((line) => line.line ? [line.line] : []);
@@ -331,7 +335,7 @@
 		<fieldset class={panel} disabled={busy || saving || quote.archived}>
 			<legend class="px-1 font-semibold">Import XLSX</legend>
 			{#if imported?.applied}<p class="text-sm" role="status">Import zapisany w szkicu.</p>{/if}
-			<details open={!!imported && !imported.applied}>
+			<details bind:open={importOpen}>
 				<summary class="cursor-pointer text-sm font-medium">Rozwiń import XLSX</summary>
 				<div class="mt-3 space-y-4">
 			<div class="flex flex-wrap items-end gap-2">

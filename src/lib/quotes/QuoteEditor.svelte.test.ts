@@ -209,6 +209,12 @@ it('starts with import collapsed and allows opening its file controls', async ()
 	await expect.element(imported.getByLabelText('Plik XLSX')).not.toBeVisible();
 	await imported.getByText('Rozwiń import XLSX').click();
 	await expect.element(imported.getByLabelText('Plik XLSX')).toBeVisible();
+	const input = imported.getByLabelText('Plik XLSX').element() as HTMLInputElement;
+	const files = new DataTransfer();
+	files.items.add(new File(['fixture'], 'test.xlsx'));
+	input.files = files.files;
+	input.dispatchEvent(new Event('change', { bubbles: true }));
+	await expect.element(imported.getByRole('button', { name: 'Prześlij arkusz' })).toBeVisible();
 });
 
 it('summarizes an applied import while its controls are collapsed', async () => {

@@ -66,6 +66,19 @@ for (const width of [320, 390, 1280]) {
 		await page.getByRole('button', { name: 'Zmień nazwę', exact: true }).click();
 		await expect(page.getByRole('dialog')).toHaveCount(1);
 		await expect(page.getByRole('dialog')).toContainText('Zmień nazwę');
+		// Android Chrome must resize the layout viewport when its keyboard opens.
+		await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /interactive-widget=resizes-content/);
+		await page.setViewportSize({ width, height: 430 });
+		await expect(page.getByRole('dialog').getByRole('button', { name: 'Zapisz', exact: true })).toBeInViewport({ ratio: 1 });
+		const nameInput = page.getByRole('dialog').getByLabel('Nazwa', { exact: true });
+		await nameInput.focus();
+		await page.setViewportSize({ width, height: 120 });
+		await expect.poll(async () => {
+			const input = await nameInput.boundingBox();
+			const dialog = await page.getByRole('dialog').boundingBox();
+			return !!input && !!dialog && input.y >= dialog.y && input.y + input.height <= dialog.y + dialog.height;
+		}).toBe(true);
+		await page.setViewportSize({ width, height: width === 390 ? 844 : 740 });
 		await page.keyboard.press('Escape');
 		await trigger.click();
 		await page.getByRole('button', { name: 'Szczegóły', exact: true }).click();
