@@ -155,6 +155,54 @@ it('shows when the saved draft preview is still refreshing', async () => {
 	await expect.element(view.getByText('Odświeżanie podglądu…')).not.toBeInTheDocument();
 });
 
+it('opens a revision preview and ignores a late response after returning to the draft', async () => {
+	let finishRevision!: (result: { html: string }) => void;
+	api.getQuote.mockResolvedValue({ quote: create(QuoteSchema, {
+		id: 'quote-1', draftVersion: 1n, currentRevision: 1n, draft: { title: 'Szkic', priceMode: QuotePriceMode.GROSS }
+	}) });
+	api.listQuoteRevisions.mockResolvedValue({ revisions: [{ revision: 1n, publishedAt: '2026-01-01T00:00:00Z' }] });
+	api.getQuotePreview.mockImplementation(({ revision }: { revision: bigint }) => revision === 1n
+		? new Promise((resolve) => { finishRevision = resolve; })
+		: Promise.resolve({ html: '<p>Aktualny szkic</p>' }));
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await expect.poll(() => api.getQuotePreview.mock.calls.length).toBe(1);
+	await view.getByRole('button', { name: 'Podgląd', exact: true }).click();
+	const toggle = document.querySelector<HTMLButtonElement>('button[aria-label="Pokaż podgląd wyceny"]')!;
+	await expect.poll(() => toggle.getAttribute('aria-pressed')).toBe('true');
+	await view.getByRole('button', { name: 'Podgląd szkicu' }).last().click();
+	await expect.poll(() => document.querySelector<HTMLIFrameElement>('iframe[title="Podgląd wyceny"]')?.srcdoc).toContain('Aktualny szkic');
+	finishRevision({ html: '<p>Stara rewizja</p>' });
+	await new Promise((resolve) => setTimeout(resolve, 0));
+	await expect.poll(() => document.querySelector<HTMLIFrameElement>('iframe[title="Podgląd wyceny"]')?.srcdoc).toContain('Aktualny szkic');
+	await expect.element(view.getByRole('heading', { name: 'Podgląd dokumentu · szkic' })).toBeVisible();
+});
+
+it('opens the draft preview from document actions', async () => {
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await view.getByRole('button', { name: 'Podgląd szkicu' }).click();
+	const toggle = document.querySelector<HTMLButtonElement>('button[aria-label="Pokaż podgląd wyceny"]')!;
+	await expect.poll(() => toggle.getAttribute('aria-pressed')).toBe('true');
+});
+
+it('retains the draft and previous preview when refreshing fails, and can retry', async () => {
+	api.getQuotePreview.mockResolvedValueOnce({ html: '<p>Poprzedni podgląd</p>' });
+	api.getQuotePreview.mockRejectedValueOnce(new Error('Brak połączenia'));
+	api.getQuotePreview.mockResolvedValueOnce({ html: '<p>Odświeżony podgląd</p>' });
+	api.saveDraft.mockResolvedValue({ quote: create(QuoteSchema, {
+		id: 'quote-1', draftVersion: 2n, draft: { title: 'Moja oferta', priceMode: QuotePriceMode.GROSS }
+	}) });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await expect.poll(() => api.getQuotePreview.mock.calls.length).toBe(1);
+	await view.getByLabelText('Tytuł').fill('Moja oferta');
+	await view.getByRole('button', { name: 'Zapisz szkic' }).first().click();
+	await expect.element(view.getByText(/Nie udało się odświeżyć podglądu/)).toBeVisible();
+	await expect.element(view.getByLabelText('Tytuł')).toHaveValue('Moja oferta');
+	const frame = () => document.querySelector<HTMLIFrameElement>('iframe[title="Podgląd wyceny"]');
+	await expect.poll(() => frame()?.srcdoc).toContain('Poprzedni podgląd');
+	await view.getByRole('button', { name: 'Spróbuj ponownie' }).click();
+	await expect.poll(() => frame()?.srcdoc).toContain('Odświeżony podgląd');
+});
+
 it('starts with import collapsed and allows opening its file controls', async () => {
 	const view = await render(QuoteEditor, { id: 'quote-1' });
 	const imported = view.getByRole('group', { name: 'Import XLSX' });

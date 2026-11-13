@@ -112,6 +112,9 @@ for (const width of [320, 390, 1280, 1440]) {
 		await expect(actionBar.getByRole('status')).toHaveText('Zapisano');
 		expect(quote.draft?.title).toBe('Zmieniony szkic');
 		expect(quote.draft?.lines[7]?.name).toBe('Ostatnia pozycja');
+		await page.getByRole('button', { name: 'Podgląd szkicu' }).click();
+		await expect(title).toBeHidden();
+		await expect(page.locator('iframe[title="Podgląd wyceny"]')).toBeVisible();
 	});
 }
 

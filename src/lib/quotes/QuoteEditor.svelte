@@ -413,7 +413,7 @@
 		<div id="quote-documents" class={panel}>
 			<h2 class="font-semibold">Dokumenty</h2>
 			<div class="flex flex-wrap gap-2">
-				<button class={button} disabled={busy || saving} onclick={async () => { if (await save()) await showPreview(); }}>Podgląd szkicu</button>
+				<button class={button} disabled={busy || saving} onclick={async () => { if (await save()) { viewMode = 'preview'; await showPreview(); } }}>Podgląd szkicu</button>
 				<button class={button} disabled={busy || quote.archived} onclick={() => act('draft-pdf', async (key) => {
 					if (!quote) return;
 					await getQuoteClient().generateDraftPdf({ quoteId: id, expectedVersion: quote.draftVersion, idempotencyKey: key });
@@ -438,7 +438,7 @@
 						<li class="flex flex-wrap items-center gap-2 py-2">
 							<span class="mr-auto">v{revision.revision} · {new Date(revision.publishedAt).toLocaleString('pl-PL')}</span>
 							<span role="status">PDF: {revisionPdfs[String(revision.revision)]?.status === 'succeeded' ? 'gotowy' : revisionPdfs[String(revision.revision)]?.status === 'failed' ? 'błąd' : pending(revisionPdfs[String(revision.revision)]?.status) ? 'w przygotowaniu' : 'brak informacji'}</span>
-							<button class={button} onclick={() => showPreview(revision.revision)}>Podgląd</button>
+							<button class={button} onclick={() => { viewMode = 'preview'; void showPreview(revision.revision); }}>Podgląd</button>
 							<button class={button} disabled={revisionPdfs[String(revision.revision)]?.status !== 'succeeded'} onclick={() => download(revision.revision)}>Pobierz PDF</button>
 							{#if revisionPdfs[String(revision.revision)]?.status === 'failed'}
 								<button class={button} disabled={busy} onclick={() => act(`retry:${revision.revision}`, async (key) => {
