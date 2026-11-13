@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { DotsThreeVertical } from 'phosphor-svelte';
+	import { DotsThreeVertical, X } from 'phosphor-svelte';
 	import AppDialog from '../AppDialog.svelte';
 	let { label, triggerLabel, items }: {
 		label: string;
@@ -27,7 +27,12 @@
 </button>
 {#if open}
 	<AppDialog labelledby={titleId} mobile="sheet" onclose={() => open = false}>
-		{#snippet header()}<h2 id={titleId} class="break-words text-base font-semibold">{label}</h2>{/snippet}
+		{#snippet header()}
+			<div class="flex items-start gap-3">
+				<h2 id={titleId} class="min-w-0 flex-1 break-words text-base font-semibold">{label}</h2>
+				<button type="button" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-bg-app" aria-label="Zamknij menu działań" onclick={() => open = false}><X class="h-5 w-5" /></button>
+			</div>
+		{/snippet}
 		<div class="flex flex-col">
 			{#each items as item (item.id)}
 				<button type="button" disabled={item.disabled} onclick={() => run(item.run)} class="min-h-11 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-zinc-800 {item.destructive ? 'mt-2 border-t border-border-line text-red-600' : 'text-text-main'}">{item.label}</button>

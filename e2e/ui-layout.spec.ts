@@ -36,6 +36,9 @@ for (const width of [320, 390]) {
 			expect(box && box.x >= 0 && box.x + box.width <= width).toBeTruthy();
 		}
 		expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+		await page.getByRole('button', { name: 'Zamknij menu działań' }).click();
+		await expect(trigger).toBeFocused();
+		await trigger.click();
 		await page.keyboard.press('Escape');
 		await expect(trigger).toBeFocused();
 		await trigger.click();
