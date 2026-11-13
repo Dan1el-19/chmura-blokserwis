@@ -5,6 +5,8 @@ import {
 	ListQuotesResponseSchema, SaveDraftRequestSchema, SaveDraftResponseSchema
 } from '../src/lib/gen/unisource/v2/quotes_pb.js';
 
+const longPreview = `<html><head><style>@page{size:A4;margin:18mm}body{margin:0}table{width:100%;border-collapse:collapse}td{padding:8px;border-bottom:1px solid #ccc}td:last-child{text-align:right}</style></head><body><h1>SZKIC</h1><table><tr><td>Pozycja</td><td id="total">40,00 zł</td></tr>${Array.from({ length: 60 }, (_, index) => `<tr><td>Długa nazwa pozycji ${index + 1}</td><td>${index + 100},00 zł</td></tr>`).join('')}</table><footer>Koniec oferty</footer></body></html>`;
+
 for (const width of [320, 390, 1280, 1440]) {
 	test(`edits and previews an A4 quote at ${width}px`, async ({ page }) => {
 		await page.setViewportSize({ width, height: 844 });
@@ -33,7 +35,7 @@ for (const width of [320, 390, 1280, 1440]) {
 				quote = create(QuoteSchema, { ...quote, draftVersion: quote.draftVersion + 1n, draft: request.draft });
 				body = toBinary(SaveDraftResponseSchema, create(SaveDraftResponseSchema, { quote }));
 			} else if (method === 'GetQuotePreview') body = toBinary(GetQuotePreviewResponseSchema, create(GetQuotePreviewResponseSchema, {
-				html: '<html><head><style>@page{size:A4;margin:18mm}body{margin:0}table{width:100%}</style></head><body><h1>SZKIC</h1><table><tr><td>Pozycja</td><td id="total">40,00 zł</td></tr></table></body></html>'
+				html: longPreview
 			}));
 			else return route.fulfill({ status: 404, headers: { ...headers, 'content-type': 'application/json' }, json: { code: 'not_found', message: 'Brak danych' } });
 			return route.fulfill({ status: 200, headers: { ...headers, 'content-type': 'application/proto' }, body: Buffer.from(body) });
@@ -87,12 +89,19 @@ for (const width of [320, 390, 1280, 1440]) {
 		await page.getByRole('button', { name: 'Pokaż podgląd wyceny' }).click();
 		await expect(title).toBeHidden();
 		const frame = page.frameLocator('iframe[title="Podgląd wyceny"]');
-		await expect(frame.getByText('40,00 zł')).toBeVisible();
+		await expect(frame.getByText('40,00 zł', { exact: true })).toBeVisible();
 		const iframe = page.locator('iframe[title="Podgląd wyceny"]');
 		await expect(iframe).toHaveAttribute('sandbox', '');
-		const rightColumn = await frame.getByText('40,00 zł').boundingBox();
+		const rightColumn = await frame.getByText('40,00 zł', { exact: true }).boundingBox();
 		const frameBox = await iframe.boundingBox();
 		expect(rightColumn && frameBox && rightColumn.x + rightColumn.width <= frameBox.x + frameBox.width + 1).toBe(true);
+		const lastValue = frame.getByText('159,00 zł');
+		await lastValue.scrollIntoViewIfNeeded();
+		const lastValueBox = await lastValue.boundingBox();
+		const scrolledFrame = await iframe.boundingBox();
+		expect(lastValueBox && scrolledFrame && lastValueBox.x >= scrolledFrame.x && lastValueBox.x + lastValueBox.width <= scrolledFrame.x + scrolledFrame.width + 1 && lastValueBox.y >= scrolledFrame.y && lastValueBox.y + lastValueBox.height <= scrolledFrame.y + scrolledFrame.height + 1).toBe(true);
+		await frame.getByText('Koniec oferty').scrollIntoViewIfNeeded();
+		await expect(frame.getByText('Koniec oferty')).toBeVisible();
 		await page.getByRole('button', { name: '100%' }).click();
 		const viewport = page.locator('.preview-viewport');
 		await expect.poll(() => viewport.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
