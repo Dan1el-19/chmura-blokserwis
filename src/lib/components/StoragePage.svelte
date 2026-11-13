@@ -1103,6 +1103,7 @@
 				{viewError}
 				{#if routeFolderId}<a class="ml-2 underline" href={resolve(folderHref())}>Wróć do katalogu głównego</a>{/if}
 				{#if !accountReady}<button type="button" class="ml-2 font-medium underline" onclick={() => void loadAccount()}>Ponów połączenie</button>{/if}
+				{#if currentList?.errorKind === 'load'}<button type="button" class="ml-2 font-medium underline" onclick={() => void loadEntries()} disabled={listBusy}>Ponów wczytanie folderu</button>{/if}
 			</div>
 		{/if}
 		<div class="rounded-md border border-border-line bg-bg-panel">
@@ -1119,7 +1120,7 @@
 								<td colspan="6" class="px-4 py-3"><button type="button" onclick={(event) => { event.stopPropagation(); void goToBreadcrumb(folderPath.length - 2); }} class="flex items-center gap-3 text-text-muted"><ArrowUp class="h-5 w-5" />{parentFolderName}</button></td>
 							</tr>
 						{/if}
-						{#if !entries.length && !loading}
+						{#if !entries.length && !loading && currentList?.initialized && !currentList.error}
 								<tr><td colspan="6" class="px-4 py-12 text-center text-text-muted"><div class="flex min-h-32 flex-col items-center justify-center gap-2"><Folder class="h-10 w-10 text-gray-300 dark:text-zinc-600" /><strong class="font-medium text-text-main">Folder jest pusty</strong><span class="text-xs">Dodaj plik albo utwórz folder, aby zacząć.</span></div></td></tr>
 						{/if}
 						{#each folders as entry (entry.id)}
@@ -1150,7 +1151,7 @@
 				{#if folderPath.length}
 					<button type="button" onclick={() => void goToBreadcrumb(folderPath.length - 2)} ondragover={(event) => dragOverFolder(folderPath.length > 1 ? folderPath.at(-2) : undefined, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(folderPath.length > 1 ? folderPath.at(-2) : undefined, event)} class="flex w-full items-center gap-3 rounded-md border border-border-line bg-bg-panel p-3 text-left text-text-muted"><ArrowUp class="h-8 w-8 shrink-0" /><span class="truncate text-sm font-medium">{parentFolderName}</span></button>
 				{/if}
-				{#if !entries.length && !loading}<div class="py-10 text-center text-sm text-text-muted">Folder jest pusty</div>{/if}
+				{#if !entries.length && !loading && currentList?.initialized && !currentList.error}<div class="py-10 text-center text-sm text-text-muted">Folder jest pusty</div>{/if}
 				{#each [...folders, ...files] as entry (entry.id)}
 					{@const isFolder = entry.kind === EntryKind.FOLDER}
 					<div role="group" aria-label={entry.name} class="touch-pan-y rounded-md border {selectedIds.includes(entry.id) ? 'border-primary/50 bg-primary/10 dark:bg-primary/15' : 'border-border-line bg-bg-panel'}" onpointerdown={(event) => startLongPress(entry, event)} onpointermove={moveLongPress} onpointerup={endLongPress} onpointercancel={cancelLongPress}>
@@ -1167,13 +1168,13 @@
 			</div>
 
 			{#if nextPageToken}
-				<div class="flex justify-center border-t border-border-line p-4"><button type="button" onclick={loadNextPage} disabled={listBusy} class="rounded-md border border-border-line px-4 py-2 text-sm font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">Pokaż więcej</button></div>
+				<div class="flex justify-center border-t border-border-line p-4"><button type="button" onclick={loadNextPage} disabled={listBusy} class="rounded-md border border-border-line px-4 py-2 text-sm font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">{currentList?.errorKind === 'next' ? 'Ponów wczytanie kolejnej strony' : 'Pokaż więcej'}</button></div>
 			{/if}
 		</div>
 		{/if}
 	{:else}
 		<div class="space-y-3">
-			{#if viewError}<div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300" role="alert">{viewError}</div>{/if}
+			{#if viewError}<div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300" role="alert">{viewError}{#if currentList?.errorKind === 'load'} <button type="button" class="font-medium underline" onclick={() => void loadTrash()} disabled={listBusy}>Ponów wczytanie kosza</button>{/if}</div>{/if}
 			<div class="rounded-md border border-border-line bg-bg-panel">
 				<div class="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-border-line px-4 py-3">
 					<div><h2 class="text-sm font-semibold text-text-main">Usunięte elementy</h2><p class="mt-0.5 text-xs text-text-muted">Elementy w koszu można przywrócić przed upływem retencji.</p></div>
@@ -1187,7 +1188,7 @@
 					</div>
 				</div>
 				<div class="hidden overflow-x-auto lg:block"><table class="w-full text-left text-sm"><thead class="border-b border-border-line bg-gray-50/50 font-medium text-text-muted dark:bg-zinc-900/50"><tr><th class="px-4 py-3">Nazwa</th><th class="w-36 px-4 py-3">Usunięto do</th><th class="w-48 px-4 py-3 text-right">Akcje</th></tr></thead><tbody class="divide-y divide-border-line">
-					{#if !trashItems.length && !loading}<tr><td colspan="3" class="px-4 py-12 text-center text-text-muted"><div class="flex min-h-32 flex-col items-center justify-center gap-2"><Trash class="h-10 w-10 text-gray-300 dark:text-zinc-600" /><strong class="font-medium text-text-main">Kosz jest pusty</strong><span class="text-xs">Usunięte elementy pojawią się tutaj.</span></div></td></tr>{/if}
+					{#if !trashItems.length && !loading && currentList?.initialized && !currentList.error}<tr><td colspan="3" class="px-4 py-12 text-center text-text-muted"><div class="flex min-h-32 flex-col items-center justify-center gap-2"><Trash class="h-10 w-10 text-gray-300 dark:text-zinc-600" /><strong class="font-medium text-text-main">Kosz jest pusty</strong><span class="text-xs">Usunięte elementy pojawią się tutaj.</span></div></td></tr>{/if}
 					{#each trashItems as item (item.entry?.id)}
 						{#if item.entry}<tr><td class="px-4 py-3"><div class="flex items-center gap-3"><input type="checkbox" class="file-selection-checkbox" checked={selectedTrashIds.includes(item.entry.id)} aria-label={`Zaznacz ${item.entry.name}`} onchange={(event) => toggleTrashSelection(item.entry!.id, event.currentTarget.checked)} /><span class="flex h-9 w-9 items-center justify-center rounded-md bg-red-50 text-red-500 dark:bg-red-900/20"><Trash class="h-4 w-4" /></span><span><strong class="block font-medium text-text-main">{item.entry.name}</strong><span class="mt-0.5 block text-xs text-text-muted">{item.entry.kind === EntryKind.FOLDER ? 'Folder' : formatBytes(item.entry.sizeBytes)}</span></span></div></td><td class="px-4 py-3 font-mono text-xs text-text-muted">{item.purgeAt ? timestampDate(item.purgeAt).toLocaleDateString('pl-PL') : '—'}</td><td class="px-4 py-3"><div class="flex justify-end gap-2"><button type="button" disabled={pendingRestoreIds.includes(item.entry?.id ?? '')} onclick={() => void restoreTrashItem(item)} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800">Przywróć</button><button type="button" onclick={() => void permanentlyDelete(item)} class="rounded-md px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Zleć trwałe usunięcie</button></div></td></tr>{/if}
 					{/each}
@@ -1195,12 +1196,12 @@
 				</tbody></table></div>
 				<div class="space-y-2 p-2 lg:hidden">
 					{#if loading}<div class="animate-pulse space-y-2" role="status" aria-label="Ładowanie kosza">{#each [1,2,3] as row (row)}<div class="h-16 rounded bg-gray-100 dark:bg-zinc-800"></div>{/each}</div>{/if}
-					{#if !trashItems.length && !loading}<p class="py-10 text-center text-sm text-text-muted">Kosz jest pusty</p>{/if}
+					{#if !trashItems.length && !loading && currentList?.initialized && !currentList.error}<p class="py-10 text-center text-sm text-text-muted">Kosz jest pusty</p>{/if}
 					{#each trashItems as item (item.entry?.id)}
 						{#if item.entry}<div class="rounded-md border border-border-line p-3"><div class="flex items-center gap-3"><input type="checkbox" class="file-selection-checkbox" checked={selectedTrashIds.includes(item.entry.id)} aria-label={`Zaznacz ${item.entry.name}`} onchange={(event) => toggleTrashSelection(item.entry!.id, event.currentTarget.checked)} /><span class="flex h-9 w-9 items-center justify-center rounded-md bg-red-50 text-red-500 dark:bg-red-900/20"><Trash class="h-4 w-4" /></span><span class="min-w-0 flex-1"><strong class="block truncate text-sm font-medium text-text-main">{item.entry.name}</strong><span class="mt-0.5 block text-xs text-text-muted">{item.purgeAt ? `Do ${timestampDate(item.purgeAt).toLocaleDateString('pl-PL')}` : 'Termin usunięcia nieznany'}</span></span></div><div class="mt-3 flex justify-end gap-2"><button type="button" disabled={pendingRestoreIds.includes(item.entry?.id ?? '')} onclick={() => void restoreTrashItem(item)} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium">Przywróć</button><button type="button" onclick={() => void permanentlyDelete(item)} class="rounded-md px-3 py-2 text-xs font-medium text-red-600">Zleć trwałe usunięcie</button></div></div>{/if}
 					{/each}
 				</div>
-				{#if nextPageToken}<div class="flex justify-center border-t border-border-line p-4"><button type="button" onclick={loadNextPage} disabled={listBusy} class="rounded-md border border-border-line px-4 py-2 text-sm font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">Pokaż więcej</button></div>{/if}
+				{#if nextPageToken}<div class="flex justify-center border-t border-border-line p-4"><button type="button" onclick={loadNextPage} disabled={listBusy} class="rounded-md border border-border-line px-4 py-2 text-sm font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">{currentList?.errorKind === 'next' ? 'Ponów wczytanie kolejnej strony' : 'Pokaż więcej'}</button></div>{/if}
 			</div>
 		</div>
 	{/if}

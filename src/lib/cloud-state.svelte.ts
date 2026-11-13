@@ -59,6 +59,7 @@ export class CatalogList {
 	refreshing = $state(false);
 	loadingNext = $state(false);
 	error = $state('');
+	errorKind = $state<'load' | 'next' | null>(null);
 	scrollTop = 0;
 	pages = 0;
 	updatedAt = 0;
@@ -258,6 +259,7 @@ export class CloudState {
 			list.dirty = true;
 			list.updatedAt = 0;
 			list.error = '';
+			list.errorKind = null;
 		}
 		if (active?.mode === 'files' && active.spaceId === spaceId)
 			this.activeListKey = this.list('files', spaceId, active.parentId, sort).key;
@@ -313,6 +315,7 @@ export class CloudState {
 		list.refreshing = list.initialized && !options.next;
 		list.loadingNext = !!options.next;
 		list.error = '';
+		list.errorKind = null;
 		list.pending = (async () => {
 			try {
 				let path = list.path;
@@ -366,7 +369,7 @@ export class CloudState {
 				list.dirty = false;
 				list.updatedAt = Date.now();
 			} catch (error) {
-				if (current()) list.error = storageErrorMessage(error);
+				if (current()) { list.error = storageErrorMessage(error); list.errorKind = options.next ? 'next' : 'load'; }
 			} finally {
 				list.loading = false;
 				list.refreshing = false;

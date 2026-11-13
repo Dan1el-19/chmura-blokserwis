@@ -372,6 +372,41 @@ it('searches the selected space and shows the matching path', async () => {
 	await expect.element(screen.getByText('Dokumenty', { exact: true })).toBeVisible();
 });
 
+it('retains loaded entries and retries the failed next page with the same cursor', async () => {
+	api.listEntries.mockResolvedValueOnce({ entries: [{ id: 'first', spaceId: 'personal-space', name: 'first.txt', kind: EntryKind.FILE, revision: 1 }], nextPageToken: 'next-page' });
+	api.listEntries.mockRejectedValueOnce(new ConnectError('unavailable', Code.Unavailable));
+	api.listEntries.mockResolvedValueOnce({ entries: [{ id: 'second', spaceId: 'personal-space', name: 'second.txt', kind: EntryKind.FILE, revision: 1 }], nextPageToken: '' });
+	const screen = await render(StoragePage);
+	await screen.getByRole('button', { name: 'Pokaż więcej' }).click();
+	await expect.element(screen.getByRole('alert')).toBeVisible();
+	await expect.element(screen.getByRole('table').getByText('first.txt')).toBeVisible();
+	await screen.getByRole('button', { name: 'Ponów wczytanie kolejnej strony' }).click();
+	await expect.element(screen.getByRole('table').getByText('second.txt')).toBeVisible();
+	expect(api.listEntries.mock.calls[1][0].pageToken).toBe('next-page');
+	expect(api.listEntries.mock.calls[2][0].pageToken).toBe('next-page');
+	await expect.element(screen.getByRole('table').getByText('first.txt')).toBeVisible();
+});
+
+it('offers a retry instead of an empty folder when the initial list fails', async () => {
+	api.listEntries.mockRejectedValueOnce(new ConnectError('unavailable', Code.Unavailable));
+	api.listEntries.mockResolvedValueOnce({ entries: [{ id: 'first', spaceId: 'personal-space', name: 'first.txt', kind: EntryKind.FILE, revision: 1 }], nextPageToken: '' });
+	const screen = await render(StoragePage);
+	await expect.element(screen.getByRole('alert')).toBeVisible();
+	await expect.element(screen.getByRole('table').getByText('Folder jest pusty')).not.toBeInTheDocument();
+	await screen.getByRole('button', { name: 'Ponów wczytanie folderu' }).click();
+	await expect.element(screen.getByRole('table').getByText('first.txt')).toBeVisible();
+});
+
+it('does not claim the trash is empty when loading it fails', async () => {
+	api.listTrash.mockRejectedValueOnce(new ConnectError('unavailable', Code.Unavailable));
+	api.listTrash.mockResolvedValueOnce({ items: [], nextPageToken: '' });
+	const screen = await render(StoragePage, { props: { mode: 'trash' } });
+	await expect.element(screen.getByRole('alert')).toBeVisible();
+	await expect.element(screen.getByRole('table').getByText('Kosz jest pusty')).not.toBeInTheDocument();
+	await screen.getByRole('button', { name: 'Ponów wczytanie kosza' }).click();
+	await expect.element(screen.getByRole('table').getByText('Kosz jest pusty')).toBeVisible();
+});
+
 it('filters a catalog before pagination and applies the same filter to search', async () => {
 	api.listEntries.mockResolvedValue({ entries: [], nextPageToken: 'old-cursor' });
 	const screen = await render(StoragePage);
