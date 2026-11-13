@@ -138,6 +138,24 @@ it('keeps the same editor and draft when switching to preview and back', async (
 	expect(view.getByLabelText('Tytuł').element()).toBe(input);
 });
 
+it('starts with import collapsed and allows opening its file controls', async () => {
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	const imported = view.getByRole('group', { name: 'Import XLSX' });
+	await expect.element(imported.getByLabelText('Plik XLSX')).not.toBeVisible();
+	await imported.getByText('Rozwiń import XLSX').click();
+	await expect.element(imported.getByLabelText('Plik XLSX')).toBeVisible();
+});
+
+it('summarizes an applied import while its controls are collapsed', async () => {
+	api.getImportResult.mockResolvedValue({ result: create(QuoteImportResultSchema, {
+		id: 'import-applied', status: 'succeeded', applied: true
+	}) });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	const imported = view.getByRole('group', { name: 'Import XLSX' });
+	await expect.element(imported.getByText('Import zapisany w szkicu.')).toBeVisible();
+	await expect.element(imported.getByLabelText('Plik XLSX')).not.toBeVisible();
+});
+
 it('applies imported prices as gross even when the detected mapping says net', async () => {
 	api.getImportResult.mockResolvedValue({ result: create(QuoteImportResultSchema, {
 		id: 'import-net', status: 'succeeded', resultVersion: 1n,

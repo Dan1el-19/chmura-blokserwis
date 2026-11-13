@@ -41,6 +41,11 @@ for (const width of [320, 390]) {
 		await page.goto('/wyceny/layout-quote');
 		const title = page.getByLabel('Tytuł');
 		await title.fill('Zmieniony szkic');
+		const sections = page.getByRole('navigation', { name: 'Sekcje wyceny' });
+		await sections.getByRole('link', { name: 'Pozycje' }).click();
+		await expect(page.getByLabel('Nazwa pozycji 1')).toBeInViewport();
+		await sections.getByRole('link', { name: 'Dane' }).click();
+		await expect(title).toHaveValue('Zmieniony szkic');
 		const actionBar = page.getByRole('region', { name: 'Zapis wyceny' });
 		await expect(actionBar).toBeInViewport();
 		await expect(actionBar.getByRole('button', { name: 'Zapisz szkic' })).toBeVisible();

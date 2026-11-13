@@ -308,19 +308,29 @@
 		</div>
 		<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,0.8fr)]">
 		<div class="min-w-0 space-y-4 xl:block {viewMode === 'preview' ? 'hidden' : ''}">
-		<fieldset class={panel} disabled={busy || quote.archived}>
+		<nav class="flex flex-wrap gap-x-4 gap-y-2 text-sm" aria-label="Sekcje wyceny">
+			<a class="text-primary underline" href="#quote-data">Dane</a>
+			<a class="text-primary underline" href="#quote-lines">Pozycje</a>
+			<a class="text-primary underline" href="#quote-content">Treść</a>
+			<a class="text-primary underline" href="#quote-documents">Dokumenty</a>
+		</nav>
+		<fieldset id="quote-data" class={panel} disabled={busy || quote.archived}>
 			<legend class="px-1 font-semibold">Dane wyceny</legend>
 			<div class="grid gap-3 sm:grid-cols-2">
 				<label>Tytuł<input class={field} bind:value={draft.title} oninput={changed} /></label>
 				<label>Klient<input class={field} bind:value={draft.client} oninput={changed} /></label>
 			</div>
 			<p class="text-sm text-text-muted">Ceny w tej wycenie: {draft.priceMode === QuotePriceMode.NET ? 'netto (zapisane wcześniej)' : 'brutto'}.</p>
-			<QuoteLines bind:lines={draft.lines} net={draft.priceMode === QuotePriceMode.NET} onchange={changed} />
+			<div id="quote-lines"><h2 class="mb-2 font-semibold">Pozycje</h2><QuoteLines bind:lines={draft.lines} net={draft.priceMode === QuotePriceMode.NET} onchange={changed} /></div>
 			{#if draft.priceMode === QuotePriceMode.NET}<p role="status">Ta starsza wycena ma ceny netto. Import pozycji zastąpi je cenami brutto.</p>{/if}
 		</fieldset>
 
 		<fieldset class={panel} disabled={busy || saving || quote.archived}>
 			<legend class="px-1 font-semibold">Import XLSX</legend>
+			{#if imported?.applied}<p class="text-sm" role="status">Import zapisany w szkicu.</p>{/if}
+			<details open={!!imported && !imported.applied}>
+				<summary class="cursor-pointer text-sm font-medium">Rozwiń import XLSX</summary>
+				<div class="mt-3 space-y-4">
 			<div class="flex flex-wrap items-end gap-2">
 				<label class="text-sm">Plik XLSX<input class={field} type="file" accept=".xlsx" onchange={(event) => {
 					file = event.currentTarget.files?.[0];
@@ -335,8 +345,7 @@
 			</div>
 			{#if imported}
 				{#if pending(imported.status)}<p role="status">Analiza arkusza w toku…</p>
-				{:else if imported.applied}<p>Import zapisany w szkicu.</p>
-				{:else}
+				{:else if !imported.applied}
 					{#if imported.status === 'succeeded'}
 						<div class="rounded-lg border border-border-line p-4">
 							<h2 class="font-semibold">Sprawdź pozycje z arkusza</h2>
@@ -380,9 +389,11 @@
 					</details>
 				{/if}
 			{/if}
+				</div>
+			</details>
 		</fieldset>
 
-		<fieldset class={panel} disabled={busy || quote.archived}>
+		<fieldset id="quote-content" class={panel} disabled={busy || quote.archived}>
 			<legend class="px-1 font-semibold">Treść oferty</legend>
 			<button class={button} type="button" disabled={pending(operation?.status)} onclick={() => act('generate', async (key) => {
 				if (!quote) return;
@@ -396,7 +407,7 @@
 			<label class="block">Zakończenie<textarea class={field} rows="3" bind:value={draft.conclusion} oninput={changed}></textarea></label>
 		</fieldset>
 
-		<div class={panel}>
+		<div id="quote-documents" class={panel}>
 			<h2 class="font-semibold">Dokumenty</h2>
 			<div class="flex flex-wrap gap-2">
 				<button class={button} disabled={busy || saving} onclick={async () => { if (await save()) await showPreview(); }}>Podgląd szkicu</button>

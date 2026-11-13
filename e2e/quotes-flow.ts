@@ -31,6 +31,7 @@ export async function runQuoteFlow(page: Page, {
 	await page.getByRole('button', { name: 'Zapisz szkic' }).click();
 	await expect(page.getByText('Zapisano', { exact: true })).toBeVisible();
 
+	await page.getByText('Rozwiń import XLSX').click();
 	await page.getByLabel('Plik XLSX').setInputFiles(fixture);
 	await page.getByRole('button', { name: 'Prześlij arkusz' }).click();
 	await expect(page.getByText('Zlecono analizę arkusza.')).toBeVisible();
