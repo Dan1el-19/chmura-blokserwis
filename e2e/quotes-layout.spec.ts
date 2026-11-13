@@ -5,7 +5,7 @@ import {
 	ListQuotesResponseSchema, SaveDraftRequestSchema, SaveDraftResponseSchema
 } from '../src/lib/gen/unisource/v2/quotes_pb.js';
 
-for (const width of [320, 390]) {
+for (const width of [320, 390, 1280, 1440]) {
 	test(`edits and previews an A4 quote at ${width}px`, async ({ page }) => {
 		await page.setViewportSize({ width, height: 844 });
 		await page.addInitScript(() => Object.assign(window, {
@@ -41,6 +41,24 @@ for (const width of [320, 390]) {
 		await page.goto('/wyceny/layout-quote');
 		const title = page.getByLabel('Tytuł');
 		await title.fill('Zmieniony szkic');
+		if (width >= 1280) {
+			const table = page.getByRole('table', { name: 'Pozycje wyceny' });
+			await expect(table.getByRole('columnheader', { name: 'Wartość' })).toBeVisible();
+			const name = await table.getByLabel('Nazwa pozycji 1').boundingBox();
+			const quantity = await table.getByLabel('Ilość pozycji 1').boundingBox();
+			const price = await table.getByLabel('Cena brutto pozycji 1').boundingBox();
+			const remove = await table.getByRole('button', { name: 'Usuń pozycję 1' }).boundingBox();
+			const tableBox = await table.boundingBox();
+			expect(name && quantity && price && remove && tableBox && quantity.x >= name.x + name.width && price.x >= quantity.x + quantity.width && remove.x + remove.width <= tableBox.x + tableBox.width + 1).toBe(true);
+			expect(quantity?.width).toBeGreaterThanOrEqual(44);
+			expect(price?.width).toBeGreaterThanOrEqual(44);
+			await expect(page.locator('iframe[title="Podgląd wyceny"]')).toBeVisible();
+			await expect.poll(() => page.locator('#main-content').evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+			await table.getByLabel('Nazwa pozycji 8').fill('Ostatnia pozycja');
+			await page.getByRole('button', { name: 'Zapisz szkic', exact: true }).first().click();
+			await expect.poll(() => quote.draft?.lines[7]?.name).toBe('Ostatnia pozycja');
+			return;
+		}
 		const sections = page.getByRole('navigation', { name: 'Sekcje wyceny' });
 		await sections.getByRole('link', { name: 'Pozycje' }).click();
 		await expect(page.getByLabel('Nazwa pozycji 1')).toBeInViewport();

@@ -54,7 +54,7 @@
 	.value { align-self: center; font-size: 0.875rem; overflow-wrap: anywhere; }
 	.value .mobile-label { display: inline; }
 	.remove { text-align: right; }
-	@container (min-width: 480px) {
+	@container (min-width: 440px) {
 		table { display: table; table-layout: fixed; border-collapse: collapse; }
 		thead { display: table-header-group; }
 		tbody { display: table-row-group; }

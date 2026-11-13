@@ -306,7 +306,7 @@
 			<button type="button" class={button} aria-label="Pokaż edycję wyceny" aria-pressed={viewMode === 'editing'} onclick={() => viewMode = 'editing'}>Edycja</button>
 			<button type="button" class={button} aria-label="Pokaż podgląd wyceny" aria-pressed={viewMode === 'preview'} onclick={() => viewMode = 'preview'}>Podgląd</button>
 		</div>
-		<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,0.8fr)]">
+		<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,0.8fr)]">
 		<div class="min-w-0 space-y-4 xl:block {viewMode === 'preview' ? 'hidden' : ''}">
 		<nav class="flex flex-wrap gap-x-4 gap-y-2 text-sm" aria-label="Sekcje wyceny">
 			<a class="text-primary underline" href="#quote-data">Dane</a>
