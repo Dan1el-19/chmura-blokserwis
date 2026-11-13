@@ -20,7 +20,7 @@ for (const width of [320, 390]) {
 		});
 		let quote = create(QuoteSchema, { id: 'layout-quote', draftVersion: 1n, draft: {
 			title: 'Testowa wycena', priceMode: QuotePriceMode.GROSS,
-			lines: [{ name: 'Kamera', quantity: '2', unitPrice: '20' }]
+			lines: Array.from({ length: 8 }, (_, index) => ({ name: index ? `Pozycja ${index + 1}` : 'Kamera', quantity: '2', unitPrice: '20' }))
 		} });
 		await page.route('http://localhost:8788/**', async (route) => {
 			const headers = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'POST, OPTIONS' };
@@ -44,6 +44,7 @@ for (const width of [320, 390]) {
 		const sections = page.getByRole('navigation', { name: 'Sekcje wyceny' });
 		await sections.getByRole('link', { name: 'Pozycje' }).click();
 		await expect(page.getByLabel('Nazwa pozycji 1')).toBeInViewport();
+		await page.getByLabel('Nazwa pozycji 8').fill('Ostatnia pozycja');
 		await sections.getByRole('link', { name: 'Dane' }).click();
 		await expect(title).toHaveValue('Zmieniony szkic');
 		const actionBar = page.getByRole('region', { name: 'Zapis wyceny' });
@@ -88,9 +89,11 @@ for (const width of [320, 390]) {
 		await page.getByRole('button', { name: 'Pokaż edycję wyceny' }).click();
 		await expect(title).toHaveValue('Zmieniony szkic');
 		await expect(page.getByLabel('Ilość pozycji 1')).toHaveValue('2');
+		await expect(page.getByLabel('Nazwa pozycji 8')).toHaveValue('Ostatnia pozycja');
 		await actionBar.getByRole('button', { name: 'Zapisz szkic' }).click();
 		await expect(actionBar.getByRole('status')).toHaveText('Zapisano');
 		expect(quote.draft?.title).toBe('Zmieniony szkic');
+		expect(quote.draft?.lines[7]?.name).toBe('Ostatnia pozycja');
 	});
 }
 
