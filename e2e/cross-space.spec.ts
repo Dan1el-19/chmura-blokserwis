@@ -1,6 +1,6 @@
 import { expect, test } from 'playwright/test';
 
-test('moves a private file into a shared folder', async ({ page }, testInfo) => {
+test('moves a private file into a shared folder', async ({ page }) => {
 	const moves: Array<Record<string, unknown>> = [];
 	const file = { id: 'report', spaceId: 'personal', name: 'report.txt', kind: 2, revision: 1, sizeBytes: '1' };
 	const folder = { id: 'destination', spaceId: 'main', name: 'Zespół', kind: 1, revision: 1, sizeBytes: '0' };
@@ -19,10 +19,8 @@ test('moves a private file into a shared folder', async ({ page }, testInfo) => 
 		await route.fulfill({ status: 200, headers, body: JSON.stringify(result) });
 	});
 	await page.goto('/personal');
-	if (testInfo.project.name === 'mobile') {
-		await page.getByRole('button', { name: 'Akcje dla report.txt' }).click();
-		await page.getByRole('button', { name: 'Przenieś', exact: true }).click();
-	} else await page.getByRole('button', { name: 'Przenieś report.txt', exact: true }).click();
+	await page.getByRole('button', { name: 'Akcje dla report.txt' }).click();
+	await page.getByRole('button', { name: 'Przenieś', exact: true }).click();
 	const dialog = page.getByRole('dialog', { name: 'Przenieś element' });
 	await dialog.getByRole('combobox', { name: 'Przestrzeń docelowa' }).selectOption('main');
 	await dialog.getByRole('button', { name: 'Otwórz folder Zespół' }).click();

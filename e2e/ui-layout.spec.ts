@@ -1,6 +1,6 @@
 import { expect, test } from 'playwright/test';
 
-for (const width of [320, 390]) {
+for (const width of [320, 390, 1280]) {
 	test(`file actions fit the viewport at ${width}px`, async ({ page }) => {
 		await page.setViewportSize({ width, height: width === 390 ? 844 : 740 });
 		let creates = 0;
@@ -22,6 +22,20 @@ for (const width of [320, 390]) {
 		await page.route('https://storage.example/**', (route) => route.fulfill({ status: 200, headers: { 'content-disposition': 'attachment; filename="file.txt"' }, body: 'file' }));
 		await page.goto('/personal');
 		const trigger = page.getByRole('button', { name: 'Akcje dla Bardzo dluga nazwa pliku testowego.txt' });
+		if (width >= 1024) {
+			const row = page.getByRole('row', { name: /Bardzo dluga nazwa pliku testowego/ });
+			await expect(row.getByRole('button', { name: 'Pobierz Bardzo dluga nazwa pliku testowego.txt', exact: true })).toBeVisible();
+			await trigger.click();
+			await page.getByRole('button', { name: 'Szczegóły', exact: true }).click();
+			await expect(page.getByRole('dialog')).toContainText('Bardzo dluga nazwa pliku testowego.txt');
+			await expect(page.getByRole('dialog')).toContainText('RustFS');
+			await page.keyboard.press('Escape');
+			await trigger.focus();
+			await page.keyboard.press('Enter');
+			await page.keyboard.press('Escape');
+			await expect(trigger).toBeFocused();
+			return;
+		}
 		if (width === 390) {
 			const row = page.getByRole('group', { name: 'Bardzo dluga nazwa pliku testowego.txt' });
 			await expect(row).toBeVisible();

@@ -33,8 +33,6 @@
 		Folder,
 		FolderPlus,
 		MagnifyingGlass,
-		Pencil,
-		ShareNetwork,
 		SpinnerGap,
 		Trash
 	} from 'phosphor-svelte';
@@ -990,6 +988,17 @@
 	async function loadUploadLimit(): Promise<void> {
 		await app.loadUploadLimit(true);
 	}
+
+	function entryActions(entry: Entry, includeDownload: boolean) {
+		return [
+			...(includeDownload && entry.kind !== EntryKind.FOLDER ? [{ id: 'download', label: 'Pobierz', run: () => void downloadFile(entry) }] : []),
+			{ id: 'share', label: 'Udostępnij', run: () => sharingEntry = entry },
+			{ id: 'move', label: 'Przenieś', run: () => beginMove(entry) },
+			{ id: 'rename', label: 'Zmień nazwę', run: () => beginRename(entry) },
+			{ id: 'details', label: 'Szczegóły', run: () => detailsEntry = entry },
+			{ id: 'trash', label: 'Do kosza', destructive: true, run: () => requestTrashConfirmation(entry) }
+		];
+	}
 </script>
 
 <svelte:window
@@ -1117,7 +1126,7 @@
 								<td class="max-w-[420px] truncate px-4 py-3 text-text-main" title={entry.name}><div class="flex items-center gap-2"><Folder class="h-5 w-5 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400" /><button type="button" class="truncate text-left font-medium hover:underline" onclick={() => void openFolder(entry)}>{entry.name}</button></div></td>
 								<td class="px-4 py-3 font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</td>
 								<td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.createdAt)}</td><td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.modifiedAt)}</td>
-								<td class="px-4 py-3"><div class="flex justify-end gap-1"><button type="button" onclick={() => (sharingEntry = entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100" aria-label={`Udostępnij ${entry.name}`} title="Udostępnij"><ShareNetwork class="h-4 w-4" /></button><button type="button" onclick={() => beginMove(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Przenieś ${entry.name}`} title="Przenieś"><Folder class="h-4 w-4" /></button><button type="button" onclick={() => beginRename(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Zmień nazwę ${entry.name}`} title="Zmień nazwę"><Pencil class="h-4 w-4" /></button><button type="button" onclick={() => requestTrashConfirmation(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" aria-label={`Przenieś ${entry.name} do kosza`} title="Przenieś do kosza"><Trash class="h-4 w-4" /></button></div></td>
+								<td class="px-4 py-3"><div class="flex items-center justify-end"><ActionMenu label={entry.name} triggerLabel={`Akcje dla ${entry.name}`} items={entryActions(entry, false)} /></div></td>
 							</tr>
 						{/each}
 						{#each files as entry (entry.id)}
@@ -1126,7 +1135,7 @@
 								<td class="max-w-[420px] truncate px-4 py-3 text-text-main" title={entry.name}><div class="flex items-center gap-2">{#if mediaKindForFilename(entry.name) === 'IMAGE'}<FileImage class="h-5 w-5 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'AUDIO'}<FileAudio class="h-5 w-5 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'VIDEO'}<FileVideo class="h-5 w-5 shrink-0 text-primary" />{:else}<FileIcon class="h-5 w-5 shrink-0 text-primary" />{/if}<span class="min-w-0"><button type="button" class="block truncate text-left hover:underline" onclick={() => openFile(entry)} aria-label={mediaKindForFilename(entry.name) ? `Podgląd ${entry.name}` : `Pobierz ${entry.name}`}>{entry.name}</button>{#if storageLocationLabel(entry.storageLocation)}<span class="block text-xs text-text-muted">{storageLocationLabel(entry.storageLocation)}</span>{/if}</span></div></td>
 								<td class="px-4 py-3 font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</td>
 								<td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.createdAt)}</td><td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.modifiedAt)}</td>
-								<td class="px-4 py-3"><div class="flex justify-end gap-1"><button type="button" onclick={() => void downloadFile(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Pobierz ${entry.name}`} title="Pobierz"><DownloadSimple class="h-4 w-4" /></button><button type="button" onclick={() => (sharingEntry = entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Udostępnij ${entry.name}`} title="Udostępnij"><ShareNetwork class="h-4 w-4" /></button><button type="button" onclick={() => beginMove(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Przenieś ${entry.name}`} title="Przenieś"><Folder class="h-4 w-4" /></button><button type="button" onclick={() => beginRename(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Zmień nazwę ${entry.name}`} title="Zmień nazwę"><Pencil class="h-4 w-4" /></button><button type="button" onclick={() => requestTrashConfirmation(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20" aria-label={`Przenieś ${entry.name} do kosza`} title="Przenieś do kosza"><Trash class="h-4 w-4" /></button></div></td>
+								<td class="px-4 py-3"><div class="flex items-center justify-end"><button type="button" onclick={() => void downloadFile(entry)} class="inline-flex h-10 w-10 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Pobierz ${entry.name}`} title="Pobierz"><DownloadSimple class="h-4 w-4" /></button><ActionMenu label={entry.name} triggerLabel={`Akcje dla ${entry.name}`} items={entryActions(entry, false)} /></div></td>
 							</tr>
 						{/each}
 							{#if loading}<tr><td colspan="6" class="px-4 py-4"><div class="animate-pulse space-y-3" role="status" aria-label="Ładowanie plików">{#each [1,2,3] as row (row)}<div class="h-9 rounded bg-gray-100 dark:bg-zinc-800"></div>{/each}</div></td></tr>{/if}
@@ -1149,14 +1158,7 @@
 								{#if isFolder}<Folder class="h-8 w-8 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400" />{:else if mediaKindForFilename(entry.name) === 'IMAGE'}<FileImage class="h-8 w-8 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'AUDIO'}<FileAudio class="h-8 w-8 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'VIDEO'}<FileVideo class="h-8 w-8 shrink-0 text-primary" />{:else}<FileIcon class="h-8 w-8 shrink-0 text-primary" />{/if}
 								<span class="min-w-0 flex-1"><span class="line-clamp-2 text-sm font-medium text-text-main">{entry.name}</span><span class="mt-0.5 block text-xs text-text-muted">{formatBytes(entry.sizeBytes)} · {formatCreatedAt(entry.modifiedAt)}</span></span>
 							</button>
-							<ActionMenu label={entry.name} triggerLabel={`Akcje dla ${entry.name}`} items={[
-								...(!isFolder ? [{ id: 'download', label: 'Pobierz', run: () => void downloadFile(entry) }] : []),
-								{ id: 'share', label: 'Udostępnij', run: () => sharingEntry = entry },
-								{ id: 'move', label: 'Przenieś', run: () => beginMove(entry) },
-								{ id: 'rename', label: 'Zmień nazwę', run: () => beginRename(entry) },
-								{ id: 'details', label: 'Szczegóły', run: () => detailsEntry = entry },
-								{ id: 'trash', label: 'Do kosza', destructive: true, run: () => requestTrashConfirmation(entry) }
-							]} />
+							<ActionMenu label={entry.name} triggerLabel={`Akcje dla ${entry.name}`} items={entryActions(entry, true)} />
 						</div>
 					</div>
 				{/each}

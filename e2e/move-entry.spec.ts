@@ -79,12 +79,8 @@ test('moves an entry between folders from the desktop or mobile catalog', async 
 
 	await page.goto('/personal');
 	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached();
-	if (testInfo.project.name === 'mobile') {
-		await page.getByRole('button', { name: `Akcje dla ${file.name}` }).click();
-		await page.getByRole('button', { name: 'Przenieś', exact: true }).click();
-	} else {
-		await page.getByRole('button', { name: `Przenieś ${file.name}`, exact: true }).click();
-	}
+	await page.getByRole('button', { name: `Akcje dla ${file.name}` }).click();
+	await page.getByRole('button', { name: 'Przenieś', exact: true }).click();
 	const dialog = page.getByRole('dialog', { name: 'Przenieś element' });
 	if (testInfo.project.name === 'mobile') {
 		const controls = [dialog.getByRole('heading', { name: 'Przenieś element' }), ...['Anuluj', 'Przenieś tutaj', 'Przenieś do korzenia'].map((name) => dialog.getByRole('button', { name }))];

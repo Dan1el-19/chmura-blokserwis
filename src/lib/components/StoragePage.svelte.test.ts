@@ -243,7 +243,8 @@ it('moves an entry into a selected folder using its current revision', async () 
 	api.moveEntry.mockResolvedValueOnce({ entry: { ...file, parentId: 'destination', revision: 8 } });
 	const screen = await render(StoragePage);
 	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
-	await screen.getByRole('button', { name: 'Przenieś report.txt', exact: true }).click();
+	await screen.getByRole('row', { name: /report\.txt\b/ }).getByRole('button', { name: 'Akcje dla report.txt' }).click();
+	await screen.getByRole('dialog').getByRole('button', { name: 'Przenieś', exact: true }).click();
 	await screen.getByRole('dialog').getByRole('button', { name: 'Otwórz folder Destination' }).click();
 	await screen.getByRole('button', { name: 'Przenieś tutaj' }).click();
 	await expect.poll(() => api.moveEntry).toHaveBeenCalledTimes(1);
@@ -267,7 +268,8 @@ it('moves an entry to root without a parent id', async () => {
 	api.moveEntry.mockResolvedValueOnce({ entry: { ...file, parentId: '', revision: 5 } });
 	const screen = await render(StoragePage);
 	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
-	await screen.getByRole('button', { name: 'Przenieś report.txt', exact: true }).click();
+	await screen.getByRole('row', { name: /report\.txt\b/ }).getByRole('button', { name: 'Akcje dla report.txt' }).click();
+	await screen.getByRole('dialog').getByRole('button', { name: 'Przenieś', exact: true }).click();
 	await screen.getByRole('button', { name: 'Przenieś do korzenia' }).click();
 	await expect.poll(() => api.moveEntry).toHaveBeenCalledTimes(1);
 	expect(api.moveEntry.mock.calls[0]?.[0]).toMatchObject({
@@ -285,7 +287,8 @@ it('keeps the move dialog open and reports a destination name conflict', async (
 	api.moveEntry.mockRejectedValueOnce(new ConnectError('ALREADY_EXISTS', Code.AlreadyExists));
 	const screen = await render(StoragePage);
 	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
-	await screen.getByRole('button', { name: 'Przenieś report.txt', exact: true }).click();
+	await screen.getByRole('row', { name: /report\.txt\b/ }).getByRole('button', { name: 'Akcje dla report.txt' }).click();
+	await screen.getByRole('dialog').getByRole('button', { name: 'Przenieś', exact: true }).click();
 	await screen.getByRole('dialog').getByRole('button', { name: 'Otwórz folder Destination' }).click();
 	await screen.getByRole('button', { name: 'Przenieś tutaj' }).click();
 	await expect.element(screen.getByRole('alert').getByText('Element o tej nazwie już istnieje.')).toBeVisible();
@@ -297,7 +300,8 @@ it('canceling the move dialog does not call the move API', async () => {
 	api.listEntries.mockResolvedValueOnce({ entries: [file], nextPageToken: '' });
 	const screen = await render(StoragePage);
 	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
-	await screen.getByRole('button', { name: 'Przenieś report.txt', exact: true }).click();
+	await screen.getByRole('row', { name: /report\.txt\b/ }).getByRole('button', { name: 'Akcje dla report.txt' }).click();
+	await screen.getByRole('dialog').getByRole('button', { name: 'Przenieś', exact: true }).click();
 	await screen.getByRole('button', { name: 'Anuluj', exact: true }).click();
 	expect(api.moveEntry).not.toHaveBeenCalled();
 	await expect.element(screen.getByRole('dialog')).not.toBeInTheDocument();
@@ -310,7 +314,8 @@ it('moves a file to a folder in another accessible space', async () => {
 	api.moveEntry.mockResolvedValue({ entry: { ...file, spaceId: 'main-space', parentId: 'shared-folder', revision: 3 } });
 	const screen = await render(StoragePage);
 	await expect.poll(() => api.listEntries).toHaveBeenCalled();
-	await screen.getByRole('button', { name: 'Przenieś cross.txt', exact: true }).click();
+	await screen.getByRole('row', { name: /cross\.txt\b/ }).getByRole('button', { name: 'Akcje dla cross.txt' }).click();
+	await screen.getByRole('dialog').getByRole('button', { name: 'Przenieś', exact: true }).click();
 	const dialog = screen.getByRole('dialog', { name: 'Przenieś element' });
 	await dialog.getByRole('combobox', { name: 'Przestrzeń docelowa' }).selectOptions(['main-space']);
 	await dialog.getByRole('button', { name: 'Otwórz folder Wspólny' }).click();
@@ -581,7 +586,8 @@ it('creates and lists a custom public link from the file action', async () => {
 	});
 	const screen = await render(StoragePage);
 	await expect.poll(() => api.listEntries).toHaveBeenCalledTimes(1);
-	await screen.getByRole('row', { name: /shared\.png/ }).getByRole('button', { name: 'Udostępnij shared.png' }).click();
+	await screen.getByRole('row', { name: /shared\.png/ }).getByRole('button', { name: 'Akcje dla shared.png' }).click();
+	await screen.getByRole('dialog').getByRole('button', { name: 'Udostępnij', exact: true }).click();
 	const dialog = screen.getByRole('dialog', { name: 'Udostępnij plik' });
 	await expect.poll(() => api.listShares).toHaveBeenCalledTimes(1);
 	await dialog.getByRole('button', { name: 'Utwórz link', exact: true }).click();
@@ -629,7 +635,8 @@ it('requires confirmation before revoking an existing share', async () => {
 	api.listShares.mockResolvedValue({ shares: [link] });
 	api.revokeShare.mockResolvedValueOnce({ share: undefined }).mockResolvedValueOnce({ share: { ...link, revokedAt: { seconds: 1n, nanos: 0 } } });
 	const screen = await render(StoragePage);
-	await screen.getByRole('row', { name: /shared\.png/ }).getByRole('button', { name: 'Udostępnij shared.png' }).click();
+	await screen.getByRole('row', { name: /shared\.png/ }).getByRole('button', { name: 'Akcje dla shared.png' }).click();
+	await screen.getByRole('dialog').getByRole('button', { name: 'Udostępnij', exact: true }).click();
 	const dialog = screen.getByRole('dialog', { name: 'Udostępnij plik' });
 	await dialog.getByRole('button', { name: 'Unieważnij', exact: true }).click();
 	expect(api.revokeShare).not.toHaveBeenCalled();
@@ -897,7 +904,8 @@ it.each([
 		});
 		const screen = await render(StoragePage, { props: { spaceKind } });
 
-		await screen.getByRole('button', { name: 'Przenieś raport.pdf do kosza' }).click();
+		await screen.getByRole('row', { name: /raport\.pdf\b/ }).getByRole('button', { name: 'Akcje dla raport.pdf' }).click();
+	await screen.getByRole('dialog').getByRole('button', { name: 'Do kosza', exact: true }).click();
 		expect(screen.getByRole('alertdialog')).toBeTruthy();
 		expect(api.trashEntry).not.toHaveBeenCalled();
 
@@ -1207,7 +1215,8 @@ it('reconciles a cached file removed by another client when its operation is rej
 	});
 	api.trashEntry.mockRejectedValueOnce(new ConnectError('NOT_FOUND', Code.NotFound));
 	const screen = await render(StoragePage);
-	await screen.getByRole('button', { name: 'Przenieś gone.txt do kosza' }).click();
+	await screen.getByRole('row', { name: /gone\.txt\b/ }).getByRole('button', { name: 'Akcje dla gone.txt' }).click();
+	await screen.getByRole('dialog').getByRole('button', { name: 'Do kosza', exact: true }).click();
 	await screen.getByRole('button', { name: 'Przenieś do kosza', exact: true }).click();
 	await expect.element(screen.getByRole('alertdialog')).not.toBeInTheDocument();
 	await expect.element(screen.getByRole('table').getByText('Folder jest pusty')).toBeVisible();
@@ -1245,7 +1254,8 @@ it('finishes stale-entry reconciliation after a pending refresh even when the or
 				rejectMutation = reject;
 			})
 	);
-	await screen.getByRole('button', { name: 'Przenieś gone.txt do kosza' }).click();
+	await screen.getByRole('row', { name: /gone\.txt\b/ }).getByRole('button', { name: 'Akcje dla gone.txt' }).click();
+	await screen.getByRole('dialog').getByRole('button', { name: 'Do kosza', exact: true }).click();
 	await screen.getByRole('button', { name: 'Przenieś do kosza', exact: true }).click();
 	await expect.poll(() => api.trashEntry).toHaveBeenCalledTimes(1);
 	await screen.rerender({ spaceKind: 'shared' });

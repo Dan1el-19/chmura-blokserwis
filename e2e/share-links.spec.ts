@@ -56,7 +56,8 @@ test('creates and copies a labelled public link without changing its address', a
 
 	await page.goto('/personal');
 	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached();
-	await page.getByRole('button', { name: 'Udostępnij shared.png' }).click();
+	await page.getByRole('button', { name: 'Akcje dla shared.png' }).click();
+	await page.getByRole('button', { name: 'Udostępnij', exact: true }).click();
 	const dialog = page.getByRole('dialog', { name: 'Udostępnij plik' });
 	await expect(dialog.getByLabel('Etykieta (opcjonalnie)')).toHaveCount(0);
 	await expect(dialog.getByLabel('Własny adres linku (opcjonalnie)')).toHaveCount(0);
