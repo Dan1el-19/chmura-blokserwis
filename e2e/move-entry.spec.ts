@@ -2,7 +2,10 @@ import { expect, test } from 'playwright/test';
 
 test('moves an entry between folders from the desktop or mobile catalog', async ({ page }, testInfo) => {
 	test.skip(testInfo.project.name === 'firefox', 'Move acceptance runs in Chromium desktop and mobile.');
+	if (testInfo.project.name === 'mobile') await page.setViewportSize({ width: 320, height: 480 });
 	const requests: Array<{ method: string; body: Record<string, unknown> }> = [];
+	let releaseMove!: () => void;
+	const moveGate = new Promise<void>((resolve) => { releaseMove = resolve; });
 	const target = {
 		id: 'archive',
 		spaceId: 'personal',
@@ -15,7 +18,7 @@ test('moves an entry between folders from the desktop or mobile catalog', async 
 		id: 'report',
 		spaceId: 'personal',
 		kind: 2,
-		name: 'raport.txt',
+		name: `${'bardzo-dluga-nazwa-'.repeat(8)}raport.txt`,
 		sizeBytes: '17',
 		revision: 7,
 		storageLocation: 1
@@ -57,11 +60,12 @@ test('moves an entry between folders from the desktop or mobile catalog', async 
 				break;
 			case 'ListEntries':
 				result = {
-					entries: body.parentId === 'archive' ? [] : [target, file],
+					entries: body.parentId === 'archive' ? [] : [target, file, ...Array.from({ length: 20 }, (_, index) => ({ id: `folder-${index}`, spaceId: 'personal', kind: 1, name: `Folder testowy ${index}`, revision: 1 }))],
 					nextPageToken: ''
 				};
 				break;
 			case 'MoveEntry':
+				await moveGate;
 				result = { entry: { ...file, parentId: body.parentId ?? '', revision: 8 } };
 				break;
 			case 'GetMe':
@@ -76,15 +80,30 @@ test('moves an entry between folders from the desktop or mobile catalog', async 
 	await page.goto('/personal');
 	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached();
 	if (testInfo.project.name === 'mobile') {
-		await page.getByRole('button', { name: 'Akcje dla raport.txt' }).click();
+		await page.getByRole('button', { name: `Akcje dla ${file.name}` }).click();
 		await page.getByRole('button', { name: 'Przenieś', exact: true }).click();
 	} else {
-		await page.getByRole('button', { name: 'Przenieś raport.txt', exact: true }).click();
+		await page.getByRole('button', { name: `Przenieś ${file.name}`, exact: true }).click();
 	}
 	const dialog = page.getByRole('dialog', { name: 'Przenieś element' });
+	if (testInfo.project.name === 'mobile') {
+		const controls = [dialog.getByRole('heading', { name: 'Przenieś element' }), ...['Anuluj', 'Przenieś tutaj', 'Przenieś do korzenia'].map((name) => dialog.getByRole('button', { name }))];
+		for (const control of controls) {
+			const box = await control.boundingBox();
+			expect(box && box.y >= 0 && box.y + box.height <= 480).toBe(true);
+		}
+	}
 	await dialog.getByRole('button', { name: 'Otwórz folder Archiwum' }).click();
 	await dialog.getByRole('button', { name: 'Przenieś tutaj' }).click();
 	await expect.poll(() => requests.filter((item) => item.method === 'MoveEntry')).toHaveLength(1);
+	try {
+		await expect(dialog).toHaveAttribute('aria-busy', 'true');
+		await expect(dialog.getByRole('button', { name: 'Anuluj' })).toBeDisabled();
+		await page.keyboard.press('Escape');
+		await expect(dialog).toBeVisible();
+	} finally {
+		releaseMove();
+	}
 	expect(requests.find((item) => item.method === 'MoveEntry')?.body).toMatchObject({
 		spaceId: 'personal',
 		entryId: 'report',

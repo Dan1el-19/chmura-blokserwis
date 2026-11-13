@@ -196,12 +196,14 @@
 	}
 </script>
 
-<AppDialog labelledby="move-entry-title" busy={busy} onclose={onclose}>
-	<section class="space-y-4">
+<AppDialog labelledby="move-entry-title" busy={busy} size="md" mobile="fullscreen" onclose={onclose}>
+	{#snippet header()}
 		<div>
 			<h2 id="move-entry-title" class="text-base font-semibold text-text-main">Przenieś element</h2>
 			<p class="mt-1 break-words text-sm text-text-muted">Wybierz folder dla {moveEntries.length === 1 ? `„${entry.name}”` : `${moveEntries.length} zaznaczonych elementów`}.</p>
 		</div>
+	{/snippet}
+	<section class="space-y-4">
 
 		<label class="block space-y-1 text-sm"><span>Przestrzeń docelowa</span><select aria-label="Przestrzeń docelowa" value={targetSpaceId} disabled={busy} onchange={(event) => switchSpace(event.currentTarget.value)} class="w-full rounded-md border border-border-line bg-bg-panel px-3 py-2">
 			{#each [...spaces].sort((a, b) => a.kind === SpaceKind.SHARED ? -1 : b.kind === SpaceKind.SHARED ? 1 : 0) as space (space.id)}<option value={space.id}>{space.kind === SpaceKind.SHARED ? 'Pliki wspólne' : 'Pliki prywatne'}</option>{/each}
@@ -254,12 +256,14 @@
 		{#if failures.length}<ul class="max-h-36 space-y-2 overflow-y-auto text-sm" aria-label="Nieprzeniesione elementy">{#each failures as failure (failure.id)}<li class="break-words"><span class="font-medium">{failure.name}</span><span class="block text-red-600 dark:text-red-300">{failure.message}</span></li>{/each}</ul>{/if}
 		{#if targetIsInsideSource}<p class="text-sm text-red-600" role="alert">Folderu nie można przenieść do niego samego ani do jego podfolderu.</p>{/if}
 
-		<div class="flex flex-wrap justify-end gap-2 border-t border-border-line pt-3">
+	</section>
+	{#snippet footer()}
+		<div class="flex flex-wrap justify-end gap-2">
 			<button type="button" disabled={busy} onclick={onclose} class="rounded-md px-3 py-2 text-sm text-text-muted hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-zinc-800">Anuluj</button>
 			<button type="button" disabled={busy || loading || targetIsSource || targetIsInsideSource} onclick={() => void moveTo(parentId)} class="rounded-md border border-border-line px-3 py-2 text-sm font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">{failures.length ? 'Ponów nieudane' : 'Przenieś tutaj'}</button>
 			<button type="button" disabled={busy || sourceAlreadyAtRoot} onclick={() => void moveTo('')} class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
 				{#if busy}<SpinnerGap class="h-4 w-4 animate-spin" />Przenoszenie…{:else}Przenieś do korzenia{/if}
 			</button>
 		</div>
-	</section>
+	{/snippet}
 </AppDialog>

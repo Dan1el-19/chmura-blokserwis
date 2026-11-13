@@ -27,7 +27,7 @@
 </button>
 {#if open}
 	<AppDialog labelledby={titleId} mobile="sheet" onclose={() => open = false}>
-		<h2 id={titleId} class="mb-3 break-words text-base font-semibold">{label}</h2>
+		{#snippet header()}<h2 id={titleId} class="break-words text-base font-semibold">{label}</h2>{/snippet}
 		<div class="flex flex-col">
 			{#each items as item (item.id)}
 				<button type="button" disabled={item.disabled} onclick={() => run(item.run)} class="min-h-11 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-zinc-800 {item.destructive ? 'mt-2 border-t border-border-line text-red-600' : 'text-text-main'}">{item.label}</button>
