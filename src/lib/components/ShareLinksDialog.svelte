@@ -27,6 +27,7 @@
 	let maxDownloadsInput = $state<string | number>('');
 	let expiryInput = $state('');
 	let editingId = $state('');
+	let confirmRevokeId = $state('');
 	let editLabel = $state('');
 	let editPassword = $state('');
 	let clearPassword = $state(false);
@@ -201,7 +202,9 @@
 		notice = '';
 		try {
 			const result = await shareLinks.revokeShare(create(RevokeShareRequestSchema, { spaceId, shareId: link.id }));
-			if (result.share) links = links.map((item) => item.id === link.id ? result.share! : item);
+			if (!result.share) throw new Error('Usługa nie potwierdziła unieważnienia linku.');
+			links = links.map((item) => item.id === link.id ? result.share! : item);
+			confirmRevokeId = '';
 			notice = 'Link został unieważniony.';
 		} catch (cause) {
 			error = message(cause);
@@ -244,9 +247,15 @@
 								<button type="button" onclick={() => void copy(link.address)} class="inline-flex items-center gap-1.5 rounded border border-border-line px-2.5 py-2 text-xs font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"><CopySimple class="h-3.5 w-3.5" />Kopiuj link</button>
 								{#if file.kind === EntryKind.FILE}<button type="button" onclick={() => void copy(link.address, true)} class="inline-flex items-center gap-1.5 rounded border border-border-line px-2.5 py-2 text-xs font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"><CopySimple class="h-3.5 w-3.5" />Kopiuj pobieranie</button>{/if}
 								<button type="button" disabled={pending} onclick={() => editingId === link.id ? editingId = '' : startEditing(link)} class="inline-flex items-center gap-1.5 rounded border border-border-line px-2.5 py-2 text-xs font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">{editingId === link.id ? 'Zamknij edycję' : 'Edytuj'}</button>
-								<button type="button" disabled={pending} onclick={() => void revoke(link)} class="inline-flex items-center gap-1.5 rounded px-2.5 py-2 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-900/20"><Trash class="h-3.5 w-3.5" />Unieważnij</button>
+								<button type="button" disabled={pending} onclick={() => confirmRevokeId = link.id} class="inline-flex items-center gap-1.5 rounded px-2.5 py-2 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-900/20"><Trash class="h-3.5 w-3.5" />Unieważnij</button>
 							</div>{/if}
 						</div>
+						{#if confirmRevokeId === link.id}
+							<div role="group" aria-label="Potwierdzenie unieważnienia" class="mt-3 space-y-2 rounded-md border border-red-300 p-3 text-sm dark:border-red-800">
+								<p>Osoby korzystające z tego linku stracą dostęp. Tego linku nie będzie można wznowić.</p>
+								<div class="flex flex-wrap gap-2"><button type="button" disabled={pending} class="min-h-11 rounded-md border border-border-line px-3 disabled:opacity-50" onclick={() => confirmRevokeId = ''}>Anuluj unieważnienie</button><button type="button" disabled={pending} class="min-h-11 rounded-md bg-red-600 px-3 text-white disabled:opacity-50" onclick={() => void revoke(link)}>Potwierdź unieważnienie</button></div>
+							</div>
+						{/if}
 						{#if editingId === link.id}<form onsubmit={(event) => void saveEdit(link, event)} class="mt-4 grid gap-3 border-t border-border-line pt-4 md:grid-cols-2">
 							<label class="space-y-1.5 text-sm"><span>Etykieta</span><input bind:value={editLabel} maxlength="200" disabled={pending} class="w-full rounded-md border border-border-line bg-bg-app px-3 py-2 text-sm" /></label>
 							<label class="space-y-1.5 text-sm"><span>Nowe hasło</span><input type="password" bind:value={editPassword} autocomplete="new-password" maxlength="256" disabled={pending || clearPassword} placeholder={link.hasPassword ? 'Pozostaw puste, aby nie zmieniać' : 'Pozostaw puste, aby pozostać bez hasła'} class="w-full rounded-md border border-border-line bg-bg-app px-3 py-2 text-sm" />{#if link.hasPassword}<span class="flex items-center gap-2 text-xs"><input type="checkbox" bind:checked={clearPassword} disabled={pending} />Usuń obecne hasło</span>{/if}</label>

@@ -623,6 +623,27 @@ it('creates and lists a custom public link from the file action', async () => {
 	await expect.element(shareRow.getByText(/\/s\/my-picture$/)).toBeVisible();
 });
 
+it('requires confirmation before revoking an existing share', async () => {
+	api.listEntries.mockResolvedValue({ entries: [{ id: 'share-file', spaceId: 'personal-space', name: 'shared.png', kind: EntryKind.FILE, revision: 1 }], nextPageToken: '' });
+	const link = { id: 'share-id', address: 'my-picture', label: '', revision: 1, hasPassword: false, downloadCount: 0n, viewCount: 0n };
+	api.listShares.mockResolvedValue({ shares: [link] });
+	api.revokeShare.mockResolvedValueOnce({ share: undefined }).mockResolvedValueOnce({ share: { ...link, revokedAt: { seconds: 1n, nanos: 0 } } });
+	const screen = await render(StoragePage);
+	await screen.getByRole('row', { name: /shared\.png/ }).getByRole('button', { name: 'Udostępnij shared.png' }).click();
+	const dialog = screen.getByRole('dialog', { name: 'Udostępnij plik' });
+	await dialog.getByRole('button', { name: 'Unieważnij', exact: true }).click();
+	expect(api.revokeShare).not.toHaveBeenCalled();
+	await expect.element(dialog.getByText(/tego linku nie będzie można wznowić/i)).toBeVisible();
+	await dialog.getByRole('button', { name: 'Anuluj unieważnienie' }).click();
+	expect(api.revokeShare).not.toHaveBeenCalled();
+	await dialog.getByRole('button', { name: 'Unieważnij', exact: true }).click();
+	await dialog.getByRole('button', { name: 'Potwierdź unieważnienie' }).click();
+	await expect.element(dialog.getByRole('alert')).toHaveTextContent('Usługa nie potwierdziła unieważnienia linku.');
+	await dialog.getByRole('button', { name: 'Potwierdź unieważnienie' }).click();
+	await expect.poll(() => api.revokeShare).toHaveBeenCalledTimes(2);
+	await expect.element(dialog.getByText('Link został unieważniony.')).toBeVisible();
+});
+
 it('waits for the route folder to resolve before creating an upload in that folder', async () => {
 	let resolveFolder!: (response: { entry: object }) => void;
 	api.getEntry.mockImplementationOnce(
