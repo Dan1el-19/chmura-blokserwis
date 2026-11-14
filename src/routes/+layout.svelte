@@ -209,7 +209,25 @@
 			clerkInstance.mountSignIn(signInHost, {
 				routing: 'hash',
 				withSignUp: false,
-				appearance: { variables: { colorPrimary: '#2d57b3', fontFamily: 'Inter, sans-serif' } }
+				appearance: {
+					variables: {
+						colorPrimary: 'var(--color-primary)',
+						colorBackground: 'var(--bg-panel)',
+						colorForeground: 'var(--text-main)',
+						colorMutedForeground: 'var(--text-muted)',
+						colorInput: 'var(--bg-panel)',
+						colorInputForeground: 'var(--text-main)',
+						colorBorder: 'var(--border-line)',
+						fontFamily: 'Inter, sans-serif'
+					},
+					elements: {
+						rootBox: { width: '100%', minWidth: 0 },
+						cardBox: { width: '100%', minWidth: 0 },
+						card: { width: '100%', minWidth: 0 },
+						socialButtonsBlockButton: { color: 'var(--text-main)', borderColor: 'var(--border-line)' },
+						alertText: { overflowWrap: 'anywhere' }
+					}
+				}
 			});
 			signInMounted = true;
 			mountedSignInHost = signInHost;
@@ -277,19 +295,9 @@
 	</main>
 {:else if $authState.status === 'signed-out' || $authState.status === 'pending'}
 	<main class="flex min-h-dvh items-center justify-center bg-bg-app p-4">
-		<section class="w-full max-w-md rounded-lg border border-border-line bg-bg-panel p-6 shadow-lg sm:p-8" aria-labelledby="sign-in-title">
-			<div class="flex items-center gap-3">
-				<img src={favicon} alt="" class="h-8 w-8" />
-				<div>
-					<p class="font-mono text-base font-bold text-text-main">Chmura Blokserwis</p>
-					<p class="mt-0.5 text-xs text-text-muted">Prywatna przestrzeń plików</p>
-				</div>
-			</div>
-			<h1 id="sign-in-title" class="mt-8 font-mono text-xl font-bold text-text-main">Zaloguj się</h1>
+		<section class="w-full max-w-md min-w-0" aria-label="Logowanie">
 			{#if $authState.status === 'pending'}
-				<p class="mt-2 text-sm leading-6 text-text-muted">{$authState.error} Zakończ wymagany krok, aby przejść do plików.</p>
-			{:else}
-				<p class="mt-2 text-sm leading-6 text-text-muted">Dostęp do chmury jest dostępny dla zaproszonych użytkowników.</p>
+				<p class="mb-4 rounded-md border border-border-line bg-bg-panel px-4 py-3 text-sm leading-6 text-text-muted" role="status">{$authState.error} Zakończ wymagany krok, aby przejść do plików.</p>
 			{/if}
 			{#if passkeyEnvironment === 'insecure'}
 				<p class="mt-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900" role="status">
@@ -301,7 +309,7 @@
 					Ta przeglądarka nie udostępnia WebAuthn. Możesz zalogować się inną metodą.
 				</p>
 			{/if}
-			<div class="mt-5 min-h-32" bind:this={signInHost}></div>
+			<div class="min-h-32 min-w-0" bind:this={signInHost}></div>
 		</section>
 	</main>
 {:else}

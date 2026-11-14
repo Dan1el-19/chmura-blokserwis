@@ -7,7 +7,8 @@ import QuoteEditor from './QuoteEditor.svelte';
 
 const api = vi.hoisted(() => ({
 	getQuote: vi.fn(), saveDraft: vi.fn(), getImportResult: vi.fn(), getQuoteOperation: vi.fn(),
-	getQuotePdf: vi.fn(), applyImport: vi.fn(), listQuoteRevisions: vi.fn(), remapQuoteImport: vi.fn()
+	getQuotePdf: vi.fn(), applyImport: vi.fn(), listQuoteRevisions: vi.fn(), remapQuoteImport: vi.fn(),
+	getQuotePreview: vi.fn()
 }));
 vi.mock('#lib/api.js', () => ({ getQuoteClient: () => api }));
 vi.mock('$app/navigation', () => ({ beforeNavigate: vi.fn() }));
@@ -24,6 +25,38 @@ beforeEach(() => {
 	api.getImportResult.mockRejectedValue(missing);
 	api.getQuoteOperation.mockRejectedValue(missing);
 	api.getQuotePdf.mockRejectedValue(missing);
+	api.getQuotePreview.mockResolvedValue({ html: '' });
+});
+
+it.each([
+	{ margin: '20mm 19mm 20mm', top: 76, left: 72 },
+	{ margin: '18mm', top: 68, left: 68 }
+])('previews A4 with the PDF margins from $margin and fits a narrow panel', async ({ margin, top, left }) => {
+	api.getQuotePreview.mockResolvedValue({ html: `<!doctype html><html><head><style>
+		@page{size:A4;margin:${margin};@bottom-left{content:"BLOKSERWIS"}}
+		body{margin:0;font:9.5pt Arial}header{height:20mm}p{margin:0;height:10mm}
+		</style></head><body><header>SZKIC</header>${'<p>Pozycja oferty</p>'.repeat(100)}<footer>Koniec oferty</footer></body></html>` });
+	await render(QuoteEditor, { id: 'quote-1' });
+	await expect.poll(() => document.querySelector('iframe[title="Podgląd wyceny"]')).not.toBeNull();
+	const frame = document.querySelector<HTMLIFrameElement>('iframe[title="Podgląd wyceny"]')!;
+	expect(frame.getAttribute('sandbox')).toBe('');
+	// Inspect layout in the test only; production keeps the opaque sandbox origin.
+	frame.removeAttribute('sandbox');
+	frame.srcdoc += ' ';
+	await expect.poll(() => frame.contentDocument?.querySelector('header')?.textContent).toBe('SZKIC');
+	const doc = frame.contentDocument!;
+	const style = frame.contentWindow!.getComputedStyle(doc.body);
+	expect(Math.round(parseFloat(style.paddingTop))).toBe(top);
+	expect(Math.round(parseFloat(style.paddingLeft))).toBe(left);
+	expect(Math.round(doc.body.getBoundingClientRect().width)).toBe(794);
+	expect(doc.scrollingElement!.scrollHeight).toBeGreaterThan(doc.scrollingElement!.clientHeight);
+	const aside = frame.closest('aside')!;
+	aside.style.width = '320px';
+	await expect.poll(() => frame.getBoundingClientRect().width).toBeLessThanOrEqual(320);
+	expect(Math.round(doc.body.getBoundingClientRect().width)).toBe(794);
+	expect(doc.scrollingElement!.scrollWidth).toBeLessThanOrEqual(doc.scrollingElement!.clientWidth);
+	doc.scrollingElement!.scrollTop = doc.scrollingElement!.scrollHeight;
+	expect(doc.querySelector('footer')!.getBoundingClientRect().bottom).toBeLessThanOrEqual(frame.contentWindow!.innerHeight);
 });
 
 it('keeps typed values after a concurrent save conflict', async () => {

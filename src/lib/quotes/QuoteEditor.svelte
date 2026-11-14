@@ -13,6 +13,7 @@
 	import { button, field, isMissing, panel, primary, quoteError, shouldPollQuote } from './ui.js';
 	import QuoteLines from './QuoteLines.svelte';
 	import QuoteAiActivity from './QuoteAiActivity.svelte';
+	import QuotePreview from './QuotePreview.svelte';
 
 	let { id }: { id: string } = $props();
 	let quote = $state<Quote>();
@@ -421,7 +422,7 @@
 					{#if previewRevision}<button class={button} onclick={() => showPreview()}>Podgląd szkicu</button>{/if}
 				</div>
 				{#if previewError}<p role="status" class="text-sm">Nie udało się odświeżyć podglądu: {previewError} <button class="underline" onclick={() => showPreview(previewRevision)}>Spróbuj ponownie</button></p>{/if}
-				{#if preview}<iframe title="Podgląd wyceny" sandbox="" srcdoc={preview} class="h-[70vh] w-full rounded bg-white"></iframe>{:else if !previewError}<p role="status">Wczytywanie podglądu…</p>{/if}
+				{#if preview}<QuotePreview html={preview} />{:else if !previewError}<p role="status">Wczytywanie podglądu…</p>{/if}
 			</section>
 		</aside>
 		</div>
