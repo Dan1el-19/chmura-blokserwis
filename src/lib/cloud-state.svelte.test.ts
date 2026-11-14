@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { create } from '@bufbuild/protobuf';
 import {
+	CatalogFileType,
 	CatalogSortBy,
 	CatalogSortDirection,
 	EntrySchema
@@ -73,6 +74,25 @@ it('shares account initialization and fresh lists across views without duplicate
 	await app.load(list);
 	expect(api.listEntries).toHaveBeenCalledTimes(1);
 	expect(app.list('files', 'private', '')).toBe(list);
+});
+it('discards a late page after the filter changes', async () => {
+	const app = new CloudState();
+	const oldList = app.list('files', 'private', '');
+	api.listEntries.mockResolvedValueOnce({ entries: [], nextPageToken: 'next' });
+	await app.load(oldList);
+	app.activeListKey = oldList.key;
+	let finish!: (value: object) => void;
+	api.listEntries.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+	const oldPage = app.load(oldList, { next: true });
+	app.setFileType('private', CatalogFileType.PDF);
+	const newList = app.list('files', 'private', '');
+	api.listEntries.mockResolvedValueOnce({ entries: [{ id: 'pdf', name: 'report.pdf', kind: EntryKind.FILE }], nextPageToken: '' });
+	await app.load(newList);
+	finish({ entries: [{ id: 'stale', name: 'old.png', kind: EntryKind.FILE }], nextPageToken: '' });
+	await oldPage;
+	expect(newList.entries.map((entry) => entry.id)).toEqual(['pdf']);
+	expect(oldList.entries).toEqual([]);
+	expect(api.listEntries.mock.calls.at(-1)?.[0]).toMatchObject({ fileType: CatalogFileType.PDF, pageToken: '' });
 });
 it('refreshes every loaded page atomically and retains cached data during refresh', async () => {
 	const app = new CloudState();

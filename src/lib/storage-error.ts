@@ -2,6 +2,8 @@ import { Code, ConnectError } from '@connectrpc/connect';
 import { unauthenticatedMessage } from './session-error.js';
 export function storageErrorMessage(error: unknown): string {
 	if (error instanceof ConnectError) {
+		if (error.rawMessage.includes('OPERATION_IN_PROGRESS')) return 'W tym folderze trwa przesyłanie. Zakończ lub anuluj transfer i spróbuj ponownie.';
+		if (error.rawMessage.includes('TREE_TOO_LARGE')) return 'Nie można jednorazowo przenieść więcej niż 500 elementów wraz z zawartością kosza.';
 		if (error.rawMessage.includes('STORAGE_UPLOADS_DISABLED'))
 			return 'Wybrany tryb przesyłania nie jest obecnie dostępny dla tego konta. Wybierz R2 dla nowego przesyłania.';
 		if (error.rawMessage.includes('UPLOADS_PAUSED'))

@@ -73,8 +73,8 @@ test('moves an entry between folders from the desktop or mobile catalog', async 
 		await route.fulfill({ status: 200, headers, body: JSON.stringify(result) });
 	});
 
-	await page.goto('/');
-	await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeAttached();
+	await page.goto('/personal');
+	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached();
 	if (testInfo.project.name === 'mobile') {
 		await page.getByRole('button', { name: 'Akcje dla raport.txt' }).click();
 		await page.getByRole('button', { name: 'Przenieś', exact: true }).click();
@@ -139,8 +139,8 @@ test('moves a catalog file by dragging it onto a destination folder', async ({ p
 		await route.fulfill({ status: 200, headers, body: JSON.stringify(result) });
 	});
 
-	await page.goto('/');
-	await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeAttached();
+	await page.goto('/personal');
+	await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeAttached();
 	await page.getByRole('row', { name: /przenoszony\.txt/ }).dragTo(page.getByRole('row', { name: /Archiwum/ }));
 	await expect.poll(() => requests.filter((request) => request.method === 'MoveEntry')).toHaveLength(1);
 	expect(requests.find((request) => request.method === 'MoveEntry')?.body).toMatchObject({

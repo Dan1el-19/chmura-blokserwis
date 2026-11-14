@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onMount, untrack } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { toast } from 'svelte-sonner';
 	import { getCloudState, type CatalogSort, type CatalogSortBy, type CatalogSortDirection } from '#lib/cloud-state.svelte.js';
 	import { storageErrorMessage as errorMessage } from '#lib/storage-error.js';
@@ -8,6 +9,7 @@
 	import FilePreviewDialog from './FilePreviewDialog.svelte';
 	import ShareLinksDialog from './ShareLinksDialog.svelte';
 	import { mediaKindForFilename } from '#lib/media-preview.js';
+	import { nextAvailableUploadName, uploadNameKey } from '#lib/upload-conflict.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { AppRouteWithQuery } from '#lib/routes.js';
@@ -35,6 +37,14 @@
 		Trash
 	} from 'phosphor-svelte';
 	import {
+		CatalogFileType,
+		BulkTrashEntriesRequestSchema,
+		BulkDeletePermanentlyRequestSchema,
+		BulkRestoreEntriesRequestSchema,
+		CatalogSortBy as CatalogSortByProto,
+		CatalogSortDirection as CatalogSortDirectionProto,
+		SearchEntriesRequestSchema,
+		ListEntriesRequestSchema,
 		CreateFolderRequestSchema,
 		DeletePermanentlyRequestSchema,
 		EntryKind,
@@ -47,12 +57,13 @@
 		TrashEntryRequestSchema,
 		type CreateFolderRequest,
 		type Entry,
+		type SearchEntryResult,
 		type TrashItem
 	} from '#lib/gen/unisourcecfl/catalog/v1/catalog_pb.js';
 
 	type MainView = 'files' | 'trash';
 	let {
-		spaceKind = 'private',
+		spaceKind = 'shared',
 		mode = 'files'
 	}: {
 		spaceKind?: 'private' | 'shared';
@@ -65,15 +76,23 @@
 	const activeSpaceId = $derived(
 		(mode === 'trash' ? spaces.find((space) => space.id === app.trashSpaceId) : undefined)?.id ??
 			spaces.find(
-				(space) => space.kind === (spaceKind === 'shared' ? SpaceKind.SHARED : SpaceKind.PRIVATE)
+				(space) => space.kind === (mode === 'trash' || spaceKind === 'shared' ? SpaceKind.SHARED : SpaceKind.PRIVATE)
 			)?.id ??
 			''
 	);
 	const routeFolderId = $derived(mode === 'files' ? (page.url.searchParams.get('folder') ?? '') : '');
 	const currentSort = $derived(mode === 'files' ? app.sortFor(activeSpaceId) : { by: 'NAME', direction: 'ASC' } as CatalogSort);
+	const currentFileType = $derived(mode === 'files' ? app.fileTypeFor(activeSpaceId) : CatalogFileType.UNSPECIFIED);
 	const currentList = $derived(
-		accountReady && activeSpaceId ? app.peekList(mode, activeSpaceId, routeFolderId, currentSort) : undefined
+		accountReady && activeSpaceId ? app.peekList(mode, activeSpaceId, routeFolderId, currentSort, currentFileType) : undefined
 	);
+	let searchQuery = $state('');
+	let searchTerm = $state('');
+	let searchResults = $state<SearchEntryResult[]>([]);
+	let searchNext = $state('');
+	let searchBusy = $state(false);
+	let searchError = $state('');
+	let searchGeneration = 0;
 	let apiError = $state('');
 	const viewError = $derived(apiError || app.accountError || currentList?.error || '');
 	let notice = $state('');
@@ -89,10 +108,18 @@
 	let pendingDelete = $state<TrashItem | null>(null);
 	let deletePending = $state(false);
 	let deleteError = $state('');
+	let selectedTrashIds = $state<string[]>([]);
+	let bulkDeleteOpen = $state(false);
+	let bulkDeleteBusy = $state(false);
+	let bulkDeleteError = $state('');
+	let bulkDeleteBatches = $state<{ entries: Entry[]; requestId: string; spaceId: string }[]>([]);
+	let bulkRestoreBusy = $state(false);
+	let bulkRestoreBatches: { entries: Entry[]; requestId: string; spaceId: string }[] = [];
 	let view = $derived(mode);
 	const folderPath = $derived(currentList?.path ?? []);
 	const entries = $derived(currentList?.entries ?? []);
 	const trashItems = $derived(currentList?.items ?? []);
+	const selectedTrashEntries = $derived(trashItems.flatMap((item) => item.entry && selectedTrashIds.includes(item.entry.id) ? [item.entry] : []));
 	const nextPageToken = $derived(currentList?.nextPageToken ?? '');
 	const loading = $derived(!currentList?.initialized && !viewError);
 	const listBusy = $derived(loading || currentList?.refreshing || currentList?.loadingNext);
@@ -145,7 +172,9 @@
 		const scope = `${mode}:${activeSpaceId}:${routeFolderId}:${app.sessionVersion}`;
 		untrack(() => {
 			void scope;
+			closeSearch();
 			selectedIds = [];
+			selectedTrashIds = [];
 			selectionMode = false;
 			lastSelectedIndex = -1;
 			movingEntries = [];
@@ -264,6 +293,48 @@
 	function updateSort(value: string): void {
 		const [by, direction] = value.split(':') as [CatalogSortBy, CatalogSortDirection];
 		app.setSort(activeSpaceId, { by, direction });
+		if (searchTerm) void runSearch(false, { by, direction });
+	}
+
+	async function runSearch(next = false, sort: CatalogSort = currentSort, fileType: CatalogFileType = currentFileType): Promise<void> {
+		const query = next ? searchTerm : searchQuery.trim();
+		if (!query || !activeSpaceId || searchBusy && next) return;
+		const generation = ++searchGeneration;
+		const spaceId = activeSpaceId;
+		if (!next) { searchTerm = query; searchResults = []; searchNext = ''; }
+		searchBusy = true;
+		searchError = '';
+		try {
+			const response = await catalog.searchEntries(create(SearchEntriesRequestSchema, {
+				spaceId, query, pageSize: 50, pageToken: next ? searchNext : '',
+				sortBy: CatalogSortByProto[sort.by], sortDirection: CatalogSortDirectionProto[sort.direction], fileType
+			}));
+			if (generation !== searchGeneration || spaceId !== activeSpaceId) return;
+			searchResults = next ? [...searchResults, ...response.results] : response.results;
+			searchNext = response.nextPageToken;
+		} catch (error) {
+			if (generation === searchGeneration) searchError = errorMessage(error);
+		} finally {
+			if (generation === searchGeneration) searchBusy = false;
+		}
+	}
+	function updateFileType(value: string): void {
+		const fileType = Number(value) as CatalogFileType;
+		app.setFileType(activeSpaceId, fileType);
+		if (searchTerm) void runSearch(false, currentSort, fileType);
+	}
+	function closeSearch(): void {
+		searchGeneration++;
+		searchTerm = '';
+		searchQuery = '';
+		searchResults = [];
+		searchNext = '';
+		searchBusy = false;
+		searchError = '';
+	}
+	async function openSearchFolder(folderId?: string): Promise<void> {
+		closeSearch();
+		await goto(resolve(folderHref(folderId)));
 	}
 
 	function storageLocationLabel(location: StorageLocation | undefined): string {
@@ -325,10 +396,11 @@
 		const currentMode = mode;
 		if (!accountReady || !spaceId) return;
 		const sort = currentMode === 'files' ? app.sortFor(spaceId) : undefined;
+		const fileType = currentMode === 'files' ? app.fileTypeFor(spaceId) : CatalogFileType.UNSPECIFIED;
 		untrack(() => {
-			const list = sort ? app.list(currentMode, spaceId, folderId, sort) : app.list(currentMode, spaceId, folderId);
+			const list = sort ? app.list(currentMode, spaceId, folderId, sort, fileType) : app.list(currentMode, spaceId, folderId);
 			app.activeListKey = list.key;
-			if (currentMode === 'files') app.lastFolders[spaceKind === 'shared' ? '/main' : '/'] = folderId;
+			if (currentMode === 'files') app.lastFolders[spaceKind === 'shared' ? '/' : '/personal'] = folderId;
 			void app.load(list);
 		});
 	});
@@ -336,6 +408,7 @@
 		void loadAccount();
 		void app.loadUploadLimit();
 		return () => {
+			searchGeneration++;
 			if (app.activeListKey === currentList?.key) app.activeListKey = '';
 		};
 	});
@@ -361,7 +434,7 @@
 			? folderPath[folderPath.length - 2].name
 			: isSharedSpace
 				? 'Main'
-				: 'Moje pliki'
+				: 'Pliki prywatne'
 	);
 
 	async function createFolder(): Promise<void> {
@@ -480,7 +553,8 @@
 		}
 	}
 
-	async function restoreTrashItem(item: TrashItem): Promise<void> {
+	let restoreConflict = $state<{ item: TrashItem; name: string; spaceId: string; target?: Entry } | null>(null);
+	async function restoreTrashItem(item: TrashItem, newName?: string, replacement?: Entry): Promise<void> {
 		if (!item.entry || pendingRestoreIds.includes(item.entry.id)) return;
 		const originList = currentList!;
 		const version = app.sessionVersion;
@@ -488,9 +562,11 @@
 		try {
 			const result = await trash.restoreEntry(
 				create(RestoreEntryRequestSchema, {
-					spaceId: activeSpaceId,
+					spaceId: originList.spaceId,
 					entryId: item.entry!.id,
-					expectedRevision: item.entry!.revision
+					expectedRevision: item.entry!.revision,
+					...(newName !== undefined ? { newName } : {}),
+					...(replacement ? {replaceEntryId: replacement.id, replaceExpectedRevision: replacement.revision} : {})
 				})
 			);
 			if (version !== app.sessionVersion) return;
@@ -499,10 +575,30 @@
 			notice = `„${item.entry!.name}” przywrócono.`;
 		} catch (error) {
 			if (version !== app.sessionVersion) return;
-			const message = errorMessage(error);
-			if (await refreshStaleEntry(error, originList, item.entry?.id)) {
+			if (error instanceof ConnectError && error.code === Code.AlreadyExists && item.entry) {
+				try {
+					const occupied = new SvelteSet<string>();
+					let target: Entry | undefined;
+					let token = '';
+					do {
+						const response = await catalog.listEntries(create(ListEntriesRequestSchema, {
+							spaceId: originList.spaceId,
+							...(item.entry.parentId ? {parentId: item.entry.parentId} : {}),
+							pageSize: 100, pageToken: token
+						}));
+						for (const entry of response.entries) {
+							occupied.add(uploadNameKey(entry.name));
+							if (uploadNameKey(entry.name) === uploadNameKey(item.entry.name)) target = entry;
+						}
+						token = response.nextPageToken;
+					} while (token);
+					if (version === app.sessionVersion) restoreConflict = { item, name: nextAvailableUploadName(item.entry.name, occupied), spaceId: originList.spaceId, ...(item.entry.kind === EntryKind.FILE && target?.kind === EntryKind.FILE ? {target} : {}) };
+				} catch (cause) { apiError = errorMessage(cause); }
+			} else {
+				const message = errorMessage(error);
+				await refreshStaleEntry(error, originList, item.entry?.id);
 				apiError = message;
-			} else apiError = message;
+			}
 		} finally {
 			pendingRestoreIds = pendingRestoreIds.filter((id) => id !== item.entry!.id);
 		}
@@ -511,6 +607,86 @@
 	function permanentlyDelete(item: TrashItem): void {
 		pendingDelete = item;
 		deleteError = '';
+	}
+	function toggleTrashSelection(id: string, checked: boolean): void {
+		selectedTrashIds = checked ? [...selectedTrashIds.filter((value) => value !== id), id] : selectedTrashIds.filter((value) => value !== id);
+	}
+	function requestBulkDelete(): void {
+		bulkDeleteBatches = [];
+		for (let i = 0; i < selectedTrashEntries.length; i += 100) bulkDeleteBatches.push({ entries: selectedTrashEntries.slice(i, i + 100), requestId: crypto.randomUUID(), spaceId: activeSpaceId });
+		bulkDeleteError = '';
+		bulkDeleteOpen = true;
+	}
+	async function restoreSelectedTrash(): Promise<void> {
+		if (bulkRestoreBusy || !selectedTrashEntries.length || !currentList) return;
+		const selectedKey = JSON.stringify(selectedTrashEntries.map((entry) => [entry.id, entry.revision]));
+		const pendingKey = JSON.stringify(bulkRestoreBatches.flatMap((batch) => batch.entries.map((entry) => [entry.id, entry.revision])));
+		if (selectedKey !== pendingKey || bulkRestoreBatches.some((batch) => batch.spaceId !== activeSpaceId)) {
+			bulkRestoreBatches = [];
+			for (let i = 0; i < selectedTrashEntries.length; i += 100) bulkRestoreBatches.push({ entries: selectedTrashEntries.slice(i, i + 100), requestId: crypto.randomUUID(), spaceId: activeSpaceId });
+		}
+		bulkRestoreBusy = true;
+		apiError = '';
+		const originList = currentList;
+		const version = app.sessionVersion;
+		const pending: typeof bulkRestoreBatches = [];
+		const succeeded: Entry[] = [];
+		let failedCount = 0;
+		for (const batch of bulkRestoreBatches) {
+			try {
+				const response = await trash.bulkRestoreEntries(create(BulkRestoreEntriesRequestSchema, { spaceId: batch.spaceId, requestId: batch.requestId, items: batch.entries.map((entry) => ({ entryId: entry.id, expectedRevision: entry.revision })) }));
+				if (response.results.length !== batch.entries.length || response.results.some((result, index) => result.entryId !== batch.entries[index].id)) throw new Error('Nieprawidłowa odpowiedź serwera.');
+				const failed: Entry[] = [];
+				response.results.forEach((result, index) => { if (result.success) succeeded.push(batch.entries[index]); else failed.push(batch.entries[index]); });
+				if (failed.length) pending.push({ ...batch, entries: failed, requestId: crypto.randomUUID() });
+				failedCount += failed.length;
+			} catch {
+				pending.push(batch);
+				failedCount += batch.entries.length;
+			}
+		}
+		bulkRestoreBatches = pending;
+		if (version === app.sessionVersion) {
+			const ids = new Set(succeeded.map((entry) => entry.id));
+			originList.items = originList.items.filter((item) => !item.entry || !ids.has(item.entry.id));
+			for (const entry of succeeded) app.changed(originList.spaceId, entry.parentId ?? '');
+			if (activeSpaceId === originList.spaceId) selectedTrashIds = selectedTrashIds.filter((id) => !ids.has(id));
+			if (failedCount) apiError = `Przywrócono ${succeeded.length}; nie udało się przywrócić ${failedCount}. Zaznaczenie zachowano.`;
+			else notice = `Przywrócono ${succeeded.length} elementów.`;
+		}
+		bulkRestoreBusy = false;
+	}
+	async function confirmBulkDelete(): Promise<void> {
+		if (bulkDeleteBusy || !bulkDeleteBatches.length || !currentList) return;
+		bulkDeleteBusy = true;
+		const originList = currentList;
+		const version = app.sessionVersion;
+		const pending: typeof bulkDeleteBatches = [];
+		const succeeded: Entry[] = [];
+		let failedCount = 0;
+		for (const batch of bulkDeleteBatches) {
+			try {
+				const response = await trash.bulkDeletePermanently(create(BulkDeletePermanentlyRequestSchema, { spaceId: batch.spaceId, requestId: batch.requestId, items: batch.entries.map((entry) => ({ entryId: entry.id, expectedRevision: entry.revision })) }));
+				if (response.results.length !== batch.entries.length || response.results.some((result, index) => result.entryId !== batch.entries[index].id)) throw new Error('Nieprawidłowa odpowiedź serwera.');
+				const failed: Entry[] = [];
+				response.results.forEach((result, index) => { if (result.success) succeeded.push(batch.entries[index]); else failed.push(batch.entries[index]); });
+				if (failed.length) pending.push({ ...batch, entries: failed, requestId: crypto.randomUUID() });
+				failedCount += failed.length;
+			} catch {
+				pending.push(batch);
+				failedCount += batch.entries.length;
+			}
+		}
+		bulkDeleteBatches = pending;
+		if (version === app.sessionVersion) {
+			const ids = new Set(succeeded.map((entry) => entry.id));
+			originList.items = originList.items.filter((item) => !item.entry || !ids.has(item.entry.id));
+			for (const entry of succeeded) app.changed(originList.spaceId, entry.parentId ?? '');
+			if (activeSpaceId === originList.spaceId) selectedTrashIds = selectedTrashIds.filter((id) => !ids.has(id));
+			if (failedCount) bulkDeleteError = `Zlecono usunięcie ${succeeded.length}; nie udało się usunąć ${failedCount}. Zaznaczenie zachowano.`;
+			else { bulkDeleteOpen = false; notice = `Zlecono trwałe usunięcie: ${succeeded.length} elementów.`; }
+		}
+		bulkDeleteBusy = false;
 	}
 	async function confirmDelete(): Promise<void> {
 		const entry = pendingDelete?.entry;
@@ -605,27 +781,46 @@
 
 	function requestBulkTrash(): void {
 		bulkTrashTarget = [...selectedEntries];
+		bulkTrashBatches = [];
+		for (let i = 0; i < bulkTrashTarget.length; i += 100) bulkTrashBatches.push({ entries: bulkTrashTarget.slice(i, i + 100), requestId: crypto.randomUUID(), spaceId: activeSpaceId });
 		bulkTrashResults = [];
+		trashError = '';
 		bulkTrashOpen = true;
 	}
+	let bulkTrashBatches: { entries: Entry[]; requestId: string; spaceId: string }[] = [];
 
 	async function trashSelected(): Promise<void> {
 		if (bulkTrashBusy || !bulkTrashTarget.length) return;
 		bulkTrashBusy = true;
 		const version = app.sessionVersion;
+		const spaceId = bulkTrashBatches[0]?.spaceId ?? activeSpaceId;
 		const results: { entry: Entry; error?: string }[] = [];
-		await runWithConcurrency(bulkTrashTarget, 4, async (entry) => {
+		const pending: typeof bulkTrashBatches = [];
+		for (const batch of bulkTrashBatches) {
 			try {
-				await trash.trashEntry(create(TrashEntryRequestSchema, { spaceId: activeSpaceId, entryId: entry.id, expectedRevision: entry.revision }));
-				results.push({ entry });
+				const response = await trash.bulkTrashEntries(create(BulkTrashEntriesRequestSchema, { spaceId: batch.spaceId, requestId: batch.requestId, items: batch.entries.map((entry) => ({ entryId: entry.id, expectedRevision: entry.revision })) }));
+				if (response.results.length !== batch.entries.length || response.results.some((result, index) => result.entryId !== batch.entries[index].id)) throw new Error('Nieprawidłowa odpowiedź serwera.');
+				const failed: Entry[] = [];
+				response.results.forEach((result, index) => {
+					const entry = batch.entries[index];
+					if (result.success) results.push({ entry });
+					else {
+						failed.push(entry);
+						const code = result.error === 'REVISION_CONFLICT' ? Code.Aborted : result.error === 'NOT_FOUND' ? Code.NotFound : Code.Unknown;
+						results.push({ entry, error: errorMessage(new ConnectError(result.error || 'Nie udało się wykonać operacji.', code)) });
+					}
+				});
+				if (failed.length) pending.push({ ...batch, entries: failed, requestId: crypto.randomUUID() });
 			} catch (cause) {
-				results.push({ entry, error: errorMessage(cause) });
+				pending.push(batch);
+				for (const entry of batch.entries) results.push({ entry, error: errorMessage(cause) });
 			}
-		});
+		}
+		bulkTrashBatches = pending;
 		if (version === app.sessionVersion) {
 			const succeeded = results.filter((result) => !result.error);
 			const failed = results.filter((result) => result.error);
-			for (const result of succeeded) app.changed(activeSpaceId, result.entry.parentId ?? '', undefined, result.entry.id);
+			for (const result of succeeded) app.changed(spaceId, result.entry.parentId ?? '', undefined, result.entry.id);
 			selectedIds = failed.map((result) => result.entry.id);
 			bulkTrashTarget = failed.map((result) => result.entry);
 			bulkTrashResults = results;
@@ -693,21 +888,66 @@
 		else void downloadFile(entry);
 	}
 
-	function uploadFiles(files: File[]): void {
-		if (!accountReady || !routeFolderReady || uploadLimitBytes === null) return;
-		app.transfers.enqueue(
-			files,
-			{
-				spaceId: activeSpaceId,
-				...(currentParentId ? { parentId: currentParentId } : {}),
-				mode: app.defaultUploadMode,
-				label: [
-					isSharedSpace ? 'Main' : 'Moje pliki',
-					...folderPath.map((folder) => folder.name)
-				].join(' / ')
-			},
-			Number(uploadLimitBytes)
-		);
+	type UploadConflictChoice = 'keep' | 'replace' | 'skip';
+	let uploadConflict = $state<{ name: string; canReplace: boolean } | null>(null);
+	let uploadConflictResolve: ((choice: UploadConflictChoice) => void) | undefined;
+	let selectingUploads = false;
+	let uploadsViewDestroyed = false;
+	function chooseUploadConflict(choice: UploadConflictChoice): void {
+		const resolve = uploadConflictResolve;
+		uploadConflictResolve = undefined;
+		uploadConflict = null;
+		resolve?.(choice);
+	}
+	onDestroy(() => { uploadsViewDestroyed = true; chooseUploadConflict('skip'); });
+	async function uploadFiles(files: File[]): Promise<void> {
+		if (!accountReady || !routeFolderReady || uploadLimitBytes === null || selectingUploads) return;
+		selectingUploads = true;
+		const destination = {
+			spaceId: activeSpaceId,
+			...(currentParentId ? { parentId: currentParentId } : {}),
+			mode: app.defaultUploadMode,
+			label: [isSharedSpace ? 'Main' : 'Pliki prywatne', ...folderPath.map((folder) => folder.name)].join(' / ')
+		};
+		const maxBytes = Number(uploadLimitBytes);
+		try {
+			const occupied = new SvelteMap<string, Entry | null>();
+			let token = '';
+			do {
+				const page = await catalog.listEntries(create(ListEntriesRequestSchema, {
+					spaceId: destination.spaceId, ...(destination.parentId ? {parentId: destination.parentId} : {}),
+					pageSize: 100, pageToken: token
+				}));
+				for (const entry of page.entries) occupied.set(uploadNameKey(entry.name), entry);
+				token = page.nextPageToken;
+			} while (token);
+			for (const task of app.transfers.tasks) {
+				if (task.target.spaceId === destination.spaceId && (task.target.parentId ?? '') === (destination.parentId ?? '') && !['done', 'cancelled', 'error'].includes(task.phase)) occupied.set(uploadNameKey(task.name), null);
+			}
+			for (const file of files) {
+				if (uploadsViewDestroyed) break;
+				let name = file.name.normalize('NFC');
+				const key = uploadNameKey(name);
+				const existing = occupied.get(key);
+				let replacement: { replaceEntryId: string; replaceExpectedRevision: number } | undefined;
+				if (occupied.has(key)) {
+					const choice = await new Promise<UploadConflictChoice>((resolve) => {
+						uploadConflictResolve = resolve;
+						uploadConflict = { name, canReplace: existing?.kind === EntryKind.FILE };
+					});
+					if (uploadsViewDestroyed) break;
+					if (choice === 'skip') continue;
+					if (choice === 'replace' && existing?.kind === EntryKind.FILE) replacement = {replaceEntryId: existing.id, replaceExpectedRevision: existing.revision};
+					else name = nextAvailableUploadName(name, new Set(occupied.keys()));
+				}
+				occupied.set(uploadNameKey(name), null);
+				app.transfers.enqueue([file], { ...destination, name, ...replacement }, maxBytes);
+			}
+		} catch (error) {
+			apiError = errorMessage(error);
+		} finally {
+			selectingUploads = false;
+		}
 	}
 
 	function onFileSelected(event: Event): void {
@@ -748,13 +988,13 @@
 	ondrop={onPageDrop}
 />
 
-<h1 class="sr-only">{view === 'trash' ? 'Kosz' : isSharedSpace ? 'Pliki wspólne' : 'Moje pliki'}</h1>
+<h1 class="sr-only">{view === 'trash' ? 'Kosz' : isSharedSpace ? 'Pliki wspólne' : 'Pliki prywatne'}</h1>
 
 <div class="space-y-4">
 	{#if view === 'files'}
 		<div class="flex flex-col gap-3 border-b border-border-line pb-4">
 			<nav class="-mx-1 flex min-w-0 items-center gap-1 overflow-x-auto px-1 text-sm leading-none whitespace-nowrap" aria-label="Ścieżka">
-			<a href={resolve(folderHref())} ondragover={(event) => dragOverFolder(undefined, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(undefined, event)} class="inline-flex h-5 shrink-0 items-center font-semibold text-text-main hover:underline {dropTargetId === '__root__' ? 'rounded bg-primary/10' : ''}">{isSharedSpace ? 'Main' : 'Moje pliki'}</a>
+			<a href={resolve(folderHref())} ondragover={(event) => dragOverFolder(undefined, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(undefined, event)} class="inline-flex h-5 shrink-0 items-center font-semibold text-text-main hover:underline {dropTargetId === '__root__' ? 'rounded bg-primary/10' : ''}">{isSharedSpace ? 'Main' : 'Pliki prywatne'}</a>
 				{#each folderPath as folder, index (folder.id)}
 					<span class="inline-flex h-5 shrink-0 items-center text-text-muted" aria-hidden="true"><CaretRight class="h-3.5 w-3.5" /></span>
 					<a href={resolve(folderHref(folder.id))} ondragover={(event) => dragOverFolder(folder, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(folder, event)} class="inline-flex h-5 max-w-[45vw] shrink-0 items-center truncate text-text-muted hover:text-text-main hover:underline sm:max-w-[160px] {dropTargetId === folder.id ? 'rounded bg-primary/10' : ''}" aria-current={index === folderPath.length - 1 ? 'page' : undefined}>{folder.name}</a>
@@ -777,18 +1017,47 @@
  </button>
 				</div>
 				<label class="flex items-center gap-2 text-sm text-text-muted">
+					<span>Typ</span><select aria-label="Typ pliku" value={String(currentFileType)} onchange={(event) => updateFileType(event.currentTarget.value)} disabled={!accountReady || !activeSpaceId} class="h-10 rounded-lg border border-border-line bg-bg-panel px-3 text-sm text-text-main">
+						<option value="0">Wszystkie</option><option value="1">Obrazy</option><option value="2">PDF</option><option value="3">Audio</option><option value="4">Wideo</option><option value="5">Tekst i kod</option><option value="6">Pozostałe</option>
+					</select>
+				</label>
+				<label class="flex items-center gap-2 text-sm text-text-muted">
 					<span>Sortuj</span>
 					<select aria-label="Sortowanie" value={`${currentSort.by}:${currentSort.direction}`} onchange={(event) => updateSort(event.currentTarget.value)} disabled={!accountReady || !activeSpaceId} class="h-10 rounded-lg border border-border-line bg-bg-panel px-3 text-sm text-text-main focus-visible:ring-2 focus-visible:ring-primary/50">
 						<option value="NAME:ASC">Nazwa (A–Z)</option>
 						<option value="NAME:DESC">Nazwa (Z–A)</option>
 						<option value="CREATED_AT:ASC">Data utworzenia (od najstarszych)</option>
 						<option value="CREATED_AT:DESC">Data utworzenia (od najnowszych)</option>
+						<option value="MODIFIED_AT:ASC">Data modyfikacji (od najstarszych)</option>
+						<option value="MODIFIED_AT:DESC">Data modyfikacji (od najnowszych)</option>
 						<option value="SIZE:ASC">Rozmiar (od najmniejszych)</option>
 						<option value="SIZE:DESC">Rozmiar (od największych)</option>
 					</select>
 				</label>
 			</div>
 		</div>
+		<form class="flex flex-wrap gap-2" onsubmit={(event) => { event.preventDefault(); void runSearch(); }}>
+			<input aria-label="Szukaj w przestrzeni" bind:value={searchQuery} placeholder="Szukaj w tej przestrzeni" class="h-10 min-w-0 flex-1 rounded-lg border border-border-line bg-bg-panel px-3 text-sm" />
+			<button type="submit" disabled={!accountReady || !searchQuery.trim()} class="rounded-lg border border-border-line px-4 text-sm disabled:opacity-50">Szukaj</button>
+			{#if searchTerm}<button type="button" onclick={closeSearch} class="rounded-lg border border-border-line px-4 text-sm">Wyczyść</button>{/if}
+		</form>
+		{#if searchTerm}
+			<section class="rounded-md border border-border-line bg-bg-panel p-4" aria-label="Wyniki wyszukiwania">
+				<h2 class="font-semibold">Wyniki wyszukiwania</h2>
+				{#if searchError}<p role="alert">{searchError}</p>{/if}
+				{#if searchBusy}<p role="status">Wyszukiwanie…</p>{/if}
+				{#if !searchBusy && !searchError && !searchResults.length}<p>Brak wyników</p>{/if}
+				<ul>{#each searchResults as result (result.entry?.id)}
+					{#if result.entry}
+					<li class="border-b border-border-line py-3">
+						<button type="button" class="font-medium hover:underline" onclick={() => result.entry?.kind === EntryKind.FOLDER ? void openSearchFolder(result.entry.id) : result.entry && openFile(result.entry)}>{result.entry.name}</button>
+						<div class="text-xs text-text-muted">{#if result.path.length}{#each result.path as folder, index (folder.id)}{#if index > 0} / {/if}<button type="button" class="hover:underline" onclick={() => void openSearchFolder(folder.id)}>{folder.name}</button>{/each}{:else}<button type="button" class="hover:underline" onclick={() => void openSearchFolder()}>{isSharedSpace ? 'Main' : 'Pliki prywatne'}</button>{/if}</div>
+					</li>
+					{/if}
+				{/each}</ul>
+				{#if searchNext}<button type="button" disabled={searchBusy} onclick={() => void runSearch(true)} class="mt-3 rounded border border-border-line px-4 py-2 text-sm">Pokaż więcej</button>{/if}
+			</section>
+		{:else}
 			<div class="flex flex-wrap items-center gap-2">
 				<button type="button" onclick={() => (selectionMode = !selectionMode)} class="min-h-9 rounded-md border border-border-line px-3 text-xs font-medium text-text-main hover:bg-gray-50 lg:hidden dark:hover:bg-zinc-800">{selectionMode ? 'Zamknij zaznaczanie' : 'Zaznacz elementy'}</button>
 				<label class="inline-flex min-h-11 items-center gap-2 text-xs font-medium text-text-main lg:hidden"><input type="checkbox" class="file-selection-checkbox" checked={allLoadedSelected} indeterminate={partiallySelected} disabled={!displayedEntries.length} onchange={toggleSelectAllLoaded} aria-label="Zaznacz wszystkie wczytane elementy" />Zaznacz wszystkie</label>
@@ -819,24 +1088,24 @@
 			<div class="hidden overflow-x-auto lg:block">
 				<table class="w-full text-left text-sm">
 					<thead class="border-b border-border-line bg-gray-50/50 font-medium text-text-muted dark:bg-zinc-900/50">
-						<tr><th class="w-10 px-3 py-3"><input type="checkbox" class="file-selection-checkbox" checked={allLoadedSelected} indeterminate={partiallySelected} disabled={!displayedEntries.length} onchange={toggleSelectAllLoaded} aria-label="Zaznacz wszystkie wczytane elementy" /></th><th class="px-4 py-3">Nazwa</th><th class="w-36 px-4 py-3">Rozmiar</th><th class="w-40 px-4 py-3">Utworzono</th><th class="w-36 px-4 py-3 text-right">Akcje</th></tr>
+						<tr><th class="w-10 px-3 py-3"><input type="checkbox" class="file-selection-checkbox" checked={allLoadedSelected} indeterminate={partiallySelected} disabled={!displayedEntries.length} onchange={toggleSelectAllLoaded} aria-label="Zaznacz wszystkie wczytane elementy" /></th><th class="px-4 py-3">Nazwa</th><th class="w-36 px-4 py-3">Rozmiar</th><th class="w-40 px-4 py-3">Utworzono</th><th class="w-40 px-4 py-3">Zmodyfikowano</th><th class="w-36 px-4 py-3 text-right">Akcje</th></tr>
 					</thead>
 					<tbody class="divide-y divide-border-line">
 						{#if folderPath.length}
 								<tr class="cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/50 {dropTargetId === (folderPath.length > 1 ? folderPath.at(-2)?.id : '__root__') ? 'bg-primary/10' : ''}" onclick={() => void goToBreadcrumb(folderPath.length - 2)} onkeydown={(event) => event.key === 'Enter' && void goToBreadcrumb(folderPath.length - 2)} ondragover={(event) => dragOverFolder(folderPath.length > 1 ? folderPath.at(-2) : undefined, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(folderPath.length > 1 ? folderPath.at(-2) : undefined, event)} tabindex="0" aria-label="Przejdź do folderu nadrzędnego">
-								<td colspan="5" class="px-4 py-3"><button type="button" onclick={(event) => { event.stopPropagation(); void goToBreadcrumb(folderPath.length - 2); }} class="flex items-center gap-3 text-text-muted"><ArrowUp class="h-5 w-5" />{parentFolderName}</button></td>
+								<td colspan="6" class="px-4 py-3"><button type="button" onclick={(event) => { event.stopPropagation(); void goToBreadcrumb(folderPath.length - 2); }} class="flex items-center gap-3 text-text-muted"><ArrowUp class="h-5 w-5" />{parentFolderName}</button></td>
 							</tr>
 						{/if}
 						{#if !entries.length && !loading}
-								<tr><td colspan="5" class="px-4 py-12 text-center text-text-muted"><div class="flex min-h-32 flex-col items-center justify-center gap-2"><Folder class="h-10 w-10 text-gray-300 dark:text-zinc-600" /><strong class="font-medium text-text-main">Folder jest pusty</strong><span class="text-xs">Dodaj plik albo utwórz folder, aby zacząć.</span></div></td></tr>
+								<tr><td colspan="6" class="px-4 py-12 text-center text-text-muted"><div class="flex min-h-32 flex-col items-center justify-center gap-2"><Folder class="h-10 w-10 text-gray-300 dark:text-zinc-600" /><strong class="font-medium text-text-main">Folder jest pusty</strong><span class="text-xs">Dodaj plik albo utwórz folder, aby zacząć.</span></div></td></tr>
 						{/if}
 						{#each folders as entry (entry.id)}
 							<tr class="group transition-colors {selectedIds.includes(entry.id) ? 'bg-primary/10 hover:bg-primary/15 dark:bg-primary/15 dark:hover:bg-primary/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800/50'} {dropTargetId === entry.id ? 'bg-primary/10' : ''}" aria-selected={selectedIds.includes(entry.id)} draggable="true" ondragstart={(event) => beginEntryDrag(entry, event)} ondragover={(event) => dragOverFolder(entry, event)} ondragleave={endFolderDrag} ondrop={(event) => void dropEntryOnFolder(entry, event)} ondragend={endFolderDrag}>
 								<td class="px-3 py-3"><input type="checkbox" checked={selectedIds.includes(entry.id)} onclick={(event) => changeSelection(entry, event.currentTarget.checked, event)} aria-label={`Zaznacz ${entry.name}`} class="file-selection-checkbox" /></td>
 								<td class="max-w-[420px] truncate px-4 py-3 text-text-main" title={entry.name}><div class="flex items-center gap-2"><Folder class="h-5 w-5 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400" /><button type="button" class="truncate text-left font-medium hover:underline" onclick={() => void openFolder(entry)}>{entry.name}</button></div></td>
 								<td class="px-4 py-3 font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</td>
-								<td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.createdAt)}</td>
-								<td class="px-4 py-3"><div class="flex justify-end gap-1"><button type="button" onclick={() => beginMove(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Przenieś ${entry.name}`} title="Przenieś"><Folder class="h-4 w-4" /></button><button type="button" onclick={() => beginRename(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Zmień nazwę ${entry.name}`} title="Zmień nazwę"><Pencil class="h-4 w-4" /></button><button type="button" onclick={() => requestTrashConfirmation(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" aria-label={`Przenieś ${entry.name} do kosza`} title="Przenieś do kosza"><Trash class="h-4 w-4" /></button></div></td>
+								<td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.createdAt)}</td><td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.modifiedAt)}</td>
+								<td class="px-4 py-3"><div class="flex justify-end gap-1"><button type="button" onclick={() => (sharingEntry = entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100" aria-label={`Udostępnij ${entry.name}`} title="Udostępnij"><ShareNetwork class="h-4 w-4" /></button><button type="button" onclick={() => beginMove(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Przenieś ${entry.name}`} title="Przenieś"><Folder class="h-4 w-4" /></button><button type="button" onclick={() => beginRename(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Zmień nazwę ${entry.name}`} title="Zmień nazwę"><Pencil class="h-4 w-4" /></button><button type="button" onclick={() => requestTrashConfirmation(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" aria-label={`Przenieś ${entry.name} do kosza`} title="Przenieś do kosza"><Trash class="h-4 w-4" /></button></div></td>
 							</tr>
 						{/each}
 						{#each files as entry (entry.id)}
@@ -844,11 +1113,11 @@
 								<td class="px-3 py-3"><input type="checkbox" checked={selectedIds.includes(entry.id)} onclick={(event) => changeSelection(entry, event.currentTarget.checked, event)} aria-label={`Zaznacz ${entry.name}`} class="file-selection-checkbox" /></td>
 								<td class="max-w-[420px] truncate px-4 py-3 text-text-main" title={entry.name}><div class="flex items-center gap-2">{#if mediaKindForFilename(entry.name) === 'IMAGE'}<FileImage class="h-5 w-5 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'AUDIO'}<FileAudio class="h-5 w-5 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'VIDEO'}<FileVideo class="h-5 w-5 shrink-0 text-primary" />{:else}<FileIcon class="h-5 w-5 shrink-0 text-primary" />{/if}<span class="min-w-0"><button type="button" class="block truncate text-left hover:underline" onclick={() => openFile(entry)} aria-label={mediaKindForFilename(entry.name) ? `Podgląd ${entry.name}` : `Pobierz ${entry.name}`}>{entry.name}</button>{#if storageLocationLabel(entry.storageLocation)}<span class="block text-xs text-text-muted">{storageLocationLabel(entry.storageLocation)}</span>{/if}</span></div></td>
 								<td class="px-4 py-3 font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</td>
-								<td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.createdAt)}</td>
+								<td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.createdAt)}</td><td class="px-4 py-3 text-xs text-text-muted">{formatCreatedAt(entry.modifiedAt)}</td>
 								<td class="px-4 py-3"><div class="flex justify-end gap-1"><button type="button" onclick={() => void downloadFile(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Pobierz ${entry.name}`} title="Pobierz"><DownloadSimple class="h-4 w-4" /></button><button type="button" onclick={() => (sharingEntry = entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Udostępnij ${entry.name}`} title="Udostępnij"><ShareNetwork class="h-4 w-4" /></button><button type="button" onclick={() => beginMove(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Przenieś ${entry.name}`} title="Przenieś"><Folder class="h-4 w-4" /></button><button type="button" onclick={() => beginRename(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-700" aria-label={`Zmień nazwę ${entry.name}`} title="Zmień nazwę"><Pencil class="h-4 w-4" /></button><button type="button" onclick={() => requestTrashConfirmation(entry)} class="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20" aria-label={`Przenieś ${entry.name} do kosza`} title="Przenieś do kosza"><Trash class="h-4 w-4" /></button></div></td>
 							</tr>
 						{/each}
-							{#if loading}<tr><td colspan="5" class="px-4 py-4"><div class="animate-pulse space-y-3" role="status" aria-label="Ładowanie plików">{#each [1,2,3] as row (row)}<div class="h-9 rounded bg-gray-100 dark:bg-zinc-800"></div>{/each}</div></td></tr>{/if}
+							{#if loading}<tr><td colspan="6" class="px-4 py-4"><div class="animate-pulse space-y-3" role="status" aria-label="Ładowanie plików">{#each [1,2,3] as row (row)}<div class="h-9 rounded bg-gray-100 dark:bg-zinc-800"></div>{/each}</div></td></tr>{/if}
 					</tbody>
 				</table>
 			</div>
@@ -866,14 +1135,14 @@
 							{#if selectionMode}<label class="flex h-11 w-11 shrink-0 items-center justify-center" onpointerdown={(event) => event.stopPropagation()}><input type="checkbox" checked={selectedIds.includes(entry.id)} onclick={(event) => { event.stopPropagation(); changeSelection(entry, event.currentTarget.checked, event); }} aria-label={`Zaznacz ${entry.name}`} class="file-selection-checkbox" /></label>{/if}
 							<button type="button" class="flex min-w-0 flex-1 items-center gap-3 text-left" onclick={() => openOrSelectMobile(entry)} aria-label={selectionMode ? `Zaznacz lub odznacz ${entry.name}` : isFolder ? `Otwórz folder ${entry.name}` : mediaKindForFilename(entry.name) ? `Podgląd ${entry.name}` : `Pobierz ${entry.name}`}>
 								{#if isFolder}<Folder class="h-8 w-8 shrink-0 fill-amber-400 text-amber-600 dark:fill-amber-500/50 dark:text-amber-400" />{:else if mediaKindForFilename(entry.name) === 'IMAGE'}<FileImage class="h-8 w-8 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'AUDIO'}<FileAudio class="h-8 w-8 shrink-0 text-primary" />{:else if mediaKindForFilename(entry.name) === 'VIDEO'}<FileVideo class="h-8 w-8 shrink-0 text-primary" />{:else}<FileIcon class="h-8 w-8 shrink-0 text-primary" />{/if}
-								<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-text-main">{entry.name}</span><span class="mt-0.5 block font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</span><span class="block text-xs text-text-muted">Utworzono: {formatCreatedAt(entry.createdAt)}</span>{#if !isFolder && storageLocationLabel(entry.storageLocation)}<span class="block text-xs text-text-muted">{storageLocationLabel(entry.storageLocation)}</span>{/if}</span>
+								<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium text-text-main">{entry.name}</span><span class="mt-0.5 block font-mono text-xs text-text-muted">{formatBytes(entry.sizeBytes)}</span><span class="block text-xs text-text-muted">Utworzono: {formatCreatedAt(entry.createdAt)}</span><span class="block text-xs text-text-muted">Zmodyfikowano: {formatCreatedAt(entry.modifiedAt)}</span>{#if !isFolder && storageLocationLabel(entry.storageLocation)}<span class="block text-xs text-text-muted">{storageLocationLabel(entry.storageLocation)}</span>{/if}</span>
 							</button>
 							<button type="button" onpointerdown={(event) => event.stopPropagation()} class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800" onclick={() => (mobileActionEntryId = mobileActionEntryId === entry.id ? '' : entry.id)} aria-label={`Akcje dla ${entry.name}`}><DotsThreeVertical class="h-5 w-5" weight="bold" /></button>
 						</div>
 						{#if mobileActionEntryId === entry.id}
 							<div class="flex justify-end gap-1 border-t border-border-line p-2">
 								{#if !isFolder}<button type="button" onclick={() => void downloadFile(entry)} class="rounded px-3 py-2 text-xs text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"><DownloadSimple class="mr-1 inline h-4 w-4" />Pobierz</button>{/if}
-								{#if !isFolder}<button type="button" onclick={() => (sharingEntry = entry)} class="rounded px-3 py-2 text-xs text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"><ShareNetwork class="mr-1 inline h-4 w-4" />Udostępnij</button>{/if}
+								<button type="button" onclick={() => (sharingEntry = entry)} class="rounded px-3 py-2 text-xs text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"><ShareNetwork class="mr-1 inline h-4 w-4" />Udostępnij</button>
 								<button type="button" onclick={() => beginMove(entry)} class="rounded px-3 py-2 text-xs text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"><Folder class="mr-1 inline h-4 w-4" />Przenieś</button>
 								<button type="button" onclick={() => beginRename(entry)} class="rounded px-3 py-2 text-xs text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800"><Pencil class="mr-1 inline h-4 w-4" />Zmień nazwę</button>
 								<button type="button" onclick={() => requestTrashConfirmation(entry)} class="rounded px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"><Trash class="mr-1 inline h-4 w-4" />Do kosza</button>
@@ -887,6 +1156,7 @@
 				<div class="flex justify-center border-t border-border-line p-4"><button type="button" onclick={loadNextPage} disabled={listBusy} class="rounded-md border border-border-line px-4 py-2 text-sm font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">Pokaż więcej</button></div>
 			{/if}
 		</div>
+		{/if}
 	{:else}
 		<div class="space-y-3">
 			{#if viewError}<div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300" role="alert">{viewError}</div>{/if}
@@ -894,9 +1164,10 @@
 				<div class="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-border-line px-4 py-3">
 					<div><h2 class="text-sm font-semibold text-text-main">Usunięte elementy</h2><p class="mt-0.5 text-xs text-text-muted">Elementy w koszu można przywrócić przed upływem retencji.</p></div>
 					<div class="flex items-center gap-2">
+						{#if selectedTrashEntries.length}<button type="button" disabled={bulkRestoreBusy} onclick={() => void restoreSelectedTrash()} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium">Przywróć zaznaczone</button><button type="button" disabled={bulkRestoreBusy} onclick={requestBulkDelete} class="rounded-md border border-red-200 px-3 py-2 text-xs font-medium text-red-600">Usuń zaznaczone trwale</button>{/if}
 						<div class="inline-flex rounded-md border border-border-line p-0.5" role="group" aria-label="Przestrzeń kosza">
-							<button type="button" aria-pressed={!isSharedSpace} disabled={!accountReady || !isSharedSpace} onclick={() => switchTrashSpace('private')} class="rounded px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 {!isSharedSpace ? 'bg-primary text-white' : 'text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800'}">Personal</button>
 							<button type="button" aria-pressed={isSharedSpace} disabled={!accountReady || isSharedSpace} onclick={() => switchTrashSpace('shared')} class="rounded px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 {isSharedSpace ? 'bg-primary text-white' : 'text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800'}">Main</button>
+							<button type="button" aria-pressed={!isSharedSpace} disabled={!accountReady || !isSharedSpace} onclick={() => switchTrashSpace('private')} class="rounded px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 {!isSharedSpace ? 'bg-primary text-white' : 'text-text-muted hover:bg-gray-100 dark:hover:bg-zinc-800'}">Pliki prywatne</button>
 						</div>
 						<button type="button" onclick={() => void refreshView()} disabled={listBusy || !activeSpaceId} class="flex h-9 w-9 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-zinc-800" aria-label="Odśwież" title="Odśwież">{#if listBusy}<SpinnerGap class="h-5 w-5 animate-spin" />{:else}<ArrowClockwise class="h-5 w-5" />{/if}</button>
 					</div>
@@ -904,7 +1175,7 @@
 				<div class="hidden overflow-x-auto lg:block"><table class="w-full text-left text-sm"><thead class="border-b border-border-line bg-gray-50/50 font-medium text-text-muted dark:bg-zinc-900/50"><tr><th class="px-4 py-3">Nazwa</th><th class="w-36 px-4 py-3">Usunięto do</th><th class="w-48 px-4 py-3 text-right">Akcje</th></tr></thead><tbody class="divide-y divide-border-line">
 					{#if !trashItems.length && !loading}<tr><td colspan="3" class="px-4 py-12 text-center text-text-muted"><div class="flex min-h-32 flex-col items-center justify-center gap-2"><Trash class="h-10 w-10 text-gray-300 dark:text-zinc-600" /><strong class="font-medium text-text-main">Kosz jest pusty</strong><span class="text-xs">Usunięte elementy pojawią się tutaj.</span></div></td></tr>{/if}
 					{#each trashItems as item (item.entry?.id)}
-						{#if item.entry}<tr><td class="px-4 py-3"><div class="flex items-center gap-3"><span class="flex h-9 w-9 items-center justify-center rounded-md bg-red-50 text-red-500 dark:bg-red-900/20"><Trash class="h-4 w-4" /></span><span><strong class="block font-medium text-text-main">{item.entry.name}</strong><span class="mt-0.5 block text-xs text-text-muted">{item.entry.kind === EntryKind.FOLDER ? 'Folder' : formatBytes(item.entry.sizeBytes)}</span></span></div></td><td class="px-4 py-3 font-mono text-xs text-text-muted">{item.purgeAt ? timestampDate(item.purgeAt).toLocaleDateString('pl-PL') : '—'}</td><td class="px-4 py-3"><div class="flex justify-end gap-2"><button type="button" disabled={pendingRestoreIds.includes(item.entry?.id ?? '')} onclick={() => void restoreTrashItem(item)} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800">Przywróć</button><button type="button" onclick={() => void permanentlyDelete(item)} class="rounded-md px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Zleć trwałe usunięcie</button></div></td></tr>{/if}
+						{#if item.entry}<tr><td class="px-4 py-3"><div class="flex items-center gap-3"><input type="checkbox" class="file-selection-checkbox" checked={selectedTrashIds.includes(item.entry.id)} aria-label={`Zaznacz ${item.entry.name}`} onchange={(event) => toggleTrashSelection(item.entry!.id, event.currentTarget.checked)} /><span class="flex h-9 w-9 items-center justify-center rounded-md bg-red-50 text-red-500 dark:bg-red-900/20"><Trash class="h-4 w-4" /></span><span><strong class="block font-medium text-text-main">{item.entry.name}</strong><span class="mt-0.5 block text-xs text-text-muted">{item.entry.kind === EntryKind.FOLDER ? 'Folder' : formatBytes(item.entry.sizeBytes)}</span></span></div></td><td class="px-4 py-3 font-mono text-xs text-text-muted">{item.purgeAt ? timestampDate(item.purgeAt).toLocaleDateString('pl-PL') : '—'}</td><td class="px-4 py-3"><div class="flex justify-end gap-2"><button type="button" disabled={pendingRestoreIds.includes(item.entry?.id ?? '')} onclick={() => void restoreTrashItem(item)} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800">Przywróć</button><button type="button" onclick={() => void permanentlyDelete(item)} class="rounded-md px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Zleć trwałe usunięcie</button></div></td></tr>{/if}
 					{/each}
 					{#if loading}<tr><td colspan="3" class="px-4 py-4"><div class="animate-pulse space-y-3" role="status" aria-label="Ładowanie kosza">{#each [1,2,3] as row (row)}<div class="h-9 rounded bg-gray-100 dark:bg-zinc-800"></div>{/each}</div></td></tr>{/if}
 				</tbody></table></div>
@@ -912,7 +1183,7 @@
 					{#if loading}<div class="animate-pulse space-y-2" role="status" aria-label="Ładowanie kosza">{#each [1,2,3] as row (row)}<div class="h-16 rounded bg-gray-100 dark:bg-zinc-800"></div>{/each}</div>{/if}
 					{#if !trashItems.length && !loading}<p class="py-10 text-center text-sm text-text-muted">Kosz jest pusty</p>{/if}
 					{#each trashItems as item (item.entry?.id)}
-						{#if item.entry}<div class="rounded-md border border-border-line p-3"><div class="flex items-center gap-3"><span class="flex h-9 w-9 items-center justify-center rounded-md bg-red-50 text-red-500 dark:bg-red-900/20"><Trash class="h-4 w-4" /></span><span class="min-w-0 flex-1"><strong class="block truncate text-sm font-medium text-text-main">{item.entry.name}</strong><span class="mt-0.5 block text-xs text-text-muted">{item.purgeAt ? `Do ${timestampDate(item.purgeAt).toLocaleDateString('pl-PL')}` : 'Termin usunięcia nieznany'}</span></span></div><div class="mt-3 flex justify-end gap-2"><button type="button" disabled={pendingRestoreIds.includes(item.entry?.id ?? '')} onclick={() => void restoreTrashItem(item)} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium">Przywróć</button><button type="button" onclick={() => void permanentlyDelete(item)} class="rounded-md px-3 py-2 text-xs font-medium text-red-600">Zleć trwałe usunięcie</button></div></div>{/if}
+						{#if item.entry}<div class="rounded-md border border-border-line p-3"><div class="flex items-center gap-3"><input type="checkbox" class="file-selection-checkbox" checked={selectedTrashIds.includes(item.entry.id)} aria-label={`Zaznacz ${item.entry.name}`} onchange={(event) => toggleTrashSelection(item.entry!.id, event.currentTarget.checked)} /><span class="flex h-9 w-9 items-center justify-center rounded-md bg-red-50 text-red-500 dark:bg-red-900/20"><Trash class="h-4 w-4" /></span><span class="min-w-0 flex-1"><strong class="block truncate text-sm font-medium text-text-main">{item.entry.name}</strong><span class="mt-0.5 block text-xs text-text-muted">{item.purgeAt ? `Do ${timestampDate(item.purgeAt).toLocaleDateString('pl-PL')}` : 'Termin usunięcia nieznany'}</span></span></div><div class="mt-3 flex justify-end gap-2"><button type="button" disabled={pendingRestoreIds.includes(item.entry?.id ?? '')} onclick={() => void restoreTrashItem(item)} class="rounded-md border border-border-line px-3 py-2 text-xs font-medium">Przywróć</button><button type="button" onclick={() => void permanentlyDelete(item)} class="rounded-md px-3 py-2 text-xs font-medium text-red-600">Zleć trwałe usunięcie</button></div></div>{/if}
 					{/each}
 				</div>
 				{#if nextPageToken}<div class="flex justify-center border-t border-border-line p-4"><button type="button" onclick={loadNextPage} disabled={listBusy} class="rounded-md border border-border-line px-4 py-2 text-sm font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">Pokaż więcej</button></div>{/if}
@@ -937,6 +1208,30 @@
 	<ShareLinksDialog file={sharingEntry} spaceId={activeSpaceId} onclose={() => (sharingEntry = null)} />
 {/if}
 
+{#if restoreConflict}
+	<AppDialog labelledby="restore-conflict-title" onclose={() => restoreConflict = null}>
+		<h2 id="restore-conflict-title" class="text-base font-semibold">Element o tej nazwie już istnieje</h2>
+		<p class="mt-2 break-words text-sm text-text-muted">Przywróć jako „{restoreConflict.name}” lub pomiń ten element.</p>
+		<div class="mt-5 flex flex-wrap justify-end gap-2">
+			<button type="button" class="min-h-10 rounded-md px-3 text-sm" onclick={() => restoreConflict = null}>Pomiń</button>
+			<button type="button" class="min-h-10 rounded-md border border-border-line px-3 text-sm" onclick={() => { const choice = restoreConflict; restoreConflict = null; if (choice && currentList?.spaceId === choice.spaceId) void restoreTrashItem(choice.item, choice.name); }}>Zachowaj oba</button>
+			{#if restoreConflict.target}<button type="button" class="min-h-10 rounded-md bg-red-600 px-3 text-sm text-white" onclick={() => { const choice = restoreConflict; restoreConflict = null; if (choice && currentList?.spaceId === choice.spaceId) void restoreTrashItem(choice.item, undefined, choice.target); }}>Zastąp</button>{/if}
+		</div>
+	</AppDialog>
+{/if}
+
+{#if uploadConflict}
+	<AppDialog labelledby="upload-conflict-title" onclose={() => chooseUploadConflict('skip')}>
+		<h2 id="upload-conflict-title" class="text-base font-semibold">Element o tej nazwie już istnieje</h2>
+		<p class="mt-2 break-words text-sm text-text-muted">{uploadConflict.name}</p>
+		<div class="mt-5 flex flex-wrap justify-end gap-2">
+			<button type="button" class="min-h-10 rounded-md px-3 text-sm" onclick={() => chooseUploadConflict('skip')}>Pomiń</button>
+			<button type="button" class="min-h-10 rounded-md border border-border-line px-3 text-sm" onclick={() => chooseUploadConflict('keep')}>Zachowaj oba</button>
+			{#if uploadConflict.canReplace}<button type="button" class="min-h-10 rounded-md bg-red-600 px-3 text-sm text-white" onclick={() => chooseUploadConflict('replace')}>Zastąp</button>{/if}
+		</div>
+	</AppDialog>
+{/if}
+
 {#if bulkTrashOpen}
 	<AppDialog labelledby="bulk-trash-title" busy={bulkTrashBusy} onclose={() => { if (!bulkTrashBusy) bulkTrashOpen = false; }}>
 		<section class="w-full max-w-lg space-y-4 rounded-md border border-border-line bg-bg-panel p-5 shadow-lg">
@@ -948,11 +1243,23 @@
 	</AppDialog>
 {/if}
 
+{#if bulkDeleteOpen}
+	<AppDialog labelledby="bulk-delete-title" busy={bulkDeleteBusy} onclose={() => { if (!bulkDeleteBusy) bulkDeleteOpen = false; }}>
+		<section class="w-full max-w-lg space-y-4 rounded-md border border-border-line bg-bg-panel p-5 shadow-lg">
+			<h2 id="bulk-delete-title" class="text-base font-semibold text-text-main">Trwale usunąć zaznaczone elementy?</h2>
+			<p class="text-sm text-text-muted">Zlecenie obejmuje {bulkDeleteBatches.reduce((count, batch) => count + batch.entries.length, 0)} elementów wraz z zawartością folderów.</p>
+			{#if bulkDeleteError}<p role="alert" class="rounded-md bg-red-500/10 p-3 text-sm text-red-600">{bulkDeleteError}</p>{/if}
+			<div class="flex justify-end gap-2"><button type="button" disabled={bulkDeleteBusy} onclick={() => (bulkDeleteOpen = false)} class="min-h-10 rounded-md px-3 text-sm">Zamknij</button><button type="button" disabled={bulkDeleteBusy} onclick={() => void confirmBulkDelete()} class="min-h-10 rounded-md bg-red-600 px-4 text-sm font-medium text-white">Zleć trwałe usunięcie</button></div>
+		</section>
+	</AppDialog>
+{/if}
+
 {#if movingEntry && activeSpaceId}
 	<MoveEntryDialog
 		entry={movingEntry}
 		entries={movingEntries}
 		spaceId={activeSpaceId}
+		{spaces}
 		initialPath={folderPath}
 		onclose={() => (movingEntry = null)}
 		onmoved={(moved, failed) => {

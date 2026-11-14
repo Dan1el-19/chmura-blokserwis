@@ -1,4 +1,4 @@
-export type BrowserMediaKind = 'IMAGE' | 'AUDIO' | 'VIDEO';
+export type BrowserMediaKind = 'IMAGE' | 'AUDIO' | 'VIDEO' | 'PDF' | 'TEXT';
 export type PlaybackSnapshot = { currentTime: number; paused: boolean };
 export type MediaPlaybackTarget = {
 	currentTime: number;
@@ -7,6 +7,7 @@ export type MediaPlaybackTarget = {
 };
 
 const MEDIA_KIND_BY_EXTENSION: Readonly<Record<string, BrowserMediaKind>> = {
+	pdf: 'PDF',
 	jpg: 'IMAGE',
 	jpeg: 'IMAGE',
 	png: 'IMAGE',
@@ -21,10 +22,13 @@ const MEDIA_KIND_BY_EXTENSION: Readonly<Record<string, BrowserMediaKind>> = {
 	webm: 'VIDEO'
 };
 
+const TEXT_EXTENSIONS = new Set(['txt', 'md', 'csv', 'tsv', 'log', 'json', 'xml', 'yaml', 'yml', 'toml', 'ini', 'js', 'mjs', 'cjs', 'ts', 'tsx', 'jsx', 'py', 'rs', 'go', 'java', 'kt', 'c', 'h', 'cpp', 'hpp', 'css', 'sh', 'sql']);
+
 export function mediaKindForFilename(name: string): BrowserMediaKind | null {
 	const dot = name.lastIndexOf('.');
 	if (dot < 0) return null;
-	return MEDIA_KIND_BY_EXTENSION[name.slice(dot + 1).toLowerCase()] ?? null;
+	const extension = name.slice(dot + 1).toLowerCase();
+	return TEXT_EXTENSIONS.has(extension) ? 'TEXT' : MEDIA_KIND_BY_EXTENSION[extension] ?? null;
 }
 
 export function capturePlayback(media: MediaPlaybackTarget | undefined): PlaybackSnapshot | undefined {

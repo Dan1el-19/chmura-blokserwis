@@ -10,21 +10,28 @@ service CatalogService {
   rpc GetPreview(GetPreviewRequest) returns (GetPreviewResponse);
   rpc GetSpaces(GetSpacesRequest) returns (GetSpacesResponse);
   rpc ListEntries(ListEntriesRequest) returns (ListEntriesResponse);
+  rpc SearchEntries(SearchEntriesRequest) returns (SearchEntriesResponse);
   rpc CreateFolder(CreateFolderRequest) returns (CreateFolderResponse);
   rpc GetEntry(GetEntryRequest) returns (GetEntryResponse);
   rpc RenameEntry(RenameEntryRequest) returns (RenameEntryResponse);
   rpc MoveEntry(MoveEntryRequest) returns (MoveEntryResponse);
+  rpc BulkMoveEntries(BulkMoveEntriesRequest) returns (BulkMoveEntriesResponse);
 }
 
 service TrashService {
   rpc TrashEntry(TrashEntryRequest) returns (TrashEntryResponse);
+  rpc BulkTrashEntries(BulkTrashEntriesRequest) returns (BulkTrashEntriesResponse);
   rpc ListTrash(ListTrashRequest) returns (ListTrashResponse);
   rpc RestoreEntry(RestoreEntryRequest) returns (RestoreEntryResponse);
+  rpc BulkRestoreEntries(BulkRestoreEntriesRequest) returns (BulkRestoreEntriesResponse);
   rpc DeletePermanently(DeletePermanentlyRequest) returns (DeletePermanentlyResponse);
+  rpc BulkDeletePermanently(BulkDeletePermanentlyRequest) returns (BulkDeletePermanentlyResponse);
 }
 
 service ShareService {
   rpc ListShares(ListSharesRequest) returns (ListSharesResponse);
+  rpc ListSpaceShares(ListSpaceSharesRequest) returns (ListSpaceSharesResponse);
+  rpc DeleteShare(DeleteShareRequest) returns (DeleteShareResponse);
   rpc CreateShare(CreateShareRequest) returns (CreateShareResponse);
   rpc UpdateShare(UpdateShareRequest) returns (UpdateShareResponse);
   rpc RevokeShare(RevokeShareRequest) returns (RevokeShareResponse);
@@ -37,10 +44,31 @@ message ListEntriesRequest {
   string page_token = 4;
   CatalogSortBy sort_by = 5;
   CatalogSortDirection sort_direction = 6;
+  CatalogFileType file_type = 7;
 }
 
 message ListEntriesResponse {
   repeated Entry entries = 1;
+  string next_page_token = 2;
+}
+
+message SearchEntriesRequest {
+  string space_id = 1;
+  string query = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+  CatalogSortBy sort_by = 5;
+  CatalogSortDirection sort_direction = 6;
+  CatalogFileType file_type = 7;
+}
+
+message SearchEntryResult {
+  Entry entry = 1;
+  repeated Entry path = 2;
+}
+
+message SearchEntriesResponse {
+  repeated SearchEntryResult results = 1;
   string next_page_token = 2;
 }
 
@@ -80,10 +108,21 @@ message MoveEntryRequest {
   string entry_id = 2;
   optional string parent_id = 3;
   uint32 expected_revision = 4;
+  optional string target_space_id = 5;
 }
 
 message MoveEntryResponse {
   Entry entry = 1;
+}
+message BulkMoveEntriesRequest {
+  string space_id = 1;
+  string request_id = 2;
+  repeated BulkEntryInput items = 3;
+  optional string parent_id = 4;
+  optional string target_space_id = 5;
+}
+message BulkMoveEntriesResponse {
+  repeated BulkEntryResult results = 1;
 }
 
 message TrashItem {
@@ -99,6 +138,39 @@ message TrashEntryRequest {
 message TrashEntryResponse {
   TrashItem item = 1;
 }
+message BulkEntryInput {
+  string entry_id = 1;
+  uint32 expected_revision = 2;
+}
+message BulkEntryResult {
+  string entry_id = 1;
+  bool success = 2;
+  string error = 3;
+}
+message BulkTrashEntriesRequest {
+  string space_id = 1;
+  string request_id = 2;
+  repeated BulkEntryInput items = 3;
+}
+message BulkTrashEntriesResponse {
+  repeated BulkEntryResult results = 1;
+}
+message BulkDeletePermanentlyRequest {
+  string space_id = 1;
+  string request_id = 2;
+  repeated BulkEntryInput items = 3;
+}
+message BulkDeletePermanentlyResponse {
+  repeated BulkEntryResult results = 1;
+}
+message BulkRestoreEntriesRequest {
+  string space_id = 1;
+  string request_id = 2;
+  repeated BulkEntryInput items = 3;
+}
+message BulkRestoreEntriesResponse {
+  repeated BulkEntryResult results = 1;
+}
 message ListTrashRequest {
   string space_id = 1;
   int32 page_size = 2;
@@ -112,6 +184,9 @@ message RestoreEntryRequest {
   string space_id = 1;
   string entry_id = 2;
   uint32 expected_revision = 3;
+  optional string new_name = 4;
+  optional string replace_entry_id = 5;
+  optional uint32 replace_expected_revision = 6;
 }
 message RestoreEntryResponse {
   Entry entry = 1;
@@ -136,6 +211,7 @@ message Entry {
   optional string md5_base64 = 8;
   StorageLocation storage_location = 9;
   google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp modified_at = 11;
 }
 
 enum CatalogSortBy {
@@ -143,6 +219,17 @@ enum CatalogSortBy {
   CATALOG_SORT_BY_NAME = 1;
   CATALOG_SORT_BY_CREATED_AT = 2;
   CATALOG_SORT_BY_SIZE = 3;
+  CATALOG_SORT_BY_MODIFIED_AT = 4;
+}
+
+enum CatalogFileType {
+  CATALOG_FILE_TYPE_UNSPECIFIED = 0;
+  CATALOG_FILE_TYPE_IMAGE = 1;
+  CATALOG_FILE_TYPE_PDF = 2;
+  CATALOG_FILE_TYPE_AUDIO = 3;
+  CATALOG_FILE_TYPE_VIDEO = 4;
+  CATALOG_FILE_TYPE_TEXT = 5;
+  CATALOG_FILE_TYPE_OTHER = 6;
 }
 
 enum CatalogSortDirection {
@@ -202,6 +289,7 @@ message GetPreviewResponse {
   google.protobuf.Timestamp expires_at = 2;
   string content_type = 3;
   PreviewMediaKind media_kind = 4;
+  string content_id = 5;
 }
 
 enum PreviewMediaKind {
@@ -209,6 +297,8 @@ enum PreviewMediaKind {
   PREVIEW_MEDIA_KIND_IMAGE = 1;
   PREVIEW_MEDIA_KIND_AUDIO = 2;
   PREVIEW_MEDIA_KIND_VIDEO = 3;
+  PREVIEW_MEDIA_KIND_PDF = 4;
+  PREVIEW_MEDIA_KIND_TEXT = 5;
 }
 
 message ShareLink {
@@ -223,6 +313,7 @@ message ShareLink {
   uint64 download_count = 9;
   uint64 view_count = 10;
   uint32 revision = 11;
+  bool paused = 12;
 }
 
 message ListSharesRequest {
@@ -232,6 +323,27 @@ message ListSharesRequest {
 message ListSharesResponse {
   repeated ShareLink shares = 1;
 }
+message SpaceShare {
+  ShareLink share = 1;
+  string entry_id = 2;
+  string entry_name = 3;
+  EntryKind entry_kind = 4;
+}
+message ListSpaceSharesRequest {
+  string space_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+message ListSpaceSharesResponse {
+  repeated SpaceShare shares = 1;
+  string next_page_token = 2;
+}
+message DeleteShareRequest {
+  string space_id = 1;
+  string share_id = 2;
+  uint32 expected_revision = 3;
+}
+message DeleteShareResponse {}
 message CreateShareRequest {
   string space_id = 1;
   string entry_id = 2;
@@ -254,6 +366,8 @@ message UpdateShareRequest {
   optional string password = 6;
   google.protobuf.Timestamp expires_at = 7;
   optional uint64 max_downloads = 8;
+  optional bool paused = 9;
+  optional string slug = 10;
 }
 message UpdateShareResponse {
   ShareLink share = 1;

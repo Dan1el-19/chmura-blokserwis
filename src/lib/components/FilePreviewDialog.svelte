@@ -18,6 +18,7 @@
 		type GetPreviewResponse
 	} from '#lib/gen/unisourcecfl/catalog/v1/catalog_pb.js';
 	import AppDialog from './AppDialog.svelte';
+	import TextPreview from './TextPreview.svelte';
 
 	let {
 		file,
@@ -84,8 +85,10 @@
 				create(GetPreviewRequestSchema, { spaceId, entryId: file.id })
 			);
 			if (version !== requestVersion) return;
+			const sameContent = !!preview?.contentId && preview.contentId === result.contentId;
 			preview = result;
-			if (playback) pendingPlayback = playback;
+			if (playback && sameContent) pendingPlayback = playback;
+			else { pendingPlayback = undefined; lastPlayback = undefined; }
 			await tick();
 			if (version !== requestVersion) return;
 			if (mediaElement?.currentSrc === result.url) restorePendingPlayback();
@@ -103,6 +106,7 @@
 	async function renewPreview(): Promise<void> {
 		if (renewalInFlight) return;
 		const sourceUrl = preview?.url ?? '';
+		const sourceContentId = preview?.contentId;
 		if (sourceUrl && renewedUrl === sourceUrl) {
 			error = 'Nie udało się odnowić podglądu. Możesz ponowić próbę albo pobrać plik.';
 			return;
@@ -112,7 +116,7 @@
 		lastPlayback = currentPlayback() ?? lastPlayback;
 		try {
 			await requestPreview(lastPlayback);
-			if (preview?.url !== sourceUrl) renewedUrl = '';
+			if (preview?.url !== sourceUrl || preview?.contentId !== sourceContentId) renewedUrl = '';
 		} finally {
 			renewalInFlight = false;
 		}
@@ -177,7 +181,12 @@
 		{:else if loading && !preview}
 			<div class="flex min-h-48 items-center justify-center gap-2 text-sm text-text-muted" role="status"><SpinnerGap class="h-5 w-5 animate-spin" />Przygotowywanie podglądu…</div>
 		{:else if preview}
-			{#if preview.mediaKind === PreviewMediaKind.IMAGE}
+			{#key `${preview.contentId}:${preview.url}`}
+			{#if preview.mediaKind === PreviewMediaKind.PDF}
+				<iframe title={`Podgląd PDF: ${file.name}`} src={preview.url} sandbox="allow-scripts allow-same-origin" referrerpolicy="no-referrer" class="h-[65dvh] w-full rounded-md border border-border-line"></iframe>
+			{:else if preview.mediaKind === PreviewMediaKind.TEXT}
+				<TextPreview url={preview.url} sizeBytes={file.sizeBytes === undefined ? undefined : Number(file.sizeBytes)} />
+			{:else if preview.mediaKind === PreviewMediaKind.IMAGE}
 				<img class="mx-auto max-h-[65dvh] max-w-full rounded-md object-contain" src={preview.url} alt={file.name} onerror={() => void renewPreview()} />
 			{:else if preview.mediaKind === PreviewMediaKind.AUDIO}
 				<audio bind:this={mediaElement} class="w-full" controls preload="metadata" src={preview.url} onerror={() => void renewPreview()} onloadedmetadata={restorePendingPlayback}></audio>
@@ -187,6 +196,7 @@
 			{:else}
 				<p class="rounded-md bg-bg-app p-4 text-sm text-text-muted">Nie można wyświetlić tego typu pliku. Możesz go pobrać.</p>
 			{/if}
+			{/key}
 		{/if}
 
 		<footer class="flex justify-end gap-2 border-t border-border-line pt-3">

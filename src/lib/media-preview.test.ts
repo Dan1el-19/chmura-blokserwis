@@ -18,12 +18,15 @@ it.each([
 	['sound.ogg', 'AUDIO'],
 	['sound.m4a', 'AUDIO'],
 	['movie.mp4', 'VIDEO'],
-	['movie.webm', 'VIDEO']
+	['movie.webm', 'VIDEO'],
+	['document.pdf', 'PDF'],
+	['script.js', 'TEXT'],
+	['notes.TXT', 'TEXT']
 ])('recognizes supported browser preview %s', (name, kind) => {
 	expect(mediaKindForFilename(name)).toBe(kind);
 });
 
-it.each(['document.pdf', 'vector.svg', 'page.html', 'unknown', 'empty.'])(
+it.each(['vector.svg', 'page.html', 'unknown', 'empty.'])(
 	'rejects browser preview for %s',
 	(name) => {
 		expect(mediaKindForFilename(name)).toBeNull();

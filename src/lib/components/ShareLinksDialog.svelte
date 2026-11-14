@@ -9,6 +9,7 @@
 	import { resolve } from '$app/paths';
 	import { storageErrorMessage } from '#lib/storage-error.js';
 	import {
+		EntryKind,
 		CreateShareRequestSchema,
 		ListSharesRequestSchema,
 		RevokeShareRequestSchema,
@@ -73,8 +74,9 @@
 		return new URL(path, window.location.origin).toString();
 	}
 
-	function statusFor(link: ShareLink): 'active' | 'expired' | 'revoked' | 'limit' {
+	function statusFor(link: ShareLink): 'active' | 'expired' | 'revoked' | 'limit' | 'paused' {
 		if (link.revokedAt) return 'revoked';
+		if (link.paused) return 'paused';
 		if (link.expiresAt && timestampDate(link.expiresAt).getTime() <= Date.now()) return 'expired';
 		if (link.maxDownloads !== undefined && link.downloadCount >= link.maxDownloads) return 'limit';
 		return 'active';
@@ -215,7 +217,7 @@
 	<section class="space-y-5">
 		<header class="flex items-start justify-between gap-4">
 			<div class="min-w-0">
-				<h2 id={titleId} class="text-base font-semibold text-text-main">Udostępnij plik</h2>
+				<h2 id={titleId} class="text-base font-semibold text-text-main">{file.kind === EntryKind.FOLDER ? 'Udostępnij folder' : 'Udostępnij plik'}</h2>
 				<p class="mt-1 truncate text-xs text-text-muted">{file.name}</p>
 			</div>
 			<button type="button" onclick={onclose} class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-gray-100 hover:text-text-main dark:hover:bg-zinc-800" aria-label="Zamknij udostępnianie"><X class="h-5 w-5" /></button>
@@ -234,7 +236,7 @@
 		{#if error}<p class="rounded-md bg-red-500/10 p-3 text-sm text-red-600 dark:text-red-300" role="alert">{error}</p>{/if}
 
 		<div>
-			<h3 class="mb-2 text-sm font-semibold text-text-main">Linki do pliku</h3>
+			<h3 class="mb-2 text-sm font-semibold text-text-main">{file.kind === EntryKind.FOLDER ? 'Linki do folderu' : 'Linki do pliku'}</h3>
 			{#if loading}<p class="flex items-center gap-2 py-5 text-sm text-text-muted" role="status"><SpinnerGap class="h-4 w-4 animate-spin" />Ładowanie linków…</p>
 			{:else if !links.length}<p class="rounded-md border border-dashed border-border-line px-4 py-6 text-center text-sm text-text-muted">Nie utworzono jeszcze linków.</p>
 			{:else}<ul class="max-h-[55dvh] space-y-2 overflow-y-auto">
@@ -242,10 +244,10 @@
 					{@const status = statusFor(link)}
 					<li class="rounded-md border border-border-line p-3 {status === 'active' || status === 'limit' ? 'bg-bg-panel' : 'bg-bg-app opacity-75'}">
 						<div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-							<div class="min-w-0">{#if status === 'active' || status === 'limit'}<a class="block truncate font-mono text-sm text-primary hover:underline" href={resolve('/s/[address]', { address: link.address })} target="_blank" rel="noreferrer">{urlFor(link.address)}</a>{:else}<span class="block truncate font-mono text-sm text-text-muted">{urlFor(link.address)}</span>{/if}<p class="mt-1 break-words text-sm font-medium text-text-main">{link.label || 'Bez etykiety'}</p><p class="mt-1 text-xs text-text-muted">{status === 'active' ? 'Aktywny' : status === 'expired' ? 'Wygasły' : status === 'limit' ? 'Limit wyczerpany' : 'Unieważniony'} · {expiryLabel(link)}</p><p class="mt-1 text-xs text-text-muted">Wejścia: {link.viewCount.toString()} · Pobrania: {link.downloadCount.toString()}{link.maxDownloads === undefined ? '' : ` / ${link.maxDownloads.toString()}`} · {link.hasPassword ? 'Chroniony hasłem' : 'Bez hasła'}</p></div>
+							<div class="min-w-0">{#if status === 'active' || status === 'limit'}<a class="block truncate font-mono text-sm text-primary hover:underline" href={resolve('/s/[address]', { address: link.address })} target="_blank" rel="noreferrer">{urlFor(link.address)}</a>{:else}<span class="block truncate font-mono text-sm text-text-muted">{urlFor(link.address)}</span>{/if}<p class="mt-1 break-words text-sm font-medium text-text-main">{link.label || 'Bez etykiety'}</p><p class="mt-1 text-xs text-text-muted">{status === 'active' ? 'Aktywny' : status === 'expired' ? 'Wygasły' : status === 'limit' ? 'Limit wyczerpany' : status === 'paused' ? 'Wstrzymany' : 'Unieważniony'} · {expiryLabel(link)}</p><p class="mt-1 text-xs text-text-muted">Wejścia: {link.viewCount.toString()} · Pobrania: {link.downloadCount.toString()}{link.maxDownloads === undefined ? '' : ` / ${link.maxDownloads.toString()}`} · {link.hasPassword ? 'Chroniony hasłem' : 'Bez hasła'}</p></div>
 							{#if status === 'active' || status === 'limit'}<div class="flex shrink-0 flex-wrap gap-1">
 								<button type="button" onclick={() => void copy(link.address)} class="inline-flex items-center gap-1.5 rounded border border-border-line px-2.5 py-2 text-xs font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"><CopySimple class="h-3.5 w-3.5" />Kopiuj link</button>
-								<button type="button" onclick={() => void copy(link.address, true)} class="inline-flex items-center gap-1.5 rounded border border-border-line px-2.5 py-2 text-xs font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"><CopySimple class="h-3.5 w-3.5" />Kopiuj pobieranie</button>
+								{#if file.kind === EntryKind.FILE}<button type="button" onclick={() => void copy(link.address, true)} class="inline-flex items-center gap-1.5 rounded border border-border-line px-2.5 py-2 text-xs font-medium text-text-main hover:bg-gray-50 dark:hover:bg-zinc-800"><CopySimple class="h-3.5 w-3.5" />Kopiuj pobieranie</button>{/if}
 								<button type="button" disabled={pending} onclick={() => editingId === link.id ? editingId = '' : startEditing(link)} class="inline-flex items-center gap-1.5 rounded border border-border-line px-2.5 py-2 text-xs font-medium text-text-main hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-zinc-800">{editingId === link.id ? 'Zamknij edycję' : 'Edytuj'}</button>
 								<button type="button" disabled={pending} onclick={() => void revoke(link)} class="inline-flex items-center gap-1.5 rounded px-2.5 py-2 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-900/20"><Trash class="h-3.5 w-3.5" />Unieważnij</button>
 							</div>{/if}

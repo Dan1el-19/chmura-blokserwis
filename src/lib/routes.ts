@@ -1,2 +1,2 @@
-export type AppRoute = '/' | '/main' | '/trash' | '/settings' | '/wyceny';
+export type AppRoute = '/' | '/main' | '/personal' | '/trash' | '/shares' | '/settings' | '/wyceny';
 export type AppRouteWithQuery = AppRoute | `${AppRoute}?${string}`;

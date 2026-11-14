@@ -6,7 +6,7 @@
 	import UploadPanel from '#lib/components/UploadPanel.svelte';
 	import { page } from '$app/state';
 	import { writable, readonly } from 'svelte/store';
-	import { Folder, Shield, Trash, GearSix, FileText } from 'phosphor-svelte';
+	import { Folder, Shield, Trash, GearSix, FileText, ShareNetwork } from 'phosphor-svelte';
 	import { Toaster } from 'svelte-sonner';
 	import type { Clerk } from '@clerk/clerk-js';
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY, PUBLIC_QUOTES_API_URL } from '$app/env/public';
@@ -42,16 +42,19 @@
 	const isPublicShare = $derived(currentPath === '/s' || currentPath.startsWith('/s/'));
 	let pageTitle = $derived.by(() => {
 		if (isPublicShare) return 'Chmura Blokserwis';
-		if (currentPath === '/main') return 'Main | Chmura Blokserwis';
+		if (currentPath === '/' || currentPath === '/main') return 'Main | Chmura Blokserwis';
+		if (currentPath === '/personal') return 'Pliki prywatne | Chmura Blokserwis';
 		if (currentPath === '/trash') return 'Kosz | Chmura Blokserwis';
+		if (currentPath === '/shares') return 'Udostępnienia | Chmura Blokserwis';
 		if (currentPath === '/wyceny' || currentPath.startsWith('/wyceny/')) return 'Wyceny | Chmura Blokserwis';
 		if (currentPath === '/settings') return 'Ustawienia | Chmura Blokserwis';
 		return 'Pliki | Chmura Blokserwis';
 	});
 	const navItems: Array<{ href: AppRoute; label: string; icon: Component; color: string }> = [
-		{ href: '/', label: 'Pliki', icon: Folder, color: 'bg-blue-500' },
-		{ href: '/main', label: 'Main', icon: Shield, color: 'bg-emerald-500' },
+		{ href: '/', label: 'Main', icon: Folder, color: 'bg-blue-500' },
+		{ href: '/personal', label: 'Pliki prywatne', icon: Shield, color: 'bg-emerald-500' },
 		...(PUBLIC_QUOTES_API_URL ? [{ href: '/wyceny' as const, label: 'Wyceny', icon: FileText, color: 'bg-blue-500' }] : []),
+		{ href: '/shares', label: 'Udostępnienia', icon: ShareNetwork, color: 'bg-indigo-500' },
 		{ href: '/trash', label: 'Kosz', icon: Trash, color: 'bg-red-500' },
 		{ href: '/settings', label: 'Ustawienia', icon: GearSix, color: 'bg-violet-500' }
 	];
@@ -282,7 +285,7 @@
 				<img src={favicon} alt="" class="h-8 w-8" />
 				<div>
 					<p class="font-mono text-base font-bold text-text-main">Chmura Blokserwis</p>
-					<p class="mt-0.5 text-xs text-text-muted">Prywatna przestrzeń plików</p>
+					<p class="mt-0.5 text-xs text-text-muted">Wspólna przestrzeń plików</p>
 				</div>
 			</div>
 			<h1 id="sign-in-title" class="mt-8 font-mono text-xl font-bold text-text-main">Zaloguj się</h1>

@@ -296,8 +296,8 @@ test.describe('multipart transfer UI over the browser RPC and XHR flow', () => {
 		const correct = makeSparseFixture(join(directory, 'correct'), 'sparse.bin', 0);
 		const wrong = makeSparseFixture(join(directory, 'wrong'), 'sparse.bin', 1);
 		const mock = await installBrowserMocks(page, { holdParts: [2, 3, 4] });
-		await page.goto('/');
-		await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeVisible({ timeout: 15_000 });
+		await page.goto('/personal');
+		await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeVisible({ timeout: 15_000 });
 		await page.getByLabel('Wybierz pliki do przesłania').setInputFiles(correct);
 		await mock.putStarted;
 		await expect(page.getByRole('region', { name: 'Transfery' })).toContainText('sparse.bin');
@@ -309,7 +309,7 @@ test.describe('multipart transfer UI over the browser RPC and XHR flow', () => {
 		await expect(page.getByRole('status')).toContainText('Wstrzymano');
 		mock.releasePuts();
 		await page.reload();
-		await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeVisible({ timeout: 15_000 });
+		await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeVisible({ timeout: 15_000 });
 		const restoredFile = page.getByLabel('Wybierz plik do wznowienia: sparse.bin');
 		await expect(restoredFile).toBeVisible();
 		const targetCountBeforeWrongFile = mock.events.filter((event) => event.startsWith('target:')).length;
@@ -335,8 +335,8 @@ test.describe('multipart transfer UI over the browser RPC and XHR flow', () => {
 		temporaryDirectories.add(directory);
 		const file = makeSparseFixture(directory, 'sparse.bin', 0);
 		const mock = await installBrowserMocks(page, { initialReadyPolls: 2, retryReadyPolls: 2, failFirstPut: 'provider' });
-		await page.goto('/');
-		await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeVisible({ timeout: 15_000 });
+		await page.goto('/personal');
+		await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeVisible({ timeout: 15_000 });
 		await page.getByLabel('Wybierz pliki do przesłania').setInputFiles(file);
 		await mock.putStarted;
 		await expect(page.getByRole('status')).toContainText('Przesłano', { timeout: 45_000 });
@@ -358,8 +358,8 @@ test.describe('multipart transfer UI over the browser RPC and XHR flow', () => {
 		temporaryDirectories.add(directory);
 		const file = makeSparseFixture(directory, 'sparse.bin', 0);
 		const mock = await installBrowserMocks(page, { failFirstPut: 'gateway' });
-		await page.goto('/');
-		await expect(page.getByRole('heading', { name: 'Moje pliki' })).toBeVisible({ timeout: 15_000 });
+		await page.goto('/personal');
+		await expect(page.getByRole('heading', { name: 'Pliki prywatne' })).toBeVisible({ timeout: 15_000 });
 		await page.getByLabel('Wybierz pliki do przesłania').setInputFiles(file);
 		await mock.putStarted;
 		await expect(page.getByRole('alert')).toContainText('HTTP 503', { timeout: 45_000 });

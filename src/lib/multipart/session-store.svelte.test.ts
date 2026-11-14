@@ -11,6 +11,8 @@ function session(ownerId: string, localId: string): PersistedMultipartSession {
 		spaceId: 'personal',
 		parentId: 'folder-1',
 		name: 'archive.bin',
+		replaceEntryId: 'entry-1',
+		replaceExpectedRevision: 4,
 		sizeBytes: 100_000_001,
 		partSizeBytes: 33_554_432,
 		fingerprintHex: 'a'.repeat(64),
@@ -44,6 +46,8 @@ it('persists recoverable metadata by owner and omits secrets and file contents',
 			ownerId: 'alice',
 			localId: 'local-1',
 			uploadId: 'upload-local-1',
+			replaceEntryId: 'entry-1',
+			replaceExpectedRevision: 4,
 			fingerprintHex: 'a'.repeat(64),
 			parts: [{ partNumber: 1, sizeBytes: 100_000_001, sha256Hex: 'b'.repeat(64), md5Base64: 'md5', targetOperation: { attemptId: 'attempt-1', requestId: 'target-request-1', expectedRevision: 1n, operationId: 'target-request-1', generation: 1n } }]
 		});

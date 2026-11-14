@@ -33,6 +33,9 @@ message BeginMultipartUploadRequest {
   repeated MultipartManifestPart manifest_parts = 6;
   UploadMode upload_mode = 7;
   string request_id = 8;
+  optional string replace_entry_id = 9;
+  optional uint32 replace_expected_revision = 10;
+  bool supports_name_conflict = 11;
 }
 
 message BeginMultipartUploadResponse {

@@ -59,7 +59,7 @@ beforeEach(() => {
 		return () => {};
 	});
 	fixture.getMe.mockResolvedValue({});
-	fixture.getSpaces.mockResolvedValue({ spaces: [{ id: 'personal', kind: 2 }] });
+	fixture.getSpaces.mockResolvedValue({ spaces: [{ id: 'main', kind: 1 }, { id: 'personal', kind: 2 }] });
 	fixture.getUploadLimits.mockResolvedValue({ maxUploadBytes: 100_000_000n, canManage: false });
 	fixture.listEntries.mockResolvedValue({ entries: [], nextPageToken: '' });
 	fixture.createUpload.mockResolvedValue({
@@ -68,6 +68,12 @@ beforeEach(() => {
 	});
 	fixture.cancelUpload.mockResolvedValue({});
 	fixture.completeUpload.mockResolvedValue({});
+});
+it('offers Main as the home page and personal files under their own route', async () => {
+	const screen = await render(LayoutTestShell);
+	await screen.getByRole('button', { name: 'Przełącz menu' }).click();
+	await expect.element(screen.getByRole('link', { name: 'Main', exact: true })).toHaveAttribute('href', '/');
+	await expect.element(screen.getByRole('navigation', { name: 'Nawigacja mobilna' }).getByRole('link', { name: 'Pliki prywatne', exact: true })).toHaveAttribute('href', '/personal');
 });
 it('aborts the old session queue immediately while a new Clerk token is still being verified', async () => {
 	let finishPut!: () => void;

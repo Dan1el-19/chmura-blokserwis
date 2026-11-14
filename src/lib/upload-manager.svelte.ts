@@ -1,7 +1,9 @@
-import { SvelteMap } from 'svelte/reactivity';
+import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { create } from '@bufbuild/protobuf';
-import { uploads } from './api.js';
-import { StorageLocation } from './gen/unisourcecfl/catalog/v1/catalog_pb.js';
+import { catalog, uploads } from './api.js';
+import { Code, ConnectError } from '@connectrpc/connect';
+import { nextAvailableUploadName, uploadNameKey } from './upload-conflict.js';
+import { EntryKind, ListEntriesRequestSchema, StorageLocation, type Entry } from './gen/unisourcecfl/catalog/v1/catalog_pb.js';
 import {
 	CancelUploadRequestSchema,
 	CompleteUploadRequestSchema,
@@ -9,6 +11,7 @@ import {
 	GetUploadRequestSchema,
 	RetryUploadRequestSchema,
 	UploadFailureKind,
+	UploadErrorDetailSchema,
 	UploadMode,
 	UploadState,
 	type UploadSession,
@@ -26,6 +29,7 @@ import {
 	MultipartAccountChangedError,
 	MultipartController,
 	MultipartFileMismatchError,
+	MultipartNameConflictError,
 	type MultipartProgressEvent
 } from './multipart/controller.js';
 import { canCreateMultipartUpload, type MultipartCapabilities } from './multipart/protocol.js';
@@ -36,6 +40,9 @@ export type UploadDestination = {
 	parentId?: string;
 	mode: UploadMode;
 	label: string;
+	name?: string;
+	replaceEntryId?: string;
+	replaceExpectedRevision?: number;
 };
 export type UploadTask = {
 	id: string;
@@ -47,9 +54,11 @@ export type UploadTask = {
 	multipartLocalId?: string;
 	multipartVerifying?: boolean;
 	multipartPartProgress?: Record<number, number>;
+	conflictEntry?: Entry;
 	phase:
 		| 'queued'
 		| 'needsFile'
+		| 'conflict'
 		| 'paused'
 		| 'checksum'
 		| 'preparing'
@@ -107,7 +116,7 @@ export class UploadManager {
 			const multipartEligible = canCreateMultipartUpload(this.capabilities, file.size);
 			return {
 				id,
-				name: file.name,
+				name: target.name ?? file.name,
 				sizeBytes: file.size,
 				target: { ...target },
 				file,
@@ -130,6 +139,70 @@ export class UploadManager {
 		this.tasks.push(...tasks);
 		this.collapsed = false;
 		void this.process();
+	}
+	private async destinationEntries(target: UploadDestination): Promise<Entry[]> {
+		const entries: Entry[] = [];
+		let token = '';
+		do {
+			const response = await catalog.listEntries(create(ListEntriesRequestSchema, {
+				spaceId: target.spaceId, ...(target.parentId ? {parentId:target.parentId} : {}), pageSize:100, pageToken:token
+			}));
+			entries.push(...response.entries);
+			token = response.nextPageToken;
+		} while (token);
+		return entries;
+	}
+	private async markConflict(task: UploadTask, generation: number): Promise<void> {
+		try {
+			const entries = await this.destinationEntries(task.target);
+			if (generation !== this.generation || task.phase === 'cancelled') return;
+			if (task.controller?.signal.aborted) { task.phase = 'cancelled'; task.file = undefined; return; }
+			task.conflictEntry = entries.find(entry => uploadNameKey(entry.name) === uploadNameKey(task.name));
+			task.phase = 'conflict';
+			task.error = undefined;
+			this.collapsed = false;
+		} catch (error) {
+			if (generation !== this.generation || task.phase === 'cancelled') return;
+			if (task.controller?.signal.aborted) { task.phase = 'cancelled'; task.file = undefined; return; }
+			task.phase = 'error';
+			task.error = storageErrorMessage(error);
+		}
+	}
+	async resolveConflict(id: string, choice: 'keep' | 'replace' | 'skip'): Promise<void> {
+		const task = this.tasks.find(item => item.id === id);
+		if (!task || task.phase !== 'conflict') return;
+		if (choice === 'skip') { this.cancel(id); return; }
+		const generation = this.generation;
+		task.phase = 'preparing';
+		try {
+			const entries = await this.destinationEntries(task.target);
+			if (generation !== this.generation || task.phase !== 'preparing') return;
+			const current = entries.find(entry => uploadNameKey(entry.name) === uploadNameKey(task.name));
+			const occupied = new SvelteSet(entries.map(entry => uploadNameKey(entry.name)));
+			for (const other of this.tasks) if (other.id !== id && !terminal(other) && other.target.spaceId === task.target.spaceId && (other.target.parentId ?? '') === (task.target.parentId ?? '')) occupied.add(uploadNameKey(other.name));
+			const {replaceEntryId: _oldId, replaceExpectedRevision: _oldRevision, ...destination} = task.target;
+			void _oldId; void _oldRevision;
+			if (choice === 'replace' && current?.kind === EntryKind.FILE) {
+				task.target = {...destination, name:task.name, replaceEntryId:current.id, replaceExpectedRevision:current.revision};
+			} else if (choice === 'replace' && current) {
+				task.conflictEntry = current;
+				task.phase = 'conflict';
+				task.error = 'Folderu nie można zastąpić plikiem.';
+				return;
+			} else {
+				const name = occupied.has(uploadNameKey(task.name)) ? nextAvailableUploadName(task.name, occupied) : task.name;
+				task.target = {...destination, name};
+				task.name = name;
+			}
+			task.conflictEntry = undefined;
+			task.error = undefined;
+			task.phase = 'queued';
+			void this.process();
+		} catch (error) {
+			if (generation !== this.generation || task.phase !== 'preparing') return;
+			task.phase = 'conflict';
+			task.error = storageErrorMessage(error);
+		}
 	}
 	resume(id: string, file?: File): void {
 		const task = this.tasks.find((item) => item.id === id);
@@ -217,7 +290,7 @@ export class UploadManager {
 	}
 	private restoreSession(session: PersistedMultipartSession): void {
 		if (['completed', 'cancelled'].includes(session.phase) || this.tasks.some((task) => task.multipartLocalId === session.localId)) return;
-		const verifying = session.phase === 'verifying';
+		const verifying = session.phase === 'verifying' || (session.phase === 'failed' && session.failureCode === 'NAME_CONFLICT');
 		this.tasks.push({
 			id: session.localId,
 			name: session.name,
@@ -226,7 +299,9 @@ export class UploadManager {
 				spaceId: session.spaceId,
 				...(session.parentId ? { parentId: session.parentId } : {}),
 				mode: session.uploadMode,
-				label: session.spaceId
+				label: session.spaceId,
+				name: session.name,
+				...(session.replaceEntryId !== undefined ? { replaceEntryId: session.replaceEntryId, replaceExpectedRevision: session.replaceExpectedRevision } : {})
 			},
 			multipartLocalId: session.localId,
 			multipartVerifying: verifying,
@@ -269,7 +344,7 @@ export class UploadManager {
 			return;
 		}
 		task.sizeBytes = file.size;
-		task.name = file.name;
+		task.name = task.target.name ?? file.name;
 		task.phase = 'preparing';
 		task.error = undefined;
 		try {
@@ -279,7 +354,6 @@ export class UploadManager {
 			if (currentPhase === 'paused' || currentPhase === 'cancelled') return;
 			if (session.phase === 'verifying') {
 				task.multipartVerifying = true;
-				task.file = undefined;
 				task.phase = 'verifying';
 				task.progress = 99;
 				await this.watchMultipartVerification(task, generation);
@@ -291,6 +365,10 @@ export class UploadManager {
 			const currentPhase = task.phase as UploadTask['phase'];
 			if (generation !== this.generation || currentPhase === 'cancelled' || currentPhase === 'paused') return;
 			if (error instanceof MultipartAccountChangedError) return;
+			if (error instanceof MultipartNameConflictError) {
+				await this.markConflict(task, generation);
+				return;
+			}
 			if (error instanceof MultipartFileMismatchError) {
 				task.phase = 'needsFile';
 				task.file = undefined;
@@ -311,6 +389,13 @@ export class UploadManager {
 				if (generation !== this.generation || task.phase !== 'verifying') return;
 				if (session.phase === 'completed') {
 					this.finishMultipartTask(task, generation);
+					return;
+				}
+				if (session.phase === 'failed' && session.failureCode === 'NAME_CONFLICT') {
+					await this.multipart.forgetNameConflict(task.multipartLocalId);
+					if (generation !== this.generation || task.phase !== 'verifying') return;
+					task.multipartVerifying = false;
+					await this.markConflict(task, generation);
 					return;
 				}
 				if (session.phase === 'failed' || session.phase === 'cancelled') throw new Error(`Multipart session is ${session.phase}.`);
@@ -372,7 +457,7 @@ export class UploadManager {
 				throw new Error('Brak połączenia z siecią. Spróbuj ponownie po odzyskaniu łączności.');
 		};
 		controller.signal.addEventListener('abort', cancelSession);
-		Object.assign(task, { name: file.name, phase: 'checksum', progress: 0 });
+		Object.assign(task, { name: task.target.name ?? file.name, phase: 'checksum', progress: 0 });
 		try {
 			checkOnline();
 			const md5Base64 = await calculateMd5Base64(file, {
@@ -384,12 +469,13 @@ export class UploadManager {
 			});
 			checkCancelled();
 			checkOnline();
-			Object.assign(task, { name: file.name, phase: 'preparing', progress: 0 });
+			Object.assign(task, { name: task.target.name ?? file.name, phase: 'preparing', progress: 0 });
 			let response: { session?: UploadSession; target?: UploadTarget } = await uploads.createUpload(
 				create(CreateUploadRequestSchema, {
 					spaceId: targetSpaceId,
 					...(targetParentId ? { parentId: targetParentId } : {}),
-					name: file.name,
+					name: task.target.name ?? file.name,
+					...(task.target.replaceEntryId !== undefined ? { replaceEntryId: task.target.replaceEntryId, replaceExpectedRevision: task.target.replaceExpectedRevision } : {}),
 					sizeBytes: BigInt(file.size),
 					md5Base64,
 					requestId: crypto.randomUUID(),
@@ -411,7 +497,7 @@ export class UploadManager {
 				checkOnline();
 				if (!response.target?.url)
 					throw new Error('Backend nie zwrócił podpisanego adresu do przesłania pliku.');
-				Object.assign(task, { name: file.name, phase, progress: 0, storageLocation });
+				Object.assign(task, { name: task.target.name ?? file.name, phase, progress: 0, storageLocation });
 				let acceptingProgress = true;
 				try {
 					await uploadToTarget(file, response.target.url, response.target.headers, {
@@ -420,7 +506,7 @@ export class UploadManager {
 							if (!acceptingProgress || controller.signal.aborted || activeAttemptId !== attemptId)
 								return;
 							Object.assign(task, {
-								name: file.name,
+								name: task.target.name ?? file.name,
 								phase,
 								progress: total ? Math.round((loaded / total) * 100) : 0,
 								storageLocation
@@ -449,7 +535,7 @@ export class UploadManager {
 					retried = true;
 					activeAttemptId = '';
 					Object.assign(task, {
-						name: file.name,
+						name: task.target.name ?? file.name,
 						phase: 'preparing',
 						progress: 0,
 						storageLocation
@@ -475,7 +561,7 @@ export class UploadManager {
 				}
 				checkCancelled();
 				Object.assign(task, {
-					name: file.name,
+					name: task.target.name ?? file.name,
 					phase: 'finalizing',
 					progress: 100,
 					storageLocation
@@ -502,7 +588,7 @@ export class UploadManager {
 			}
 			checkCancelled();
 			Object.assign(task, {
-				name: file.name,
+				name: task.target.name ?? file.name,
 				phase: 'done',
 				progress: 100,
 				storageLocation: session.storageLocation
@@ -522,7 +608,7 @@ export class UploadManager {
 				(error instanceof DOMException && error.name === 'AbortError')
 			) {
 				Object.assign(task, {
-					name: file.name,
+					name: task.target.name ?? file.name,
 					phase: 'cancelled',
 					progress: 0,
 					storageLocation: task.storageLocation
@@ -535,9 +621,26 @@ export class UploadManager {
 						task.error = `Upload przerwano w przeglądarce, ale nie udało się anulować sesji: ${storageErrorMessage(cancelError)}`;
 					}
 				}
+			} else if (error instanceof ConnectError && (error.code === Code.AlreadyExists || (error.code === Code.Aborted && error.findDetails(UploadErrorDetailSchema).some(detail => detail.code === 'REVISION_CONFLICT')))) {
+				if (!uploadId) await this.markConflict(task, generation);
+				else {
+					try {
+							let state: UploadState | undefined;
+							try { state = (await uploads.cancelUpload(create(CancelUploadRequestSchema, {uploadId}))).session?.state; }
+							catch { state = (await uploads.getUpload(create(GetUploadRequestSchema, {uploadId}))).session?.state; }
+							if (generation !== this.generation) return;
+							if (state === UploadState.COMPLETED) {
+								task.phase = 'done'; task.progress = 100; task.error = undefined; this.onComplete(task.target);
+							} else if (state === UploadState.CANCELLED || state === UploadState.EXPIRED) {
+								await this.markConflict(task, generation);
+							} else throw new Error('Nie udało się potwierdzić anulowania poprzedniej sesji.', { cause: error });
+						} catch (cancelError) {
+							if (generation === this.generation) { task.phase = 'error'; task.error = storageErrorMessage(cancelError); }
+						}
+				}
 			} else {
 				Object.assign(task, {
-					name: file.name,
+					name: task.target.name ?? file.name,
 					phase: 'error',
 					progress: 0,
 					storageLocation: task.storageLocation,
@@ -548,7 +651,7 @@ export class UploadManager {
 			activeAttemptId = '';
 			controller.signal.removeEventListener('abort', cancelSession);
 			task.controller = undefined;
-			task.file = undefined;
+			if (task.phase !== 'conflict') task.file = undefined;
 		}
 	}
 }
