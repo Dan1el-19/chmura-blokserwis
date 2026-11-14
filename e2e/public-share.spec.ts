@@ -12,7 +12,7 @@ test('opens a public share without initializing Clerk', async ({ page }) => {
 					listener();
 					return () => {};
 				},
-				mountSignIn: () => {},
+				mountSignIn: (host: HTMLElement) => { host.textContent = 'Formularz Clerk'; },
 				unmountSignIn: () => {}
 			}
 		});
@@ -51,7 +51,7 @@ test('opens a public share without initializing Clerk', async ({ page }) => {
 	expect(clerkRequest).toBe(false);
 	await page.getByRole('link', { name: 'Otwórz Chmurę Blokserwis' }).click();
 	await expect(page).toHaveURL('/');
-	await expect(page.getByRole('heading', { name: 'Zaloguj się' })).toBeVisible();
+	await expect(page.getByText('Formularz Clerk', { exact: true })).toBeVisible();
 });
 
 test('unlocks a protected share by sending the password in the request body', async ({ page }) => {
