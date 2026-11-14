@@ -2,6 +2,8 @@
 	import UploadNavigation from './UploadNavigation.svelte';
 	import type { UploadManager } from '#lib/upload-manager.svelte.js';
 	import { SignOut } from 'phosphor-svelte';
+	import { fly, scale } from 'svelte/transition';
+	import { backOut, quintOut } from 'svelte/easing';
 	import { resolve } from '$app/paths';
 	import type { Component } from 'svelte';
 	import type { AppRoute, AppRouteWithQuery } from '#lib/routes.js';
@@ -22,8 +24,25 @@
 		onSignOut: () => void;
 		isDrawerOpen: boolean;
 	} = $props();
-	const primaryNavItems = $derived(navItems.filter((item) => item.href !== '/trash' && item.href !== '/settings'));
-	const secondaryNavItems = $derived(navItems.filter((item) => item.href === '/trash' || item.href === '/settings'));
+	const primaryNavItems = $derived(
+		navItems.filter((item) => item.href !== '/trash' && item.href !== '/settings')
+	);
+	const secondaryNavItems = $derived(
+		navItems.filter((item) => item.href === '/trash' || item.href === '/settings')
+	);
+
+	function itemDelay(index: number) {
+		return 35 + index * 38;
+	}
+
+	function activeBgFor(item: NavItem) {
+		if (item.color === 'bg-blue-500') return 'bg-blue-100/55 dark:bg-blue-900/50';
+		if (item.color === 'bg-emerald-500') return 'bg-emerald-100/55 dark:bg-emerald-900/50';
+		if (item.color === 'bg-indigo-500') return 'bg-indigo-100/55 dark:bg-indigo-900/50';
+		if (item.color === 'bg-violet-500') return 'bg-violet-100/55 dark:bg-violet-900/50';
+		if (item.color === 'bg-red-500') return 'bg-red-100/55 dark:bg-red-900/50';
+		return 'bg-bg-panel/55';
+	}
 
 	function isActive(item: NavItem) {
 		return currentPath === item.href || (item.href !== '/' && currentPath.startsWith(`${item.href}/`));
@@ -31,30 +50,67 @@
 </script>
 
 {#if isDrawerOpen}
-	<button type="button" class="fixed inset-0 z-20 mt-14 bg-black/40 lg:hidden" onclick={() => (isDrawerOpen = false)} aria-label="Zamknij menu"></button>
-	<nav class="fixed top-14 left-0 z-30 flex max-h-[calc(100dvh-3.5rem)] w-full flex-col gap-1 overflow-y-auto border-b border-border-line bg-bg-panel p-4 shadow-lg lg:hidden" aria-label="Nawigacja mobilna">
-		{#each primaryNavItems as item (item.href)}
+	<button
+		type="button"
+		class="fixed inset-0 z-20 mt-14 bg-black/25 backdrop-blur-md lg:hidden"
+		onclick={() => (isDrawerOpen = false)}
+		aria-label="Zamknij menu"
+	></button>
+	<nav
+		class="fixed top-14 left-0 z-30 flex max-h-[calc(100dvh-3.5rem)] w-screen max-w-[100vw] flex-col gap-2 overflow-x-hidden overflow-y-auto p-4 lg:hidden"
+		aria-label="Nawigacja mobilna"
+		in:fly={{ y: -20, duration: 300, opacity: 1, easing: quintOut }}
+		out:fly={{ y: -10, duration: 150, opacity: 1 }}
+	>
+		{#each primaryNavItems as item, i (item.href)}
 			<a
 				aria-current={isActive(item) ? 'page' : undefined}
 				href={resolve((lastFolders[item.href] ? `${item.href}?folder=${encodeURIComponent(lastFolders[item.href])}` : item.href) as AppRouteWithQuery)}
 				onclick={() => (isDrawerOpen = false)}
-				class="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium {isActive(item) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' : 'text-text-main hover:bg-gray-100 dark:hover:bg-zinc-800'}"
+				class="flex w-full min-w-0 items-center gap-4 rounded-full py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]
+					{isActive(item) ? activeBgFor(item) : 'bg-bg-panel/55'}"
+				in:fly={{ y: -24, duration: 280, delay: itemDelay(i), easing: backOut }}
+				out:scale={{ duration: 100, start: 0.95 }}
 			>
-				<item.icon class="h-5 w-5 shrink-0" />
-				<span>{item.label}</span>
+				<span class="flex h-10 w-10 items-center justify-center rounded-full {item.color} text-white">
+					<item.icon class="h-5 w-5" weight="bold" />
+				</span>
+				<span class="text-base font-medium text-text-main">{item.label}</span>
 			</a>
 		{/each}
-		<UploadNavigation {manager} onopen={() => isDrawerOpen = false} />
-		<div class="my-2 border-t border-border-line"></div>
-		{#each secondaryNavItems as item (item.href)}
-			<a aria-current={isActive(item) ? 'page' : undefined} href={resolve(item.href)} onclick={() => (isDrawerOpen = false)} class="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium {isActive(item) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' : 'text-text-main hover:bg-gray-100 dark:hover:bg-zinc-800'}">
-				<item.icon class="h-5 w-5 shrink-0" />
-				<span>{item.label}</span>
+
+		<UploadNavigation {manager} mobile onopen={() => isDrawerOpen = false} />
+		{#each secondaryNavItems as item, index (item.href)}
+			<a
+				aria-current={isActive(item) ? 'page' : undefined}
+				href={resolve(item.href)}
+				onclick={() => (isDrawerOpen = false)}
+				class="mt-2 flex w-full min-w-0 items-center gap-4 rounded-full py-3 pr-6 pl-3 shadow-lg transition-transform active:scale-[0.98]
+					{isActive(item) ? activeBgFor(item) : 'bg-bg-panel/55'}"
+				in:fly={{ y: -24, duration: 280, delay: itemDelay(primaryNavItems.length + index), easing: backOut }}
+				out:scale={{ duration: 100, start: 0.95 }}
+			>
+				<span class="flex h-10 w-10 items-center justify-center rounded-full {item.color} text-white">
+					<item.icon class="h-5 w-5" weight="bold" />
+				</span>
+				<span class="text-base font-medium text-text-main">{item.label}</span>
 			</a>
 		{/each}
-		<button type="button" onclick={() => { isDrawerOpen = false; onSignOut(); }} class="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-text-main hover:bg-gray-100 dark:hover:bg-zinc-800">
-			<SignOut class="h-5 w-5 shrink-0" />
-			<span>Wyloguj</span>
+
+		<button
+			type="button"
+			onclick={() => {
+				isDrawerOpen = false;
+				onSignOut();
+			}}
+			class="flex w-full items-center gap-4 rounded-full bg-bg-panel/55 py-3 pr-6 pl-3 text-left shadow-lg transition-transform active:scale-[0.98]"
+			in:fly={{ y: -24, duration: 280, delay: itemDelay(primaryNavItems.length + secondaryNavItems.length), easing: backOut }}
+			out:scale={{ duration: 100, start: 0.95 }}
+		>
+			<span class="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white">
+				<SignOut class="h-5 w-5" weight="bold" />
+			</span>
+			<span class="text-base font-medium text-text-main">Wyloguj</span>
 		</button>
 	</nav>
 {/if}
