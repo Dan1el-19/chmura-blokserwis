@@ -6,13 +6,17 @@
 	let { operation, proposal = false }: { operation: GetQuoteOperationResponse; proposal?: boolean } = $props();
 	let active = $derived(operation.status === 'queued' || operation.status === 'running');
 	let sections = $derived(partialDescription(operation.partialJson));
-	let sources = $derived(researchSources(operation.searches));
+	let events = $derived(operation.events ?? []);
+	let sources = $derived(researchSources([...operation.searches, { sources: events.filter(event => event.url).map(event => ({ title:event.title, url:event.url })) }]));
+	let latest = $derived(events.filter(event => event.kind !== 'text').at(-1));
 	let headline = $derived(
 		operation.status === 'queued' ? 'Przygotowuję generowanie' :
 		operation.status === 'conflict' ? 'Szkic zmienił się podczas generowania' :
 		operation.status === 'uncertain' ? 'Nie udało się potwierdzić wyniku' :
+		operation.status === 'cancelled' ? 'Praca asystenta zatrzymana' :
 		operation.status === 'failed' ? 'Nie udało się wygenerować opisu' :
 		operation.status === 'succeeded' ? (proposal ? 'Propozycja gotowa' : 'Opis jest gotowy') :
+		latest && active ? latest.text :
 		operation.researchStatus === 'searching' ? 'Szukam informacji o urządzeniach' :
 		sections.length ? 'Piszę treść oferty' : 'Przygotowuję treść oferty'
 	);
@@ -36,9 +40,10 @@
 		</div>
 	</div>
 
-	{#if operation.searches.length || operation.researchStatus === 'disabled' || operation.researchStatus === 'no_results'}
+	{#if events.length || operation.searches.length || operation.researchStatus === 'disabled' || operation.researchStatus === 'no_results'}
 	<details open={active} class="space-y-3 border-t border-primary/15 pt-3">
 		<summary class="cursor-pointer text-xs font-medium text-text-main">Szczegóły aktywności</summary>
+	{#if events.length}<ol class="space-y-2 text-xs">{#each events.filter(event => event.kind !== 'text') as event (event.sequence)}<li class="break-words text-text-muted">{event.text}</li>{/each}</ol>{/if}
 	{#if operation.searches.length}
 		<div class="space-y-2 border-t border-primary/15 pt-3">
 			<p class="flex items-center gap-2 text-xs font-semibold text-text-main"><Globe size={16} /> Wyszukiwanie w internecie</p>
@@ -71,7 +76,7 @@
 	</details>
 	{/if}
 
-	{#if active && sections.length}
+	{#if active && operation.partialText}<div class="border-t border-primary/15 pt-3" aria-label="Powstający opis AI"><p class="mb-2 text-xs font-semibold">Powstająca treść</p><p class="whitespace-pre-wrap break-words leading-relaxed">{operation.partialText}<span aria-hidden="true" class="motion-safe:animate-pulse"> ▍</span></p></div>{:else if active && sections.length}
 		<div class="space-y-3 border-t border-primary/15 pt-3" aria-label="Powstający opis AI">
 			<p class="text-xs font-semibold text-text-main">Powstająca treść</p>
 			{#each sections as section, index (section.label)}

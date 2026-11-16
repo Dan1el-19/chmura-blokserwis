@@ -2,10 +2,9 @@
 	import { getContext, onMount } from 'svelte';
 	import { Code, ConnectError } from '@connectrpc/connect';
 	import { AUTH_CONTEXT, type AuthContext } from '#lib/auth-context.js';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { getQuoteClient } from '#lib/api.js';
-	import { QuotePriceMode, type Quote } from '#lib/gen/unisource/v2/quotes_pb.js';
+	import { type Quote } from '#lib/gen/unisource/v2/quotes_pb.js';
 	import { button, panel, primary, quoteError } from '#lib/quotes/ui.js';
 	import PageHeader from '#lib/components/ui/PageHeader.svelte';
 
@@ -13,13 +12,11 @@
 	let archived = $state(false);
 	let offset = $state(0);
 	let loading = $state(true);
-	let creating = $state(false);
 	let error = $state('');
 	let denied = $state(false);
 	const auth = getContext<AuthContext>(AUTH_CONTEXT);
 	const authState = auth.state;
 	let request = 0;
-	let createKey = '';
 
 	async function load(nextOffset = 0, archive = archived) {
 		const current = ++request;
@@ -42,24 +39,6 @@
 		}
 	}
 
-	async function createQuote() {
-		creating = true;
-		error = '';
-		try {
-			createKey ||= crypto.randomUUID();
-			const result = await getQuoteClient().createQuote({
-				idempotencyKey: createKey,
-				draft: { title: 'Nowa wycena', priceMode: QuotePriceMode.GROSS, documentSchemaVersion: 2 }
-			});
-			if (!result.quote) throw new Error('Nie otrzymano identyfikatora szkicu.');
-			await goto(resolve('/wyceny/[id]', { id: result.quote.id }));
-		} catch (reason) {
-			error = quoteError(reason);
-		} finally {
-			creating = false;
-		}
-	}
-
 	async function activateOrganization(organization: string) {
 		try { await auth.selectOrganization(organization); await load(); }
 		catch (reason) { error = quoteError(reason); }
@@ -71,7 +50,7 @@
 <section class="mx-auto max-w-5xl space-y-4">
 	<PageHeader title="Wyceny">
 		{#snippet actions()}
-		<button type="button" class={primary} disabled={creating} onclick={createQuote}>Nowa wycena</button>
+		<a class="{primary} inline-flex min-h-11 items-center" href={resolve('/wyceny/[id]', { id: 'nowa' })}>Nowa wycena</a>
 		{/snippet}
 	</PageHeader>
 	<div class="flex gap-2">

@@ -29,3 +29,13 @@ it('collapses completed research while keeping its sources available', async () 
 	await view.getByText('Źródła internetowe (1)').click();
 	await expect.element(view.getByRole('link', { name: 'Karta produktu' })).toBeVisible();
 });
+
+it('streams current agent text and collapsible real tool activity for the new document', async () => {
+ const operation = create(GetQuoteOperationResponseSchema, {
+  status:'running', partialText:'Zwora elektromagnetyczna utrzymuje drzwi w pozycji zamkniętej.',
+  events:[{sequence:1n,kind:'read_started',text:'Czytam stronę producenta',url:'https://example.com/zwora',title:'Karta zwory'}]
+ });
+ const view=await render(QuoteAiActivity,{operation,proposal:true});
+ await expect.element(view.getByText('Zwora elektromagnetyczna utrzymuje drzwi w pozycji zamkniętej.')).toBeVisible();
+ await expect.element(view.getByText('Czytam stronę producenta').first()).toBeVisible();
+});

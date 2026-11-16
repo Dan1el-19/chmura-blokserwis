@@ -5,6 +5,10 @@ package unisource.v2;
 option go_package = "github.com/Dan1el-19/UniSourceGO/gen/unisource/v2;unisourcev2";
 
 service QuoteService {
+  rpc SendQuoteAgentMessage(SendQuoteAgentMessageRequest) returns (SendQuoteAgentMessageResponse);
+  rpc GetQuoteConversation(GetQuoteConversationRequest) returns (GetQuoteConversationResponse);
+  rpc CancelQuoteAgentTurn(CancelQuoteAgentTurnRequest) returns (CancelQuoteAgentTurnResponse);
+  rpc SaveQuoteWorkflow(SaveQuoteWorkflowRequest) returns (SaveQuoteWorkflowResponse);
   rpc GenerateQuoteText(GenerateQuoteTextRequest) returns (GenerateQuoteTextResponse);
   rpc ApplyQuoteText(ApplyQuoteTextRequest) returns (ApplyQuoteTextResponse);
   rpc GetQuoteOperation(GetQuoteOperationRequest) returns (GetQuoteOperationResponse);
@@ -85,6 +89,7 @@ message Quote {
   int64 current_revision = 4;
   bool archived = 5;
   QuoteDraft draft = 6;
+  QuoteWorkflowState workflow = 7;
 }
 
 message CreateQuoteRequest {
@@ -329,6 +334,10 @@ message GetQuoteOperationResponse {
   string research_status = 6;
   repeated QuoteResearchSearch searches = 7;
   repeated QuoteScopeSection proposed_scope_sections = 8;
+  repeated QuoteLineTextProposal proposed_line_texts = 9;
+  repeated QuoteAgentEvent events = 10;
+  int64 last_event_sequence = 11;
+  string partial_text = 12;
 }
 
 message ApplyQuoteTextRequest {
@@ -336,6 +345,7 @@ message ApplyQuoteTextRequest {
   string operation_id = 2;
   int64 expected_version = 3;
   string idempotency_key = 4;
+  bool apply_line_texts = 5;
 }
 
 message ApplyQuoteTextResponse {
@@ -356,8 +366,70 @@ message QuoteResearchSearch {
 message WatchQuoteOperationRequest {
   string quote_id = 1;
   string operation_id = 2;
+  int64 after_sequence = 3;
 }
 
 message WatchQuoteOperationResponse {
+  GetQuoteOperationResponse operation = 1;
+}
+
+// Presentation state is independent of draft_version and cannot change document data.
+message QuoteWorkflowState {
+  string stage = 1; // import, review, agent, preview, summary
+  string ai_choice = 2; // undecided, yes, no
+  int64 version = 3;
+}
+message SaveQuoteWorkflowRequest {
+  string quote_id = 1;
+  int64 expected_version = 2; // workflow version, not draft version
+  QuoteWorkflowState workflow = 3;
+}
+message SaveQuoteWorkflowResponse {
+  QuoteWorkflowState workflow = 1;
+}
+message QuoteLineTextProposal {
+  int32 line_index = 1;
+  string name = 2;
+  string description = 3;
+}
+message QuoteAgentEvent {
+  int64 sequence = 1;
+  string kind = 2; // search_started, search_completed, read_started, read_completed, warning, text, proposal, done
+  string text = 3;
+  string url = 4;
+  string title = 5;
+  string created_at = 6;
+}
+message QuoteAgentMessage {
+  int64 id = 1;
+  string role = 2;
+  string text = 3;
+  string operation_id = 4;
+  int64 draft_version = 5;
+  string created_at = 6;
+}
+message SendQuoteAgentMessageRequest {
+  string quote_id = 1;
+  int64 expected_version = 2;
+  string idempotency_key = 3;
+  string message = 4;
+}
+message GetQuoteConversationRequest {
+  string quote_id = 1;
+  int64 before_id = 2; // zero returns the newest page
+}
+message GetQuoteConversationResponse {
+  repeated QuoteAgentMessage messages = 1;
+  bool has_more = 2;
+}
+message CancelQuoteAgentTurnRequest {
+  string quote_id = 1;
+  string operation_id = 2;
+}
+
+message SendQuoteAgentMessageResponse {
+  string operation_id = 1;
+}
+message CancelQuoteAgentTurnResponse {
   GetQuoteOperationResponse operation = 1;
 }

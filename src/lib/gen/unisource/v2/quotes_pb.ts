@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file unisource/v2/quotes.proto.
  */
 export const file_unisource_v2_quotes: GenFile = /*@__PURE__*/
-  fileDesc("Chl1bmlzb3VyY2UvdjIvcXVvdGVzLnByb3RvEgx1bmlzb3VyY2UudjIiMgoRUXVvdGVTY29wZVNlY3Rpb24SDwoHaGVhZGluZxgBIAEoCRIMCgRib2R5GAIgASgJIpcBCglRdW90ZUxpbmUSDAoEbmFtZRgBIAEoCRIQCghxdWFudGl0eRgCIAEoCRISCgp1bml0X3ByaWNlGAMgASgJEiwKCHZhdF9raW5kGAQgASgOMhoudW5pc291cmNlLnYyLlF1b3RlVmF0S2luZBITCgt2YXRfcGVyY2VudBgFIAEoCRITCgtkZXNjcmlwdGlvbhgGIAEoCSKUAwoKUXVvdGVEcmFmdBINCgV0aXRsZRgBIAEoCRIOCgZjbGllbnQYAiABKAkSMAoKcHJpY2VfbW9kZRgDIAEoDjIcLnVuaXNvdXJjZS52Mi5RdW90ZVByaWNlTW9kZRImCgVsaW5lcxgEIAMoCzIXLnVuaXNvdXJjZS52Mi5RdW90ZUxpbmUSFAoMaW50cm9kdWN0aW9uGAUgASgJEg0KBXNjb3BlGAYgASgJEh0KFXRlY2huaWNhbF9kZXNjcmlwdGlvbhgHIAEoCRISCgpjb25jbHVzaW9uGAggASgJEhUKDWRvY3VtZW50X2RhdGUYCSABKAkSNwoOc2NvcGVfc2VjdGlvbnMYCiADKAsyHy51bmlzb3VyY2UudjIuUXVvdGVTY29wZVNlY3Rpb24SHwoXZG9jdW1lbnRfc2NoZW1hX3ZlcnNpb24YCyABKAUSRAoUZGVzY3JpcHRpb25fc3RhbmRhcmQYDCABKA4yJi51bmlzb3VyY2UudjIuUXVvdGVEZXNjcmlwdGlvblN0YW5kYXJkIo8BCgVRdW90ZRIKCgJpZBgBIAEoCRIOCgZudW1iZXIYAiABKAkSFQoNZHJhZnRfdmVyc2lvbhgDIAEoAxIYChBjdXJyZW50X3JldmlzaW9uGAQgASgDEhAKCGFyY2hpdmVkGAUgASgIEicKBWRyYWZ0GAYgASgLMhgudW5pc291cmNlLnYyLlF1b3RlRHJhZnQiVgoSQ3JlYXRlUXVvdGVSZXF1ZXN0EhcKD2lkZW1wb3RlbmN5X2tleRgBIAEoCRInCgVkcmFmdBgCIAEoCzIYLnVuaXNvdXJjZS52Mi5RdW90ZURyYWZ0IiMKD0dldFF1b3RlUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCSJNChFMaXN0UXVvdGVzUmVxdWVzdBIQCghhcmNoaXZlZBgBIAEoCBIRCglwYWdlX3NpemUYAiABKAUSEwoLcGFnZV9vZmZzZXQYAyABKAUiOQoSTGlzdFF1b3Rlc1Jlc3BvbnNlEiMKBnF1b3RlcxgBIAMoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSKAAQoQU2F2ZURyYWZ0UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCRInCgVkcmFmdBgEIAEoCzIYLnVuaXNvdXJjZS52Mi5RdW90ZURyYWZ0IloKE0FyY2hpdmVRdW90ZVJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgCIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkiWgoTUmVzdG9yZVF1b3RlUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCSI5ChNDcmVhdGVRdW90ZVJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIjYKEEdldFF1b3RlUmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiNwoRU2F2ZURyYWZ0UmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiOgoUQXJjaGl2ZVF1b3RlUmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiOgoUUmVzdG9yZVF1b3RlUmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUi0gEKElF1b3RlSW1wb3J0TWFwcGluZxINCgVzaGVldBgBIAEoCRIRCglmaXJzdF9yb3cYAiABKAUSEAoIbGFzdF9yb3cYAyABKAUSEwoLbmFtZV9jb2x1bW4YBCABKAUSFwoPcXVhbnRpdHlfY29sdW1uGAUgASgFEhQKDHByaWNlX2NvbHVtbhgGIAEoBRISCgp0b3RhbF9jZWxsGAcgASgJEjAKCnByaWNlX21vZGUYCCABKA4yHC51bmlzb3VyY2UudjIuUXVvdGVQcmljZU1vZGUiTAoPUXVvdGVJbXBvcnRMaW5lEhIKCnNvdXJjZV9yb3cYASABKAUSJQoEbGluZRgCIAEoCzIXLnVuaXNvdXJjZS52Mi5RdW90ZUxpbmUinwIKEVF1b3RlSW1wb3J0UmVzdWx0EgoKAmlkGAEgASgJEg4KBnN0YXR1cxgCIAEoCRISCgplcnJvcl9jb2RlGAMgASgJEjEKB21hcHBpbmcYBCABKAsyIC51bmlzb3VyY2UudjIuUXVvdGVJbXBvcnRNYXBwaW5nEiwKBWxpbmVzGAUgAygLMh0udW5pc291cmNlLnYyLlF1b3RlSW1wb3J0TGluZRISCgpiYXNlX3RvdGFsGAYgASgJEhkKDHNvdXJjZV90b3RhbBgHIAEoCUgAiAEBEhAKCHdhcm5pbmdzGAggAygJEg8KB2FwcGxpZWQYCSABKAgSFgoOcmVzdWx0X3ZlcnNpb24YCiABKANCDwoNX3NvdXJjZV90b3RhbCJrChZVcGxvYWRRdW90ZVhsc3hSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAiABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJEgwKBHhsc3gYBCABKAwiLAoXVXBsb2FkUXVvdGVYbHN4UmVzcG9uc2USEQoJaW1wb3J0X2lkGAEgASgJIj0KFkdldEltcG9ydFJlc3VsdFJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSEQoJaW1wb3J0X2lkGAIgASgJIkoKF0dldEltcG9ydFJlc3VsdFJlc3BvbnNlEi8KBnJlc3VsdBgBIAEoCzIfLnVuaXNvdXJjZS52Mi5RdW90ZUltcG9ydFJlc3VsdCKkAQoXUmVtYXBRdW90ZUltcG9ydFJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSEQoJaW1wb3J0X2lkGAIgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAyABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAQgASgJEjEKB21hcHBpbmcYBSABKAsyIC51bmlzb3VyY2UudjIuUXVvdGVJbXBvcnRNYXBwaW5nIi0KGFJlbWFwUXVvdGVJbXBvcnRSZXNwb25zZRIRCglpbXBvcnRfaWQYASABKAki5wEKEkFwcGx5SW1wb3J0UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIRCglpbXBvcnRfaWQYAiABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgDIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYBCABKAkSMAoKcHJpY2VfbW9kZRgFIAEoDjIcLnVuaXNvdXJjZS52Mi5RdW90ZVByaWNlTW9kZRIvCg5yZXZpZXdlZF9saW5lcxgGIAMoCzIXLnVuaXNvdXJjZS52Mi5RdW90ZUxpbmUSFgoOcmVzdWx0X3ZlcnNpb24YByABKAMiOQoTQXBwbHlJbXBvcnRSZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSJaChNBcHByb3ZlUXVvdGVSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAiABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJIjoKFEFwcHJvdmVRdW90ZVJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlImIKG1B1Ymxpc2hRdW90ZVJldmlzaW9uUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCSJCChxQdWJsaXNoUXVvdGVSZXZpc2lvblJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIlUKGUxpc3RRdW90ZVJldmlzaW9uc1JlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSEQoJcGFnZV9zaXplGAIgASgFEhMKC3BhZ2Vfb2Zmc2V0GAMgASgFImsKEVF1b3RlUmV2aXNpb25JbmZvEhAKCHJldmlzaW9uGAEgASgDEhQKDHB1Ymxpc2hlZF9hdBgCIAEoCRIUCgxwdWJsaXNoZWRfYnkYAyABKAkSGAoQdGVtcGxhdGVfdmVyc2lvbhgEIAEoCSJQChpMaXN0UXVvdGVSZXZpc2lvbnNSZXNwb25zZRIyCglyZXZpc2lvbnMYASADKAsyHy51bmlzb3VyY2UudjIuUXVvdGVSZXZpc2lvbkluZm8iPAoWR2V0UXVvdGVQcmV2aWV3UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIQCghyZXZpc2lvbhgCIAEoAyI+ChdHZXRRdW90ZVByZXZpZXdSZXNwb25zZRIMCgRodG1sGAEgASgJEhUKDWRyYWZ0X3ZlcnNpb24YAiABKAMiXgoXR2VuZXJhdGVEcmFmdFBkZlJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgCIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkiPgoYR2VuZXJhdGVEcmFmdFBkZlJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlImUKEkdldFF1b3RlUGRmUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIQCghyZXZpc2lvbhgCIAEoAxIVCg1kcmFmdF92ZXJzaW9uGAMgASgDEhQKDG9wZXJhdGlvbl9pZBgEIAEoCSKJAQoTR2V0UXVvdGVQZGZSZXNwb25zZRIOCgZzdGF0dXMYASABKAkSCwoDdXJsGAIgASgJEhIKCmVycm9yX2NvZGUYAyABKAkSEAoIcmV2aXNpb24YBCABKAMSFQoNZHJhZnRfdmVyc2lvbhgFIAEoAxIYChB0ZW1wbGF0ZV92ZXJzaW9uGAcgASgJImoKFFJldHJ5UXVvdGVQZGZSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhAKCHJldmlzaW9uGAIgASgDEhUKDWRyYWZ0X3ZlcnNpb24YAyABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAQgASgJIjsKFVJldHJ5UXVvdGVQZGZSZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSJfChhHZW5lcmF0ZVF1b3RlVGV4dFJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgCIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkiMQoZR2VuZXJhdGVRdW90ZVRleHRSZXNwb25zZRIUCgxvcGVyYXRpb25faWQYASABKAkiQgoYR2V0UXVvdGVPcGVyYXRpb25SZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhQKDG9wZXJhdGlvbl9pZBgCIAEoCSKSAgoZR2V0UXVvdGVPcGVyYXRpb25SZXNwb25zZRIOCgZzdGF0dXMYASABKAkSEgoKZXJyb3JfY29kZRgCIAEoCRIVCg1kcmFmdF92ZXJzaW9uGAMgASgDEhQKDG9wZXJhdGlvbl9pZBgEIAEoCRIUCgxwYXJ0aWFsX2pzb24YBSABKAkSFwoPcmVzZWFyY2hfc3RhdHVzGAYgASgJEjMKCHNlYXJjaGVzGAcgAygLMiEudW5pc291cmNlLnYyLlF1b3RlUmVzZWFyY2hTZWFyY2gSQAoXcHJvcG9zZWRfc2NvcGVfc2VjdGlvbnMYCCADKAsyHy51bmlzb3VyY2UudjIuUXVvdGVTY29wZVNlY3Rpb24icgoVQXBwbHlRdW90ZVRleHRSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhQKDG9wZXJhdGlvbl9pZBgCIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAMgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgEIAEoCSI8ChZBcHBseVF1b3RlVGV4dFJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIjEKE1F1b3RlUmVzZWFyY2hTb3VyY2USDQoFdGl0bGUYASABKAkSCwoDdXJsGAIgASgJImcKE1F1b3RlUmVzZWFyY2hTZWFyY2gSDAoEaXRlbRgBIAEoCRIOCgZzdGF0dXMYAiABKAkSMgoHc291cmNlcxgDIAMoCzIhLnVuaXNvdXJjZS52Mi5RdW90ZVJlc2VhcmNoU291cmNlIkQKGldhdGNoUXVvdGVPcGVyYXRpb25SZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhQKDG9wZXJhdGlvbl9pZBgCIAEoCSJZChtXYXRjaFF1b3RlT3BlcmF0aW9uUmVzcG9uc2USOgoJb3BlcmF0aW9uGAEgASgLMicudW5pc291cmNlLnYyLkdldFF1b3RlT3BlcmF0aW9uUmVzcG9uc2UqaAoOUXVvdGVQcmljZU1vZGUSIAocUVVPVEVfUFJJQ0VfTU9ERV9VTlNQRUNJRklFRBAAEhgKFFFVT1RFX1BSSUNFX01PREVfTkVUEAESGgoWUVVPVEVfUFJJQ0VfTU9ERV9HUk9TUxACKoMBCgxRdW90ZVZhdEtpbmQSHgoaUVVPVEVfVkFUX0tJTkRfVU5TUEVDSUZJRUQQABIXChNRVU9URV9WQVRfS0lORF9SQVRFEAESGQoVUVVPVEVfVkFUX0tJTkRfRVhFTVBUEAISHwobUVVPVEVfVkFUX0tJTkRfT1VUX09GX1NDT1BFEAMq8QEKGFF1b3RlRGVzY3JpcHRpb25TdGFuZGFyZBIqCiZRVU9URV9ERVNDUklQVElPTl9TVEFOREFSRF9VTlNQRUNJRklFRBAAEiYKIlFVT1RFX0RFU0NSSVBUSU9OX1NUQU5EQVJEX0dFTkVSQUwQARIpCiVRVU9URV9ERVNDUklQVElPTl9TVEFOREFSRF9NT05JVE9SSU5HEAISLQopUVVPVEVfREVTQ1JJUFRJT05fU1RBTkRBUkRfQUNDRVNTX0NPTlRST0wQAxInCiNRVU9URV9ERVNDUklQVElPTl9TVEFOREFSRF9JTlRFUkNPTRAEMqgPCgxRdW90ZVNlcnZpY2USZAoRR2VuZXJhdGVRdW90ZVRleHQSJi51bmlzb3VyY2UudjIuR2VuZXJhdGVRdW90ZVRleHRSZXF1ZXN0GicudW5pc291cmNlLnYyLkdlbmVyYXRlUXVvdGVUZXh0UmVzcG9uc2USWwoOQXBwbHlRdW90ZVRleHQSIy51bmlzb3VyY2UudjIuQXBwbHlRdW90ZVRleHRSZXF1ZXN0GiQudW5pc291cmNlLnYyLkFwcGx5UXVvdGVUZXh0UmVzcG9uc2USZAoRR2V0UXVvdGVPcGVyYXRpb24SJi51bmlzb3VyY2UudjIuR2V0UXVvdGVPcGVyYXRpb25SZXF1ZXN0GicudW5pc291cmNlLnYyLkdldFF1b3RlT3BlcmF0aW9uUmVzcG9uc2USbAoTV2F0Y2hRdW90ZU9wZXJhdGlvbhIoLnVuaXNvdXJjZS52Mi5XYXRjaFF1b3RlT3BlcmF0aW9uUmVxdWVzdBopLnVuaXNvdXJjZS52Mi5XYXRjaFF1b3RlT3BlcmF0aW9uUmVzcG9uc2UwARJhChBHZW5lcmF0ZURyYWZ0UGRmEiUudW5pc291cmNlLnYyLkdlbmVyYXRlRHJhZnRQZGZSZXF1ZXN0GiYudW5pc291cmNlLnYyLkdlbmVyYXRlRHJhZnRQZGZSZXNwb25zZRJSCgtHZXRRdW90ZVBkZhIgLnVuaXNvdXJjZS52Mi5HZXRRdW90ZVBkZlJlcXVlc3QaIS51bmlzb3VyY2UudjIuR2V0UXVvdGVQZGZSZXNwb25zZRJYCg1SZXRyeVF1b3RlUGRmEiIudW5pc291cmNlLnYyLlJldHJ5UXVvdGVQZGZSZXF1ZXN0GiMudW5pc291cmNlLnYyLlJldHJ5UXVvdGVQZGZSZXNwb25zZRJVCgxBcHByb3ZlUXVvdGUSIS51bmlzb3VyY2UudjIuQXBwcm92ZVF1b3RlUmVxdWVzdBoiLnVuaXNvdXJjZS52Mi5BcHByb3ZlUXVvdGVSZXNwb25zZRJtChRQdWJsaXNoUXVvdGVSZXZpc2lvbhIpLnVuaXNvdXJjZS52Mi5QdWJsaXNoUXVvdGVSZXZpc2lvblJlcXVlc3QaKi51bmlzb3VyY2UudjIuUHVibGlzaFF1b3RlUmV2aXNpb25SZXNwb25zZRJnChJMaXN0UXVvdGVSZXZpc2lvbnMSJy51bmlzb3VyY2UudjIuTGlzdFF1b3RlUmV2aXNpb25zUmVxdWVzdBooLnVuaXNvdXJjZS52Mi5MaXN0UXVvdGVSZXZpc2lvbnNSZXNwb25zZRJeCg9HZXRRdW90ZVByZXZpZXcSJC51bmlzb3VyY2UudjIuR2V0UXVvdGVQcmV2aWV3UmVxdWVzdBolLnVuaXNvdXJjZS52Mi5HZXRRdW90ZVByZXZpZXdSZXNwb25zZRJeCg9VcGxvYWRRdW90ZVhsc3gSJC51bmlzb3VyY2UudjIuVXBsb2FkUXVvdGVYbHN4UmVxdWVzdBolLnVuaXNvdXJjZS52Mi5VcGxvYWRRdW90ZVhsc3hSZXNwb25zZRJeCg9HZXRJbXBvcnRSZXN1bHQSJC51bmlzb3VyY2UudjIuR2V0SW1wb3J0UmVzdWx0UmVxdWVzdBolLnVuaXNvdXJjZS52Mi5HZXRJbXBvcnRSZXN1bHRSZXNwb25zZRJhChBSZW1hcFF1b3RlSW1wb3J0EiUudW5pc291cmNlLnYyLlJlbWFwUXVvdGVJbXBvcnRSZXF1ZXN0GiYudW5pc291cmNlLnYyLlJlbWFwUXVvdGVJbXBvcnRSZXNwb25zZRJSCgtBcHBseUltcG9ydBIgLnVuaXNvdXJjZS52Mi5BcHBseUltcG9ydFJlcXVlc3QaIS51bmlzb3VyY2UudjIuQXBwbHlJbXBvcnRSZXNwb25zZRJSCgtDcmVhdGVRdW90ZRIgLnVuaXNvdXJjZS52Mi5DcmVhdGVRdW90ZVJlcXVlc3QaIS51bmlzb3VyY2UudjIuQ3JlYXRlUXVvdGVSZXNwb25zZRJJCghHZXRRdW90ZRIdLnVuaXNvdXJjZS52Mi5HZXRRdW90ZVJlcXVlc3QaHi51bmlzb3VyY2UudjIuR2V0UXVvdGVSZXNwb25zZRJPCgpMaXN0UXVvdGVzEh8udW5pc291cmNlLnYyLkxpc3RRdW90ZXNSZXF1ZXN0GiAudW5pc291cmNlLnYyLkxpc3RRdW90ZXNSZXNwb25zZRJMCglTYXZlRHJhZnQSHi51bmlzb3VyY2UudjIuU2F2ZURyYWZ0UmVxdWVzdBofLnVuaXNvdXJjZS52Mi5TYXZlRHJhZnRSZXNwb25zZRJVCgxBcmNoaXZlUXVvdGUSIS51bmlzb3VyY2UudjIuQXJjaGl2ZVF1b3RlUmVxdWVzdBoiLnVuaXNvdXJjZS52Mi5BcmNoaXZlUXVvdGVSZXNwb25zZRJVCgxSZXN0b3JlUXVvdGUSIS51bmlzb3VyY2UudjIuUmVzdG9yZVF1b3RlUmVxdWVzdBoiLnVuaXNvdXJjZS52Mi5SZXN0b3JlUXVvdGVSZXNwb25zZUI/Wj1naXRodWIuY29tL0RhbjFlbC0xOS9VbmlTb3VyY2VHTy9nZW4vdW5pc291cmNlL3YyO3VuaXNvdXJjZXYyYgZwcm90bzM");
+  fileDesc("Chl1bmlzb3VyY2UvdjIvcXVvdGVzLnByb3RvEgx1bmlzb3VyY2UudjIiMgoRUXVvdGVTY29wZVNlY3Rpb24SDwoHaGVhZGluZxgBIAEoCRIMCgRib2R5GAIgASgJIpcBCglRdW90ZUxpbmUSDAoEbmFtZRgBIAEoCRIQCghxdWFudGl0eRgCIAEoCRISCgp1bml0X3ByaWNlGAMgASgJEiwKCHZhdF9raW5kGAQgASgOMhoudW5pc291cmNlLnYyLlF1b3RlVmF0S2luZBITCgt2YXRfcGVyY2VudBgFIAEoCRITCgtkZXNjcmlwdGlvbhgGIAEoCSKUAwoKUXVvdGVEcmFmdBINCgV0aXRsZRgBIAEoCRIOCgZjbGllbnQYAiABKAkSMAoKcHJpY2VfbW9kZRgDIAEoDjIcLnVuaXNvdXJjZS52Mi5RdW90ZVByaWNlTW9kZRImCgVsaW5lcxgEIAMoCzIXLnVuaXNvdXJjZS52Mi5RdW90ZUxpbmUSFAoMaW50cm9kdWN0aW9uGAUgASgJEg0KBXNjb3BlGAYgASgJEh0KFXRlY2huaWNhbF9kZXNjcmlwdGlvbhgHIAEoCRISCgpjb25jbHVzaW9uGAggASgJEhUKDWRvY3VtZW50X2RhdGUYCSABKAkSNwoOc2NvcGVfc2VjdGlvbnMYCiADKAsyHy51bmlzb3VyY2UudjIuUXVvdGVTY29wZVNlY3Rpb24SHwoXZG9jdW1lbnRfc2NoZW1hX3ZlcnNpb24YCyABKAUSRAoUZGVzY3JpcHRpb25fc3RhbmRhcmQYDCABKA4yJi51bmlzb3VyY2UudjIuUXVvdGVEZXNjcmlwdGlvblN0YW5kYXJkIsMBCgVRdW90ZRIKCgJpZBgBIAEoCRIOCgZudW1iZXIYAiABKAkSFQoNZHJhZnRfdmVyc2lvbhgDIAEoAxIYChBjdXJyZW50X3JldmlzaW9uGAQgASgDEhAKCGFyY2hpdmVkGAUgASgIEicKBWRyYWZ0GAYgASgLMhgudW5pc291cmNlLnYyLlF1b3RlRHJhZnQSMgoId29ya2Zsb3cYByABKAsyIC51bmlzb3VyY2UudjIuUXVvdGVXb3JrZmxvd1N0YXRlIlYKEkNyZWF0ZVF1b3RlUmVxdWVzdBIXCg9pZGVtcG90ZW5jeV9rZXkYASABKAkSJwoFZHJhZnQYAiABKAsyGC51bmlzb3VyY2UudjIuUXVvdGVEcmFmdCIjCg9HZXRRdW90ZVJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkiTQoRTGlzdFF1b3Rlc1JlcXVlc3QSEAoIYXJjaGl2ZWQYASABKAgSEQoJcGFnZV9zaXplGAIgASgFEhMKC3BhZ2Vfb2Zmc2V0GAMgASgFIjkKEkxpc3RRdW90ZXNSZXNwb25zZRIjCgZxdW90ZXMYASADKAsyEy51bmlzb3VyY2UudjIuUXVvdGUigAEKEFNhdmVEcmFmdFJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgCIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkSJwoFZHJhZnQYBCABKAsyGC51bmlzb3VyY2UudjIuUXVvdGVEcmFmdCJaChNBcmNoaXZlUXVvdGVSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAiABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJIloKE1Jlc3RvcmVRdW90ZVJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgCIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkiOQoTQ3JlYXRlUXVvdGVSZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSI2ChBHZXRRdW90ZVJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIjcKEVNhdmVEcmFmdFJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIjoKFEFyY2hpdmVRdW90ZVJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIjoKFFJlc3RvcmVRdW90ZVJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlItIBChJRdW90ZUltcG9ydE1hcHBpbmcSDQoFc2hlZXQYASABKAkSEQoJZmlyc3Rfcm93GAIgASgFEhAKCGxhc3Rfcm93GAMgASgFEhMKC25hbWVfY29sdW1uGAQgASgFEhcKD3F1YW50aXR5X2NvbHVtbhgFIAEoBRIUCgxwcmljZV9jb2x1bW4YBiABKAUSEgoKdG90YWxfY2VsbBgHIAEoCRIwCgpwcmljZV9tb2RlGAggASgOMhwudW5pc291cmNlLnYyLlF1b3RlUHJpY2VNb2RlIkwKD1F1b3RlSW1wb3J0TGluZRISCgpzb3VyY2Vfcm93GAEgASgFEiUKBGxpbmUYAiABKAsyFy51bmlzb3VyY2UudjIuUXVvdGVMaW5lIp8CChFRdW90ZUltcG9ydFJlc3VsdBIKCgJpZBgBIAEoCRIOCgZzdGF0dXMYAiABKAkSEgoKZXJyb3JfY29kZRgDIAEoCRIxCgdtYXBwaW5nGAQgASgLMiAudW5pc291cmNlLnYyLlF1b3RlSW1wb3J0TWFwcGluZxIsCgVsaW5lcxgFIAMoCzIdLnVuaXNvdXJjZS52Mi5RdW90ZUltcG9ydExpbmUSEgoKYmFzZV90b3RhbBgGIAEoCRIZCgxzb3VyY2VfdG90YWwYByABKAlIAIgBARIQCgh3YXJuaW5ncxgIIAMoCRIPCgdhcHBsaWVkGAkgASgIEhYKDnJlc3VsdF92ZXJzaW9uGAogASgDQg8KDV9zb3VyY2VfdG90YWwiawoWVXBsb2FkUXVvdGVYbHN4UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCRIMCgR4bHN4GAQgASgMIiwKF1VwbG9hZFF1b3RlWGxzeFJlc3BvbnNlEhEKCWltcG9ydF9pZBgBIAEoCSI9ChZHZXRJbXBvcnRSZXN1bHRSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhEKCWltcG9ydF9pZBgCIAEoCSJKChdHZXRJbXBvcnRSZXN1bHRSZXNwb25zZRIvCgZyZXN1bHQYASABKAsyHy51bmlzb3VyY2UudjIuUXVvdGVJbXBvcnRSZXN1bHQipAEKF1JlbWFwUXVvdGVJbXBvcnRSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhEKCWltcG9ydF9pZBgCIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAMgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgEIAEoCRIxCgdtYXBwaW5nGAUgASgLMiAudW5pc291cmNlLnYyLlF1b3RlSW1wb3J0TWFwcGluZyItChhSZW1hcFF1b3RlSW1wb3J0UmVzcG9uc2USEQoJaW1wb3J0X2lkGAEgASgJIucBChJBcHBseUltcG9ydFJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSEQoJaW1wb3J0X2lkGAIgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAyABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAQgASgJEjAKCnByaWNlX21vZGUYBSABKA4yHC51bmlzb3VyY2UudjIuUXVvdGVQcmljZU1vZGUSLwoOcmV2aWV3ZWRfbGluZXMYBiADKAsyFy51bmlzb3VyY2UudjIuUXVvdGVMaW5lEhYKDnJlc3VsdF92ZXJzaW9uGAcgASgDIjkKE0FwcGx5SW1wb3J0UmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiWgoTQXBwcm92ZVF1b3RlUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCSI6ChRBcHByb3ZlUXVvdGVSZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSJiChtQdWJsaXNoUXVvdGVSZXZpc2lvblJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgCIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkiQgocUHVibGlzaFF1b3RlUmV2aXNpb25SZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSJVChlMaXN0UXVvdGVSZXZpc2lvbnNSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhEKCXBhZ2Vfc2l6ZRgCIAEoBRITCgtwYWdlX29mZnNldBgDIAEoBSJrChFRdW90ZVJldmlzaW9uSW5mbxIQCghyZXZpc2lvbhgBIAEoAxIUCgxwdWJsaXNoZWRfYXQYAiABKAkSFAoMcHVibGlzaGVkX2J5GAMgASgJEhgKEHRlbXBsYXRlX3ZlcnNpb24YBCABKAkiUAoaTGlzdFF1b3RlUmV2aXNpb25zUmVzcG9uc2USMgoJcmV2aXNpb25zGAEgAygLMh8udW5pc291cmNlLnYyLlF1b3RlUmV2aXNpb25JbmZvIjwKFkdldFF1b3RlUHJldmlld1JlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSEAoIcmV2aXNpb24YAiABKAMiPgoXR2V0UXVvdGVQcmV2aWV3UmVzcG9uc2USDAoEaHRtbBgBIAEoCRIVCg1kcmFmdF92ZXJzaW9uGAIgASgDIl4KF0dlbmVyYXRlRHJhZnRQZGZSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAiABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJIj4KGEdlbmVyYXRlRHJhZnRQZGZSZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSJlChJHZXRRdW90ZVBkZlJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSEAoIcmV2aXNpb24YAiABKAMSFQoNZHJhZnRfdmVyc2lvbhgDIAEoAxIUCgxvcGVyYXRpb25faWQYBCABKAkiiQEKE0dldFF1b3RlUGRmUmVzcG9uc2USDgoGc3RhdHVzGAEgASgJEgsKA3VybBgCIAEoCRISCgplcnJvcl9jb2RlGAMgASgJEhAKCHJldmlzaW9uGAQgASgDEhUKDWRyYWZ0X3ZlcnNpb24YBSABKAMSGAoQdGVtcGxhdGVfdmVyc2lvbhgHIAEoCSJqChRSZXRyeVF1b3RlUGRmUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIQCghyZXZpc2lvbhgCIAEoAxIVCg1kcmFmdF92ZXJzaW9uGAMgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgEIAEoCSI7ChVSZXRyeVF1b3RlUGRmUmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiXwoYR2VuZXJhdGVRdW90ZVRleHRSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAiABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJIjEKGUdlbmVyYXRlUXVvdGVUZXh0UmVzcG9uc2USFAoMb3BlcmF0aW9uX2lkGAEgASgJIkIKGEdldFF1b3RlT3BlcmF0aW9uUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIUCgxvcGVyYXRpb25faWQYAiABKAkitgMKGUdldFF1b3RlT3BlcmF0aW9uUmVzcG9uc2USDgoGc3RhdHVzGAEgASgJEhIKCmVycm9yX2NvZGUYAiABKAkSFQoNZHJhZnRfdmVyc2lvbhgDIAEoAxIUCgxvcGVyYXRpb25faWQYBCABKAkSFAoMcGFydGlhbF9qc29uGAUgASgJEhcKD3Jlc2VhcmNoX3N0YXR1cxgGIAEoCRIzCghzZWFyY2hlcxgHIAMoCzIhLnVuaXNvdXJjZS52Mi5RdW90ZVJlc2VhcmNoU2VhcmNoEkAKF3Byb3Bvc2VkX3Njb3BlX3NlY3Rpb25zGAggAygLMh8udW5pc291cmNlLnYyLlF1b3RlU2NvcGVTZWN0aW9uEkAKE3Byb3Bvc2VkX2xpbmVfdGV4dHMYCSADKAsyIy51bmlzb3VyY2UudjIuUXVvdGVMaW5lVGV4dFByb3Bvc2FsEi0KBmV2ZW50cxgKIAMoCzIdLnVuaXNvdXJjZS52Mi5RdW90ZUFnZW50RXZlbnQSGwoTbGFzdF9ldmVudF9zZXF1ZW5jZRgLIAEoAxIUCgxwYXJ0aWFsX3RleHQYDCABKAkijAEKFUFwcGx5UXVvdGVUZXh0UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIUCgxvcGVyYXRpb25faWQYAiABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgDIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYBCABKAkSGAoQYXBwbHlfbGluZV90ZXh0cxgFIAEoCCI8ChZBcHBseVF1b3RlVGV4dFJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIjEKE1F1b3RlUmVzZWFyY2hTb3VyY2USDQoFdGl0bGUYASABKAkSCwoDdXJsGAIgASgJImcKE1F1b3RlUmVzZWFyY2hTZWFyY2gSDAoEaXRlbRgBIAEoCRIOCgZzdGF0dXMYAiABKAkSMgoHc291cmNlcxgDIAMoCzIhLnVuaXNvdXJjZS52Mi5RdW90ZVJlc2VhcmNoU291cmNlIlwKGldhdGNoUXVvdGVPcGVyYXRpb25SZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhQKDG9wZXJhdGlvbl9pZBgCIAEoCRIWCg5hZnRlcl9zZXF1ZW5jZRgDIAEoAyJZChtXYXRjaFF1b3RlT3BlcmF0aW9uUmVzcG9uc2USOgoJb3BlcmF0aW9uGAEgASgLMicudW5pc291cmNlLnYyLkdldFF1b3RlT3BlcmF0aW9uUmVzcG9uc2UiRwoSUXVvdGVXb3JrZmxvd1N0YXRlEg0KBXN0YWdlGAEgASgJEhEKCWFpX2Nob2ljZRgCIAEoCRIPCgd2ZXJzaW9uGAMgASgDInoKGFNhdmVRdW90ZVdvcmtmbG93UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEjIKCHdvcmtmbG93GAMgASgLMiAudW5pc291cmNlLnYyLlF1b3RlV29ya2Zsb3dTdGF0ZSJPChlTYXZlUXVvdGVXb3JrZmxvd1Jlc3BvbnNlEjIKCHdvcmtmbG93GAEgASgLMiAudW5pc291cmNlLnYyLlF1b3RlV29ya2Zsb3dTdGF0ZSJOChVRdW90ZUxpbmVUZXh0UHJvcG9zYWwSEgoKbGluZV9pbmRleBgBIAEoBRIMCgRuYW1lGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJIm8KD1F1b3RlQWdlbnRFdmVudBIQCghzZXF1ZW5jZRgBIAEoAxIMCgRraW5kGAIgASgJEgwKBHRleHQYAyABKAkSCwoDdXJsGAQgASgJEg0KBXRpdGxlGAUgASgJEhIKCmNyZWF0ZWRfYXQYBiABKAkifAoRUXVvdGVBZ2VudE1lc3NhZ2USCgoCaWQYASABKAMSDAoEcm9sZRgCIAEoCRIMCgR0ZXh0GAMgASgJEhQKDG9wZXJhdGlvbl9pZBgEIAEoCRIVCg1kcmFmdF92ZXJzaW9uGAUgASgDEhIKCmNyZWF0ZWRfYXQYBiABKAkidAocU2VuZFF1b3RlQWdlbnRNZXNzYWdlUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCRIPCgdtZXNzYWdlGAQgASgJIkIKG0dldFF1b3RlQ29udmVyc2F0aW9uUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIRCgliZWZvcmVfaWQYAiABKAMiYwocR2V0UXVvdGVDb252ZXJzYXRpb25SZXNwb25zZRIxCghtZXNzYWdlcxgBIAMoCzIfLnVuaXNvdXJjZS52Mi5RdW90ZUFnZW50TWVzc2FnZRIQCghoYXNfbW9yZRgCIAEoCCJFChtDYW5jZWxRdW90ZUFnZW50VHVyblJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSFAoMb3BlcmF0aW9uX2lkGAIgASgJIjUKHVNlbmRRdW90ZUFnZW50TWVzc2FnZVJlc3BvbnNlEhQKDG9wZXJhdGlvbl9pZBgBIAEoCSJaChxDYW5jZWxRdW90ZUFnZW50VHVyblJlc3BvbnNlEjoKCW9wZXJhdGlvbhgBIAEoCzInLnVuaXNvdXJjZS52Mi5HZXRRdW90ZU9wZXJhdGlvblJlc3BvbnNlKmgKDlF1b3RlUHJpY2VNb2RlEiAKHFFVT1RFX1BSSUNFX01PREVfVU5TUEVDSUZJRUQQABIYChRRVU9URV9QUklDRV9NT0RFX05FVBABEhoKFlFVT1RFX1BSSUNFX01PREVfR1JPU1MQAiqDAQoMUXVvdGVWYXRLaW5kEh4KGlFVT1RFX1ZBVF9LSU5EX1VOU1BFQ0lGSUVEEAASFwoTUVVPVEVfVkFUX0tJTkRfUkFURRABEhkKFVFVT1RFX1ZBVF9LSU5EX0VYRU1QVBACEh8KG1FVT1RFX1ZBVF9LSU5EX09VVF9PRl9TQ09QRRADKvEBChhRdW90ZURlc2NyaXB0aW9uU3RhbmRhcmQSKgomUVVPVEVfREVTQ1JJUFRJT05fU1RBTkRBUkRfVU5TUEVDSUZJRUQQABImCiJRVU9URV9ERVNDUklQVElPTl9TVEFOREFSRF9HRU5FUkFMEAESKQolUVVPVEVfREVTQ1JJUFRJT05fU1RBTkRBUkRfTU9OSVRPUklORxACEi0KKVFVT1RFX0RFU0NSSVBUSU9OX1NUQU5EQVJEX0FDQ0VTU19DT05UUk9MEAMSJwojUVVPVEVfREVTQ1JJUFRJT05fU1RBTkRBUkRfSU5URVJDT00QBDLeEgoMUXVvdGVTZXJ2aWNlEnAKFVNlbmRRdW90ZUFnZW50TWVzc2FnZRIqLnVuaXNvdXJjZS52Mi5TZW5kUXVvdGVBZ2VudE1lc3NhZ2VSZXF1ZXN0GisudW5pc291cmNlLnYyLlNlbmRRdW90ZUFnZW50TWVzc2FnZVJlc3BvbnNlEm0KFEdldFF1b3RlQ29udmVyc2F0aW9uEikudW5pc291cmNlLnYyLkdldFF1b3RlQ29udmVyc2F0aW9uUmVxdWVzdBoqLnVuaXNvdXJjZS52Mi5HZXRRdW90ZUNvbnZlcnNhdGlvblJlc3BvbnNlEm0KFENhbmNlbFF1b3RlQWdlbnRUdXJuEikudW5pc291cmNlLnYyLkNhbmNlbFF1b3RlQWdlbnRUdXJuUmVxdWVzdBoqLnVuaXNvdXJjZS52Mi5DYW5jZWxRdW90ZUFnZW50VHVyblJlc3BvbnNlEmQKEVNhdmVRdW90ZVdvcmtmbG93EiYudW5pc291cmNlLnYyLlNhdmVRdW90ZVdvcmtmbG93UmVxdWVzdBonLnVuaXNvdXJjZS52Mi5TYXZlUXVvdGVXb3JrZmxvd1Jlc3BvbnNlEmQKEUdlbmVyYXRlUXVvdGVUZXh0EiYudW5pc291cmNlLnYyLkdlbmVyYXRlUXVvdGVUZXh0UmVxdWVzdBonLnVuaXNvdXJjZS52Mi5HZW5lcmF0ZVF1b3RlVGV4dFJlc3BvbnNlElsKDkFwcGx5UXVvdGVUZXh0EiMudW5pc291cmNlLnYyLkFwcGx5UXVvdGVUZXh0UmVxdWVzdBokLnVuaXNvdXJjZS52Mi5BcHBseVF1b3RlVGV4dFJlc3BvbnNlEmQKEUdldFF1b3RlT3BlcmF0aW9uEiYudW5pc291cmNlLnYyLkdldFF1b3RlT3BlcmF0aW9uUmVxdWVzdBonLnVuaXNvdXJjZS52Mi5HZXRRdW90ZU9wZXJhdGlvblJlc3BvbnNlEmwKE1dhdGNoUXVvdGVPcGVyYXRpb24SKC51bmlzb3VyY2UudjIuV2F0Y2hRdW90ZU9wZXJhdGlvblJlcXVlc3QaKS51bmlzb3VyY2UudjIuV2F0Y2hRdW90ZU9wZXJhdGlvblJlc3BvbnNlMAESYQoQR2VuZXJhdGVEcmFmdFBkZhIlLnVuaXNvdXJjZS52Mi5HZW5lcmF0ZURyYWZ0UGRmUmVxdWVzdBomLnVuaXNvdXJjZS52Mi5HZW5lcmF0ZURyYWZ0UGRmUmVzcG9uc2USUgoLR2V0UXVvdGVQZGYSIC51bmlzb3VyY2UudjIuR2V0UXVvdGVQZGZSZXF1ZXN0GiEudW5pc291cmNlLnYyLkdldFF1b3RlUGRmUmVzcG9uc2USWAoNUmV0cnlRdW90ZVBkZhIiLnVuaXNvdXJjZS52Mi5SZXRyeVF1b3RlUGRmUmVxdWVzdBojLnVuaXNvdXJjZS52Mi5SZXRyeVF1b3RlUGRmUmVzcG9uc2USVQoMQXBwcm92ZVF1b3RlEiEudW5pc291cmNlLnYyLkFwcHJvdmVRdW90ZVJlcXVlc3QaIi51bmlzb3VyY2UudjIuQXBwcm92ZVF1b3RlUmVzcG9uc2USbQoUUHVibGlzaFF1b3RlUmV2aXNpb24SKS51bmlzb3VyY2UudjIuUHVibGlzaFF1b3RlUmV2aXNpb25SZXF1ZXN0GioudW5pc291cmNlLnYyLlB1Ymxpc2hRdW90ZVJldmlzaW9uUmVzcG9uc2USZwoSTGlzdFF1b3RlUmV2aXNpb25zEicudW5pc291cmNlLnYyLkxpc3RRdW90ZVJldmlzaW9uc1JlcXVlc3QaKC51bmlzb3VyY2UudjIuTGlzdFF1b3RlUmV2aXNpb25zUmVzcG9uc2USXgoPR2V0UXVvdGVQcmV2aWV3EiQudW5pc291cmNlLnYyLkdldFF1b3RlUHJldmlld1JlcXVlc3QaJS51bmlzb3VyY2UudjIuR2V0UXVvdGVQcmV2aWV3UmVzcG9uc2USXgoPVXBsb2FkUXVvdGVYbHN4EiQudW5pc291cmNlLnYyLlVwbG9hZFF1b3RlWGxzeFJlcXVlc3QaJS51bmlzb3VyY2UudjIuVXBsb2FkUXVvdGVYbHN4UmVzcG9uc2USXgoPR2V0SW1wb3J0UmVzdWx0EiQudW5pc291cmNlLnYyLkdldEltcG9ydFJlc3VsdFJlcXVlc3QaJS51bmlzb3VyY2UudjIuR2V0SW1wb3J0UmVzdWx0UmVzcG9uc2USYQoQUmVtYXBRdW90ZUltcG9ydBIlLnVuaXNvdXJjZS52Mi5SZW1hcFF1b3RlSW1wb3J0UmVxdWVzdBomLnVuaXNvdXJjZS52Mi5SZW1hcFF1b3RlSW1wb3J0UmVzcG9uc2USUgoLQXBwbHlJbXBvcnQSIC51bmlzb3VyY2UudjIuQXBwbHlJbXBvcnRSZXF1ZXN0GiEudW5pc291cmNlLnYyLkFwcGx5SW1wb3J0UmVzcG9uc2USUgoLQ3JlYXRlUXVvdGUSIC51bmlzb3VyY2UudjIuQ3JlYXRlUXVvdGVSZXF1ZXN0GiEudW5pc291cmNlLnYyLkNyZWF0ZVF1b3RlUmVzcG9uc2USSQoIR2V0UXVvdGUSHS51bmlzb3VyY2UudjIuR2V0UXVvdGVSZXF1ZXN0Gh4udW5pc291cmNlLnYyLkdldFF1b3RlUmVzcG9uc2USTwoKTGlzdFF1b3RlcxIfLnVuaXNvdXJjZS52Mi5MaXN0UXVvdGVzUmVxdWVzdBogLnVuaXNvdXJjZS52Mi5MaXN0UXVvdGVzUmVzcG9uc2USTAoJU2F2ZURyYWZ0Eh4udW5pc291cmNlLnYyLlNhdmVEcmFmdFJlcXVlc3QaHy51bmlzb3VyY2UudjIuU2F2ZURyYWZ0UmVzcG9uc2USVQoMQXJjaGl2ZVF1b3RlEiEudW5pc291cmNlLnYyLkFyY2hpdmVRdW90ZVJlcXVlc3QaIi51bmlzb3VyY2UudjIuQXJjaGl2ZVF1b3RlUmVzcG9uc2USVQoMUmVzdG9yZVF1b3RlEiEudW5pc291cmNlLnYyLlJlc3RvcmVRdW90ZVJlcXVlc3QaIi51bmlzb3VyY2UudjIuUmVzdG9yZVF1b3RlUmVzcG9uc2VCP1o9Z2l0aHViLmNvbS9EYW4xZWwtMTkvVW5pU291cmNlR08vZ2VuL3VuaXNvdXJjZS92Mjt1bmlzb3VyY2V2MmIGcHJvdG8z");
 
 /**
  * @generated from message unisource.v2.QuoteScopeSection
@@ -181,6 +181,11 @@ export type Quote = Message<"unisource.v2.Quote"> & {
    * @generated from field: unisource.v2.QuoteDraft draft = 6;
    */
   draft?: QuoteDraft | undefined;
+
+  /**
+   * @generated from field: unisource.v2.QuoteWorkflowState workflow = 7;
+   */
+  workflow?: QuoteWorkflowState | undefined;
 };
 
 /**
@@ -1276,6 +1281,26 @@ export type GetQuoteOperationResponse = Message<"unisource.v2.GetQuoteOperationR
    * @generated from field: repeated unisource.v2.QuoteScopeSection proposed_scope_sections = 8;
    */
   proposedScopeSections: QuoteScopeSection[];
+
+  /**
+   * @generated from field: repeated unisource.v2.QuoteLineTextProposal proposed_line_texts = 9;
+   */
+  proposedLineTexts: QuoteLineTextProposal[];
+
+  /**
+   * @generated from field: repeated unisource.v2.QuoteAgentEvent events = 10;
+   */
+  events: QuoteAgentEvent[];
+
+  /**
+   * @generated from field: int64 last_event_sequence = 11;
+   */
+  lastEventSequence: bigint;
+
+  /**
+   * @generated from field: string partial_text = 12;
+   */
+  partialText: string;
 };
 
 /**
@@ -1308,6 +1333,11 @@ export type ApplyQuoteTextRequest = Message<"unisource.v2.ApplyQuoteTextRequest"
    * @generated from field: string idempotency_key = 4;
    */
   idempotencyKey: string;
+
+  /**
+   * @generated from field: bool apply_line_texts = 5;
+   */
+  applyLineTexts: boolean;
 };
 
 /**
@@ -1398,6 +1428,11 @@ export type WatchQuoteOperationRequest = Message<"unisource.v2.WatchQuoteOperati
    * @generated from field: string operation_id = 2;
    */
   operationId: string;
+
+  /**
+   * @generated from field: int64 after_sequence = 3;
+   */
+  afterSequence: bigint;
 };
 
 /**
@@ -1423,6 +1458,332 @@ export type WatchQuoteOperationResponse = Message<"unisource.v2.WatchQuoteOperat
  */
 export const WatchQuoteOperationResponseSchema: GenMessage<WatchQuoteOperationResponse> = /*@__PURE__*/
   messageDesc(file_unisource_v2_quotes, 51);
+
+/**
+ * Presentation state is independent of draft_version and cannot change document data.
+ *
+ * @generated from message unisource.v2.QuoteWorkflowState
+ */
+export type QuoteWorkflowState = Message<"unisource.v2.QuoteWorkflowState"> & {
+  /**
+   * import, review, agent, preview, summary
+   *
+   * @generated from field: string stage = 1;
+   */
+  stage: string;
+
+  /**
+   * undecided, yes, no
+   *
+   * @generated from field: string ai_choice = 2;
+   */
+  aiChoice: string;
+
+  /**
+   * @generated from field: int64 version = 3;
+   */
+  version: bigint;
+};
+
+/**
+ * Describes the message unisource.v2.QuoteWorkflowState.
+ * Use `create(QuoteWorkflowStateSchema)` to create a new message.
+ */
+export const QuoteWorkflowStateSchema: GenMessage<QuoteWorkflowState> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 52);
+
+/**
+ * @generated from message unisource.v2.SaveQuoteWorkflowRequest
+ */
+export type SaveQuoteWorkflowRequest = Message<"unisource.v2.SaveQuoteWorkflowRequest"> & {
+  /**
+   * @generated from field: string quote_id = 1;
+   */
+  quoteId: string;
+
+  /**
+   * workflow version, not draft version
+   *
+   * @generated from field: int64 expected_version = 2;
+   */
+  expectedVersion: bigint;
+
+  /**
+   * @generated from field: unisource.v2.QuoteWorkflowState workflow = 3;
+   */
+  workflow?: QuoteWorkflowState | undefined;
+};
+
+/**
+ * Describes the message unisource.v2.SaveQuoteWorkflowRequest.
+ * Use `create(SaveQuoteWorkflowRequestSchema)` to create a new message.
+ */
+export const SaveQuoteWorkflowRequestSchema: GenMessage<SaveQuoteWorkflowRequest> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 53);
+
+/**
+ * @generated from message unisource.v2.SaveQuoteWorkflowResponse
+ */
+export type SaveQuoteWorkflowResponse = Message<"unisource.v2.SaveQuoteWorkflowResponse"> & {
+  /**
+   * @generated from field: unisource.v2.QuoteWorkflowState workflow = 1;
+   */
+  workflow?: QuoteWorkflowState | undefined;
+};
+
+/**
+ * Describes the message unisource.v2.SaveQuoteWorkflowResponse.
+ * Use `create(SaveQuoteWorkflowResponseSchema)` to create a new message.
+ */
+export const SaveQuoteWorkflowResponseSchema: GenMessage<SaveQuoteWorkflowResponse> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 54);
+
+/**
+ * @generated from message unisource.v2.QuoteLineTextProposal
+ */
+export type QuoteLineTextProposal = Message<"unisource.v2.QuoteLineTextProposal"> & {
+  /**
+   * @generated from field: int32 line_index = 1;
+   */
+  lineIndex: number;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string description = 3;
+   */
+  description: string;
+};
+
+/**
+ * Describes the message unisource.v2.QuoteLineTextProposal.
+ * Use `create(QuoteLineTextProposalSchema)` to create a new message.
+ */
+export const QuoteLineTextProposalSchema: GenMessage<QuoteLineTextProposal> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 55);
+
+/**
+ * @generated from message unisource.v2.QuoteAgentEvent
+ */
+export type QuoteAgentEvent = Message<"unisource.v2.QuoteAgentEvent"> & {
+  /**
+   * @generated from field: int64 sequence = 1;
+   */
+  sequence: bigint;
+
+  /**
+   * search_started, search_completed, read_started, read_completed, warning, text, proposal, done
+   *
+   * @generated from field: string kind = 2;
+   */
+  kind: string;
+
+  /**
+   * @generated from field: string text = 3;
+   */
+  text: string;
+
+  /**
+   * @generated from field: string url = 4;
+   */
+  url: string;
+
+  /**
+   * @generated from field: string title = 5;
+   */
+  title: string;
+
+  /**
+   * @generated from field: string created_at = 6;
+   */
+  createdAt: string;
+};
+
+/**
+ * Describes the message unisource.v2.QuoteAgentEvent.
+ * Use `create(QuoteAgentEventSchema)` to create a new message.
+ */
+export const QuoteAgentEventSchema: GenMessage<QuoteAgentEvent> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 56);
+
+/**
+ * @generated from message unisource.v2.QuoteAgentMessage
+ */
+export type QuoteAgentMessage = Message<"unisource.v2.QuoteAgentMessage"> & {
+  /**
+   * @generated from field: int64 id = 1;
+   */
+  id: bigint;
+
+  /**
+   * @generated from field: string role = 2;
+   */
+  role: string;
+
+  /**
+   * @generated from field: string text = 3;
+   */
+  text: string;
+
+  /**
+   * @generated from field: string operation_id = 4;
+   */
+  operationId: string;
+
+  /**
+   * @generated from field: int64 draft_version = 5;
+   */
+  draftVersion: bigint;
+
+  /**
+   * @generated from field: string created_at = 6;
+   */
+  createdAt: string;
+};
+
+/**
+ * Describes the message unisource.v2.QuoteAgentMessage.
+ * Use `create(QuoteAgentMessageSchema)` to create a new message.
+ */
+export const QuoteAgentMessageSchema: GenMessage<QuoteAgentMessage> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 57);
+
+/**
+ * @generated from message unisource.v2.SendQuoteAgentMessageRequest
+ */
+export type SendQuoteAgentMessageRequest = Message<"unisource.v2.SendQuoteAgentMessageRequest"> & {
+  /**
+   * @generated from field: string quote_id = 1;
+   */
+  quoteId: string;
+
+  /**
+   * @generated from field: int64 expected_version = 2;
+   */
+  expectedVersion: bigint;
+
+  /**
+   * @generated from field: string idempotency_key = 3;
+   */
+  idempotencyKey: string;
+
+  /**
+   * @generated from field: string message = 4;
+   */
+  message: string;
+};
+
+/**
+ * Describes the message unisource.v2.SendQuoteAgentMessageRequest.
+ * Use `create(SendQuoteAgentMessageRequestSchema)` to create a new message.
+ */
+export const SendQuoteAgentMessageRequestSchema: GenMessage<SendQuoteAgentMessageRequest> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 58);
+
+/**
+ * @generated from message unisource.v2.GetQuoteConversationRequest
+ */
+export type GetQuoteConversationRequest = Message<"unisource.v2.GetQuoteConversationRequest"> & {
+  /**
+   * @generated from field: string quote_id = 1;
+   */
+  quoteId: string;
+
+  /**
+   * zero returns the newest page
+   *
+   * @generated from field: int64 before_id = 2;
+   */
+  beforeId: bigint;
+};
+
+/**
+ * Describes the message unisource.v2.GetQuoteConversationRequest.
+ * Use `create(GetQuoteConversationRequestSchema)` to create a new message.
+ */
+export const GetQuoteConversationRequestSchema: GenMessage<GetQuoteConversationRequest> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 59);
+
+/**
+ * @generated from message unisource.v2.GetQuoteConversationResponse
+ */
+export type GetQuoteConversationResponse = Message<"unisource.v2.GetQuoteConversationResponse"> & {
+  /**
+   * @generated from field: repeated unisource.v2.QuoteAgentMessage messages = 1;
+   */
+  messages: QuoteAgentMessage[];
+
+  /**
+   * @generated from field: bool has_more = 2;
+   */
+  hasMore: boolean;
+};
+
+/**
+ * Describes the message unisource.v2.GetQuoteConversationResponse.
+ * Use `create(GetQuoteConversationResponseSchema)` to create a new message.
+ */
+export const GetQuoteConversationResponseSchema: GenMessage<GetQuoteConversationResponse> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 60);
+
+/**
+ * @generated from message unisource.v2.CancelQuoteAgentTurnRequest
+ */
+export type CancelQuoteAgentTurnRequest = Message<"unisource.v2.CancelQuoteAgentTurnRequest"> & {
+  /**
+   * @generated from field: string quote_id = 1;
+   */
+  quoteId: string;
+
+  /**
+   * @generated from field: string operation_id = 2;
+   */
+  operationId: string;
+};
+
+/**
+ * Describes the message unisource.v2.CancelQuoteAgentTurnRequest.
+ * Use `create(CancelQuoteAgentTurnRequestSchema)` to create a new message.
+ */
+export const CancelQuoteAgentTurnRequestSchema: GenMessage<CancelQuoteAgentTurnRequest> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 61);
+
+/**
+ * @generated from message unisource.v2.SendQuoteAgentMessageResponse
+ */
+export type SendQuoteAgentMessageResponse = Message<"unisource.v2.SendQuoteAgentMessageResponse"> & {
+  /**
+   * @generated from field: string operation_id = 1;
+   */
+  operationId: string;
+};
+
+/**
+ * Describes the message unisource.v2.SendQuoteAgentMessageResponse.
+ * Use `create(SendQuoteAgentMessageResponseSchema)` to create a new message.
+ */
+export const SendQuoteAgentMessageResponseSchema: GenMessage<SendQuoteAgentMessageResponse> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 62);
+
+/**
+ * @generated from message unisource.v2.CancelQuoteAgentTurnResponse
+ */
+export type CancelQuoteAgentTurnResponse = Message<"unisource.v2.CancelQuoteAgentTurnResponse"> & {
+  /**
+   * @generated from field: unisource.v2.GetQuoteOperationResponse operation = 1;
+   */
+  operation?: GetQuoteOperationResponse | undefined;
+};
+
+/**
+ * Describes the message unisource.v2.CancelQuoteAgentTurnResponse.
+ * Use `create(CancelQuoteAgentTurnResponseSchema)` to create a new message.
+ */
+export const CancelQuoteAgentTurnResponseSchema: GenMessage<CancelQuoteAgentTurnResponse> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 63);
 
 /**
  * @generated from enum unisource.v2.QuotePriceMode
@@ -1521,6 +1882,38 @@ export const QuoteDescriptionStandardSchema: GenEnum<QuoteDescriptionStandard> =
  * @generated from service unisource.v2.QuoteService
  */
 export const QuoteService: GenService<{
+  /**
+   * @generated from rpc unisource.v2.QuoteService.SendQuoteAgentMessage
+   */
+  sendQuoteAgentMessage: {
+    methodKind: "unary";
+    input: typeof SendQuoteAgentMessageRequestSchema;
+    output: typeof SendQuoteAgentMessageResponseSchema;
+  },
+  /**
+   * @generated from rpc unisource.v2.QuoteService.GetQuoteConversation
+   */
+  getQuoteConversation: {
+    methodKind: "unary";
+    input: typeof GetQuoteConversationRequestSchema;
+    output: typeof GetQuoteConversationResponseSchema;
+  },
+  /**
+   * @generated from rpc unisource.v2.QuoteService.CancelQuoteAgentTurn
+   */
+  cancelQuoteAgentTurn: {
+    methodKind: "unary";
+    input: typeof CancelQuoteAgentTurnRequestSchema;
+    output: typeof CancelQuoteAgentTurnResponseSchema;
+  },
+  /**
+   * @generated from rpc unisource.v2.QuoteService.SaveQuoteWorkflow
+   */
+  saveQuoteWorkflow: {
+    methodKind: "unary";
+    input: typeof SaveQuoteWorkflowRequestSchema;
+    output: typeof SaveQuoteWorkflowResponseSchema;
+  },
   /**
    * @generated from rpc unisource.v2.QuoteService.GenerateQuoteText
    */

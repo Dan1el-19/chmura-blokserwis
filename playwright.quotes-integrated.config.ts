@@ -4,7 +4,7 @@ export default defineConfig({
 	testDir: './e2e',
 	testMatch: 'quotes-integrated.spec.ts',
 	use: { baseURL: process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3100', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
-	projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+	projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }, { name: 'chromium-mobile', use: { ...devices['Pixel 7'] } }],
 	webServer: process.env.E2E_EXTERNAL_APP === '1' ? undefined : {
 		command: 'pnpm exec vite dev --host 127.0.0.1 --port 3100 --strictPort',
 		url: 'http://127.0.0.1:3100',

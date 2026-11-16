@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PDFDocumentProxy, RenderTask, TextLayer } from 'pdfjs-dist';
-	let { pdf, pageNumber, scale, root }: { pdf: PDFDocumentProxy; pageNumber: number; scale: number; root: HTMLElement } = $props();
+	let { pdf, pageNumber, scale, root, onloaded, onerror }: { pdf: PDFDocumentProxy; pageNumber: number; scale: number; root: HTMLElement; onloaded?:()=>void; onerror?:()=>void } = $props();
 	let container: HTMLDivElement;
 	let canvas: HTMLCanvasElement;
 	let textLayer: HTMLDivElement;
@@ -37,8 +37,8 @@
 				renderTask = page.render({ canvas, viewport, transform: pixelRatio === 1 ? undefined : [pixelRatio, 0, 0, pixelRatio, 0, 0] });
 				textTask = new pdfjs.TextLayer({ textContentSource: page.streamTextContent(), container: textLayer, viewport });
 				await Promise.all([renderTask.promise, textTask.render()]);
-				if (!cancelled) error = '';
-			} catch (reason) { if (!cancelled) error = reason instanceof Error ? reason.message : 'Nie udało się wyświetlić strony.'; }
+				if (!cancelled) { error = ''; onloaded?.(); }
+			} catch (reason) { if (!cancelled) { error = reason instanceof Error ? reason.message : 'Nie udało się wyświetlić strony.'; onerror?.(); } }
 		})();
 		return () => { cancelled = true; renderTask?.cancel(); textTask?.cancel(); if (canvas) { canvas.width = 0; canvas.height = 0; } if (textLayer) clearTextLayer(); };
 	});

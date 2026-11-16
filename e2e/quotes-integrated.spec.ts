@@ -5,7 +5,7 @@ const fixture = process.env.E2E_QUOTES_FIXTURE;
 const apiUrl = process.env.PUBLIC_QUOTES_API_URL;
 const runIntegrated = process.env.E2E_QUOTES_INTEGRATED === '1';
 
-test('imports XLSX, resumes after reload and downloads published revisions through UniSourceGO', async ({ page }) => {
+test.beforeEach(async ({ page }) => {
 	test.skip(!runIntegrated || !fixture || !apiUrl, 'Run through the isolated UniSourceGO quotes integration test.');
 	test.setTimeout(150_000);
 	const origin = new URL(apiUrl!).origin;
@@ -36,8 +36,32 @@ test('imports XLSX, resumes after reload and downloads published revisions throu
 		return route.fulfill({ status: 200, headers, json: body });
 	});
 
+});
+
+for (const generateAI of [true, false]) test(`imports XLSX, resumes and downloads revisions (${generateAI ? 'AI' : 'without AI'})`, async ({ page }) => {
 	await runQuoteFlow(page, {
 		fixture: fixture!, title: 'Oferta E2E', expectedScope: 'Montaż kamery',
-		generateAI: process.env.E2E_QUOTES_SKIP_AI !== '1'
+		generateAI
 	});
+});
+
+
+test('creates a manual quotation and approves a real PDF without AI', async ({ page }) => {
+ await page.goto('/wyceny/nowa');
+ await page.getByText('Opcje zaawansowane', { exact: true }).click();
+ await page.getByRole('button', { name: 'Wprowadź dane ręcznie' }).click();
+ await page.getByLabel('Nazwa wyceny', { exact: true }).fill('Ręczna wycena E2E');
+ await page.getByLabel('Klient', { exact: true }).fill('Klient ręczny');
+ await page.getByRole('button', { name: 'Dodaj pozycję', exact: true }).click();
+ await page.getByLabel('Nazwa pozycji 1', { exact: true }).fill('Przycisk wyjścia');
+ await page.getByLabel('Ilość pozycji 1', { exact: true }).fill('2');
+ await page.getByLabel('Cena brutto pozycji 1', { exact: true }).fill('25');
+ await page.getByRole('button', { name: 'Zapisz i sprawdź dane' }).click();
+ await expect(page.getByRole('region', { name: 'Dane wyceny' })).toContainText('50,00 zł');
+ await page.getByRole('button', { name: 'Kontynuuj bez AI' }).click();
+ const approve = page.getByRole('button', { name: 'Zatwierdź wycenę', exact: true });
+ await expect(approve).toBeEnabled({ timeout: 30000 });
+ await approve.click();
+ await expect(page.getByRole('heading', { name: /^W\/\d{3,}\/\d{4}$/ })).toBeVisible();
+ await expect(page.getByRole('button', { name: 'Pobierz PDF', exact: true })).toBeEnabled({ timeout: 30000 });
 });

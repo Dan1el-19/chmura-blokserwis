@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatQuoteLineValue, shouldPollQuote } from './ui.js';
+import { formatQuoteLineValue, formatQuoteTotal, shouldPollQuote } from './ui.js';
 
 describe('quote line display values', () => {
 	it('multiplies decimal strings exactly and rounds each line to grosze', () => {
@@ -23,4 +23,10 @@ describe('quote status polling', () => {
 		expect(shouldPollQuote(['running'], false)).toBe(true);
 		expect(shouldPollQuote([], true)).toBe(true);
 	});
+});
+
+it('totals individually rounded lines exactly and rejects incomplete input',()=>{
+ expect(formatQuoteTotal([{quantity:'1',unitPrice:'441'},{quantity:'1',unitPrice:'330'},{quantity:'1',unitPrice:'145'},{quantity:'1',unitPrice:'116'},{quantity:'1',unitPrice:'119'},{quantity:'1',unitPrice:'97'},{quantity:'1',unitPrice:'220'},{quantity:'1',unitPrice:'1100'}])).toBe('2 568,00 zł');
+ expect(formatQuoteTotal([{quantity:'0.5',unitPrice:'0.01'},{quantity:'0.5',unitPrice:'0.01'}])).toBe('0,02 zł');
+ expect(formatQuoteTotal([{quantity:'',unitPrice:'10'}])).toBe('—');
 });

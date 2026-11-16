@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import QuotePdfPreview from './QuotePdfPreview.svelte';
 
@@ -20,4 +20,13 @@ it('renders a PDF page with selectable text and zoom controls', async () => {
  expect(canvas?.width).toBeGreaterThan(0);
  await view.getByRole('button',{name:'100%'}).click();
  await expect.element(view.getByText(/100%/).last()).toBeVisible();
+});
+
+it('acknowledges only a successfully rendered document and reports invalid PDFs',async()=>{
+ const loaded=vi.fn(),failed=vi.fn();
+ const view=await render(QuotePdfPreview,{bytes:pdfFixture(),onloaded:loaded,onerror:failed});
+ await expect.poll(()=>loaded.mock.calls.length).toBeGreaterThan(0);
+ expect(failed).not.toHaveBeenCalled();
+ await view.rerender({bytes:new TextEncoder().encode('%PDF-invalid'),onloaded:loaded,onerror:failed});
+ await expect.poll(()=>failed.mock.calls.length).toBeGreaterThan(0);
 });

@@ -1,9 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import QuoteEditor from '#lib/quotes/QuoteEditor.svelte';
+	import QuoteWizard from '#lib/quotes/QuoteWizard.svelte';
 	let { params }: PageProps = $props();
 </script>
 
-{#key params.id}
-	<QuoteEditor id={params.id} />
-{/key}
+<QuoteWizard id={params.id} />

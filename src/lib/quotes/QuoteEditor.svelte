@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { create } from '@bufbuild/protobuf';
 	import { Code, ConnectError } from '@connectrpc/connect';
@@ -9,10 +9,12 @@
 	import {
 		QuoteDraftSchema, QuoteImportMappingSchema, QuotePriceMode, QuoteDescriptionStandard,
 		type Quote, type QuoteDraft, type QuoteLine, type QuoteImportResult,
-		type QuoteRevisionInfo, type GetQuoteOperationResponse, type GetQuotePdfResponse
+		type QuoteAgentMessage, type QuoteWorkflowState, type QuoteRevisionInfo, type GetQuoteOperationResponse, type GetQuotePdfResponse
 	} from '#lib/gen/unisource/v2/quotes_pb.js';
-	import { button, field, isMissing, panel, primary, quoteError, shouldPollQuote } from './ui.js';
+	import { button, field, formatQuoteLineValue, formatQuoteTotal, isMissing, panel, primary, quoteError, shouldPollQuote } from './ui.js';
 	import QuoteLines from './QuoteLines.svelte';
+	import QuoteAgentChat from './QuoteAgentChat.svelte';
+	import { wizardStages, type QuoteWizardMode, type WizardStage } from './wizard-state.js';
 	import QuoteAiActivity from './QuoteAiActivity.svelte';
 	import QuotePreview from './QuotePreview.svelte';
 	import QuoteActionBar from './QuoteActionBar.svelte';
@@ -21,7 +23,7 @@
 	import QuotePdfPreview from './QuotePdfPreview.svelte';
 	import { readPdfResponse, samePdfIdentity, type PdfIdentity } from './pdf-preview.js';
 
-	let { id }: { id: string } = $props();
+	let { id, wizardMode }: { id: string; wizardMode?: QuoteWizardMode } = $props();
 	let quote = $state<Quote>();
 	let draft = $state<QuoteDraft>();
 	let imported = $state<QuoteImportResult>();
@@ -69,7 +71,20 @@
 	let inFlight: Promise<boolean> | undefined;
 	const keys = new SvelteMap<string, string>();
 	const pending = (value?: string) => value === 'running' || value === 'queued';
-	const saveState = $derived(saving ? 'saving' : saveFailed ? 'error' : dirty ? 'dirty' : 'clean');
+	let messages = $state<QuoteAgentMessage[]>([]);
+ let chatTab = $state<'data'|'agent'>('data');
+ let workflow = $state<QuoteWorkflowState>();
+ let initialFileHandled = false;
+ let workflowInitialized = false;
+ let workflowQueue: Promise<void> = Promise.resolve();
+ let transitioning = $state(false);
+ let reviewedDirty = $state(false);
+ let displayedPreviewBytes = $state<Uint8Array>();
+ let enteringPreview = '';
+ const pdfCurrent = $derived(Boolean(previewBytes && displayedPreviewBytes === previewBytes && previewIdentity?.quoteId === id && previewIdentity.revision === 0n && previewIdentity.draftVersion === quote?.draftVersion && !dirty && !saving && !previewLoading && !previewError));
+ const reviewImport = $derived(imported?.status === 'succeeded' && !imported.applied);
+ const visibleLines = $derived(reviewImport ? reviewed : (draft?.lines ?? []));
+ const saveState = $derived(saving ? 'saving' : saveFailed ? 'error' : dirty ? 'dirty' : 'clean');
 
 	function commandKey(operation: string) {
 		let key = keys.get(operation);
@@ -79,6 +94,7 @@
 
 	function adopt(value: Quote) {
 		quote = value;
+		workflow ??= value.workflow;
 		draft = create(QuoteDraftSchema, value.draft);
 		dirty = false;
 		if (loaded && previewRevision === 0n) {
@@ -167,13 +183,14 @@
 
 	function publish(): void {
 		void act('publish', async (key) => {
-			if (!quote) return;
+			if (!quote || (wizardMode && !pdfCurrent)) return;
 			const request = { quoteId: id, expectedVersion: quote.draftVersion, idempotencyKey: key };
 			const result = quote.currentRevision ? await getQuoteClient().publishQuoteRevision(request) : await getQuoteClient().approveQuote(request);
 			if (!result.quote) throw new Error('Nie otrzymano potwierdzenia zatwierdzenia wyceny.');
 			adopt(result.quote);
 			status = 'Opublikowano rewizję.';
 			await loadRevisions(0);
+			if(wizardMode) await wizardGo('summary');
 		});
 	}
 
@@ -200,12 +217,12 @@
 		watchAbort = controller;
 		watching = operationId;
 		try {
-			for await (const message of getQuoteClient().watchQuoteOperation({ quoteId: id, operationId }, { signal: controller.signal })) {
+			for await (const message of getQuoteClient().watchQuoteOperation({ quoteId: id, operationId, afterSequence:operation?.operationId===operationId ? operation.lastEventSequence : 0n }, { signal: controller.signal })) {
 				if (disposed || controller.signal.aborted || watching !== operationId) return;
 				const update = message.operation;
 				if (!update) continue;
-				operation = update;
-				if (!pending(update.status)) { refreshQuietly(); return; }
+				operation = { ...update, events: [...(operation?.operationId === update.operationId ? operation.events ?? [] : []), ...(update.events ?? [])].filter((event,index,all)=>all.findIndex(other=>other.sequence===event.sequence)===index) };
+				if (!pending(update.status)) { refreshQuietly(); void loadConversation(); return; }
 			}
 		} catch {
 			// Periodic status refresh reconnects after network interruptions.
@@ -273,14 +290,14 @@
 	}
 
 	beforeNavigate(({ cancel, willUnload }) => {
-		if (!willUnload && (dirty || saving || recoveryText) && !window.confirm('Opuścić wycenę z niezapisanymi zmianami lub kopią do odzyskania?')) cancel();
+		if (!willUnload && (dirty || reviewedDirty || saving || recoveryText) && !window.confirm('Opuścić wycenę z niezapisanymi zmianami lub kopią do odzyskania?')) cancel();
 	});
 
 	onMount(() => {
 		void (async () => {
 			try { await loadQuote(); await loadRevisions(); refreshQuietly(); if (draft?.documentSchemaVersion !== 2) void showPreview(); }
 			catch (reason) { if (!disposed) error = quoteError(reason); }
-			finally { loaded = true; }
+			finally { loaded = true; if(wizardMode) void loadConversation(); }
 		})();
 		const poll = setInterval(() => {
 			const statuses = [imported?.status, operation?.status, currentPdf?.status, draftPdf?.status,
@@ -389,68 +406,164 @@
 			else status = 'PDF jest w przygotowaniu.';
 		} catch (reason) { error = quoteError(reason); }
 	}
+
+ async function loadConversation(){
+  if(!wizardMode || draft?.documentSchemaVersion !== 2)return;
+  try { const result=await getQuoteClient().getQuoteConversation({quoteId:id}); if(!disposed)messages=result.messages; }
+  catch(reason){if(!isMissing(reason)&&!disposed)extraError=quoteError(reason);}
+ }
+ async function wizardGo(stage: WizardStage, editing = false, aiChoice?: string, navigate = true): Promise<boolean> {
+  const transition = workflowQueue.then(async () => {
+   if (!wizardMode || !quote || disposed) return false;
+   if (dirty && !(await save())) return false;
+   const choice = aiChoice ?? workflow?.aiChoice ?? 'undecided';
+   try {
+    if (workflow?.stage !== stage || workflow.aiChoice !== choice) {
+     const response = await getQuoteClient().saveQuoteWorkflow({ quoteId: id, expectedVersion: workflow?.version ?? 0n, workflow: { stage, aiChoice: choice } });
+     if (!response.workflow) throw new Error('Nie otrzymano potwierdzenia zapisu etapu wyceny.');
+     if (disposed) return false;
+     workflow = response.workflow;
+    }
+    if (navigate) await wizardMode.onstagechange(stage, editing);
+    return true;
+   } catch (reason) {
+    if (!disposed) error = quoteError(reason);
+    // A transport failure may follow a committed write. Reconcile the independent
+    // workflow version, but require an explicit retry before starting paid work.
+    try {
+     const latest = await getQuoteClient().getQuote({ quoteId: id });
+     if (!disposed && latest.quote) workflow = latest.quote.workflow;
+    } catch { /* Keep the original error; the next explicit attempt can retry. */ }
+    return false;
+   }
+  });
+  workflowQueue = transition.then(() => undefined);
+  return transition;
+ }
+ function reviewedChanged() {
+  reviewedDirty = true;
+  keys.delete('apply');
+ }
+ async function uploadInitial(input:File){
+  file=input; importOpen=true;
+  await act('upload',async(key)=>{
+   if(!quote)return;
+   if(input.size>5*1024*1024)throw new Error('Plik może mieć maksymalnie 5 MiB.');
+   await getQuoteClient().uploadQuoteXlsx({quoteId:id,expectedVersion:quote.draftVersion,idempotencyKey:key,xlsx:new Uint8Array(await input.arrayBuffer())});
+   status='Analizuję arkusz…';
+  });
+ }
+ async function applyReviewed(){
+  if(!reviewImport)return true;
+  let applied=false;
+  await act('apply',async(key)=>{
+   if(!quote||!imported)return;
+   const result=await getQuoteClient().applyImport({quoteId:id,importId:imported.id,resultVersion:imported.resultVersion,expectedVersion:quote.draftVersion,idempotencyKey:key,reviewedLines:reviewed,priceMode:QuotePriceMode.GROSS});
+   if(result.quote){adopt(result.quote);reviewedDirty=false;if(imported)imported={...imported,applied:true};applied=true;}
+  });
+  return applied;
+ }
+ async function continueReview(ai: boolean) {
+  if (transitioning || busy || saving) return;
+  transitioning = true;
+  try {
+   if (!(await save()) || !(await applyReviewed()) || !draft || !quote) return;
+   if (!draft.lines.length) { error = 'Dodaj przynajmniej jedną pozycję.'; return; }
+   if (!draft.title.trim() || !draft.client.trim() || !draft.documentDate) {
+    error = 'Uzupełnij nazwę wyceny, klienta i datę.';
+    await wizardGo('review', true);
+    return;
+   }
+   if (await wizardGo(ai ? 'agent' : 'preview', false, ai ? 'yes' : 'no')) {
+    if (ai) await startAgent();
+   }
+  } finally { transitioning = false; }
+ }
+ async function startAgent(){
+  await act('generate',async(key)=>{
+   if(!quote)return;
+   const result=await getQuoteClient().generateQuoteText({quoteId:id,expectedVersion:quote.draftVersion,idempotencyKey:key});
+   operation=await getQuoteClient().getQuoteOperation({quoteId:id,operationId:result.operationId});
+   void watchOperation(result.operationId); void loadConversation();
+  });
+ }
+ async function sendAgent(text:string){
+  if(!quote||pending(operation?.status)||!(await save()))return false;
+  let sent=false;
+  await act('agent-message',async(key)=>{
+   if(!quote)return;
+   const result=await getQuoteClient().sendQuoteAgentMessage({quoteId:id,expectedVersion:quote.draftVersion,idempotencyKey:key,message:text});
+   operation=await getQuoteClient().getQuoteOperation({quoteId:id,operationId:result.operationId});
+   sent=true;void watchOperation(result.operationId);await loadConversation();
+  });
+  return sent;
+ }
+ async function cancelAgent(){
+  if(!operation)return;
+  try{const response=await getQuoteClient().cancelQuoteAgentTurn({quoteId:id,operationId:operation.operationId});operation=response.operation;await loadConversation();}
+  catch(reason){error=quoteError(reason);}
+ }
+ async function applyAgent(){
+  await act('apply-text',async(key)=>{
+   if(!quote||!operation||dirty||operation.draftVersion!==quote.draftVersion)return;
+   const result=await getQuoteClient().applyQuoteText({quoteId:id,operationId:operation.operationId,expectedVersion:quote.draftVersion,idempotencyKey:key,applyLineTexts:true});
+   dismissedProposal=operation.operationId;
+   if(result.quote){adopt(result.quote);if(wizardMode?.stage==='agent')await wizardGo('preview');}
+  },false);
+ }
+ async function finishEditing(){
+  if(!(await save())||!(await applyReviewed()))return;
+  await wizardGo(wizardMode?.stage==='review'?'review':'preview');
+ }
+ $effect(()=>{
+  const state={quote,dirty,saving,busy,pdfCurrent};
+  untrack(()=>wizardMode?.onstatechange(state));
+ });
+ $effect(() => {
+  const input = wizardMode?.initialFile;
+  const ready = loaded;
+  if (input && ready && quote?.draft?.documentSchemaVersion === 2 && !initialFileHandled) untrack(() => {
+   initialFileHandled = true;
+   void uploadInitial(input);
+  });
+ });
+ $effect(() => {
+  const mode = wizardMode;
+  const ready = loaded;
+  const value = quote;
+  if (!mode || !ready || !value || value.draft?.documentSchemaVersion !== 2) return;
+  untrack(() => {
+   if (!workflowInitialized) {
+    workflowInitialized = true;
+    if (mode.resume && wizardStages.includes(workflow?.stage as WizardStage)) {
+     mode.onstagechange(workflow!.stage as WizardStage);
+     if (mode.stage !== workflow!.stage) return;
+    }
+   }
+   if (mode.stage === 'summary' && !value.currentRevision) { void wizardGo(value.draft?.lines.length ? 'review' : 'import'); return; }
+   // Import status is fetched separately; do not redirect before it has arrived.
+   if (mode.stage === 'preview' && !value.draft?.lines.length && !reviewImport) { void wizardGo('review', true); return; }
+   if (mode.stage === 'preview' && !mode.editing) {
+    const key = String(value.draftVersion);
+    if (enteringPreview !== key) { enteringPreview = key; void openPreview(); }
+   } else enteringPreview = '';
+   if (workflow?.stage !== mode.stage) void wizardGo(mode.stage, mode.editing, undefined, false);
+  });
+ });
+ $effect(()=>{
+  const result=imported;const mode=wizardMode;
+  if(mode?.stage==='import'&&result?.status==='succeeded'&&!result.applied)untrack(()=>{void wizardGo('review');});
+ });
+
 </script>
 
-<svelte:window onbeforeunload={(event) => { if (dirty || saving || recoveryText) { event.preventDefault(); event.returnValue = ''; } }} />
 
-<section class="quote-editor mx-auto max-w-7xl space-y-4" style:--quote-action-height="{actionBarHeight}px">
-	<a class="inline-flex items-center gap-2 text-sm font-medium text-text-muted hover:text-primary" href={resolve('/wyceny')}>← Wróć do wycen</a>
-	{#if error}<p role="alert" class="rounded border border-red-400 p-3">{error}</p>{/if}
-	{#if conflict}<div class="rounded border border-amber-400 p-3"><p>Wczytaj wersję serwera, aby kontynuować. Twoje obecne dane zostaną pokazane do skopiowania.</p><button class={button} type="button" disabled={busy || saving} onclick={loadServerVersion}>Wczytaj wersję serwera</button></div>{/if}
-	{#if recoveryText}<details class="rounded border border-border-line p-3"><summary class="cursor-pointer">Twoje zmiany przed wczytaniem wersji serwera</summary><label>Odzyskane zmiany<textarea class={field} aria-label="Odzyskane zmiany" readonly rows="8" value={recoveryText}></textarea></label><button class={button} type="button" onclick={() => recoveryText = ''}>Zamknij kopię</button></details>{/if}
-	{#if !loaded}<p role="status">Wczytywanie szkicu…</p>{/if}
-	{#if quote && draft}
-		<header class="flex flex-wrap items-center justify-between gap-3">
-			<div>
-				<h1 class="text-2xl font-semibold">{draft.title || 'Wycena'}</h1>
-				<p class="mt-1 text-sm text-text-muted">{quote.number || 'Szkic'}{quote.currentRevision ? ` · v${quote.currentRevision}` : ''}{quote.archived ? ' · Archiwum' : ''}</p>
-			</div>
-			<div class="flex flex-wrap gap-2">
-				<button type="button" class="{button} desktop-only" aria-label="Pokaż podgląd na desktopie" aria-expanded={desktopPreview} aria-controls="quote-preview" onclick={() => { if (draft?.documentSchemaVersion === 2) { if (desktopPreview) closePreview(); else void openPreview(); } else desktopPreview = !desktopPreview; }}>{desktopPreview ? 'Ukryj podgląd' : 'Podgląd'}</button>
-				<button type="button" class={button} disabled={busy || saving} onclick={() => act('archive', async (key) => {
-					if (!quote) return;
-					const request = { quoteId: id, expectedVersion: quote.draftVersion, idempotencyKey: key };
-					const result = quote.archived ? await getQuoteClient().restoreQuote(request) : await getQuoteClient().archiveQuote(request);
-					if (result.quote) adopt(result.quote);
-				})}>{quote.archived ? 'Przywróć' : 'Archiwizuj'}</button>
-				<button type="button" class="{button} desktop-only" disabled={busy || saving || quote.archived} onclick={save}>Zapisz szkic</button>
-				<button type="button" class="{primary} desktop-only" disabled={busy || saving || quote.archived} onclick={publish}>{quote.currentRevision ? (draft.documentSchemaVersion === 2 ? 'Opublikuj rewizję' : 'Zapisz zmiany') : 'Zatwierdź wycenę'}</button>
-			</div>
-		</header>
-		<div class="desktop-only flex-wrap items-center gap-2 text-sm" role="status" aria-live="polite">
-			<span>{saving ? 'Zapisywanie…' : saveFailed ? 'Nie udało się zapisać' : dirty ? 'Niezapisane zmiany' : 'Zapisano'}</span>
-			{#if saveFailed}<button type="button" class="underline" disabled={busy || saving} onclick={save}>Ponów zapis</button>{/if}
-		</div>
-		{#if status}<p role="status">{status}</p>{/if}
-		{#if extraError}<p class="text-sm text-text-muted" role="status">{extraError}</p>{/if}
-		<div class="mobile-only gap-2" role="group" aria-label="Widok wyceny">
-			<button type="button" class={button} aria-label="Pokaż edycję wyceny" aria-pressed={viewMode === 'editing'} onclick={() => { if (draft?.documentSchemaVersion === 2) closePreview(); else viewMode = 'editing'; }}>Edycja</button>
-			<button type="button" class={button} aria-label="Pokaż podgląd wyceny" aria-pressed={viewMode === 'preview'} onclick={() => { if (draft?.documentSchemaVersion === 2) void openPreview(); else viewMode = 'preview'; }}>Podgląd</button>
-		</div>
-		<div class:desktop-preview-open={desktopPreview} class="quote-workspace grid gap-6">
-		<div class="editing-pane min-w-0 space-y-4" class:mobile-preview={viewMode === 'preview'}>
-		<nav class="quote-sections flex flex-wrap gap-x-5 gap-y-2 border-b border-border-line text-sm" aria-label="Sekcje wyceny">
-			<a class="pb-3 font-medium text-text-muted hover:text-primary" href="#quote-data">Dane</a>
-			<a class="pb-3 font-medium text-text-muted hover:text-primary" href="#quote-lines">Pozycje</a>
-			<a class="pb-3 font-medium text-text-muted hover:text-primary" href="#quote-content">{draft.documentSchemaVersion === 2 ? 'Zakres' : 'Treść'}</a>
-			<a class="pb-3 font-medium text-text-muted hover:text-primary" href="#quote-documents">Dokumenty</a>
-		</nav>
-		<fieldset id="quote-data" class="{panel} quote-data" disabled={busy || quote.archived}>
-			<legend class="px-2 font-semibold">Dane wyceny</legend>
-			<div class="grid gap-3 sm:grid-cols-2">
-				<label>Tytuł<input class={field} bind:value={draft.title} oninput={changed} /></label>
-				<label>Klient<input class={field} bind:value={draft.client} oninput={changed} /></label>
-				{#if draft.documentSchemaVersion === 2}<label>Data dokumentu<input class={field} type="date" bind:value={draft.documentDate} oninput={changed} /></label>{/if}
-			</div>
-			<p class="text-sm text-text-muted">Ceny w tej wycenie: {draft.priceMode === QuotePriceMode.NET ? 'netto (zapisane wcześniej)' : 'brutto'}.</p>
-			<div id="quote-lines"><h2 class="mb-2 font-semibold">Pozycje</h2><QuoteLines bind:lines={draft.lines} net={draft.priceMode === QuotePriceMode.NET} onchange={changed} /></div>
-			{#if draft.priceMode === QuotePriceMode.NET}<p role="status">Ta starsza wycena ma ceny netto. Import pozycji zastąpi je cenami brutto.</p>{/if}
-		</fieldset>
-
+{#snippet importPanel()}
+{#if quote && draft}
 		<fieldset class={panel} disabled={busy || saving || quote.archived}>
 			<legend class="px-1 font-semibold">Import XLSX</legend>
 			{#if imported?.applied}<p class="text-sm" role="status">Import zapisany w szkicu.</p>{/if}
-			<details bind:open={importOpen}>
+			<details open={wizardMode ? true : importOpen} ontoggle={(event)=>{if(!wizardMode)importOpen=event.currentTarget.open;}}>
 				<summary class="cursor-pointer text-sm font-medium">Rozwiń import XLSX</summary>
 				<div class="mt-3 space-y-4">
 			<div class="flex flex-wrap items-end gap-2">
@@ -514,6 +627,119 @@
 				</div>
 			</details>
 		</fieldset>
+
+{/if}
+{/snippet}
+
+
+{#snippet editableData()}
+ {#if draft}<div class="grid gap-3 sm:grid-cols-2"><label class="block text-sm">Nazwa wyceny<input class={field} bind:value={draft.title} oninput={changed}/></label><label class="block text-sm">Klient<input class={field} bind:value={draft.client} oninput={changed}/></label><label class="block text-sm">Data dokumentu<input class={field} type="date" bind:value={draft.documentDate} oninput={changed}/></label></div>{/if}
+{/snippet}
+{#snippet wizardPdf()}
+ {#if previewError}<p role="alert">{previewError}</p><button class={button} onclick={()=>retryPdfPreview()}>Spróbuj ponownie</button>{/if}
+ {#if previewLoading}<p role="status">Przygotowuję aktualny PDF…</p>{/if}
+ {#if previewBytes}{@const renderedBytes=previewBytes}{#key renderedBytes}<QuotePdfPreview bytes={renderedBytes} onloaded={()=>{if(previewBytes===renderedBytes)displayedPreviewBytes=renderedBytes;}} onerror={()=>{if(previewBytes===renderedBytes)displayedPreviewBytes=undefined;}}/>{/key}{:else if !previewError&&!previewLoading}<p role="status">Oczekiwanie na podgląd…</p>{/if}
+{/snippet}
+{#snippet agentPanel()}
+ {#if operation}<QuoteAiActivity {operation} proposal />{/if}
+ {#if operation?.status==='succeeded'&&operation.operationId!==dismissedProposal&&draft&&quote}
+  <QuoteAiProposal current={draft.scopeSections} proposal={operation.proposedScopeSections} lines={draft.lines} proposedLines={operation.proposedLineTexts??[]} stale={dirty||saving||operation.draftVersion!==quote.draftVersion} onapply={()=>void applyAgent()} ondismiss={()=>dismissedProposal=operation?.operationId??''}/>
+ {/if}
+ <QuoteAgentChat {messages} active={pending(operation?.status)} partialText={operation?.partialText} onsend={sendAgent} oncancel={()=>void cancelAgent()}/>
+{/snippet}
+
+<svelte:window onbeforeunload={(event) => { if (dirty || reviewedDirty || saving || recoveryText) { event.preventDefault(); event.returnValue = ''; } }} />
+
+<section class="quote-editor mx-auto max-w-7xl space-y-4" style:--quote-action-height="{actionBarHeight}px">
+	{#if !wizardMode}<a class="inline-flex items-center gap-2 text-sm font-medium text-text-muted hover:text-primary" href={resolve('/wyceny')}>← Wróć do wycen</a>{/if}
+	{#if error}<p role="alert" class="rounded border border-red-400 p-3">{error}</p>{/if}
+	{#if conflict}<div class="rounded border border-amber-400 p-3"><p>Wczytaj wersję serwera, aby kontynuować. Twoje obecne dane zostaną pokazane do skopiowania.</p><button class={button} type="button" disabled={busy || saving} onclick={loadServerVersion}>Wczytaj wersję serwera</button></div>{/if}
+	{#if recoveryText}<details class="rounded border border-border-line p-3"><summary class="cursor-pointer">Twoje zmiany przed wczytaniem wersji serwera</summary><label>Odzyskane zmiany<textarea class={field} aria-label="Odzyskane zmiany" readonly rows="8" value={recoveryText}></textarea></label><button class={button} type="button" onclick={() => recoveryText = ''}>Zamknij kopię</button></details>{/if}
+	{#if !loaded}<p role="status">Wczytywanie szkicu…</p>{/if}
+	{#if quote && draft}
+
+ {#if wizardMode && draft.documentSchemaVersion === 2}
+  {#if quote.archived}<p role="status">Ta wycena jest w archiwum.</p><button class={button} onclick={()=>act('restore',async(key)=>{if(!quote)return;const response=await getQuoteClient().restoreQuote({quoteId:id,expectedVersion:quote.draftVersion,idempotencyKey:key});if(response.quote)adopt(response.quote);})}>Przywróć wycenę</button>
+  {:else if wizardMode.stage==='import'}
+   {@render importPanel()}
+  {:else if wizardMode.editing}
+   <div class="wizard-edit-tabs flex gap-2" role="group" aria-label="Widok edytora"><button type="button" class={button} aria-pressed={chatTab==='data'} onclick={()=>chatTab='data'}>Dane wyceny</button><button type="button" class={button} aria-pressed={chatTab==='agent'} onclick={()=>chatTab='agent'}>Asystent AI</button></div>
+   <div class="wizard-edit-grid">
+    <fieldset class="{panel} wizard-fields" class:tab-hidden={chatTab!=='data'} disabled={busy||saving}>
+     {@render editableData()}
+     {#if reviewImport}<QuoteLines bind:lines={reviewed} bind:sourceRows onchange={reviewedChanged} />{:else}<QuoteLines bind:lines={draft.lines} net={draft.priceMode===QuotePriceMode.NET} onchange={changed}/>{/if}
+     <h2 class="font-semibold">Zakres</h2><QuoteScopeEditor bind:sections={draft.scopeSections} onchange={changed}/>
+    </fieldset>
+    <aside class="{panel} wizard-chat" class:tab-hidden={chatTab!=='agent'}>{@render agentPanel()}</aside>
+   </div>
+   <div class="wizard-actions"><button class={primary} disabled={busy||saving} onclick={finishEditing}>{wizardMode.stage==='review'?'Zapisz i sprawdź dane':'Zapisz i wróć do podglądu'}</button><span role="status" class="text-xs text-text-muted">{saving?'Zapisywanie…':saveFailed?'Błąd zapisu':dirty||reviewedDirty?'Niezapisane zmiany':'Zapisano'}</span></div>
+  {:else if wizardMode.stage==='review'}
+   <section class={panel} aria-label="Dane wyceny"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="text-lg font-semibold break-words">{draft.title}</h2><p class="text-text-muted break-words">{draft.client||'Uzupełnij klienta'} · {draft.documentDate||'Uzupełnij datę'}</p></div><button class={button} onclick={()=>wizardGo('review',true)}>Edytuj</button></div>
+    <ul class="divide-y divide-border-line">{#each visibleLines as line,index (index)}<li class="py-3 flex flex-wrap justify-between gap-2"><span class="min-w-0 break-words font-medium">{line.name}</span><span class="text-sm text-text-muted">{line.quantity} × {line.unitPrice} zł · <strong class="text-text-main">{formatQuoteLineValue(line.quantity,line.unitPrice)}</strong></span></li>{/each}</ul>
+    <p class="flex flex-wrap justify-between gap-2 border-t border-border-line pt-3 font-semibold"><span>Łączna wartość {draft.priceMode===QuotePriceMode.NET?'netto':'brutto'}</span><span>{formatQuoteTotal(visibleLines)}</span></p>{#if reviewImport}{#each imported?.warnings??[] as warning,index (index)}<p role="alert">{warning==='source_total_mismatch'?'Suma pozycji różni się od sumy w arkuszu.':warning}</p>{/each}{/if}
+   </section>
+   <section class={panel}><h2 class="text-lg font-semibold">Czy przygotować opisy z pomocą AI?</h2><p class="text-sm text-text-muted">Asystent wyszuka informacje o urządzeniach i zaproponuje opisy. Sprawdzisz je przed zastosowaniem.</p><div class="flex flex-wrap gap-3"><button class={primary} disabled={busy||saving||transitioning||!visibleLines.length} onclick={()=>continueReview(true)}>Tak, przygotuj opisy</button><button class={button} disabled={busy||saving||transitioning||!visibleLines.length} onclick={()=>continueReview(false)}>Kontynuuj bez AI</button></div></section>
+  {:else if wizardMode.stage==='agent'}
+   <section class={panel}>{@render agentPanel()}<button class={button} disabled={busy} onclick={()=>wizardGo('preview')}>Kontynuuj bez zmian</button></section>
+  {:else if wizardMode.stage==='preview'}
+   <section class={panel}>{@render wizardPdf()}</section>
+   <div class="wizard-actions"><button class={button} disabled={busy||saving} onclick={()=>wizardGo('preview',true)}>Edytuj</button><button class={primary} disabled={busy||saving||!pdfCurrent||quote.archived} onclick={publish}>{quote.currentRevision?'Zatwierdź nową rewizję':'Zatwierdź wycenę'}</button></div>
+  {:else if wizardMode.stage==='summary'}
+   <section class={panel}><p class="text-sm text-text-muted">Wycena gotowa</p><h2 class="text-2xl font-semibold">{quote.number}</h2><p class="break-words">{draft.title} · {draft.client}</p><p class="text-lg font-semibold">{formatQuoteTotal(draft.lines)}</p><div class="flex flex-wrap gap-3"><button class={primary} disabled={!currentPdf?.url} onclick={()=>download(quote?.currentRevision??0n)}>Pobierz PDF</button><button class={button} onclick={()=>{void openPreview(quote?.currentRevision??0n);}}>Zobacz PDF</button><button class={button} onclick={()=>wizardGo('preview',true)}>Edytuj wycenę</button></div>{#if !currentPdf?.url}<p role="status">{currentPdf?.status==='failed'?'Nie udało się przygotować PDF-u.':'PDF jest w przygotowaniu…'}</p>{#if currentPdf?.status==='failed'}<button class={button} onclick={()=>act('retry-published',async(key)=>{await getQuoteClient().retryQuotePdf({quoteId:id,revision:quote?.currentRevision??0n,idempotencyKey:key});},false)}>Ponów przygotowanie PDF</button>{/if}{/if}<a class="inline-flex min-h-11 items-center text-sm text-primary" href={resolve('/wyceny/[id]',{id:'nowa'})}>Nowa wycena</a>
+    <details><summary class="min-h-11 cursor-pointer text-sm">Pozostałe opcje</summary><button class={button} onclick={()=>act('archive',async(key)=>{if(!quote)return;const result=await getQuoteClient().archiveQuote({quoteId:id,expectedVersion:quote.draftVersion,idempotencyKey:key});if(result.quote)adopt(result.quote);})}>Archiwizuj</button><ul>{#each revisions as revision (revision.revision)}<li class="py-2 flex flex-wrap gap-3">Rewizja {revision.revision}<button class={button} onclick={()=>download(revision.revision)}>Pobierz PDF</button></li>{/each}</ul></details>
+   </section>
+   {#if previewRevision>0n}<section class={panel}>{@render wizardPdf()}</section>{/if}
+  {/if}
+  {#if status}<p role="status" class="text-sm">{status}</p>{/if}{#if extraError}<p role="status" class="text-sm text-text-muted">{extraError}</p>{/if}
+ {:else}
+		<header class="flex flex-wrap items-center justify-between gap-3">
+			<div>
+				<h1 class="text-2xl font-semibold">{draft.title || 'Wycena'}</h1>
+				<p class="mt-1 text-sm text-text-muted">{quote.number || 'Szkic'}{quote.currentRevision ? ` · v${quote.currentRevision}` : ''}{quote.archived ? ' · Archiwum' : ''}</p>
+			</div>
+			<div class="flex flex-wrap gap-2">
+				<button type="button" class="{button} desktop-only" aria-label="Pokaż podgląd na desktopie" aria-expanded={desktopPreview} aria-controls="quote-preview" onclick={() => { if (draft?.documentSchemaVersion === 2) { if (desktopPreview) closePreview(); else void openPreview(); } else desktopPreview = !desktopPreview; }}>{desktopPreview ? 'Ukryj podgląd' : 'Podgląd'}</button>
+				<button type="button" class={button} disabled={busy || saving} onclick={() => act('archive', async (key) => {
+					if (!quote) return;
+					const request = { quoteId: id, expectedVersion: quote.draftVersion, idempotencyKey: key };
+					const result = quote.archived ? await getQuoteClient().restoreQuote(request) : await getQuoteClient().archiveQuote(request);
+					if (result.quote) adopt(result.quote);
+				})}>{quote.archived ? 'Przywróć' : 'Archiwizuj'}</button>
+				<button type="button" class="{button} desktop-only" disabled={busy || saving || quote.archived} onclick={save}>Zapisz szkic</button>
+				<button type="button" class="{primary} desktop-only" disabled={busy || saving || quote.archived} onclick={publish}>{quote.currentRevision ? (draft.documentSchemaVersion === 2 ? 'Opublikuj rewizję' : 'Zapisz zmiany') : 'Zatwierdź wycenę'}</button>
+			</div>
+		</header>
+		<div class="desktop-only flex-wrap items-center gap-2 text-sm" role="status" aria-live="polite">
+			<span>{saving ? 'Zapisywanie…' : saveFailed ? 'Nie udało się zapisać' : dirty ? 'Niezapisane zmiany' : 'Zapisano'}</span>
+			{#if saveFailed}<button type="button" class="underline" disabled={busy || saving} onclick={save}>Ponów zapis</button>{/if}
+		</div>
+		{#if status}<p role="status">{status}</p>{/if}
+		{#if extraError}<p class="text-sm text-text-muted" role="status">{extraError}</p>{/if}
+		<div class="mobile-only gap-2" role="group" aria-label="Widok wyceny">
+			<button type="button" class={button} aria-label="Pokaż edycję wyceny" aria-pressed={viewMode === 'editing'} onclick={() => { if (draft?.documentSchemaVersion === 2) closePreview(); else viewMode = 'editing'; }}>Edycja</button>
+			<button type="button" class={button} aria-label="Pokaż podgląd wyceny" aria-pressed={viewMode === 'preview'} onclick={() => { if (draft?.documentSchemaVersion === 2) void openPreview(); else viewMode = 'preview'; }}>Podgląd</button>
+		</div>
+		<div class:desktop-preview-open={desktopPreview} class="quote-workspace grid gap-6">
+		<div class="editing-pane min-w-0 space-y-4" class:mobile-preview={viewMode === 'preview'}>
+		<nav class="quote-sections flex flex-wrap gap-x-5 gap-y-2 border-b border-border-line text-sm" aria-label="Sekcje wyceny">
+			<a class="pb-3 font-medium text-text-muted hover:text-primary" href="#quote-data">Dane</a>
+			<a class="pb-3 font-medium text-text-muted hover:text-primary" href="#quote-lines">Pozycje</a>
+			<a class="pb-3 font-medium text-text-muted hover:text-primary" href="#quote-content">{draft.documentSchemaVersion === 2 ? 'Zakres' : 'Treść'}</a>
+			<a class="pb-3 font-medium text-text-muted hover:text-primary" href="#quote-documents">Dokumenty</a>
+		</nav>
+		<fieldset id="quote-data" class="{panel} quote-data" disabled={busy || quote.archived}>
+			<legend class="px-2 font-semibold">Dane wyceny</legend>
+			<div class="grid gap-3 sm:grid-cols-2">
+				<label>Tytuł<input class={field} bind:value={draft.title} oninput={changed} /></label>
+				<label>Klient<input class={field} bind:value={draft.client} oninput={changed} /></label>
+				{#if draft.documentSchemaVersion === 2}<label>Data dokumentu<input class={field} type="date" bind:value={draft.documentDate} oninput={changed} /></label>{/if}
+			</div>
+			<p class="text-sm text-text-muted">Ceny w tej wycenie: {draft.priceMode === QuotePriceMode.NET ? 'netto (zapisane wcześniej)' : 'brutto'}.</p>
+			<div id="quote-lines"><h2 class="mb-2 font-semibold">Pozycje</h2><QuoteLines bind:lines={draft.lines} net={draft.priceMode === QuotePriceMode.NET} onchange={changed} /></div>
+			{#if draft.priceMode === QuotePriceMode.NET}<p role="status">Ta starsza wycena ma ceny netto. Import pozycji zastąpi je cenami brutto.</p>{/if}
+		</fieldset>
+
+		{@render importPanel()}
 
 		<fieldset id="quote-content" class={panel} disabled={busy || quote.archived}>
 			<legend class="px-1 font-semibold">{draft.documentSchemaVersion === 2 ? 'Zakres' : 'Treść oferty'}</legend>
@@ -609,9 +835,14 @@
 		</div>
 		<QuoteActionBar {saveState} disabled={busy || saving || quote.archived} approveLabel={quote.currentRevision ? (draft.documentSchemaVersion === 2 ? 'Opublikuj rewizję' : 'Zapisz zmiany') : 'Zatwierdź wycenę'} onsave={save} onapprove={publish} bind:height={actionBarHeight} />
 	{/if}
+	{/if}
 </section>
 
 <style>
+ .wizard-edit-grid{display:grid;gap:1rem;min-width:0}.wizard-chat,.wizard-fields{min-width:0;overflow-wrap:anywhere}.wizard-edit-grid .tab-hidden{display:none}.wizard-actions{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;position:sticky;bottom:var(--transfer-offset,0px);background:var(--color-bg-panel);padding:.75rem;padding-bottom:max(.75rem,env(safe-area-inset-bottom));border-top:1px solid var(--color-border-line);z-index:5}
+ .wizard-actions button{min-height:44px}.quote-editor :global(button){min-height:44px}
+ @container quote-editor (min-width:1100px){.wizard-edit-grid{grid-template-columns:minmax(0,1fr) minmax(340px,.7fr)}.wizard-edit-grid .tab-hidden{display:block}.wizard-edit-tabs{display:none}.wizard-chat{align-self:start;position:sticky;top:1rem}}
+
 	.quote-editor { container: quote-editor / inline-size; }
 	.desktop-only { display: none; }
 	.mobile-only { display: flex; }

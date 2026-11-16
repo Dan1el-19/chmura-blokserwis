@@ -40,8 +40,9 @@ test('accepts live XLSX to PDF and rejects a valid session outside Blokserwis', 
 			apiOrigin: api,
 			generateAI: process.env.E2E_QUOTES_PAID_AI === '1'
 		});
+		await page.getByText('Pozostałe opcje', { exact: true }).click();
 		await page.getByRole('button', { name: 'Archiwizuj' }).click();
-		await expect(page.getByText(/ · Archiwum$/)).toBeVisible();
+		await expect(page.getByText('Ta wycena jest w archiwum.')).toBeVisible();
 		const other = await outsider.newPage();
 		const rejected = other.waitForResponse((response) =>
 			response.url() === `${api}/unisource.v2.QuoteService/ListQuotes` && response.status() === 403
