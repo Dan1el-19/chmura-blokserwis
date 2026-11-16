@@ -103,7 +103,7 @@ it('does not report publication when the service returns no quote', async () => 
 	const view = await render(QuoteEditor, { id: 'quote-1' });
 	await view.getByRole('button', { name: 'Zatwierdź wycenę' }).first().click();
 	await expect.element(view.getByRole('alert')).toHaveTextContent('Nie otrzymano potwierdzenia zatwierdzenia wyceny.');
-	await expect.element(view.getByText('Opublikowano rewizję. PDF jest w przygotowaniu.')).not.toBeInTheDocument();
+	await expect.element(view.getByText('Opublikowano rewizję.', { exact: true })).not.toBeInTheDocument();
 });
 
 it('saves newer edits after an earlier delayed save completes', async () => {

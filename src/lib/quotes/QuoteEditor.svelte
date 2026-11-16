@@ -172,7 +172,7 @@
 			const result = quote.currentRevision ? await getQuoteClient().publishQuoteRevision(request) : await getQuoteClient().approveQuote(request);
 			if (!result.quote) throw new Error('Nie otrzymano potwierdzenia zatwierdzenia wyceny.');
 			adopt(result.quote);
-			status = 'Opublikowano rewizję. PDF jest w przygotowaniu.';
+			status = 'Opublikowano rewizję.';
 			await loadRevisions(0);
 		});
 	}
