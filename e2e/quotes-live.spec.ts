@@ -36,9 +36,9 @@ test('accepts live XLSX to PDF and rejects a valid session outside Blokserwis', 
 		const quoteId = await runQuoteFlow(page, {
 			fixture,
 			title: `Oferta odbiorowa ${randomUUID().slice(0, 8)}`,
-			expectedIntroduction: /\S/,
 			minimumPDFBytes: 1000,
-			apiOrigin: api
+			apiOrigin: api,
+			generateAI: process.env.E2E_QUOTES_PAID_AI === '1'
 		});
 		await page.getByRole('button', { name: 'Archiwizuj' }).click();
 		await expect(page.getByText(/ · Archiwum$/)).toBeVisible();

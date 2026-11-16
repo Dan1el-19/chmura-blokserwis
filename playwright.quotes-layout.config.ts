@@ -2,7 +2,7 @@ import { defineConfig, devices } from 'playwright/test';
 
 export default defineConfig({
 	testDir: './e2e',
-	testMatch: 'quotes-layout.spec.ts',
+	testMatch: ['quotes-layout.spec.ts', 'quotes-v2-layout.spec.ts'],
 	use: { baseURL: 'http://127.0.0.1:3100', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
 	projects: [{ name: 'mobile', use: { ...devices['Pixel 7'], defaultBrowserType: 'chromium' } }],
 	webServer: {

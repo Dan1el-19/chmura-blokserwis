@@ -1,0 +1,12 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": ["https://chmura.blokserwis.pl"],
+        "methods": ["GET"],
+        "headers": ["cache-control", "pragma"]
+      },
+      "maxAgeSeconds": 3600
+    }
+  ]
+}

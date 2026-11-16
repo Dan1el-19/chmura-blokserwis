@@ -3,7 +3,7 @@
 	import type { GetQuoteOperationResponse } from '#lib/gen/unisource/v2/quotes_pb.js';
 	import { partialDescription, researchSources } from './ai-progress.js';
 
-	let { operation }: { operation: GetQuoteOperationResponse } = $props();
+	let { operation, proposal = false }: { operation: GetQuoteOperationResponse; proposal?: boolean } = $props();
 	let active = $derived(operation.status === 'queued' || operation.status === 'running');
 	let sections = $derived(partialDescription(operation.partialJson));
 	let sources = $derived(researchSources(operation.searches));
@@ -12,7 +12,7 @@
 		operation.status === 'conflict' ? 'Szkic zmienił się podczas generowania' :
 		operation.status === 'uncertain' ? 'Nie udało się potwierdzić wyniku' :
 		operation.status === 'failed' ? 'Nie udało się wygenerować opisu' :
-		operation.status === 'succeeded' ? 'Opis jest gotowy' :
+		operation.status === 'succeeded' ? (proposal ? 'Propozycja gotowa' : 'Opis jest gotowy') :
 		operation.researchStatus === 'searching' ? 'Szukam informacji o urządzeniach' :
 		sections.length ? 'Piszę treść oferty' : 'Przygotowuję treść oferty'
 	);
@@ -30,7 +30,7 @@
 				{:else if operation.status === 'uncertain'}Nowa próba może zostać ponownie rozliczona.
 				{:else if operation.status === 'failed'}Możesz spróbować ponownie.{operation.errorCode ? ` Kod błędu: ${operation.errorCode}.` : ''}
 				{:else if active}Możesz w tym czasie edytować szkic. Podgląd poniżej jest tymczasowy.
-				{:else if operation.status === 'succeeded'}Sprawdź wygenerowany tekst w polach poniżej.
+				{:else if operation.status === 'succeeded'}{proposal ? 'Sprawdź propozycję i zdecyduj, czy ją zastosować.' : 'Sprawdź wygenerowany tekst w polach poniżej.'}
 				{/if}
 			</p>
 		</div>

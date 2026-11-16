@@ -7,7 +7,7 @@ const runIntegrated = process.env.E2E_QUOTES_INTEGRATED === '1';
 
 test('imports XLSX, resumes after reload and downloads published revisions through UniSourceGO', async ({ page }) => {
 	test.skip(!runIntegrated || !fixture || !apiUrl, 'Run through the isolated UniSourceGO quotes integration test.');
-	test.setTimeout(75_000);
+	test.setTimeout(150_000);
 	const origin = new URL(apiUrl!).origin;
 	expect(new URL(origin).hostname).toBe('127.0.0.1');
 
@@ -36,5 +36,8 @@ test('imports XLSX, resumes after reload and downloads published revisions throu
 		return route.fulfill({ status: 200, headers, json: body });
 	});
 
-	await runQuoteFlow(page, { fixture: fixture!, title: 'Oferta E2E', expectedIntroduction: 'Wstęp' });
+	await runQuoteFlow(page, {
+		fixture: fixture!, title: 'Oferta E2E', expectedScope: 'Montaż kamery',
+		generateAI: process.env.E2E_QUOTES_SKIP_AI !== '1'
+	});
 });

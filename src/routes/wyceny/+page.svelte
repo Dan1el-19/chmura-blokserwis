@@ -49,7 +49,7 @@
 			createKey ||= crypto.randomUUID();
 			const result = await getQuoteClient().createQuote({
 				idempotencyKey: createKey,
-				draft: { title: 'Nowa wycena', priceMode: QuotePriceMode.GROSS }
+				draft: { title: 'Nowa wycena', priceMode: QuotePriceMode.GROSS, documentSchemaVersion: 2 }
 			});
 			if (!result.quote) throw new Error('Nie otrzymano identyfikatora szkicu.');
 			await goto(resolve('/wyceny/[id]', { id: result.quote.id }));

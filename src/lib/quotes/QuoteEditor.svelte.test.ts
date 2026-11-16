@@ -8,7 +8,7 @@ import QuoteEditor from './QuoteEditor.svelte';
 const api = vi.hoisted(() => ({
 	getQuote: vi.fn(), saveDraft: vi.fn(), approveQuote: vi.fn(), getImportResult: vi.fn(), getQuoteOperation: vi.fn(),
 	getQuotePdf: vi.fn(), applyImport: vi.fn(), listQuoteRevisions: vi.fn(), remapQuoteImport: vi.fn(),
-	getQuotePreview: vi.fn()
+	getQuotePreview: vi.fn(), applyQuoteText: vi.fn(), generateDraftPdf: vi.fn()
 }));
 vi.mock('#lib/api.js', () => ({ getQuoteClient: () => api }));
 vi.mock('$app/navigation', () => ({ beforeNavigate: vi.fn() }));
@@ -37,6 +37,7 @@ it.each([
 		body{margin:0;font:9.5pt Arial}header{height:20mm}p{margin:0;height:10mm}
 		</style></head><body><header>SZKIC</header>${'<p>Pozycja oferty</p>'.repeat(100)}<footer>Koniec oferty</footer></body></html>` });
 	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await view.getByRole('button', { name: 'Pokaż podgląd wyceny' }).click();
 	await expect.poll(() => document.querySelector('iframe[title="Podgląd wyceny"]')).not.toBeNull();
 	const frame = document.querySelector<HTMLIFrameElement>('iframe[title="Podgląd wyceny"]')!;
 	expect(frame.getAttribute('sandbox')).toBe('');
@@ -77,7 +78,7 @@ it('keeps typed values after a concurrent save conflict', async () => {
 	await view.getByLabelText('Tytuł').fill('Moja lokalna zmiana');
 	await view.getByRole('button', { name: 'Zapisz szkic' }).first().click();
 	await expect.element(view.getByRole('alert')).toHaveTextContent('Twoje zmiany pozostają w formularzu');
-	await expect.element(view.getByText('Nie udało się zapisać', { exact: true }).first()).toBeVisible();
+	await expect.element(view.getByText('Nie udało się zapisać', { exact: true }).last()).toBeVisible();
 	await expect.element(view.getByLabelText('Tytuł')).toHaveValue('Moja lokalna zmiana');
 	expect(api.saveDraft).toHaveBeenCalledWith(expect.objectContaining({
 		expectedVersion: 1n, draft: expect.objectContaining({ title: 'Moja lokalna zmiana' })
@@ -88,13 +89,13 @@ it('reports a clean draft and allows retry after a save error', async () => {
 	api.saveDraft.mockRejectedValueOnce(new Error('Brak połączenia'));
 	api.saveDraft.mockResolvedValueOnce({ quote: original });
 	const view = await render(QuoteEditor, { id: 'quote-1' });
-	await expect.element(view.getByText('Zapisano', { exact: true }).first()).toBeVisible();
+	await expect.element(view.getByText('Zapisano', { exact: true }).last()).toBeVisible();
 	await view.getByLabelText('Tytuł').fill('Zmiana');
-	await expect.element(view.getByText('Niezapisane zmiany', { exact: true }).first()).toBeVisible();
+	await expect.element(view.getByText('Niezapisane zmiany', { exact: true }).last()).toBeVisible();
 	await view.getByRole('button', { name: 'Zapisz szkic' }).first().click();
-	await expect.element(view.getByText('Nie udało się zapisać', { exact: true }).first()).toBeVisible();
+	await expect.element(view.getByText('Nie udało się zapisać', { exact: true }).last()).toBeVisible();
 	await view.getByRole('button', { name: 'Ponów zapis' }).first().click();
-	await expect.element(view.getByText('Zapisano', { exact: true }).first()).toBeVisible();
+	await expect.element(view.getByText('Zapisano', { exact: true }).last()).toBeVisible();
 });
 
 it('does not report publication when the service returns no quote', async () => {
@@ -150,6 +151,7 @@ it('shows when the saved draft preview is still refreshing', async () => {
 	await view.getByLabelText('Tytuł').fill('Nowy szkic');
 	await view.getByRole('button', { name: 'Zapisz szkic' }).first().click();
 	await expect.poll(() => api.getQuotePreview.mock.calls.length).toBe(2);
+	await view.getByRole('button', {name:'Pokaż podgląd wyceny'}).click();
 	await expect.element(view.getByText('Odświeżanie podglądu…')).toBeVisible();
 	finishPreview({ html: '<p>Nowy podgląd</p>' });
 	await expect.element(view.getByText('Odświeżanie podglądu…')).not.toBeInTheDocument();
@@ -195,6 +197,7 @@ it('retains the draft and previous preview when refreshing fails, and can retry'
 	await expect.poll(() => api.getQuotePreview.mock.calls.length).toBe(1);
 	await view.getByLabelText('Tytuł').fill('Moja oferta');
 	await view.getByRole('button', { name: 'Zapisz szkic' }).first().click();
+	await view.getByRole('button', {name:'Pokaż podgląd wyceny'}).click();
 	await expect.element(view.getByText(/Nie udało się odświeżyć podglądu/)).toBeVisible();
 	await expect.element(view.getByLabelText('Tytuł')).toHaveValue('Moja oferta');
 	const frame = () => document.querySelector<HTMLIFrameElement>('iframe[title="Podgląd wyceny"]');
@@ -248,6 +251,7 @@ it('keeps imported source rows aligned when a result has no line', async () => {
 	const view = await render(QuoteEditor, { id: 'quote-1' });
 	const imported = view.getByRole('group', { name: 'Import XLSX' });
 	await expect.element(imported.getByLabelText('Nazwa pozycji 1')).toHaveValue('Kamera');
+	await imported.getByRole('button', { name: 'Edytuj pozycję 1: Kamera' }).click();
 	await expect.element(imported.getByText(/Wiersz 8 w arkuszu/)).toBeVisible();
 });
 
@@ -274,6 +278,7 @@ it('recovers an import and applies edited gross prices without inventing VAT', a
 		id: 'quote-1', draftVersion: 2n, draft: { title: 'Pierwotny szkic', priceMode: QuotePriceMode.GROSS }
 	}) });
 	const view = await render(QuoteEditor, { id: 'quote-1' });
+	await view.getByRole('group', { name: 'Import XLSX' }).getByRole('button', { name: 'Edytuj pozycję 1: Kamera' }).click();
 	await view.getByRole('group', { name: 'Import XLSX' }).getByLabelText('Cena brutto pozycji 1').fill('21');
 	await view.getByRole('button', { name: 'Zastosuj sprawdzone pozycje' }).click();
 	await expect.poll(() => api.applyImport.mock.calls.length).toBe(1);
@@ -291,6 +296,7 @@ it('shows all import warnings and the source row', async () => {
 	}) });
 	const view = await render(QuoteEditor, { id: 'quote-1' });
 	await expect.element(view.getByText('other_warning')).toBeVisible();
+	await view.getByRole('group', { name: 'Import XLSX' }).getByRole('button', { name: 'Edytuj pozycję 1: Kamera' }).click();
 	await expect.element(view.getByText(/Wiersz 4/)).toBeVisible();
 });
 
@@ -338,4 +344,80 @@ it('does not offer an outdated draft PDF after editing the draft', async () => {
 	await expect.element(view.getByRole('button', { name: 'Pobierz PDF szkicu' })).toBeVisible();
 	await view.getByLabelText('Tytuł').fill('Nowa treść');
 	await expect.element(view.getByRole('button', { name: 'Pobierz PDF szkicu' })).not.toBeInTheDocument();
+});
+
+it('opens and closes the desktop preview without discarding draft edits', async () => {
+	api.getQuotePreview.mockResolvedValue({ html: '<p>Podgląd szkicu</p>' });
+	const view = await render(QuoteEditor, { id: 'quote-1' });
+	(view.container.querySelector('.quote-editor') as HTMLElement).style.width = '1200px';
+	await view.getByLabelText('Tytuł').fill('Moja wycena');
+	const toggle = view.getByRole('button', { name: 'Pokaż podgląd na desktopie' });
+	await expect.element(toggle).toHaveAttribute('aria-expanded', 'false');
+	await toggle.click();
+	await expect.element(toggle).toHaveAttribute('aria-expanded', 'true');
+	await toggle.click();
+	await expect.element(toggle).toHaveAttribute('aria-expanded', 'false');
+	await expect.element(view.getByLabelText('Tytuł')).toHaveValue('Moja wycena');
+});
+
+
+it('edits the new document and explicitly applies an AI scope proposal', async () => {
+ const draftQuote = create(QuoteSchema, { id:'quote-1', draftVersion:1n, draft:{title:'Nowa', client:'Klient', priceMode:QuotePriceMode.GROSS, documentSchemaVersion:2, documentDate:'2026-11-16', scopeSections:[{heading:'Obecny',body:'Ręczny tekst'}]} });
+ api.getQuote.mockResolvedValue({quote:draftQuote});
+ api.getQuoteOperation.mockResolvedValue({status:'succeeded',operationId:'op-1',draftVersion:1n,partialJson:'',researchStatus:'',searches:[],proposedScopeSections:[{heading:'Propozycja',body:'Nowy zakres'}]});
+ api.applyQuoteText.mockResolvedValue({quote:create(QuoteSchema,{id:'quote-1',draftVersion:2n,draft:{title:'Nowa',client:'Klient',priceMode:QuotePriceMode.GROSS,documentSchemaVersion:2,documentDate:'2026-11-16',scopeSections:[{heading:'Propozycja',body:'Nowy zakres'}]}})});
+ const view = await render(QuoteEditor,{id:'quote-1'});
+ await expect.element(view.getByLabelText('Data dokumentu')).toHaveValue('2026-11-16');
+ await expect.element(view.getByLabelText('Treść podsekcji 1')).toHaveValue('Ręczny tekst');
+ await expect.element(view.getByText('Nowy zakres')).toBeVisible();
+ await view.getByRole('button',{name:'Zastosuj zakres'}).click();
+ expect(api.applyQuoteText).toHaveBeenCalledWith(expect.objectContaining({quoteId:'quote-1',operationId:'op-1',expectedVersion:1n}));
+ await expect.element(view.getByLabelText('Treść podsekcji 1')).toHaveValue('Nowy zakres');
+});
+
+it('queues one PDF on opening and stops refreshing when the panel is closed', async () => {
+ const quote = create(QuoteSchema,{id:'quote-1',draftVersion:1n,draft:{title:'Nowa',priceMode:QuotePriceMode.GROSS,documentSchemaVersion:2,documentDate:'2026-11-16',lines:[{name:'Kamera',quantity:'1',unitPrice:'10'}]}});
+ api.getQuote.mockResolvedValue({quote});
+ let generated = false;
+ api.getQuotePdf.mockImplementation(async () => {
+  if (!generated) throw new ConnectError('missing',Code.NotFound);
+  return {status:'queued',revision:0n,draftVersion:1n,templateVersion:'4',url:''};
+ });
+ api.generateDraftPdf.mockImplementation(async () => { generated=true; return {quote}; });
+ const view=await render(QuoteEditor,{id:'quote-1'});
+ await expect.element(view.getByLabelText('Data dokumentu')).toBeVisible();
+ expect(api.generateDraftPdf).not.toHaveBeenCalled();
+ await view.getByRole('button',{name:'Podgląd szkicu'}).first().click();
+ await expect.poll(() => api.generateDraftPdf.mock.calls.length).toBe(1);
+ await expect.element(view.getByText('Przygotowywanie PDF…')).toBeVisible();
+ await view.getByRole('button',{name:'Pokaż edycję wyceny'}).click();
+ await new Promise(resolve => setTimeout(resolve,1700));
+ expect(api.generateDraftPdf).toHaveBeenCalledTimes(1);
+ expect(api.getQuotePreview).not.toHaveBeenCalled();
+});
+
+it('refreshes an expired PDF link without generating another document', async () => {
+ const quote = create(QuoteSchema,{id:'quote-1',draftVersion:1n,draft:{title:'Nowa',priceMode:QuotePriceMode.GROSS,documentSchemaVersion:2,documentDate:'2026-11-16',lines:[{name:'Kamera',quantity:'1',unitPrice:'10'}]}});
+ api.getQuote.mockResolvedValue({quote});
+ api.getQuotePdf.mockResolvedValue({status:'succeeded',revision:0n,draftVersion:1n,templateVersion:'4',url:'https://storage.example/file'});
+ const fetchMock=vi.fn().mockResolvedValueOnce(new Response('expired',{status:403})).mockResolvedValueOnce(new Response('%PDF-1.7\n',{status:200}));
+ vi.stubGlobal('fetch',fetchMock);
+ try {
+  const view=await render(QuoteEditor,{id:'quote-1'});
+  await view.getByRole('button',{name:'Podgląd szkicu'}).first().click();
+  await expect.poll(() => fetchMock.mock.calls.length).toBe(2);
+  expect(api.generateDraftPdf).not.toHaveBeenCalled();
+  expect(api.getQuotePdf.mock.calls.length).toBeGreaterThanOrEqual(2);
+ } finally { vi.unstubAllGlobals(); }
+});
+
+it('keeps a recoverable copy when loading the server version after a conflict', async () => {
+ api.saveDraft.mockRejectedValue(new ConnectError('draft changed',Code.Aborted));
+ api.getQuote.mockResolvedValueOnce({quote:original}).mockResolvedValueOnce({quote:create(QuoteSchema,{id:'quote-1',draftVersion:2n,draft:{title:'Wersja serwera',priceMode:QuotePriceMode.GROSS}})});
+ const view=await render(QuoteEditor,{id:'quote-1'});
+ await view.getByLabelText('Tytuł').fill('Moja wersja');
+ await view.getByRole('button',{name:'Zapisz szkic'}).first().click();
+ await view.getByRole('button',{name:'Wczytaj wersję serwera'}).click();
+ await expect.element(view.getByLabelText('Tytuł')).toHaveValue('Wersja serwera');
+ await expect.element(view.getByLabelText('Odzyskane zmiany')).toHaveValue(expect.stringContaining('Moja wersja'));
 });

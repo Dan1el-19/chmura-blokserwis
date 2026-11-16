@@ -6,6 +6,7 @@ option go_package = "github.com/Dan1el-19/UniSourceGO/gen/unisource/v2;unisource
 
 service QuoteService {
   rpc GenerateQuoteText(GenerateQuoteTextRequest) returns (GenerateQuoteTextResponse);
+  rpc ApplyQuoteText(ApplyQuoteTextRequest) returns (ApplyQuoteTextResponse);
   rpc GetQuoteOperation(GetQuoteOperationRequest) returns (GetQuoteOperationResponse);
   rpc WatchQuoteOperation(WatchQuoteOperationRequest) returns (stream WatchQuoteOperationResponse);
   rpc GenerateDraftPdf(GenerateDraftPdfRequest) returns (GenerateDraftPdfResponse);
@@ -40,12 +41,26 @@ enum QuoteVatKind {
   QUOTE_VAT_KIND_OUT_OF_SCOPE = 3;
 }
 
+enum QuoteDescriptionStandard {
+  QUOTE_DESCRIPTION_STANDARD_UNSPECIFIED = 0;
+  QUOTE_DESCRIPTION_STANDARD_GENERAL = 1;
+  QUOTE_DESCRIPTION_STANDARD_MONITORING = 2;
+  QUOTE_DESCRIPTION_STANDARD_ACCESS_CONTROL = 3;
+  QUOTE_DESCRIPTION_STANDARD_INTERCOM = 4;
+}
+
+message QuoteScopeSection {
+  string heading = 1;
+  string body = 2;
+}
+
 message QuoteLine {
   string name = 1;
   string quantity = 2;
   string unit_price = 3;
   QuoteVatKind vat_kind = 4;
   string vat_percent = 5;
+  string description = 6;
 }
 
 message QuoteDraft {
@@ -57,6 +72,10 @@ message QuoteDraft {
   string scope = 6;
   string technical_description = 7;
   string conclusion = 8;
+  string document_date = 9;
+  repeated QuoteScopeSection scope_sections = 10;
+  int32 document_schema_version = 11;
+  QuoteDescriptionStandard description_standard = 12;
 }
 
 message Quote {
@@ -271,6 +290,7 @@ message GetQuotePdfResponse {
   string error_code = 3;
   int64 revision = 4;
   int64 draft_version = 5;
+  string template_version = 7;
 }
 
 message RetryQuotePdfRequest {
@@ -308,6 +328,18 @@ message GetQuoteOperationResponse {
   string partial_json = 5;
   string research_status = 6;
   repeated QuoteResearchSearch searches = 7;
+  repeated QuoteScopeSection proposed_scope_sections = 8;
+}
+
+message ApplyQuoteTextRequest {
+  string quote_id = 1;
+  string operation_id = 2;
+  int64 expected_version = 3;
+  string idempotency_key = 4;
+}
+
+message ApplyQuoteTextResponse {
+  Quote quote = 1;
 }
 
 message QuoteResearchSource {

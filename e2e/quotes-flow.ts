@@ -7,16 +7,18 @@ async function checkPDF(download: Download, minimumBytes: number) {
 	const bytes = await readFile(path);
 	expect(bytes.length).toBeGreaterThanOrEqual(minimumBytes);
 	expect(bytes.subarray(0, 5).toString()).toBe('%PDF-');
+	return bytes;
 }
 
 export async function runQuoteFlow(page: Page, {
-	fixture, title, expectedIntroduction, minimumPDFBytes = 5, apiOrigin
+	fixture, title, expectedScope, minimumPDFBytes = 5, apiOrigin, generateAI = true
 }: {
 	fixture: string;
 	title: string;
-	expectedIntroduction: string | RegExp;
+	expectedScope?: string | RegExp;
 	minimumPDFBytes?: number;
 	apiOrigin?: string;
+	generateAI?: boolean;
 }): Promise<string> {
 	const list = apiOrigin ? page.waitForResponse((response) =>
 		response.url() === `${apiOrigin}/unisource.v2.QuoteService/ListQuotes` && response.status() === 200
@@ -42,24 +44,38 @@ export async function runQuoteFlow(page: Page, {
 	await expect(imported.getByText('Import zapisany w szkicu.')).toBeVisible();
 	await expect(page.getByRole('group', { name: 'Dane wyceny' }).getByLabel('Nazwa pozycji 1')).toHaveValue('Kamera');
 
-	await page.getByRole('button', { name: 'Generuj opis AI' }).click();
-	await expect(page.getByLabel('Wstęp')).toHaveValue(expectedIntroduction, { timeout: 95_000 });
-	await expect(page.frameLocator('iframe[title="Podgląd wyceny"]').getByText('SZKIC', { exact: true })).toBeVisible();
-	await expect(page.frameLocator('iframe[title="Podgląd wyceny"]').getByText(expectedIntroduction, { exact: true })).toBeVisible();
+	await page.getByRole('button', { name: 'Dodaj podsekcję' }).click();
+	await page.getByLabel('Nagłówek podsekcji 1').fill('Prace');
+	await page.getByLabel('Treść podsekcji 1').fill('Montaż kamery');
+	if (generateAI) {
+		await page.getByRole('button', { name: 'Generuj opis AI' }).click();
+		const proposal = page.getByRole('region', { name: 'Propozycja zakresu AI' });
+		await expect(proposal).toBeVisible({ timeout: 95_000 });
+		await expect(page.getByLabel('Treść podsekcji 1')).toHaveValue('Montaż kamery');
+		if (expectedScope) await expect(proposal.getByText(expectedScope, { exact: true }).last()).toBeVisible();
+		await proposal.getByRole('button', { name: 'Zastosuj zakres' }).click();
+		if (expectedScope) await expect(page.getByLabel('Treść podsekcji 1')).toHaveValue(expectedScope);
+	}
 
-	await page.getByRole('button', { name: 'Generuj PDF szkicu' }).click();
+	const pdfResponse = page.waitForResponse(response => response.request().resourceType() === 'fetch' && response.headers()['content-type']?.includes('application/pdf') === true);
+	await page.getByRole('button', { name: 'Podgląd szkicu' }).click();
+	const previewBytes = await (await pdfResponse).body();
+	await expect(page.getByText(/Liczba stron:/)).toBeVisible({ timeout: 30_000 });
+	const showEdit = page.getByRole('button', { name: 'Pokaż edycję wyceny' });
+	if (await showEdit.isVisible()) await showEdit.click();
 	const draftLink = page.getByRole('button', { name: 'Pobierz PDF szkicu' });
-	await expect(draftLink).toBeVisible({ timeout: 15_000 });
+	await expect(draftLink).toBeVisible({ timeout: 30_000 });
 	const draftDownload = page.waitForEvent('download');
 	await draftLink.click();
-	await checkPDF(await draftDownload, minimumPDFBytes);
+	const downloadedBytes = await checkPDF(await draftDownload, minimumPDFBytes);
+	expect(downloadedBytes.equals(previewBytes)).toBe(true);
 
 	await page.getByRole('button', { name: 'Zatwierdź wycenę' }).click();
 	const number = page.getByText(/WYC\/\d{4}\/\d{4} · v1/);
 	await expect(number).toBeVisible();
 	const quoteNumber = (await number.innerText()).split(' · ')[0];
 	await page.getByLabel('Tytuł').fill(`${title}, druga wersja`);
-	await page.getByRole('button', { name: 'Zapisz zmiany', exact: true }).click();
+	await page.getByRole('button', { name: 'Opublikuj rewizję', exact: true }).click();
 	await expect(page.getByText(`${quoteNumber} · v2`, { exact: true })).toBeVisible();
 	await page.reload();
 	const newest = page.getByRole('button', { name: 'Pobierz najnowszy gotowy PDF' });

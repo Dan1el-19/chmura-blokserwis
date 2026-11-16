@@ -10,7 +10,29 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file unisource/v2/quotes.proto.
  */
 export const file_unisource_v2_quotes: GenFile = /*@__PURE__*/
-  fileDesc("Chl1bmlzb3VyY2UvdjIvcXVvdGVzLnByb3RvEgx1bmlzb3VyY2UudjIiggEKCVF1b3RlTGluZRIMCgRuYW1lGAEgASgJEhAKCHF1YW50aXR5GAIgASgJEhIKCnVuaXRfcHJpY2UYAyABKAkSLAoIdmF0X2tpbmQYBCABKA4yGi51bmlzb3VyY2UudjIuUXVvdGVWYXRLaW5kEhMKC3ZhdF9wZXJjZW50GAUgASgJIt0BCgpRdW90ZURyYWZ0Eg0KBXRpdGxlGAEgASgJEg4KBmNsaWVudBgCIAEoCRIwCgpwcmljZV9tb2RlGAMgASgOMhwudW5pc291cmNlLnYyLlF1b3RlUHJpY2VNb2RlEiYKBWxpbmVzGAQgAygLMhcudW5pc291cmNlLnYyLlF1b3RlTGluZRIUCgxpbnRyb2R1Y3Rpb24YBSABKAkSDQoFc2NvcGUYBiABKAkSHQoVdGVjaG5pY2FsX2Rlc2NyaXB0aW9uGAcgASgJEhIKCmNvbmNsdXNpb24YCCABKAkijwEKBVF1b3RlEgoKAmlkGAEgASgJEg4KBm51bWJlchgCIAEoCRIVCg1kcmFmdF92ZXJzaW9uGAMgASgDEhgKEGN1cnJlbnRfcmV2aXNpb24YBCABKAMSEAoIYXJjaGl2ZWQYBSABKAgSJwoFZHJhZnQYBiABKAsyGC51bmlzb3VyY2UudjIuUXVvdGVEcmFmdCJWChJDcmVhdGVRdW90ZVJlcXVlc3QSFwoPaWRlbXBvdGVuY3lfa2V5GAEgASgJEicKBWRyYWZ0GAIgASgLMhgudW5pc291cmNlLnYyLlF1b3RlRHJhZnQiIwoPR2V0UXVvdGVSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJIk0KEUxpc3RRdW90ZXNSZXF1ZXN0EhAKCGFyY2hpdmVkGAEgASgIEhEKCXBhZ2Vfc2l6ZRgCIAEoBRITCgtwYWdlX29mZnNldBgDIAEoBSI5ChJMaXN0UXVvdGVzUmVzcG9uc2USIwoGcXVvdGVzGAEgAygLMhMudW5pc291cmNlLnYyLlF1b3RlIoABChBTYXZlRHJhZnRSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAiABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJEicKBWRyYWZ0GAQgASgLMhgudW5pc291cmNlLnYyLlF1b3RlRHJhZnQiWgoTQXJjaGl2ZVF1b3RlUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCSJaChNSZXN0b3JlUXVvdGVSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAiABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJIjkKE0NyZWF0ZVF1b3RlUmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiNgoQR2V0UXVvdGVSZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSI3ChFTYXZlRHJhZnRSZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSI6ChRBcmNoaXZlUXVvdGVSZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSI6ChRSZXN0b3JlUXVvdGVSZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSLSAQoSUXVvdGVJbXBvcnRNYXBwaW5nEg0KBXNoZWV0GAEgASgJEhEKCWZpcnN0X3JvdxgCIAEoBRIQCghsYXN0X3JvdxgDIAEoBRITCgtuYW1lX2NvbHVtbhgEIAEoBRIXCg9xdWFudGl0eV9jb2x1bW4YBSABKAUSFAoMcHJpY2VfY29sdW1uGAYgASgFEhIKCnRvdGFsX2NlbGwYByABKAkSMAoKcHJpY2VfbW9kZRgIIAEoDjIcLnVuaXNvdXJjZS52Mi5RdW90ZVByaWNlTW9kZSJMCg9RdW90ZUltcG9ydExpbmUSEgoKc291cmNlX3JvdxgBIAEoBRIlCgRsaW5lGAIgASgLMhcudW5pc291cmNlLnYyLlF1b3RlTGluZSKfAgoRUXVvdGVJbXBvcnRSZXN1bHQSCgoCaWQYASABKAkSDgoGc3RhdHVzGAIgASgJEhIKCmVycm9yX2NvZGUYAyABKAkSMQoHbWFwcGluZxgEIAEoCzIgLnVuaXNvdXJjZS52Mi5RdW90ZUltcG9ydE1hcHBpbmcSLAoFbGluZXMYBSADKAsyHS51bmlzb3VyY2UudjIuUXVvdGVJbXBvcnRMaW5lEhIKCmJhc2VfdG90YWwYBiABKAkSGQoMc291cmNlX3RvdGFsGAcgASgJSACIAQESEAoId2FybmluZ3MYCCADKAkSDwoHYXBwbGllZBgJIAEoCBIWCg5yZXN1bHRfdmVyc2lvbhgKIAEoA0IPCg1fc291cmNlX3RvdGFsImsKFlVwbG9hZFF1b3RlWGxzeFJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgCIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkSDAoEeGxzeBgEIAEoDCIsChdVcGxvYWRRdW90ZVhsc3hSZXNwb25zZRIRCglpbXBvcnRfaWQYASABKAkiPQoWR2V0SW1wb3J0UmVzdWx0UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIRCglpbXBvcnRfaWQYAiABKAkiSgoXR2V0SW1wb3J0UmVzdWx0UmVzcG9uc2USLwoGcmVzdWx0GAEgASgLMh8udW5pc291cmNlLnYyLlF1b3RlSW1wb3J0UmVzdWx0IqQBChdSZW1hcFF1b3RlSW1wb3J0UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIRCglpbXBvcnRfaWQYAiABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgDIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYBCABKAkSMQoHbWFwcGluZxgFIAEoCzIgLnVuaXNvdXJjZS52Mi5RdW90ZUltcG9ydE1hcHBpbmciLQoYUmVtYXBRdW90ZUltcG9ydFJlc3BvbnNlEhEKCWltcG9ydF9pZBgBIAEoCSLnAQoSQXBwbHlJbXBvcnRSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhEKCWltcG9ydF9pZBgCIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAMgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgEIAEoCRIwCgpwcmljZV9tb2RlGAUgASgOMhwudW5pc291cmNlLnYyLlF1b3RlUHJpY2VNb2RlEi8KDnJldmlld2VkX2xpbmVzGAYgAygLMhcudW5pc291cmNlLnYyLlF1b3RlTGluZRIWCg5yZXN1bHRfdmVyc2lvbhgHIAEoAyI5ChNBcHBseUltcG9ydFJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIloKE0FwcHJvdmVRdW90ZVJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgCIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkiOgoUQXBwcm92ZVF1b3RlUmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiYgobUHVibGlzaFF1b3RlUmV2aXNpb25SZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAiABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJIkIKHFB1Ymxpc2hRdW90ZVJldmlzaW9uUmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiVQoZTGlzdFF1b3RlUmV2aXNpb25zUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIRCglwYWdlX3NpemUYAiABKAUSEwoLcGFnZV9vZmZzZXQYAyABKAUiawoRUXVvdGVSZXZpc2lvbkluZm8SEAoIcmV2aXNpb24YASABKAMSFAoMcHVibGlzaGVkX2F0GAIgASgJEhQKDHB1Ymxpc2hlZF9ieRgDIAEoCRIYChB0ZW1wbGF0ZV92ZXJzaW9uGAQgASgJIlAKGkxpc3RRdW90ZVJldmlzaW9uc1Jlc3BvbnNlEjIKCXJldmlzaW9ucxgBIAMoCzIfLnVuaXNvdXJjZS52Mi5RdW90ZVJldmlzaW9uSW5mbyI8ChZHZXRRdW90ZVByZXZpZXdSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhAKCHJldmlzaW9uGAIgASgDIj4KF0dldFF1b3RlUHJldmlld1Jlc3BvbnNlEgwKBGh0bWwYASABKAkSFQoNZHJhZnRfdmVyc2lvbhgCIAEoAyJeChdHZW5lcmF0ZURyYWZ0UGRmUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCSI+ChhHZW5lcmF0ZURyYWZ0UGRmUmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiZQoSR2V0UXVvdGVQZGZSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhAKCHJldmlzaW9uGAIgASgDEhUKDWRyYWZ0X3ZlcnNpb24YAyABKAMSFAoMb3BlcmF0aW9uX2lkGAQgASgJIm8KE0dldFF1b3RlUGRmUmVzcG9uc2USDgoGc3RhdHVzGAEgASgJEgsKA3VybBgCIAEoCRISCgplcnJvcl9jb2RlGAMgASgJEhAKCHJldmlzaW9uGAQgASgDEhUKDWRyYWZ0X3ZlcnNpb24YBSABKAMiagoUUmV0cnlRdW90ZVBkZlJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSEAoIcmV2aXNpb24YAiABKAMSFQoNZHJhZnRfdmVyc2lvbhgDIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYBCABKAkiOwoVUmV0cnlRdW90ZVBkZlJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIl8KGEdlbmVyYXRlUXVvdGVUZXh0UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCSIxChlHZW5lcmF0ZVF1b3RlVGV4dFJlc3BvbnNlEhQKDG9wZXJhdGlvbl9pZBgBIAEoCSJCChhHZXRRdW90ZU9wZXJhdGlvblJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSFAoMb3BlcmF0aW9uX2lkGAIgASgJItABChlHZXRRdW90ZU9wZXJhdGlvblJlc3BvbnNlEg4KBnN0YXR1cxgBIAEoCRISCgplcnJvcl9jb2RlGAIgASgJEhUKDWRyYWZ0X3ZlcnNpb24YAyABKAMSFAoMb3BlcmF0aW9uX2lkGAQgASgJEhQKDHBhcnRpYWxfanNvbhgFIAEoCRIXCg9yZXNlYXJjaF9zdGF0dXMYBiABKAkSMwoIc2VhcmNoZXMYByADKAsyIS51bmlzb3VyY2UudjIuUXVvdGVSZXNlYXJjaFNlYXJjaCIxChNRdW90ZVJlc2VhcmNoU291cmNlEg0KBXRpdGxlGAEgASgJEgsKA3VybBgCIAEoCSJnChNRdW90ZVJlc2VhcmNoU2VhcmNoEgwKBGl0ZW0YASABKAkSDgoGc3RhdHVzGAIgASgJEjIKB3NvdXJjZXMYAyADKAsyIS51bmlzb3VyY2UudjIuUXVvdGVSZXNlYXJjaFNvdXJjZSJEChpXYXRjaFF1b3RlT3BlcmF0aW9uUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIUCgxvcGVyYXRpb25faWQYAiABKAkiWQobV2F0Y2hRdW90ZU9wZXJhdGlvblJlc3BvbnNlEjoKCW9wZXJhdGlvbhgBIAEoCzInLnVuaXNvdXJjZS52Mi5HZXRRdW90ZU9wZXJhdGlvblJlc3BvbnNlKmgKDlF1b3RlUHJpY2VNb2RlEiAKHFFVT1RFX1BSSUNFX01PREVfVU5TUEVDSUZJRUQQABIYChRRVU9URV9QUklDRV9NT0RFX05FVBABEhoKFlFVT1RFX1BSSUNFX01PREVfR1JPU1MQAiqDAQoMUXVvdGVWYXRLaW5kEh4KGlFVT1RFX1ZBVF9LSU5EX1VOU1BFQ0lGSUVEEAASFwoTUVVPVEVfVkFUX0tJTkRfUkFURRABEhkKFVFVT1RFX1ZBVF9LSU5EX0VYRU1QVBACEh8KG1FVT1RFX1ZBVF9LSU5EX09VVF9PRl9TQ09QRRADMssOCgxRdW90ZVNlcnZpY2USZAoRR2VuZXJhdGVRdW90ZVRleHQSJi51bmlzb3VyY2UudjIuR2VuZXJhdGVRdW90ZVRleHRSZXF1ZXN0GicudW5pc291cmNlLnYyLkdlbmVyYXRlUXVvdGVUZXh0UmVzcG9uc2USZAoRR2V0UXVvdGVPcGVyYXRpb24SJi51bmlzb3VyY2UudjIuR2V0UXVvdGVPcGVyYXRpb25SZXF1ZXN0GicudW5pc291cmNlLnYyLkdldFF1b3RlT3BlcmF0aW9uUmVzcG9uc2USbAoTV2F0Y2hRdW90ZU9wZXJhdGlvbhIoLnVuaXNvdXJjZS52Mi5XYXRjaFF1b3RlT3BlcmF0aW9uUmVxdWVzdBopLnVuaXNvdXJjZS52Mi5XYXRjaFF1b3RlT3BlcmF0aW9uUmVzcG9uc2UwARJhChBHZW5lcmF0ZURyYWZ0UGRmEiUudW5pc291cmNlLnYyLkdlbmVyYXRlRHJhZnRQZGZSZXF1ZXN0GiYudW5pc291cmNlLnYyLkdlbmVyYXRlRHJhZnRQZGZSZXNwb25zZRJSCgtHZXRRdW90ZVBkZhIgLnVuaXNvdXJjZS52Mi5HZXRRdW90ZVBkZlJlcXVlc3QaIS51bmlzb3VyY2UudjIuR2V0UXVvdGVQZGZSZXNwb25zZRJYCg1SZXRyeVF1b3RlUGRmEiIudW5pc291cmNlLnYyLlJldHJ5UXVvdGVQZGZSZXF1ZXN0GiMudW5pc291cmNlLnYyLlJldHJ5UXVvdGVQZGZSZXNwb25zZRJVCgxBcHByb3ZlUXVvdGUSIS51bmlzb3VyY2UudjIuQXBwcm92ZVF1b3RlUmVxdWVzdBoiLnVuaXNvdXJjZS52Mi5BcHByb3ZlUXVvdGVSZXNwb25zZRJtChRQdWJsaXNoUXVvdGVSZXZpc2lvbhIpLnVuaXNvdXJjZS52Mi5QdWJsaXNoUXVvdGVSZXZpc2lvblJlcXVlc3QaKi51bmlzb3VyY2UudjIuUHVibGlzaFF1b3RlUmV2aXNpb25SZXNwb25zZRJnChJMaXN0UXVvdGVSZXZpc2lvbnMSJy51bmlzb3VyY2UudjIuTGlzdFF1b3RlUmV2aXNpb25zUmVxdWVzdBooLnVuaXNvdXJjZS52Mi5MaXN0UXVvdGVSZXZpc2lvbnNSZXNwb25zZRJeCg9HZXRRdW90ZVByZXZpZXcSJC51bmlzb3VyY2UudjIuR2V0UXVvdGVQcmV2aWV3UmVxdWVzdBolLnVuaXNvdXJjZS52Mi5HZXRRdW90ZVByZXZpZXdSZXNwb25zZRJeCg9VcGxvYWRRdW90ZVhsc3gSJC51bmlzb3VyY2UudjIuVXBsb2FkUXVvdGVYbHN4UmVxdWVzdBolLnVuaXNvdXJjZS52Mi5VcGxvYWRRdW90ZVhsc3hSZXNwb25zZRJeCg9HZXRJbXBvcnRSZXN1bHQSJC51bmlzb3VyY2UudjIuR2V0SW1wb3J0UmVzdWx0UmVxdWVzdBolLnVuaXNvdXJjZS52Mi5HZXRJbXBvcnRSZXN1bHRSZXNwb25zZRJhChBSZW1hcFF1b3RlSW1wb3J0EiUudW5pc291cmNlLnYyLlJlbWFwUXVvdGVJbXBvcnRSZXF1ZXN0GiYudW5pc291cmNlLnYyLlJlbWFwUXVvdGVJbXBvcnRSZXNwb25zZRJSCgtBcHBseUltcG9ydBIgLnVuaXNvdXJjZS52Mi5BcHBseUltcG9ydFJlcXVlc3QaIS51bmlzb3VyY2UudjIuQXBwbHlJbXBvcnRSZXNwb25zZRJSCgtDcmVhdGVRdW90ZRIgLnVuaXNvdXJjZS52Mi5DcmVhdGVRdW90ZVJlcXVlc3QaIS51bmlzb3VyY2UudjIuQ3JlYXRlUXVvdGVSZXNwb25zZRJJCghHZXRRdW90ZRIdLnVuaXNvdXJjZS52Mi5HZXRRdW90ZVJlcXVlc3QaHi51bmlzb3VyY2UudjIuR2V0UXVvdGVSZXNwb25zZRJPCgpMaXN0UXVvdGVzEh8udW5pc291cmNlLnYyLkxpc3RRdW90ZXNSZXF1ZXN0GiAudW5pc291cmNlLnYyLkxpc3RRdW90ZXNSZXNwb25zZRJMCglTYXZlRHJhZnQSHi51bmlzb3VyY2UudjIuU2F2ZURyYWZ0UmVxdWVzdBofLnVuaXNvdXJjZS52Mi5TYXZlRHJhZnRSZXNwb25zZRJVCgxBcmNoaXZlUXVvdGUSIS51bmlzb3VyY2UudjIuQXJjaGl2ZVF1b3RlUmVxdWVzdBoiLnVuaXNvdXJjZS52Mi5BcmNoaXZlUXVvdGVSZXNwb25zZRJVCgxSZXN0b3JlUXVvdGUSIS51bmlzb3VyY2UudjIuUmVzdG9yZVF1b3RlUmVxdWVzdBoiLnVuaXNvdXJjZS52Mi5SZXN0b3JlUXVvdGVSZXNwb25zZUI/Wj1naXRodWIuY29tL0RhbjFlbC0xOS9VbmlTb3VyY2VHTy9nZW4vdW5pc291cmNlL3YyO3VuaXNvdXJjZXYyYgZwcm90bzM");
+  fileDesc("Chl1bmlzb3VyY2UvdjIvcXVvdGVzLnByb3RvEgx1bmlzb3VyY2UudjIiMgoRUXVvdGVTY29wZVNlY3Rpb24SDwoHaGVhZGluZxgBIAEoCRIMCgRib2R5GAIgASgJIpcBCglRdW90ZUxpbmUSDAoEbmFtZRgBIAEoCRIQCghxdWFudGl0eRgCIAEoCRISCgp1bml0X3ByaWNlGAMgASgJEiwKCHZhdF9raW5kGAQgASgOMhoudW5pc291cmNlLnYyLlF1b3RlVmF0S2luZBITCgt2YXRfcGVyY2VudBgFIAEoCRITCgtkZXNjcmlwdGlvbhgGIAEoCSKUAwoKUXVvdGVEcmFmdBINCgV0aXRsZRgBIAEoCRIOCgZjbGllbnQYAiABKAkSMAoKcHJpY2VfbW9kZRgDIAEoDjIcLnVuaXNvdXJjZS52Mi5RdW90ZVByaWNlTW9kZRImCgVsaW5lcxgEIAMoCzIXLnVuaXNvdXJjZS52Mi5RdW90ZUxpbmUSFAoMaW50cm9kdWN0aW9uGAUgASgJEg0KBXNjb3BlGAYgASgJEh0KFXRlY2huaWNhbF9kZXNjcmlwdGlvbhgHIAEoCRISCgpjb25jbHVzaW9uGAggASgJEhUKDWRvY3VtZW50X2RhdGUYCSABKAkSNwoOc2NvcGVfc2VjdGlvbnMYCiADKAsyHy51bmlzb3VyY2UudjIuUXVvdGVTY29wZVNlY3Rpb24SHwoXZG9jdW1lbnRfc2NoZW1hX3ZlcnNpb24YCyABKAUSRAoUZGVzY3JpcHRpb25fc3RhbmRhcmQYDCABKA4yJi51bmlzb3VyY2UudjIuUXVvdGVEZXNjcmlwdGlvblN0YW5kYXJkIo8BCgVRdW90ZRIKCgJpZBgBIAEoCRIOCgZudW1iZXIYAiABKAkSFQoNZHJhZnRfdmVyc2lvbhgDIAEoAxIYChBjdXJyZW50X3JldmlzaW9uGAQgASgDEhAKCGFyY2hpdmVkGAUgASgIEicKBWRyYWZ0GAYgASgLMhgudW5pc291cmNlLnYyLlF1b3RlRHJhZnQiVgoSQ3JlYXRlUXVvdGVSZXF1ZXN0EhcKD2lkZW1wb3RlbmN5X2tleRgBIAEoCRInCgVkcmFmdBgCIAEoCzIYLnVuaXNvdXJjZS52Mi5RdW90ZURyYWZ0IiMKD0dldFF1b3RlUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCSJNChFMaXN0UXVvdGVzUmVxdWVzdBIQCghhcmNoaXZlZBgBIAEoCBIRCglwYWdlX3NpemUYAiABKAUSEwoLcGFnZV9vZmZzZXQYAyABKAUiOQoSTGlzdFF1b3Rlc1Jlc3BvbnNlEiMKBnF1b3RlcxgBIAMoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSKAAQoQU2F2ZURyYWZ0UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCRInCgVkcmFmdBgEIAEoCzIYLnVuaXNvdXJjZS52Mi5RdW90ZURyYWZ0IloKE0FyY2hpdmVRdW90ZVJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgCIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkiWgoTUmVzdG9yZVF1b3RlUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCSI5ChNDcmVhdGVRdW90ZVJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIjYKEEdldFF1b3RlUmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiNwoRU2F2ZURyYWZ0UmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiOgoUQXJjaGl2ZVF1b3RlUmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUiOgoUUmVzdG9yZVF1b3RlUmVzcG9uc2USIgoFcXVvdGUYASABKAsyEy51bmlzb3VyY2UudjIuUXVvdGUi0gEKElF1b3RlSW1wb3J0TWFwcGluZxINCgVzaGVldBgBIAEoCRIRCglmaXJzdF9yb3cYAiABKAUSEAoIbGFzdF9yb3cYAyABKAUSEwoLbmFtZV9jb2x1bW4YBCABKAUSFwoPcXVhbnRpdHlfY29sdW1uGAUgASgFEhQKDHByaWNlX2NvbHVtbhgGIAEoBRISCgp0b3RhbF9jZWxsGAcgASgJEjAKCnByaWNlX21vZGUYCCABKA4yHC51bmlzb3VyY2UudjIuUXVvdGVQcmljZU1vZGUiTAoPUXVvdGVJbXBvcnRMaW5lEhIKCnNvdXJjZV9yb3cYASABKAUSJQoEbGluZRgCIAEoCzIXLnVuaXNvdXJjZS52Mi5RdW90ZUxpbmUinwIKEVF1b3RlSW1wb3J0UmVzdWx0EgoKAmlkGAEgASgJEg4KBnN0YXR1cxgCIAEoCRISCgplcnJvcl9jb2RlGAMgASgJEjEKB21hcHBpbmcYBCABKAsyIC51bmlzb3VyY2UudjIuUXVvdGVJbXBvcnRNYXBwaW5nEiwKBWxpbmVzGAUgAygLMh0udW5pc291cmNlLnYyLlF1b3RlSW1wb3J0TGluZRISCgpiYXNlX3RvdGFsGAYgASgJEhkKDHNvdXJjZV90b3RhbBgHIAEoCUgAiAEBEhAKCHdhcm5pbmdzGAggAygJEg8KB2FwcGxpZWQYCSABKAgSFgoOcmVzdWx0X3ZlcnNpb24YCiABKANCDwoNX3NvdXJjZV90b3RhbCJrChZVcGxvYWRRdW90ZVhsc3hSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAiABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJEgwKBHhsc3gYBCABKAwiLAoXVXBsb2FkUXVvdGVYbHN4UmVzcG9uc2USEQoJaW1wb3J0X2lkGAEgASgJIj0KFkdldEltcG9ydFJlc3VsdFJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSEQoJaW1wb3J0X2lkGAIgASgJIkoKF0dldEltcG9ydFJlc3VsdFJlc3BvbnNlEi8KBnJlc3VsdBgBIAEoCzIfLnVuaXNvdXJjZS52Mi5RdW90ZUltcG9ydFJlc3VsdCKkAQoXUmVtYXBRdW90ZUltcG9ydFJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSEQoJaW1wb3J0X2lkGAIgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAyABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAQgASgJEjEKB21hcHBpbmcYBSABKAsyIC51bmlzb3VyY2UudjIuUXVvdGVJbXBvcnRNYXBwaW5nIi0KGFJlbWFwUXVvdGVJbXBvcnRSZXNwb25zZRIRCglpbXBvcnRfaWQYASABKAki5wEKEkFwcGx5SW1wb3J0UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIRCglpbXBvcnRfaWQYAiABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgDIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYBCABKAkSMAoKcHJpY2VfbW9kZRgFIAEoDjIcLnVuaXNvdXJjZS52Mi5RdW90ZVByaWNlTW9kZRIvCg5yZXZpZXdlZF9saW5lcxgGIAMoCzIXLnVuaXNvdXJjZS52Mi5RdW90ZUxpbmUSFgoOcmVzdWx0X3ZlcnNpb24YByABKAMiOQoTQXBwbHlJbXBvcnRSZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSJaChNBcHByb3ZlUXVvdGVSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAiABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJIjoKFEFwcHJvdmVRdW90ZVJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlImIKG1B1Ymxpc2hRdW90ZVJldmlzaW9uUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCSJCChxQdWJsaXNoUXVvdGVSZXZpc2lvblJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIlUKGUxpc3RRdW90ZVJldmlzaW9uc1JlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSEQoJcGFnZV9zaXplGAIgASgFEhMKC3BhZ2Vfb2Zmc2V0GAMgASgFImsKEVF1b3RlUmV2aXNpb25JbmZvEhAKCHJldmlzaW9uGAEgASgDEhQKDHB1Ymxpc2hlZF9hdBgCIAEoCRIUCgxwdWJsaXNoZWRfYnkYAyABKAkSGAoQdGVtcGxhdGVfdmVyc2lvbhgEIAEoCSJQChpMaXN0UXVvdGVSZXZpc2lvbnNSZXNwb25zZRIyCglyZXZpc2lvbnMYASADKAsyHy51bmlzb3VyY2UudjIuUXVvdGVSZXZpc2lvbkluZm8iPAoWR2V0UXVvdGVQcmV2aWV3UmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIQCghyZXZpc2lvbhgCIAEoAyI+ChdHZXRRdW90ZVByZXZpZXdSZXNwb25zZRIMCgRodG1sGAEgASgJEhUKDWRyYWZ0X3ZlcnNpb24YAiABKAMiXgoXR2VuZXJhdGVEcmFmdFBkZlJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgCIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkiPgoYR2VuZXJhdGVEcmFmdFBkZlJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlImUKEkdldFF1b3RlUGRmUmVxdWVzdBIQCghxdW90ZV9pZBgBIAEoCRIQCghyZXZpc2lvbhgCIAEoAxIVCg1kcmFmdF92ZXJzaW9uGAMgASgDEhQKDG9wZXJhdGlvbl9pZBgEIAEoCSKJAQoTR2V0UXVvdGVQZGZSZXNwb25zZRIOCgZzdGF0dXMYASABKAkSCwoDdXJsGAIgASgJEhIKCmVycm9yX2NvZGUYAyABKAkSEAoIcmV2aXNpb24YBCABKAMSFQoNZHJhZnRfdmVyc2lvbhgFIAEoAxIYChB0ZW1wbGF0ZV92ZXJzaW9uGAcgASgJImoKFFJldHJ5UXVvdGVQZGZSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhAKCHJldmlzaW9uGAIgASgDEhUKDWRyYWZ0X3ZlcnNpb24YAyABKAMSFwoPaWRlbXBvdGVuY3lfa2V5GAQgASgJIjsKFVJldHJ5UXVvdGVQZGZSZXNwb25zZRIiCgVxdW90ZRgBIAEoCzITLnVuaXNvdXJjZS52Mi5RdW90ZSJfChhHZW5lcmF0ZVF1b3RlVGV4dFJlcXVlc3QSEAoIcXVvdGVfaWQYASABKAkSGAoQZXhwZWN0ZWRfdmVyc2lvbhgCIAEoAxIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkiMQoZR2VuZXJhdGVRdW90ZVRleHRSZXNwb25zZRIUCgxvcGVyYXRpb25faWQYASABKAkiQgoYR2V0UXVvdGVPcGVyYXRpb25SZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhQKDG9wZXJhdGlvbl9pZBgCIAEoCSKSAgoZR2V0UXVvdGVPcGVyYXRpb25SZXNwb25zZRIOCgZzdGF0dXMYASABKAkSEgoKZXJyb3JfY29kZRgCIAEoCRIVCg1kcmFmdF92ZXJzaW9uGAMgASgDEhQKDG9wZXJhdGlvbl9pZBgEIAEoCRIUCgxwYXJ0aWFsX2pzb24YBSABKAkSFwoPcmVzZWFyY2hfc3RhdHVzGAYgASgJEjMKCHNlYXJjaGVzGAcgAygLMiEudW5pc291cmNlLnYyLlF1b3RlUmVzZWFyY2hTZWFyY2gSQAoXcHJvcG9zZWRfc2NvcGVfc2VjdGlvbnMYCCADKAsyHy51bmlzb3VyY2UudjIuUXVvdGVTY29wZVNlY3Rpb24icgoVQXBwbHlRdW90ZVRleHRSZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhQKDG9wZXJhdGlvbl9pZBgCIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAMgASgDEhcKD2lkZW1wb3RlbmN5X2tleRgEIAEoCSI8ChZBcHBseVF1b3RlVGV4dFJlc3BvbnNlEiIKBXF1b3RlGAEgASgLMhMudW5pc291cmNlLnYyLlF1b3RlIjEKE1F1b3RlUmVzZWFyY2hTb3VyY2USDQoFdGl0bGUYASABKAkSCwoDdXJsGAIgASgJImcKE1F1b3RlUmVzZWFyY2hTZWFyY2gSDAoEaXRlbRgBIAEoCRIOCgZzdGF0dXMYAiABKAkSMgoHc291cmNlcxgDIAMoCzIhLnVuaXNvdXJjZS52Mi5RdW90ZVJlc2VhcmNoU291cmNlIkQKGldhdGNoUXVvdGVPcGVyYXRpb25SZXF1ZXN0EhAKCHF1b3RlX2lkGAEgASgJEhQKDG9wZXJhdGlvbl9pZBgCIAEoCSJZChtXYXRjaFF1b3RlT3BlcmF0aW9uUmVzcG9uc2USOgoJb3BlcmF0aW9uGAEgASgLMicudW5pc291cmNlLnYyLkdldFF1b3RlT3BlcmF0aW9uUmVzcG9uc2UqaAoOUXVvdGVQcmljZU1vZGUSIAocUVVPVEVfUFJJQ0VfTU9ERV9VTlNQRUNJRklFRBAAEhgKFFFVT1RFX1BSSUNFX01PREVfTkVUEAESGgoWUVVPVEVfUFJJQ0VfTU9ERV9HUk9TUxACKoMBCgxRdW90ZVZhdEtpbmQSHgoaUVVPVEVfVkFUX0tJTkRfVU5TUEVDSUZJRUQQABIXChNRVU9URV9WQVRfS0lORF9SQVRFEAESGQoVUVVPVEVfVkFUX0tJTkRfRVhFTVBUEAISHwobUVVPVEVfVkFUX0tJTkRfT1VUX09GX1NDT1BFEAMq8QEKGFF1b3RlRGVzY3JpcHRpb25TdGFuZGFyZBIqCiZRVU9URV9ERVNDUklQVElPTl9TVEFOREFSRF9VTlNQRUNJRklFRBAAEiYKIlFVT1RFX0RFU0NSSVBUSU9OX1NUQU5EQVJEX0dFTkVSQUwQARIpCiVRVU9URV9ERVNDUklQVElPTl9TVEFOREFSRF9NT05JVE9SSU5HEAISLQopUVVPVEVfREVTQ1JJUFRJT05fU1RBTkRBUkRfQUNDRVNTX0NPTlRST0wQAxInCiNRVU9URV9ERVNDUklQVElPTl9TVEFOREFSRF9JTlRFUkNPTRAEMqgPCgxRdW90ZVNlcnZpY2USZAoRR2VuZXJhdGVRdW90ZVRleHQSJi51bmlzb3VyY2UudjIuR2VuZXJhdGVRdW90ZVRleHRSZXF1ZXN0GicudW5pc291cmNlLnYyLkdlbmVyYXRlUXVvdGVUZXh0UmVzcG9uc2USWwoOQXBwbHlRdW90ZVRleHQSIy51bmlzb3VyY2UudjIuQXBwbHlRdW90ZVRleHRSZXF1ZXN0GiQudW5pc291cmNlLnYyLkFwcGx5UXVvdGVUZXh0UmVzcG9uc2USZAoRR2V0UXVvdGVPcGVyYXRpb24SJi51bmlzb3VyY2UudjIuR2V0UXVvdGVPcGVyYXRpb25SZXF1ZXN0GicudW5pc291cmNlLnYyLkdldFF1b3RlT3BlcmF0aW9uUmVzcG9uc2USbAoTV2F0Y2hRdW90ZU9wZXJhdGlvbhIoLnVuaXNvdXJjZS52Mi5XYXRjaFF1b3RlT3BlcmF0aW9uUmVxdWVzdBopLnVuaXNvdXJjZS52Mi5XYXRjaFF1b3RlT3BlcmF0aW9uUmVzcG9uc2UwARJhChBHZW5lcmF0ZURyYWZ0UGRmEiUudW5pc291cmNlLnYyLkdlbmVyYXRlRHJhZnRQZGZSZXF1ZXN0GiYudW5pc291cmNlLnYyLkdlbmVyYXRlRHJhZnRQZGZSZXNwb25zZRJSCgtHZXRRdW90ZVBkZhIgLnVuaXNvdXJjZS52Mi5HZXRRdW90ZVBkZlJlcXVlc3QaIS51bmlzb3VyY2UudjIuR2V0UXVvdGVQZGZSZXNwb25zZRJYCg1SZXRyeVF1b3RlUGRmEiIudW5pc291cmNlLnYyLlJldHJ5UXVvdGVQZGZSZXF1ZXN0GiMudW5pc291cmNlLnYyLlJldHJ5UXVvdGVQZGZSZXNwb25zZRJVCgxBcHByb3ZlUXVvdGUSIS51bmlzb3VyY2UudjIuQXBwcm92ZVF1b3RlUmVxdWVzdBoiLnVuaXNvdXJjZS52Mi5BcHByb3ZlUXVvdGVSZXNwb25zZRJtChRQdWJsaXNoUXVvdGVSZXZpc2lvbhIpLnVuaXNvdXJjZS52Mi5QdWJsaXNoUXVvdGVSZXZpc2lvblJlcXVlc3QaKi51bmlzb3VyY2UudjIuUHVibGlzaFF1b3RlUmV2aXNpb25SZXNwb25zZRJnChJMaXN0UXVvdGVSZXZpc2lvbnMSJy51bmlzb3VyY2UudjIuTGlzdFF1b3RlUmV2aXNpb25zUmVxdWVzdBooLnVuaXNvdXJjZS52Mi5MaXN0UXVvdGVSZXZpc2lvbnNSZXNwb25zZRJeCg9HZXRRdW90ZVByZXZpZXcSJC51bmlzb3VyY2UudjIuR2V0UXVvdGVQcmV2aWV3UmVxdWVzdBolLnVuaXNvdXJjZS52Mi5HZXRRdW90ZVByZXZpZXdSZXNwb25zZRJeCg9VcGxvYWRRdW90ZVhsc3gSJC51bmlzb3VyY2UudjIuVXBsb2FkUXVvdGVYbHN4UmVxdWVzdBolLnVuaXNvdXJjZS52Mi5VcGxvYWRRdW90ZVhsc3hSZXNwb25zZRJeCg9HZXRJbXBvcnRSZXN1bHQSJC51bmlzb3VyY2UudjIuR2V0SW1wb3J0UmVzdWx0UmVxdWVzdBolLnVuaXNvdXJjZS52Mi5HZXRJbXBvcnRSZXN1bHRSZXNwb25zZRJhChBSZW1hcFF1b3RlSW1wb3J0EiUudW5pc291cmNlLnYyLlJlbWFwUXVvdGVJbXBvcnRSZXF1ZXN0GiYudW5pc291cmNlLnYyLlJlbWFwUXVvdGVJbXBvcnRSZXNwb25zZRJSCgtBcHBseUltcG9ydBIgLnVuaXNvdXJjZS52Mi5BcHBseUltcG9ydFJlcXVlc3QaIS51bmlzb3VyY2UudjIuQXBwbHlJbXBvcnRSZXNwb25zZRJSCgtDcmVhdGVRdW90ZRIgLnVuaXNvdXJjZS52Mi5DcmVhdGVRdW90ZVJlcXVlc3QaIS51bmlzb3VyY2UudjIuQ3JlYXRlUXVvdGVSZXNwb25zZRJJCghHZXRRdW90ZRIdLnVuaXNvdXJjZS52Mi5HZXRRdW90ZVJlcXVlc3QaHi51bmlzb3VyY2UudjIuR2V0UXVvdGVSZXNwb25zZRJPCgpMaXN0UXVvdGVzEh8udW5pc291cmNlLnYyLkxpc3RRdW90ZXNSZXF1ZXN0GiAudW5pc291cmNlLnYyLkxpc3RRdW90ZXNSZXNwb25zZRJMCglTYXZlRHJhZnQSHi51bmlzb3VyY2UudjIuU2F2ZURyYWZ0UmVxdWVzdBofLnVuaXNvdXJjZS52Mi5TYXZlRHJhZnRSZXNwb25zZRJVCgxBcmNoaXZlUXVvdGUSIS51bmlzb3VyY2UudjIuQXJjaGl2ZVF1b3RlUmVxdWVzdBoiLnVuaXNvdXJjZS52Mi5BcmNoaXZlUXVvdGVSZXNwb25zZRJVCgxSZXN0b3JlUXVvdGUSIS51bmlzb3VyY2UudjIuUmVzdG9yZVF1b3RlUmVxdWVzdBoiLnVuaXNvdXJjZS52Mi5SZXN0b3JlUXVvdGVSZXNwb25zZUI/Wj1naXRodWIuY29tL0RhbjFlbC0xOS9VbmlTb3VyY2VHTy9nZW4vdW5pc291cmNlL3YyO3VuaXNvdXJjZXYyYgZwcm90bzM");
+
+/**
+ * @generated from message unisource.v2.QuoteScopeSection
+ */
+export type QuoteScopeSection = Message<"unisource.v2.QuoteScopeSection"> & {
+  /**
+   * @generated from field: string heading = 1;
+   */
+  heading: string;
+
+  /**
+   * @generated from field: string body = 2;
+   */
+  body: string;
+};
+
+/**
+ * Describes the message unisource.v2.QuoteScopeSection.
+ * Use `create(QuoteScopeSectionSchema)` to create a new message.
+ */
+export const QuoteScopeSectionSchema: GenMessage<QuoteScopeSection> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 0);
 
 /**
  * @generated from message unisource.v2.QuoteLine
@@ -40,6 +62,11 @@ export type QuoteLine = Message<"unisource.v2.QuoteLine"> & {
    * @generated from field: string vat_percent = 5;
    */
   vatPercent: string;
+
+  /**
+   * @generated from field: string description = 6;
+   */
+  description: string;
 };
 
 /**
@@ -47,7 +74,7 @@ export type QuoteLine = Message<"unisource.v2.QuoteLine"> & {
  * Use `create(QuoteLineSchema)` to create a new message.
  */
 export const QuoteLineSchema: GenMessage<QuoteLine> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 0);
+  messageDesc(file_unisource_v2_quotes, 1);
 
 /**
  * @generated from message unisource.v2.QuoteDraft
@@ -92,6 +119,26 @@ export type QuoteDraft = Message<"unisource.v2.QuoteDraft"> & {
    * @generated from field: string conclusion = 8;
    */
   conclusion: string;
+
+  /**
+   * @generated from field: string document_date = 9;
+   */
+  documentDate: string;
+
+  /**
+   * @generated from field: repeated unisource.v2.QuoteScopeSection scope_sections = 10;
+   */
+  scopeSections: QuoteScopeSection[];
+
+  /**
+   * @generated from field: int32 document_schema_version = 11;
+   */
+  documentSchemaVersion: number;
+
+  /**
+   * @generated from field: unisource.v2.QuoteDescriptionStandard description_standard = 12;
+   */
+  descriptionStandard: QuoteDescriptionStandard;
 };
 
 /**
@@ -99,7 +146,7 @@ export type QuoteDraft = Message<"unisource.v2.QuoteDraft"> & {
  * Use `create(QuoteDraftSchema)` to create a new message.
  */
 export const QuoteDraftSchema: GenMessage<QuoteDraft> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 1);
+  messageDesc(file_unisource_v2_quotes, 2);
 
 /**
  * @generated from message unisource.v2.Quote
@@ -141,7 +188,7 @@ export type Quote = Message<"unisource.v2.Quote"> & {
  * Use `create(QuoteSchema)` to create a new message.
  */
 export const QuoteSchema: GenMessage<Quote> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 2);
+  messageDesc(file_unisource_v2_quotes, 3);
 
 /**
  * @generated from message unisource.v2.CreateQuoteRequest
@@ -163,7 +210,7 @@ export type CreateQuoteRequest = Message<"unisource.v2.CreateQuoteRequest"> & {
  * Use `create(CreateQuoteRequestSchema)` to create a new message.
  */
 export const CreateQuoteRequestSchema: GenMessage<CreateQuoteRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 3);
+  messageDesc(file_unisource_v2_quotes, 4);
 
 /**
  * @generated from message unisource.v2.GetQuoteRequest
@@ -180,7 +227,7 @@ export type GetQuoteRequest = Message<"unisource.v2.GetQuoteRequest"> & {
  * Use `create(GetQuoteRequestSchema)` to create a new message.
  */
 export const GetQuoteRequestSchema: GenMessage<GetQuoteRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 4);
+  messageDesc(file_unisource_v2_quotes, 5);
 
 /**
  * @generated from message unisource.v2.ListQuotesRequest
@@ -207,7 +254,7 @@ export type ListQuotesRequest = Message<"unisource.v2.ListQuotesRequest"> & {
  * Use `create(ListQuotesRequestSchema)` to create a new message.
  */
 export const ListQuotesRequestSchema: GenMessage<ListQuotesRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 5);
+  messageDesc(file_unisource_v2_quotes, 6);
 
 /**
  * @generated from message unisource.v2.ListQuotesResponse
@@ -224,7 +271,7 @@ export type ListQuotesResponse = Message<"unisource.v2.ListQuotesResponse"> & {
  * Use `create(ListQuotesResponseSchema)` to create a new message.
  */
 export const ListQuotesResponseSchema: GenMessage<ListQuotesResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 6);
+  messageDesc(file_unisource_v2_quotes, 7);
 
 /**
  * @generated from message unisource.v2.SaveDraftRequest
@@ -256,7 +303,7 @@ export type SaveDraftRequest = Message<"unisource.v2.SaveDraftRequest"> & {
  * Use `create(SaveDraftRequestSchema)` to create a new message.
  */
 export const SaveDraftRequestSchema: GenMessage<SaveDraftRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 7);
+  messageDesc(file_unisource_v2_quotes, 8);
 
 /**
  * @generated from message unisource.v2.ArchiveQuoteRequest
@@ -283,7 +330,7 @@ export type ArchiveQuoteRequest = Message<"unisource.v2.ArchiveQuoteRequest"> & 
  * Use `create(ArchiveQuoteRequestSchema)` to create a new message.
  */
 export const ArchiveQuoteRequestSchema: GenMessage<ArchiveQuoteRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 8);
+  messageDesc(file_unisource_v2_quotes, 9);
 
 /**
  * @generated from message unisource.v2.RestoreQuoteRequest
@@ -310,7 +357,7 @@ export type RestoreQuoteRequest = Message<"unisource.v2.RestoreQuoteRequest"> & 
  * Use `create(RestoreQuoteRequestSchema)` to create a new message.
  */
 export const RestoreQuoteRequestSchema: GenMessage<RestoreQuoteRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 9);
+  messageDesc(file_unisource_v2_quotes, 10);
 
 /**
  * @generated from message unisource.v2.CreateQuoteResponse
@@ -327,7 +374,7 @@ export type CreateQuoteResponse = Message<"unisource.v2.CreateQuoteResponse"> & 
  * Use `create(CreateQuoteResponseSchema)` to create a new message.
  */
 export const CreateQuoteResponseSchema: GenMessage<CreateQuoteResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 10);
+  messageDesc(file_unisource_v2_quotes, 11);
 
 /**
  * @generated from message unisource.v2.GetQuoteResponse
@@ -344,7 +391,7 @@ export type GetQuoteResponse = Message<"unisource.v2.GetQuoteResponse"> & {
  * Use `create(GetQuoteResponseSchema)` to create a new message.
  */
 export const GetQuoteResponseSchema: GenMessage<GetQuoteResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 11);
+  messageDesc(file_unisource_v2_quotes, 12);
 
 /**
  * @generated from message unisource.v2.SaveDraftResponse
@@ -361,7 +408,7 @@ export type SaveDraftResponse = Message<"unisource.v2.SaveDraftResponse"> & {
  * Use `create(SaveDraftResponseSchema)` to create a new message.
  */
 export const SaveDraftResponseSchema: GenMessage<SaveDraftResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 12);
+  messageDesc(file_unisource_v2_quotes, 13);
 
 /**
  * @generated from message unisource.v2.ArchiveQuoteResponse
@@ -378,7 +425,7 @@ export type ArchiveQuoteResponse = Message<"unisource.v2.ArchiveQuoteResponse"> 
  * Use `create(ArchiveQuoteResponseSchema)` to create a new message.
  */
 export const ArchiveQuoteResponseSchema: GenMessage<ArchiveQuoteResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 13);
+  messageDesc(file_unisource_v2_quotes, 14);
 
 /**
  * @generated from message unisource.v2.RestoreQuoteResponse
@@ -395,7 +442,7 @@ export type RestoreQuoteResponse = Message<"unisource.v2.RestoreQuoteResponse"> 
  * Use `create(RestoreQuoteResponseSchema)` to create a new message.
  */
 export const RestoreQuoteResponseSchema: GenMessage<RestoreQuoteResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 14);
+  messageDesc(file_unisource_v2_quotes, 15);
 
 /**
  * @generated from message unisource.v2.QuoteImportMapping
@@ -447,7 +494,7 @@ export type QuoteImportMapping = Message<"unisource.v2.QuoteImportMapping"> & {
  * Use `create(QuoteImportMappingSchema)` to create a new message.
  */
 export const QuoteImportMappingSchema: GenMessage<QuoteImportMapping> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 15);
+  messageDesc(file_unisource_v2_quotes, 16);
 
 /**
  * @generated from message unisource.v2.QuoteImportLine
@@ -469,7 +516,7 @@ export type QuoteImportLine = Message<"unisource.v2.QuoteImportLine"> & {
  * Use `create(QuoteImportLineSchema)` to create a new message.
  */
 export const QuoteImportLineSchema: GenMessage<QuoteImportLine> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 16);
+  messageDesc(file_unisource_v2_quotes, 17);
 
 /**
  * @generated from message unisource.v2.QuoteImportResult
@@ -531,7 +578,7 @@ export type QuoteImportResult = Message<"unisource.v2.QuoteImportResult"> & {
  * Use `create(QuoteImportResultSchema)` to create a new message.
  */
 export const QuoteImportResultSchema: GenMessage<QuoteImportResult> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 17);
+  messageDesc(file_unisource_v2_quotes, 18);
 
 /**
  * @generated from message unisource.v2.UploadQuoteXlsxRequest
@@ -563,7 +610,7 @@ export type UploadQuoteXlsxRequest = Message<"unisource.v2.UploadQuoteXlsxReques
  * Use `create(UploadQuoteXlsxRequestSchema)` to create a new message.
  */
 export const UploadQuoteXlsxRequestSchema: GenMessage<UploadQuoteXlsxRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 18);
+  messageDesc(file_unisource_v2_quotes, 19);
 
 /**
  * @generated from message unisource.v2.UploadQuoteXlsxResponse
@@ -580,7 +627,7 @@ export type UploadQuoteXlsxResponse = Message<"unisource.v2.UploadQuoteXlsxRespo
  * Use `create(UploadQuoteXlsxResponseSchema)` to create a new message.
  */
 export const UploadQuoteXlsxResponseSchema: GenMessage<UploadQuoteXlsxResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 19);
+  messageDesc(file_unisource_v2_quotes, 20);
 
 /**
  * @generated from message unisource.v2.GetImportResultRequest
@@ -604,7 +651,7 @@ export type GetImportResultRequest = Message<"unisource.v2.GetImportResultReques
  * Use `create(GetImportResultRequestSchema)` to create a new message.
  */
 export const GetImportResultRequestSchema: GenMessage<GetImportResultRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 20);
+  messageDesc(file_unisource_v2_quotes, 21);
 
 /**
  * @generated from message unisource.v2.GetImportResultResponse
@@ -621,7 +668,7 @@ export type GetImportResultResponse = Message<"unisource.v2.GetImportResultRespo
  * Use `create(GetImportResultResponseSchema)` to create a new message.
  */
 export const GetImportResultResponseSchema: GenMessage<GetImportResultResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 21);
+  messageDesc(file_unisource_v2_quotes, 22);
 
 /**
  * @generated from message unisource.v2.RemapQuoteImportRequest
@@ -658,7 +705,7 @@ export type RemapQuoteImportRequest = Message<"unisource.v2.RemapQuoteImportRequ
  * Use `create(RemapQuoteImportRequestSchema)` to create a new message.
  */
 export const RemapQuoteImportRequestSchema: GenMessage<RemapQuoteImportRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 22);
+  messageDesc(file_unisource_v2_quotes, 23);
 
 /**
  * @generated from message unisource.v2.RemapQuoteImportResponse
@@ -675,7 +722,7 @@ export type RemapQuoteImportResponse = Message<"unisource.v2.RemapQuoteImportRes
  * Use `create(RemapQuoteImportResponseSchema)` to create a new message.
  */
 export const RemapQuoteImportResponseSchema: GenMessage<RemapQuoteImportResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 23);
+  messageDesc(file_unisource_v2_quotes, 24);
 
 /**
  * @generated from message unisource.v2.ApplyImportRequest
@@ -722,7 +769,7 @@ export type ApplyImportRequest = Message<"unisource.v2.ApplyImportRequest"> & {
  * Use `create(ApplyImportRequestSchema)` to create a new message.
  */
 export const ApplyImportRequestSchema: GenMessage<ApplyImportRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 24);
+  messageDesc(file_unisource_v2_quotes, 25);
 
 /**
  * @generated from message unisource.v2.ApplyImportResponse
@@ -739,7 +786,7 @@ export type ApplyImportResponse = Message<"unisource.v2.ApplyImportResponse"> & 
  * Use `create(ApplyImportResponseSchema)` to create a new message.
  */
 export const ApplyImportResponseSchema: GenMessage<ApplyImportResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 25);
+  messageDesc(file_unisource_v2_quotes, 26);
 
 /**
  * @generated from message unisource.v2.ApproveQuoteRequest
@@ -766,7 +813,7 @@ export type ApproveQuoteRequest = Message<"unisource.v2.ApproveQuoteRequest"> & 
  * Use `create(ApproveQuoteRequestSchema)` to create a new message.
  */
 export const ApproveQuoteRequestSchema: GenMessage<ApproveQuoteRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 26);
+  messageDesc(file_unisource_v2_quotes, 27);
 
 /**
  * @generated from message unisource.v2.ApproveQuoteResponse
@@ -783,7 +830,7 @@ export type ApproveQuoteResponse = Message<"unisource.v2.ApproveQuoteResponse"> 
  * Use `create(ApproveQuoteResponseSchema)` to create a new message.
  */
 export const ApproveQuoteResponseSchema: GenMessage<ApproveQuoteResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 27);
+  messageDesc(file_unisource_v2_quotes, 28);
 
 /**
  * @generated from message unisource.v2.PublishQuoteRevisionRequest
@@ -810,7 +857,7 @@ export type PublishQuoteRevisionRequest = Message<"unisource.v2.PublishQuoteRevi
  * Use `create(PublishQuoteRevisionRequestSchema)` to create a new message.
  */
 export const PublishQuoteRevisionRequestSchema: GenMessage<PublishQuoteRevisionRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 28);
+  messageDesc(file_unisource_v2_quotes, 29);
 
 /**
  * @generated from message unisource.v2.PublishQuoteRevisionResponse
@@ -827,7 +874,7 @@ export type PublishQuoteRevisionResponse = Message<"unisource.v2.PublishQuoteRev
  * Use `create(PublishQuoteRevisionResponseSchema)` to create a new message.
  */
 export const PublishQuoteRevisionResponseSchema: GenMessage<PublishQuoteRevisionResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 29);
+  messageDesc(file_unisource_v2_quotes, 30);
 
 /**
  * @generated from message unisource.v2.ListQuoteRevisionsRequest
@@ -854,7 +901,7 @@ export type ListQuoteRevisionsRequest = Message<"unisource.v2.ListQuoteRevisions
  * Use `create(ListQuoteRevisionsRequestSchema)` to create a new message.
  */
 export const ListQuoteRevisionsRequestSchema: GenMessage<ListQuoteRevisionsRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 30);
+  messageDesc(file_unisource_v2_quotes, 31);
 
 /**
  * @generated from message unisource.v2.QuoteRevisionInfo
@@ -886,7 +933,7 @@ export type QuoteRevisionInfo = Message<"unisource.v2.QuoteRevisionInfo"> & {
  * Use `create(QuoteRevisionInfoSchema)` to create a new message.
  */
 export const QuoteRevisionInfoSchema: GenMessage<QuoteRevisionInfo> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 31);
+  messageDesc(file_unisource_v2_quotes, 32);
 
 /**
  * @generated from message unisource.v2.ListQuoteRevisionsResponse
@@ -903,7 +950,7 @@ export type ListQuoteRevisionsResponse = Message<"unisource.v2.ListQuoteRevision
  * Use `create(ListQuoteRevisionsResponseSchema)` to create a new message.
  */
 export const ListQuoteRevisionsResponseSchema: GenMessage<ListQuoteRevisionsResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 32);
+  messageDesc(file_unisource_v2_quotes, 33);
 
 /**
  * @generated from message unisource.v2.GetQuotePreviewRequest
@@ -925,7 +972,7 @@ export type GetQuotePreviewRequest = Message<"unisource.v2.GetQuotePreviewReques
  * Use `create(GetQuotePreviewRequestSchema)` to create a new message.
  */
 export const GetQuotePreviewRequestSchema: GenMessage<GetQuotePreviewRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 33);
+  messageDesc(file_unisource_v2_quotes, 34);
 
 /**
  * @generated from message unisource.v2.GetQuotePreviewResponse
@@ -947,7 +994,7 @@ export type GetQuotePreviewResponse = Message<"unisource.v2.GetQuotePreviewRespo
  * Use `create(GetQuotePreviewResponseSchema)` to create a new message.
  */
 export const GetQuotePreviewResponseSchema: GenMessage<GetQuotePreviewResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 34);
+  messageDesc(file_unisource_v2_quotes, 35);
 
 /**
  * @generated from message unisource.v2.GenerateDraftPdfRequest
@@ -974,7 +1021,7 @@ export type GenerateDraftPdfRequest = Message<"unisource.v2.GenerateDraftPdfRequ
  * Use `create(GenerateDraftPdfRequestSchema)` to create a new message.
  */
 export const GenerateDraftPdfRequestSchema: GenMessage<GenerateDraftPdfRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 35);
+  messageDesc(file_unisource_v2_quotes, 36);
 
 /**
  * @generated from message unisource.v2.GenerateDraftPdfResponse
@@ -991,7 +1038,7 @@ export type GenerateDraftPdfResponse = Message<"unisource.v2.GenerateDraftPdfRes
  * Use `create(GenerateDraftPdfResponseSchema)` to create a new message.
  */
 export const GenerateDraftPdfResponseSchema: GenMessage<GenerateDraftPdfResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 36);
+  messageDesc(file_unisource_v2_quotes, 37);
 
 /**
  * @generated from message unisource.v2.GetQuotePdfRequest
@@ -1023,7 +1070,7 @@ export type GetQuotePdfRequest = Message<"unisource.v2.GetQuotePdfRequest"> & {
  * Use `create(GetQuotePdfRequestSchema)` to create a new message.
  */
 export const GetQuotePdfRequestSchema: GenMessage<GetQuotePdfRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 37);
+  messageDesc(file_unisource_v2_quotes, 38);
 
 /**
  * @generated from message unisource.v2.GetQuotePdfResponse
@@ -1053,6 +1100,11 @@ export type GetQuotePdfResponse = Message<"unisource.v2.GetQuotePdfResponse"> & 
    * @generated from field: int64 draft_version = 5;
    */
   draftVersion: bigint;
+
+  /**
+   * @generated from field: string template_version = 7;
+   */
+  templateVersion: string;
 };
 
 /**
@@ -1060,7 +1112,7 @@ export type GetQuotePdfResponse = Message<"unisource.v2.GetQuotePdfResponse"> & 
  * Use `create(GetQuotePdfResponseSchema)` to create a new message.
  */
 export const GetQuotePdfResponseSchema: GenMessage<GetQuotePdfResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 38);
+  messageDesc(file_unisource_v2_quotes, 39);
 
 /**
  * @generated from message unisource.v2.RetryQuotePdfRequest
@@ -1092,7 +1144,7 @@ export type RetryQuotePdfRequest = Message<"unisource.v2.RetryQuotePdfRequest"> 
  * Use `create(RetryQuotePdfRequestSchema)` to create a new message.
  */
 export const RetryQuotePdfRequestSchema: GenMessage<RetryQuotePdfRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 39);
+  messageDesc(file_unisource_v2_quotes, 40);
 
 /**
  * @generated from message unisource.v2.RetryQuotePdfResponse
@@ -1109,7 +1161,7 @@ export type RetryQuotePdfResponse = Message<"unisource.v2.RetryQuotePdfResponse"
  * Use `create(RetryQuotePdfResponseSchema)` to create a new message.
  */
 export const RetryQuotePdfResponseSchema: GenMessage<RetryQuotePdfResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 40);
+  messageDesc(file_unisource_v2_quotes, 41);
 
 /**
  * @generated from message unisource.v2.GenerateQuoteTextRequest
@@ -1136,7 +1188,7 @@ export type GenerateQuoteTextRequest = Message<"unisource.v2.GenerateQuoteTextRe
  * Use `create(GenerateQuoteTextRequestSchema)` to create a new message.
  */
 export const GenerateQuoteTextRequestSchema: GenMessage<GenerateQuoteTextRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 41);
+  messageDesc(file_unisource_v2_quotes, 42);
 
 /**
  * @generated from message unisource.v2.GenerateQuoteTextResponse
@@ -1153,7 +1205,7 @@ export type GenerateQuoteTextResponse = Message<"unisource.v2.GenerateQuoteTextR
  * Use `create(GenerateQuoteTextResponseSchema)` to create a new message.
  */
 export const GenerateQuoteTextResponseSchema: GenMessage<GenerateQuoteTextResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 42);
+  messageDesc(file_unisource_v2_quotes, 43);
 
 /**
  * @generated from message unisource.v2.GetQuoteOperationRequest
@@ -1177,7 +1229,7 @@ export type GetQuoteOperationRequest = Message<"unisource.v2.GetQuoteOperationRe
  * Use `create(GetQuoteOperationRequestSchema)` to create a new message.
  */
 export const GetQuoteOperationRequestSchema: GenMessage<GetQuoteOperationRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 43);
+  messageDesc(file_unisource_v2_quotes, 44);
 
 /**
  * @generated from message unisource.v2.GetQuoteOperationResponse
@@ -1219,6 +1271,11 @@ export type GetQuoteOperationResponse = Message<"unisource.v2.GetQuoteOperationR
    * @generated from field: repeated unisource.v2.QuoteResearchSearch searches = 7;
    */
   searches: QuoteResearchSearch[];
+
+  /**
+   * @generated from field: repeated unisource.v2.QuoteScopeSection proposed_scope_sections = 8;
+   */
+  proposedScopeSections: QuoteScopeSection[];
 };
 
 /**
@@ -1226,7 +1283,56 @@ export type GetQuoteOperationResponse = Message<"unisource.v2.GetQuoteOperationR
  * Use `create(GetQuoteOperationResponseSchema)` to create a new message.
  */
 export const GetQuoteOperationResponseSchema: GenMessage<GetQuoteOperationResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 44);
+  messageDesc(file_unisource_v2_quotes, 45);
+
+/**
+ * @generated from message unisource.v2.ApplyQuoteTextRequest
+ */
+export type ApplyQuoteTextRequest = Message<"unisource.v2.ApplyQuoteTextRequest"> & {
+  /**
+   * @generated from field: string quote_id = 1;
+   */
+  quoteId: string;
+
+  /**
+   * @generated from field: string operation_id = 2;
+   */
+  operationId: string;
+
+  /**
+   * @generated from field: int64 expected_version = 3;
+   */
+  expectedVersion: bigint;
+
+  /**
+   * @generated from field: string idempotency_key = 4;
+   */
+  idempotencyKey: string;
+};
+
+/**
+ * Describes the message unisource.v2.ApplyQuoteTextRequest.
+ * Use `create(ApplyQuoteTextRequestSchema)` to create a new message.
+ */
+export const ApplyQuoteTextRequestSchema: GenMessage<ApplyQuoteTextRequest> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 46);
+
+/**
+ * @generated from message unisource.v2.ApplyQuoteTextResponse
+ */
+export type ApplyQuoteTextResponse = Message<"unisource.v2.ApplyQuoteTextResponse"> & {
+  /**
+   * @generated from field: unisource.v2.Quote quote = 1;
+   */
+  quote?: Quote | undefined;
+};
+
+/**
+ * Describes the message unisource.v2.ApplyQuoteTextResponse.
+ * Use `create(ApplyQuoteTextResponseSchema)` to create a new message.
+ */
+export const ApplyQuoteTextResponseSchema: GenMessage<ApplyQuoteTextResponse> = /*@__PURE__*/
+  messageDesc(file_unisource_v2_quotes, 47);
 
 /**
  * @generated from message unisource.v2.QuoteResearchSource
@@ -1248,7 +1354,7 @@ export type QuoteResearchSource = Message<"unisource.v2.QuoteResearchSource"> & 
  * Use `create(QuoteResearchSourceSchema)` to create a new message.
  */
 export const QuoteResearchSourceSchema: GenMessage<QuoteResearchSource> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 45);
+  messageDesc(file_unisource_v2_quotes, 48);
 
 /**
  * @generated from message unisource.v2.QuoteResearchSearch
@@ -1277,7 +1383,7 @@ export type QuoteResearchSearch = Message<"unisource.v2.QuoteResearchSearch"> & 
  * Use `create(QuoteResearchSearchSchema)` to create a new message.
  */
 export const QuoteResearchSearchSchema: GenMessage<QuoteResearchSearch> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 46);
+  messageDesc(file_unisource_v2_quotes, 49);
 
 /**
  * @generated from message unisource.v2.WatchQuoteOperationRequest
@@ -1299,7 +1405,7 @@ export type WatchQuoteOperationRequest = Message<"unisource.v2.WatchQuoteOperati
  * Use `create(WatchQuoteOperationRequestSchema)` to create a new message.
  */
 export const WatchQuoteOperationRequestSchema: GenMessage<WatchQuoteOperationRequest> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 47);
+  messageDesc(file_unisource_v2_quotes, 50);
 
 /**
  * @generated from message unisource.v2.WatchQuoteOperationResponse
@@ -1316,7 +1422,7 @@ export type WatchQuoteOperationResponse = Message<"unisource.v2.WatchQuoteOperat
  * Use `create(WatchQuoteOperationResponseSchema)` to create a new message.
  */
 export const WatchQuoteOperationResponseSchema: GenMessage<WatchQuoteOperationResponse> = /*@__PURE__*/
-  messageDesc(file_unisource_v2_quotes, 48);
+  messageDesc(file_unisource_v2_quotes, 51);
 
 /**
  * @generated from enum unisource.v2.QuotePriceMode
@@ -1376,6 +1482,42 @@ export const QuoteVatKindSchema: GenEnum<QuoteVatKind> = /*@__PURE__*/
   enumDesc(file_unisource_v2_quotes, 1);
 
 /**
+ * @generated from enum unisource.v2.QuoteDescriptionStandard
+ */
+export enum QuoteDescriptionStandard {
+  /**
+   * @generated from enum value: QUOTE_DESCRIPTION_STANDARD_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: QUOTE_DESCRIPTION_STANDARD_GENERAL = 1;
+   */
+  GENERAL = 1,
+
+  /**
+   * @generated from enum value: QUOTE_DESCRIPTION_STANDARD_MONITORING = 2;
+   */
+  MONITORING = 2,
+
+  /**
+   * @generated from enum value: QUOTE_DESCRIPTION_STANDARD_ACCESS_CONTROL = 3;
+   */
+  ACCESS_CONTROL = 3,
+
+  /**
+   * @generated from enum value: QUOTE_DESCRIPTION_STANDARD_INTERCOM = 4;
+   */
+  INTERCOM = 4,
+}
+
+/**
+ * Describes the enum unisource.v2.QuoteDescriptionStandard.
+ */
+export const QuoteDescriptionStandardSchema: GenEnum<QuoteDescriptionStandard> = /*@__PURE__*/
+  enumDesc(file_unisource_v2_quotes, 2);
+
+/**
  * @generated from service unisource.v2.QuoteService
  */
 export const QuoteService: GenService<{
@@ -1386,6 +1528,14 @@ export const QuoteService: GenService<{
     methodKind: "unary";
     input: typeof GenerateQuoteTextRequestSchema;
     output: typeof GenerateQuoteTextResponseSchema;
+  },
+  /**
+   * @generated from rpc unisource.v2.QuoteService.ApplyQuoteText
+   */
+  applyQuoteText: {
+    methodKind: "unary";
+    input: typeof ApplyQuoteTextRequestSchema;
+    output: typeof ApplyQuoteTextResponseSchema;
   },
   /**
    * @generated from rpc unisource.v2.QuoteService.GetQuoteOperation

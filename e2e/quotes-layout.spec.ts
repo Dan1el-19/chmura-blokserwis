@@ -54,6 +54,18 @@ for (const width of [320, 390, 1280, 1440]) {
 			expect(name && quantity && price && remove && tableBox && quantity.x >= name.x + name.width && price.x >= quantity.x + quantity.width && remove.x + remove.width <= tableBox.x + tableBox.width + 1).toBe(true);
 			expect(quantity?.width).toBeGreaterThanOrEqual(44);
 			expect(price?.width).toBeGreaterThanOrEqual(44);
+			if (!(await page.getByRole('button', { name: 'Pokaż podgląd na desktopie' }).isVisible())) {
+				await expect(page.getByRole('region', { name: 'Zapis wyceny' })).toBeVisible();
+				await table.getByLabel('Nazwa pozycji 8').fill('Ostatnia pozycja');
+				await page.getByRole('button', { name: 'Pokaż podgląd wyceny' }).click();
+				await expect(page.locator('iframe[title="Podgląd wyceny"]')).toBeVisible();
+				await page.getByRole('button', { name: 'Pokaż edycję wyceny' }).click();
+				await page.getByRole('region', { name: 'Zapis wyceny' }).getByRole('button', { name: 'Zapisz szkic' }).click();
+				await expect.poll(() => quote.draft?.lines[7]?.name).toBe('Ostatnia pozycja');
+				await expect.poll(() => page.locator('#main-content').evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+				return;
+			}
+			await page.getByRole('button', { name: 'Pokaż podgląd na desktopie' }).click();
 			await expect(page.locator('iframe[title="Podgląd wyceny"]')).toBeVisible();
 			await expect.poll(() => page.locator('#main-content').evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
 			await table.getByLabel('Nazwa pozycji 8').fill('Ostatnia pozycja');
@@ -63,7 +75,8 @@ for (const width of [320, 390, 1280, 1440]) {
 		}
 		const sections = page.getByRole('navigation', { name: 'Sekcje wyceny' });
 		await sections.getByRole('link', { name: 'Pozycje' }).click();
-		await expect(page.getByLabel('Nazwa pozycji 1')).toBeInViewport();
+		await expect(page.getByRole('button', { name: 'Edytuj pozycję 1: Kamera' })).toBeInViewport();
+		await page.getByRole('button', { name: 'Edytuj pozycję 8: Pozycja 8' }).click();
 		await page.getByLabel('Nazwa pozycji 8').fill('Ostatnia pozycja');
 		await sections.getByRole('link', { name: 'Dane' }).click();
 		await expect(title).toHaveValue('Zmieniony szkic');
@@ -115,7 +128,9 @@ for (const width of [320, 390, 1280, 1440]) {
 		await popup.close();
 		await page.getByRole('button', { name: 'Pokaż edycję wyceny' }).click();
 		await expect(title).toHaveValue('Zmieniony szkic');
+		await page.getByRole('button', { name: 'Edytuj pozycję 1: Kamera' }).click();
 		await expect(page.getByLabel('Ilość pozycji 1')).toHaveValue('2');
+		await page.getByRole('button', { name: 'Edytuj pozycję 8: Ostatnia pozycja' }).click();
 		await expect(page.getByLabel('Nazwa pozycji 8')).toHaveValue('Ostatnia pozycja');
 		await actionBar.getByRole('button', { name: 'Zapisz szkic' }).click();
 		await expect(actionBar.getByRole('status')).toHaveText('Zapisano');
