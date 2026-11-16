@@ -43,7 +43,7 @@ jobs:
       - name: Install browsers for component and navigation tests
         # Component tests run in Chromium through Vitest browser mode.
         # Install the browser and Linux libraries on each fresh runner.
-        run: pnpm exec playwright install --with-deps chromium firefox
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
 
       - name: Run unit and component tests
         run: pnpm test
@@ -53,6 +53,9 @@ jobs:
 
       - name: Run quote layout tests with mocked API
         run: pnpm test:e2e:quotes-layout
+
+      - name: Run quote wizard tests with mocked API
+        run: pnpm test:e2e:quotes-wizard
 
       - name: Check Proto snapshot
         run: pnpm proto:check
