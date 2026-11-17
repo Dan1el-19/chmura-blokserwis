@@ -40,10 +40,12 @@ it('opens a focused PDF view and restores the embedded view on close', async () 
  await expect.element(view.getByRole('button',{name:'Powiększ dokument'})).toBeVisible();
 });
 
-it('fits a whole A4 page in the embedded viewport before zooming',async()=>{
+it('uses the available preview width and renders at a sharp pixel density',async()=>{
  const view=await render(QuotePdfPreview,{bytes:pdfFixture()});
  await expect.poll(()=>view.container.querySelector('canvas')?.width??0).toBeGreaterThan(0);
  const viewport=view.container.querySelector<HTMLElement>('.pdf-viewport')!;
- viewport.style.width='900px';viewport.style.height='400px';
- await expect.poll(()=>view.container.querySelector('.pdf-page')!.getBoundingClientRect().height).toBeLessThanOrEqual(viewport.clientHeight);
+ viewport.style.width='500px';viewport.style.height='400px';
+ await expect.poll(()=>view.container.querySelector('.pdf-page')!.getBoundingClientRect().width).toBeGreaterThan(450);
+ const canvas=view.container.querySelector('canvas')!;
+ await expect.poll(()=>canvas.width/canvas.getBoundingClientRect().width).toBeGreaterThanOrEqual(1.95);
 });

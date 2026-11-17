@@ -12,13 +12,11 @@
 	let pdf = $state<PDFDocumentProxy>();
 	let viewport = $state<HTMLDivElement>();
 	let width = $state(0);
-	let height = $state(0);
-	let fitWidth = $state(false);
 	let focusButton = $state<HTMLButtonElement>();
 	let fit = $state(true);
 	let zoom = $state(1);
 	let error = $state('');
-	const scale = $derived(fit ? Math.max(0.2, Math.min(2, (width - 32) / 595.276, fitWidth ? 2 : (height - 32) / 841.89)) : zoom);
+	const scale = $derived(fit ? Math.max(0.2, Math.min(2, (width - 32) / 595.276)) : zoom);
 	function changeZoom(delta: number) { zoom = Math.max(.25, Math.min(2, Math.round((scale + delta) * 100) / 100)); fit = false; }
 	$effect(() => {
 		const input = bytes;
@@ -42,14 +40,14 @@
 {#snippet viewer()}
 <div class="space-y-2">
 	<div class="flex flex-wrap items-center gap-2 text-sm" aria-label="Powiększenie podglądu">
-		<button type="button" class={button} aria-label="Dopasuj do szerokości" aria-pressed={fit} onclick={() => { fit = true; fitWidth = true; }}><span class="fit-full">Dopasuj do szerokości</span><span class="fit-short" aria-hidden="true">Dopasuj</span></button>
+		<button type="button" class={button} aria-label="Dopasuj do szerokości" aria-pressed={fit} onclick={() => fit = true}><span class="fit-full">Dopasuj do szerokości</span><span class="fit-short" aria-hidden="true">Dopasuj</span></button>
 		<button type="button" class={button} aria-label="Pomniejsz podgląd" onclick={() => changeZoom(-.1)}>−</button>
 		<button type="button" class={button} aria-pressed={!fit && zoom === 1} onclick={() => { zoom = 1; fit = false; }}>100%</button>
 		<button type="button" class={button} aria-label="Powiększ podgląd" onclick={() => changeZoom(.1)}>+</button>
 		<button type="button" class={button} bind:this={focusButton} aria-label={focused ? 'Zamknij powiększenie' : 'Powiększ dokument'} onclick={() => { if (focused) { dialog?.close(); focused = false; } else focused = true; }}>{focused ? 'Zamknij' : 'Powiększ dokument ↗'}</button>
 	</div>
 	{#if error}<p role="alert">{error}</p>{/if}
-	<div class="pdf-viewport" class:focused bind:this={viewport} bind:clientWidth={width} bind:clientHeight={height}>
+	<div class="pdf-viewport" class:focused bind:this={viewport} bind:clientWidth={width}>
 		{#if pdf && viewport}
 			{#key scale}
 			{#each Array.from({length:pdf.numPages}, (_, i) => i + 1) as pageNumber (pageNumber)}

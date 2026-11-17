@@ -28,7 +28,8 @@
 				const [page, pdfjs] = await Promise.all([doc.getPage(number), import('pdfjs-dist')]);
 				if (cancelled) return;
 				const viewport = page.getViewport({ scale: factor });
-				const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+				// Render above screen density so small text stays sharp on Retina and zoomed displays.
+				const pixelRatio = Math.min(Math.max(window.devicePixelRatio || 1, 1) * 2, 4);
 				canvas.width = Math.ceil(viewport.width * pixelRatio);
 				canvas.height = Math.ceil(viewport.height * pixelRatio);
 				canvas.style.width = `${viewport.width}px`; canvas.style.height = `${viewport.height}px`;
