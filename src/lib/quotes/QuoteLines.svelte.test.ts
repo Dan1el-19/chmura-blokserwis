@@ -66,3 +66,24 @@ it('keeps descriptions collapsed until requested', async () => {
  await view.getByText('Opis pozycji').click();
  await expect.element(view.getByLabelText('Opis pozycji 1')).toHaveValue('Zachowany opis');
 });
+
+it('centers the totals and one-line actions on the editable fields at desktop widths', async () => {
+	const lines = $state([
+		create(QuoteLineSchema, { name: 'Zwora elektromagnetyczna i przycisk wyjścia', quantity: '1', unitPrice: '100' }),
+		create(QuoteLineSchema, { name: 'Robocizna', quantity: '1', unitPrice: '30' })
+	]);
+	const view = await render(QuoteLines, { lines, sourceRows: [4, 5], onchange: vi.fn() });
+	const table = view.getByRole('table').element();
+	(table.parentElement as HTMLElement).style.width = '620px';
+	const center = (rect: DOMRect) => (rect.top + rect.bottom) / 2;
+	for (const [row, amount] of [[1, '100,00 zł'], [2, '30,00 zł']] as const) {
+		const price = view.getByLabelText(`Cena brutto pozycji ${row}`).element();
+		const total = view.getByText(amount, { exact: true }).last().element();
+		const remove = view.getByRole('button', { name: `Usuń pozycję ${row}` }).element();
+		const label = document.createRange();
+		label.selectNodeContents(remove);
+		expect(Array.from(label.getClientRects())).toHaveLength(1);
+		expect(Math.abs(center(price.getBoundingClientRect()) - center(total.getBoundingClientRect()))).toBeLessThanOrEqual(1);
+		expect(Math.abs(center(price.getBoundingClientRect()) - center(remove.getBoundingClientRect()))).toBeLessThanOrEqual(1);
+	}
+});

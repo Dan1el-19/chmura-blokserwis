@@ -30,15 +30,17 @@
 <div class="space-y-3">
 	<div class="lines-container">
 		<table aria-label="Pozycje wyceny">
-			<thead><tr><th>Nazwa</th><th>Ilość</th><th>Cena {net ? 'netto' : 'brutto'}</th><th>Wartość</th><th><span class="sr-only">Akcje</span></th></tr></thead>
+			<thead>
+				<tr><th scope="col">Nazwa</th><th class="quantity" scope="col">Ilość</th><th class="price" scope="col">Cena {net ? 'netto' : 'brutto'}</th><th class="value" scope="col">Wartość</th><th class="remove" scope="col">Akcje</th></tr>
+			</thead>
 			<tbody>
 				{#each lines as line, index (line)}
-					<tr class:collapsed={expanded !== index}>
+					<tr class={{ collapsed: expanded !== index }}>
 						<td class="line-summary"><button type="button" aria-label={`Edytuj pozycję ${index + 1}: ${line.name || 'Nowa pozycja'}`} aria-expanded={expanded === index} onclick={() => expanded = expanded === index ? null : index}><span><strong>{line.name || 'Nowa pozycja'}</strong><small>{line.quantity} × {line.unitPrice} zł</small></span><span>{formatQuoteLineValue(line.quantity, line.unitPrice)} <span aria-hidden="true">›</span></span></button></td>
 						<td class="name"><label><span class="mobile-label">Pozycja {index + 1} · Nazwa</span><input class={field} aria-label={`Nazwa pozycji ${index + 1}`} bind:value={line.name} oninput={onchange} /></label><details class="line-description"><summary>Opis pozycji</summary><label><span class="sr-only">Opis (opcjonalnie)</span><textarea class={field} rows="2" aria-label={`Opis pozycji ${index + 1}`} bind:value={line.description} oninput={onchange}></textarea></label></details>{#if sourceRows[index]}<span class="source-row">Wiersz {sourceRows[index]} w arkuszu</span>{/if}</td>
-						<td><label><span class="mobile-label">Ilość</span><input class={field} aria-label={`Ilość pozycji ${index + 1}`} bind:value={line.quantity} inputmode="decimal" oninput={onchange} /></label></td>
-						<td><label><span class="mobile-label">Cena {net ? 'netto' : 'brutto'}</span><input class={field} aria-label={`Cena ${net ? 'netto' : 'brutto'} pozycji ${index + 1}`} bind:value={line.unitPrice} inputmode="decimal" oninput={onchange} /></label></td>
-						<td class="value"><span class="mobile-label">Wartość: </span><span>{formatQuoteLineValue(line.quantity, line.unitPrice)}</span></td>
+						<td class="quantity"><label><span class="mobile-label">Ilość</span><input class={field} aria-label={`Ilość pozycji ${index + 1}`} bind:value={line.quantity} inputmode="decimal" oninput={onchange} /></label></td>
+						<td class="price"><label><span class="mobile-label">Cena {net ? 'netto' : 'brutto'}</span><input class={field} aria-label={`Cena ${net ? 'netto' : 'brutto'} pozycji ${index + 1}`} bind:value={line.unitPrice} inputmode="decimal" oninput={onchange} /></label></td>
+						<td class="value"><span class="mobile-label">Wartość: </span><span class="value-amount">{formatQuoteLineValue(line.quantity, line.unitPrice)}</span></td>
 						<td class="remove"><button class={button} type="button" aria-label={`Usuń pozycję ${index + 1}`} onclick={() => remove(index)}>Usuń</button></td>
 					</tr>
 				{/each}
@@ -55,37 +57,41 @@
 	.line-summary { grid-column: 1 / -1; }
 	.line-summary button { display: flex; width: 100%; min-height: 3.5rem; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.5rem 0; text-align: left; }
 	.line-summary button > span:first-child { min-width: 0; overflow-wrap: anywhere; }
-	.line-summary button > span:last-child { flex-shrink: 0; font-size: 0.875rem; font-weight: 600; }
+	.line-summary button > span:last-child { max-width: 48%; flex-shrink: 0; overflow-wrap: anywhere; text-align: right; font-size: 0.875rem; font-weight: 600; }
 	.line-summary strong, .line-summary small { display: block; }
 	.line-summary strong { font-size: 0.875rem; font-weight: 600; }
 	.line-summary small { margin-top: 0.15rem; color: var(--color-text-muted); font-size: 0.75rem; }
 	tr.collapsed td:not(.line-summary) { display: none; }
 	tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.375rem 0.75rem; padding: 0.25rem 0; border-bottom: 1px solid var(--color-border-line); }
 	td { min-width: 0; }
+	td > label, td input { display: block; }
+	td input, .remove button { box-sizing: border-box; height: 2.75rem; }
+	.quantity input, .price input, .value-amount { font-variant-numeric: tabular-nums; }
 	.name { grid-column: 1 / -1; }
 	.mobile-label { display: block; margin-bottom: 0.375rem; font-size: 0.875rem; }
-	.source-row { display: block; font-size: 0.75rem; }
+	.source-row { display: block; color: var(--color-text-muted); font-size: 0.75rem; }
 	.line-description summary { cursor: pointer; padding: .25rem 0; font-weight: 500; }
-	.line-description { display: block; gap: 0.25rem; margin-top: 0.5rem; font-size: 0.75rem; color: var(--color-text-muted); }
+	.line-description { display: block; margin-top: 0.375rem; font-size: 0.75rem; color: var(--color-text-muted); }
 	.value { align-self: center; font-size: 0.875rem; overflow-wrap: anywhere; }
 	.value .mobile-label { display: inline; margin: 0; }
 	.remove { text-align: right; }
-	@container (min-width: 440px) {
+	.remove button { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+	@container (min-width: 520px) {
 		table { display: table; table-layout: fixed; border-collapse: collapse; }
 		thead { display: table-header-group; }
 		.line-summary { display: none; }
 		tr.collapsed td:not(.line-summary) { display: table-cell; }
 		tbody { display: table-row-group; }
 		tr { display: table-row; }
-		th, td { padding: 0.375rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--color-border-line); }
-		th { font-size: 0.875rem; font-weight: 500; }
-		.value { font-size: 0.875rem; white-space: nowrap; }
-		.remove button { display: inline-flex; align-items: center; justify-content: center; }
-		th:first-child { width: 44%; }
-		th:nth-child(2) { width: 12%; }
-		th:nth-child(3) { width: 16%; }
-		th:nth-child(4) { width: 18%; }
-		th:last-child { width: 70px; }
+		th, td { padding: 0.5rem 0.375rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--color-border-line); }
+		th { font-size: 0.875rem; font-weight: 500; white-space: nowrap; }
+		th.quantity { width: clamp(3.75rem, 12cqi, 5rem); }
+		th.price { width: clamp(6.25rem, 18cqi, 8.5rem); padding-inline-end: 1.125rem; }
+		th.value { width: clamp(6.75rem, 19cqi, 10rem); }
+		th.remove { width: 5.25rem; }
+		.quantity, .quantity input, .remove { text-align: center; }
+		.price, .price input, .value { text-align: right; }
+		.value-amount { display: flex; min-height: 2.75rem; align-items: center; justify-content: flex-end; font-weight: 500; }
 		.mobile-label { display: none; }
 		.value .mobile-label { display: none; }
 	}
