@@ -64,5 +64,5 @@ test('creates a manual quotation and approves a real PDF without AI', async ({ p
  await expect(approve).toBeEnabled({ timeout: 30000 });
  await approve.click();
  await expect(page.getByRole('heading', { name: /^W\/\d{3,}\/\d{4}$/ })).toBeVisible();
- await expect(page.getByRole('button', { name: 'Pobierz PDF', exact: true })).toBeEnabled({ timeout: 30000 });
+ await expect(page.getByRole('button', { name: 'Pobierz numerowany PDF', exact: true })).toBeEnabled({ timeout: 30000 });
 });

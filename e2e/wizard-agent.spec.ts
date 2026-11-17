@@ -11,7 +11,7 @@ function pdfFixture(): Buffer {
 }
 
 
-for(const width of [390,1440]) test(`agent correction to approved PDF at ${width}px`,async({page})=>{
+for (const { width, accept } of [{ width: 390, accept: true }, { width: 1440, accept: true }, { width: 390, accept: false }]) test(`${accept ? 'agent correction to approved PDF' : 'skips a proposal without applying it'} at ${width}px`,async({page})=>{
  await page.setViewportSize({width,height:900});
  await page.addInitScript(()=>Object.assign(window,{__internal_ClerkUICtor:class{},Clerk:{user:{id:'member'},session:{id:'session',status:'active',getToken:async()=>'token'},load:async()=>{},addListener:()=>()=>{},signOut:async()=>{}}}));
  await page.route('http://localhost:8787/**',r=>r.fulfill({headers:{'access-control-allow-origin':'*'},json:{}}));
@@ -67,6 +67,16 @@ for(const width of [390,1440]) test(`agent correction to approved PDF at ${width
  await expect(page.getByLabel('Opis rozwiązania i zakres prac')).toContainText('Zwora elektromagnetyczna do kontroli dostępu.');
  expect(quote.draft!.lines[0].description).toBe('Stary opis pozycji.');
  expect(quote.draft!.scopeSections).toHaveLength(0);
+ if (!accept) {
+  await page.getByRole('button',{name:'Kontynuuj bez zmian'}).click();
+  await expect(page.getByRole('heading',{name:'Podgląd i zatwierdzenie'})).toBeVisible();
+  await expect(page.locator('.textLayer')).toContainText('Hello PDF');
+  expect(methods).not.toContain('ApplyQuoteText');
+  expect(quote.draftVersion).toBe(1n);
+  expect(quote.draft!.lines[0].description).toBe('Stary opis pozycji.');
+  expect(quote.draft!.scopeSections).toHaveLength(0);
+  return;
+ }
  await page.getByLabel('Co chcesz zmienić?').fill('Skróć opis');await page.getByRole('button',{name:'Wyślij wiadomość'}).click();
  await expect(page.getByLabel('Opis rozwiązania i zakres prac')).toContainText('Zwora do kontroli dostępu.');
  await page.screenshot({path:`/tmp/quotes-agent-${width}.png`,fullPage:true});

@@ -21,7 +21,7 @@ export async function runQuoteFlow(page: Page, {
 	generateAI?: boolean;
 }): Promise<string> {
  await page.goto('/wyceny/nowa');
- await page.getByLabel('Plik XLSX', { exact: true }).setInputFiles(fixture);
+ await page.locator('main input[type=file]').setInputFiles(fixture);
  await expect(page).toHaveURL(/\/wyceny\/[0-9a-f-]{36}\?step=/);
  const quoteId = new URL(page.url()).pathname.split('/').at(-1)!;
  await expect(page.getByRole('heading', { name: 'Sprawdź dane', exact: true })).toBeVisible({timeout:30000});
@@ -37,19 +37,19 @@ export async function runQuoteFlow(page: Page, {
  await page.getByRole('button',{name:'Zapisz i sprawdź dane'}).click();
  await page.getByRole('button',{name:'Dalej: dane wyceny'}).click();
  if(generateAI){
-  await page.getByRole('button',{name:'Tak, przygotuj opisy'}).click();
-  const proposal=page.getByRole('region',{name:'Propozycja zakresu AI'});
+  await page.getByRole('button',{name:'Przygotuj opis rozwiązania'}).click();
+  const proposal=page.getByRole('region',{name:'Opis rozwiązania i zakres prac'});
   await expect(proposal).toBeVisible({timeout:95000});
   if(expectedScope) await expect(proposal).toContainText(expectedScope);
   await page.reload();
   await expect(proposal).toBeVisible();
-  await page.getByLabel('Co chcesz zmienić?').fill('Skróć opisy.');
+  await page.getByLabel('Co chcesz zmienić?').fill('Skróć opis.');
   const correction=page.waitForResponse(r=>r.url().endsWith('/SendQuoteAgentMessage')&&r.status()===200);
   await page.getByRole('button',{name:'Wyślij wiadomość'}).click();await correction;
   await page.getByRole('button',{name:/Zobacz rozmowę/}).click();
-  await expect(page.getByRole('region',{name:'Rozmowa z asystentem AI'})).toContainText('Skróć opisy.');
+  await expect(page.getByRole('region',{name:'Rozmowa z asystentem AI'})).toContainText('Skróć opis.');
   await expect(proposal).toBeVisible({timeout:30000});
-  await page.locator('.wizard-header').getByRole('button',{name:/Zastosuj propozycję|Zastosuj zakres/}).click();
+  await page.locator('.wizard-header').getByRole('button',{name:'Zastosuj propozycję',exact:true}).click();
  }else await page.getByRole('button',{name:'Kontynuuj bez AI'}).click();
  await expect(page.getByText(/Liczba stron:/)).toBeVisible({timeout:30000});
  const approve=page.getByRole('button',{name:'Zatwierdź wycenę',exact:true});
