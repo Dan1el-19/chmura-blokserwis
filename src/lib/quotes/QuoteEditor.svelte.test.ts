@@ -536,3 +536,15 @@ it('explains missing required document data on the details screen',async()=>{
  expect(api.generateQuoteText).not.toHaveBeenCalled();
  expect(onstagechange).not.toHaveBeenCalled();
 });
+
+it('lets the user return to upload after reviewing a completed import',async()=>{
+ const quote=wizardQuote();api.getQuote.mockResolvedValue({quote});
+ api.getImportResult.mockResolvedValue({result:create(QuoteImportResultSchema,{id:'import-back',status:'succeeded',resultVersion:1n,lines:[{sourceRow:2,line:{name:'Zwora',quantity:'1',unitPrice:'330'}}]})});
+ const states:{navigate?:(stage:'import')=>Promise<boolean>}[]=[];const onstagechange=vi.fn();
+ const wizardMode={stage:'review' as const,editing:false,onstagechange,onstatechange:(state:typeof states[number])=>states.push(state)};
+ const view=await render(QuoteEditor,{id:'quote-1',wizardMode});
+ await expect.element(view.getByText('Zwora',{exact:true})).toBeVisible();
+ await view.rerender({id:'quote-1',wizardMode:{...wizardMode,stage:'import'}});
+ await states.at(-1)!.navigate!('import');
+ expect(onstagechange.mock.calls.some(call=>call[0]==='review')).toBe(false);
+});

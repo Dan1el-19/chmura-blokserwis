@@ -78,6 +78,7 @@
  let chatTab = $state<'data'|'agent'>('data');
  let workflow = $state<QuoteWorkflowState>();
  let initialFileHandled = false;
+ let reviewedImportKey = '';
  let workflowInitialized = false;
  let workflowQueue: Promise<void> = Promise.resolve();
  let transitioning = $state(false);
@@ -617,7 +618,12 @@
  });
  $effect(()=>{
   const result=imported;const mode=wizardMode;
-  if(mode?.stage==='import'&&result?.status==='succeeded'&&!result.applied)untrack(()=>{void wizardGo('review');});
+  if(result?.status==='succeeded'&&!result.applied)untrack(()=>{
+   const key=`${result.id}:${result.resultVersion}`;
+   if(reviewedImportKey===key)return;
+   reviewedImportKey=key;
+   if(mode?.stage==='import')void wizardGo('review');
+  });
  });
 
 </script>

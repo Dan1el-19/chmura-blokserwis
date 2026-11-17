@@ -15,8 +15,10 @@
 	let error = $state('');
 	let createKey = '';
 	let previousId: string | undefined;
+	let furthestStep = $state(0);
 	$effect.pre(() => {
 		const nextId = id;
+		if (nextId !== previousId) furthestStep = 0;
 		if (nextId === 'nowa' && previousId !== 'nowa') {
 			createKey = '';
 			initialFile = undefined;
@@ -32,6 +34,7 @@
 		? { stage: 'import' as const, editing: false }
 		: readWizardLocation(currentUrl, savedStage(editor)));
 	const step = $derived(wizardStep(location.stage));
+	$effect(() => { if (step > furthestStep) furthestStep = step; });
 	const wizardMode = $derived({ ...location, resume: ![...wizardStages, 'summary'].includes(currentUrl.searchParams.get('step') as WizardStage), initialFile: initialFileQuoteId === id ? initialFile : undefined, onstagechange: changeStage, onstatechange: updateEditor });
 
 	function savedStage(state: WizardEditorState): WizardStage {
@@ -85,7 +88,7 @@
 		<ol class="wizard-steps">
 			{#each wizardStages as stage, index (stage)}
 				<li aria-current={step === index ? 'step' : undefined} class:current={step === index} class:completed={index < step}>
-					<button type="button" disabled={id === 'nowa' || index > step || editor.busy || editor.saving} aria-label={`Przejdź do: ${wizardLabels[stage]}`} onclick={() => editor.navigate?.(stage)}>
+					<button type="button" disabled={id === 'nowa' || index > furthestStep || editor.busy || editor.saving} aria-label={`Przejdź do: ${wizardLabels[stage]}`} onclick={() => editor.navigate?.(stage)}>
                      <span class="step-number" aria-hidden="true">{index + 1}</span>
                      <span class="step-label">{wizardLabels[stage]}</span>
                     </button>
