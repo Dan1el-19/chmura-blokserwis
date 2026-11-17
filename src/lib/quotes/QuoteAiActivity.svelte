@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { CheckCircle, CircleNotch, Globe, Sparkle, WarningCircle } from 'phosphor-svelte';
 	import type { GetQuoteOperationResponse } from '#lib/gen/unisource/v2/quotes_pb.js';
+	import QuoteMarkdown from './QuoteMarkdown.svelte';
 	import { partialDescription, researchSources } from './ai-progress.js';
 
 	let { operation, proposal = false }: { operation: GetQuoteOperationResponse; proposal?: boolean } = $props();
@@ -76,13 +77,13 @@
 	</details>
 	{/if}
 
-	{#if active && operation.partialText}<div class="border-t border-primary/15 pt-3" aria-label="Powstający opis AI"><p class="mb-2 text-xs font-semibold">Powstająca treść</p><p class="whitespace-pre-wrap break-words leading-relaxed">{operation.partialText}<span aria-hidden="true" class="motion-safe:animate-pulse"> ▍</span></p></div>{:else if active && sections.length}
+	{#if active && operation.partialText}<div class="border-t border-primary/15 pt-3" aria-label="Powstający opis AI"><p class="mb-2 text-xs font-semibold">Powstająca treść</p><QuoteMarkdown text={operation.partialText}/><span aria-hidden="true" class="motion-safe:animate-pulse"> ▍</span></div>{:else if active && sections.length}
 		<div class="space-y-3 border-t border-primary/15 pt-3" aria-label="Powstający opis AI">
 			<p class="text-xs font-semibold text-text-main">Powstająca treść</p>
 			{#each sections as section, index (section.label)}
 				<div class="rounded-lg border border-border-line bg-bg-panel p-3">
 					<p class="mb-1 text-xs font-medium text-text-main">{section.label}</p>
-					<p class="whitespace-pre-wrap text-sm leading-relaxed text-text-muted">{section.text}{#if index === sections.length - 1}<span aria-hidden="true" class="text-primary motion-safe:animate-pulse"> ▍</span>{/if}</p>
+					<QuoteMarkdown text={section.text}/>{#if index === sections.length - 1}<span aria-hidden="true" class="text-primary motion-safe:animate-pulse"> ▍</span>{/if}
 				</div>
 			{/each}
 		</div>

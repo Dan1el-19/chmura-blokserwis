@@ -57,7 +57,8 @@ test('creates a manual quotation and approves a real PDF without AI', async ({ p
  await page.getByLabel('Ilość pozycji 1', { exact: true }).fill('2');
  await page.getByLabel('Cena brutto pozycji 1', { exact: true }).fill('25');
  await page.getByRole('button', { name: 'Zapisz i sprawdź dane' }).click();
- await expect(page.getByRole('region', { name: 'Dane wyceny' })).toContainText('50,00 zł');
+ await expect(page.getByRole('region', { name: 'Pozycje z arkusza' })).toContainText('50,00 zł');
+ await page.getByRole('button', { name: 'Dalej: dane wyceny' }).click();
  await page.getByRole('button', { name: 'Kontynuuj bez AI' }).click();
  const approve = page.getByRole('button', { name: 'Zatwierdź wycenę', exact: true });
  await expect(approve).toBeEnabled({ timeout: 30000 });

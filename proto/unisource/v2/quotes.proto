@@ -276,6 +276,7 @@ message GenerateDraftPdfRequest {
   string quote_id = 1;
   int64 expected_version = 2;
   string idempotency_key = 3;
+  string proposal_operation_id = 4; // Optional successful AI proposal based on expected_version.
 }
 
 message GenerateDraftPdfResponse {
@@ -287,6 +288,7 @@ message GetQuotePdfRequest {
   int64 revision = 2;
   int64 draft_version = 3;
   string operation_id = 4;
+  string proposal_operation_id = 5; // Select the PDF for a successful AI operation; exclusive with other selectors.
 }
 
 message GetQuotePdfResponse {
@@ -296,6 +298,7 @@ message GetQuotePdfResponse {
   int64 revision = 4;
   int64 draft_version = 5;
   string template_version = 7;
+  string proposal_operation_id = 8; // Present only when this document represents that exact proposal.
 }
 
 message RetryQuotePdfRequest {
@@ -303,6 +306,7 @@ message RetryQuotePdfRequest {
   int64 revision = 2;
   int64 draft_version = 3;
   string idempotency_key = 4;
+  string proposal_operation_id = 5;
 }
 
 message RetryQuotePdfResponse {

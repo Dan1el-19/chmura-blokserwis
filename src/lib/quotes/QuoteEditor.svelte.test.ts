@@ -424,11 +424,11 @@ it('keeps a recoverable copy when loading the server version after a conflict', 
  await expect.element(view.getByLabelText('Odzyskane zmiany')).toHaveValue(expect.stringContaining('Moja wersja'));
 });
 
-it('shows a read-only wizard review and asks whether to use AI without starting it', async()=>{
+it('shows a read-only wizard review before collecting document details', async()=>{
  api.getQuote.mockResolvedValue({quote:create(QuoteSchema,{id:'quote-1',draftVersion:1n,draft:{title:'Drużynowa',client:'Dom dziecka',documentSchemaVersion:2,documentDate:'2026-11-16',lines:[{name:'Zwora 600 SL',quantity:'1',unitPrice:'330'}]}})});
  const view=await render(QuoteEditor,{id:'quote-1',wizardMode:{stage:'review',editing:false,onstagechange:vi.fn(),onstatechange:vi.fn()}});
  await expect.element(view.getByText('Zwora 600 SL',{exact:true})).toBeVisible();
- await expect.element(view.getByRole('button',{name:'Tak, przygotuj opisy'})).toBeVisible();
+ await expect.element(view.getByRole('button',{name:'Dalej: dane wyceny'})).toBeVisible();
  await expect.element(view.getByLabelText('Nazwa pozycji 1')).not.toBeInTheDocument();
  expect(api.generateDraftPdf).not.toHaveBeenCalled();
 });
@@ -446,7 +446,7 @@ it('does not spend an AI call when saving the workflow choice fails', async () =
  api.getQuote.mockResolvedValue({ quote: wizardQuote() });
  api.saveQuoteWorkflow.mockRejectedValue(new ConnectError('Brak dostępu do wyceny', Code.PermissionDenied));
  const onstagechange = vi.fn();
- const view = await render(QuoteEditor, { id: 'quote-1', wizardMode: { stage: 'review', editing: false, onstagechange, onstatechange: vi.fn() } });
+ const view = await render(QuoteEditor, { id: 'quote-1', wizardMode: { stage: 'details', editing: false, onstagechange, onstatechange: vi.fn() } });
  await view.getByRole('button', { name: 'Tak, przygotuj opisy' }).click();
  await expect.element(view.getByRole('alert')).toBeVisible();
  expect(api.generateQuoteText).not.toHaveBeenCalled();
@@ -477,7 +477,7 @@ it('reconciles a committed workflow after a lost response and waits for explicit
  });
  api.generateQuoteText.mockResolvedValue({ operationId: 'op-retry' });
  const onstagechange = vi.fn();
- const view = await render(QuoteEditor, { id: 'quote-1', wizardMode: { stage: 'review', editing: false, onstagechange, onstatechange: vi.fn() } });
+ const view = await render(QuoteEditor, { id: 'quote-1', wizardMode: { stage: 'details', editing: false, onstagechange, onstatechange: vi.fn() } });
  await view.getByRole('button', { name: 'Tak, przygotuj opisy' }).click();
  await expect.element(view.getByRole('alert')).toBeVisible();
  expect(api.generateQuoteText).not.toHaveBeenCalled();
@@ -485,4 +485,54 @@ it('reconciles a committed workflow after a lost response and waits for explicit
  await view.getByRole('button', { name: 'Tak, przygotuj opisy' }).click();
  await expect.poll(() => api.generateQuoteText.mock.calls.length).toBe(1);
  expect(onstagechange).toHaveBeenCalledWith('agent', false);
+});
+
+it('takes reviewed positions to a dedicated document details step without validation errors',async()=>{
+ const quote=wizardQuote();quote.draft!.client='';
+ api.getQuote.mockResolvedValue({quote});
+ const onstagechange=vi.fn();
+ const view=await render(QuoteEditor,{id:'quote-1',wizardMode:{stage:'review',editing:false,onstagechange,onstatechange:vi.fn()}});
+ await view.getByRole('button',{name:'Dalej: dane wyceny'}).click();
+ await expect.poll(()=>onstagechange.mock.calls.at(-1)).toEqual(['details',false]);
+ expect(api.generateQuoteText).not.toHaveBeenCalled();
+ await expect.element(view.getByRole('alert')).not.toBeInTheDocument();
+});
+
+it('saves reviewed import edits before navigating back to upload',async()=>{
+ const quote=wizardQuote();api.getQuote.mockResolvedValue({quote});
+ const imported=create(QuoteImportResultSchema,{id:'import-edited',status:'succeeded',resultVersion:1n,lines:[{sourceRow:2,line:{name:'Zwora',quantity:'1',unitPrice:'330'}}]});
+ api.getImportResult.mockImplementation(async()=>({result:{...imported,applied:api.applyImport.mock.calls.length>0}}));
+ api.applyImport.mockResolvedValue({quote:create(QuoteSchema,{...quote,draftVersion:2n})});
+ const states: {navigate?: (stage:'import')=>Promise<boolean>}[]=[];
+ const onstagechange=vi.fn();
+ const view=await render(QuoteEditor,{id:'quote-1',wizardMode:{stage:'review',editing:true,onstagechange,onstatechange:state=>states.push(state)}});
+ await view.getByRole('button',{name:'Edytuj pozycję 1: Zwora'}).click();
+ await view.getByLabelText('Nazwa pozycji 1').fill('Zwora poprawiona');
+ await states.at(-1)!.navigate!('import');
+ expect(api.applyImport).toHaveBeenCalledWith(expect.objectContaining({reviewedLines:[expect.objectContaining({name:'Zwora poprawiona'})]}));
+ expect(onstagechange).toHaveBeenCalledWith('import',false);
+});
+
+it('prefetches the completed AI proposal without applying it to the draft',async()=>{
+ const quote=wizardQuote();api.getQuote.mockResolvedValue({quote});
+ api.getQuoteOperation.mockResolvedValue({operationId:'ai-proposal',draftVersion:1n,status:'succeeded',partialText:'Gotowe',partialJson:'',events:[],searches:[],proposedScopeSections:[],proposedLineTexts:[{lineIndex:0,name:'Zwora',description:'Nowy opis'}]});
+ api.getQuotePdf.mockImplementation(async(request)=>request.proposalOperationId?{status:'succeeded',url:'https://pdf.example/proposal.pdf',draftVersion:1n,revision:0n,templateVersion:'4',proposalOperationId:'ai-proposal'}:Promise.reject(new ConnectError('missing',Code.NotFound)));
+ const fetchMock=vi.fn().mockResolvedValue(new Response('%PDF-1.7\n',{status:200}));vi.stubGlobal('fetch',fetchMock);
+ try {
+  await render(QuoteEditor,{id:'quote-1',wizardMode:{stage:'agent',editing:false,onstagechange:vi.fn(),onstatechange:vi.fn()}});
+  await expect.poll(()=>fetchMock.mock.calls.some(call=>call[0]==='https://pdf.example/proposal.pdf')).toBe(true);
+  expect(api.applyQuoteText).not.toHaveBeenCalled();
+  expect(quote.draft!.lines[0].description).toBe('');
+ } finally {vi.unstubAllGlobals();}
+});
+
+it('explains missing required document data on the details screen',async()=>{
+ const quote=wizardQuote();quote.draft!.client='';api.getQuote.mockResolvedValue({quote});
+ const onstagechange=vi.fn();
+ const view=await render(QuoteEditor,{id:'quote-1',wizardMode:{stage:'details',editing:false,onstagechange,onstatechange:vi.fn()}});
+ await view.getByRole('button',{name:'Kontynuuj bez AI'}).click();
+ await expect.element(view.getByRole('alert')).toHaveTextContent('Uzupełnij nazwę wyceny, klienta i datę.');
+ await expect.element(view.getByLabelText('Klient')).toHaveAttribute('aria-invalid','true');
+ expect(api.generateQuoteText).not.toHaveBeenCalled();
+ expect(onstagechange).not.toHaveBeenCalled();
 });

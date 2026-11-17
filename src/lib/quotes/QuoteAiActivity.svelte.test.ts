@@ -39,3 +39,12 @@ it('streams current agent text and collapsible real tool activity for the new do
  await expect.element(view.getByText('Zwora elektromagnetyczna utrzymuje drzwi w pozycji zamkniętej.')).toBeVisible();
  await expect.element(view.getByText('Czytam stronę producenta').first()).toBeVisible();
 });
+
+it('renders streamed Markdown as formatted content without interpreting HTML', async () => {
+ const operation=create(GetQuoteOperationResponseSchema,{status:'running',partialText:'## Zakres\n\n**Montaż** urządzeń\n\n- Okablowanie\n- Testy\n\n<script>alert(1)</script>'});
+ const view=await render(QuoteAiActivity,{operation});
+ await expect.element(view.getByRole('heading',{name:'Zakres'})).toBeVisible();
+ expect(view.container.querySelector('strong')?.textContent).toBe('Montaż');
+ expect(view.container.querySelectorAll('script')).toHaveLength(0);
+ await expect.element(view.getByRole('listitem').first()).toHaveTextContent('Okablowanie');
+});

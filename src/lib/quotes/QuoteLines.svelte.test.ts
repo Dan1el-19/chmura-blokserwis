@@ -52,7 +52,17 @@ it('edits the optional line description', async () => {
 	const lines = $state([create(QuoteLineSchema, { name: 'Kamera', quantity: '1', unitPrice: '10' })]);
 	const view = await render(QuoteLines, { lines, onchange });
 	(view.getByRole('table', { name: 'Pozycje wyceny' }).element().parentElement as HTMLElement).style.width = '700px';
+	await view.getByText('Opis pozycji').click();
 	await view.getByLabelText('Opis pozycji 1').fill('Montaż na ścianie');
 	expect(lines[0].description).toBe('Montaż na ścianie');
 	expect(onchange).toHaveBeenCalled();
+});
+
+it('keeps descriptions collapsed until requested', async () => {
+ const lines = $state([create(QuoteLineSchema, {name:'Zwora', quantity:'1', unitPrice:'330', description:'Zachowany opis'})]);
+ const view = await render(QuoteLines, { lines, onchange:vi.fn() });
+ (view.getByRole('table').element().parentElement as HTMLElement).style.width='800px';
+ await expect.element(view.getByLabelText('Opis pozycji 1')).not.toBeVisible();
+ await view.getByText('Opis pozycji').click();
+ await expect.element(view.getByLabelText('Opis pozycji 1')).toHaveValue('Zachowany opis');
 });

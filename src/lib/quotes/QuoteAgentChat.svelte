@@ -1,5 +1,6 @@
 <script lang="ts">
  import { untrack } from 'svelte';
+ import QuoteMarkdown from './QuoteMarkdown.svelte';
  import { Collapsible } from 'bits-ui';
  import type { QuoteAgentMessage } from '#lib/gen/unisource/v2/quotes_pb.js';
  import { button, field, primary } from './ui.js';
@@ -32,7 +33,7 @@
   <Collapsible.Content>
    <div class="chat-messages space-y-3" bind:this={viewport} onscroll={()=>{if(viewport)following=viewport.scrollHeight-viewport.scrollTop-viewport.clientHeight<64;}}>
     {#each messages as message (message.id)}
-     <article class:user={message.role==='user'} class="message"><p class="mb-1 text-xs font-medium text-text-muted">{message.role==='user'?'Ty':'Asystent'}</p><p class="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.text}</p></article>
+     <article class:user={message.role==='user'} class="message"><p class="mb-1 text-xs font-medium text-text-muted">{message.role==='user'?'Ty':'Asystent'}</p><QuoteMarkdown text={message.text}/></article>
     {/each}
    </div>
    {#if !following}<button type="button" class={button} onclick={()=>{following=true;if(viewport)viewport.scrollTop=viewport.scrollHeight;}}>Najnowsza wiadomość ↓</button>{/if}

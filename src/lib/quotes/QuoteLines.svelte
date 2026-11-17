@@ -35,7 +35,7 @@
 				{#each lines as line, index (line)}
 					<tr class:collapsed={expanded !== index}>
 						<td class="line-summary"><button type="button" aria-label={`Edytuj pozycję ${index + 1}: ${line.name || 'Nowa pozycja'}`} aria-expanded={expanded === index} onclick={() => expanded = expanded === index ? null : index}><span><strong>{line.name || 'Nowa pozycja'}</strong><small>{line.quantity} × {line.unitPrice} zł</small></span><span>{formatQuoteLineValue(line.quantity, line.unitPrice)} <span aria-hidden="true">›</span></span></button></td>
-						<td class="name"><label><span class="mobile-label">Pozycja {index + 1} · Nazwa</span><input class={field} aria-label={`Nazwa pozycji ${index + 1}`} bind:value={line.name} oninput={onchange} /></label><label class="line-description"><span>Opis (opcjonalnie)</span><textarea class={field} rows="2" aria-label={`Opis pozycji ${index + 1}`} bind:value={line.description} oninput={onchange}></textarea></label>{#if sourceRows[index]}<span class="source-row">Wiersz {sourceRows[index]} w arkuszu</span>{/if}</td>
+						<td class="name"><label><span class="mobile-label">Pozycja {index + 1} · Nazwa</span><input class={field} aria-label={`Nazwa pozycji ${index + 1}`} bind:value={line.name} oninput={onchange} /></label><details class="line-description"><summary>Opis pozycji</summary><label><span class="sr-only">Opis (opcjonalnie)</span><textarea class={field} rows="2" aria-label={`Opis pozycji ${index + 1}`} bind:value={line.description} oninput={onchange}></textarea></label></details>{#if sourceRows[index]}<span class="source-row">Wiersz {sourceRows[index]} w arkuszu</span>{/if}</td>
 						<td><label><span class="mobile-label">Ilość</span><input class={field} aria-label={`Ilość pozycji ${index + 1}`} bind:value={line.quantity} inputmode="decimal" oninput={onchange} /></label></td>
 						<td><label><span class="mobile-label">Cena {net ? 'netto' : 'brutto'}</span><input class={field} aria-label={`Cena ${net ? 'netto' : 'brutto'} pozycji ${index + 1}`} bind:value={line.unitPrice} inputmode="decimal" oninput={onchange} /></label></td>
 						<td class="value"><span class="mobile-label">Wartość: </span><span>{formatQuoteLineValue(line.quantity, line.unitPrice)}</span></td>
@@ -65,7 +65,8 @@
 	.name { grid-column: 1 / -1; }
 	.mobile-label { display: block; margin-bottom: 0.375rem; font-size: 0.875rem; }
 	.source-row { display: block; font-size: 0.75rem; }
-	.line-description { display: grid; gap: 0.25rem; margin-top: 0.5rem; font-size: 0.75rem; color: var(--color-text-muted); }
+	.line-description summary { cursor: pointer; padding: .25rem 0; font-weight: 500; }
+	.line-description { display: block; gap: 0.25rem; margin-top: 0.5rem; font-size: 0.75rem; color: var(--color-text-muted); }
 	.value { align-self: center; font-size: 0.875rem; overflow-wrap: anywhere; }
 	.value .mobile-label { display: inline; margin: 0; }
 	.remove { text-align: right; }
@@ -76,11 +77,11 @@
 		tr.collapsed td:not(.line-summary) { display: table-cell; }
 		tbody { display: table-row-group; }
 		tr { display: table-row; }
-		th, td { padding: 0.375rem; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--color-border-line); }
+		th, td { padding: 0.375rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--color-border-line); }
 		th { font-size: 0.875rem; font-weight: 500; }
 		.value { font-size: 0.875rem; white-space: nowrap; }
 		.remove button { display: inline-flex; align-items: center; justify-content: center; }
-		th:first-child { width: 40%; }
+		th:first-child { width: 44%; }
 		th:nth-child(2) { width: 12%; }
 		th:nth-child(3) { width: 16%; }
 		th:nth-child(4) { width: 18%; }

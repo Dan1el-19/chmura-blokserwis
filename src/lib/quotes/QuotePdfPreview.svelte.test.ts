@@ -30,3 +30,20 @@ it('acknowledges only a successfully rendered document and reports invalid PDFs'
  await view.rerender({bytes:new TextEncoder().encode('%PDF-invalid'),onloaded:loaded,onerror:failed});
  await expect.poll(()=>failed.mock.calls.length).toBeGreaterThan(0);
 });
+
+it('opens a focused PDF view and restores the embedded view on close', async () => {
+ const view=await render(QuotePdfPreview,{bytes:pdfFixture()});
+ await view.getByRole('button',{name:'Powiększ dokument'}).click();
+ await expect.element(view.getByRole('dialog',{name:'Podgląd PDF'})).toBeVisible();
+ await view.getByRole('button',{name:'Zamknij powiększenie'}).click();
+ await expect.element(view.getByRole('dialog')).not.toBeInTheDocument();
+ await expect.element(view.getByRole('button',{name:'Powiększ dokument'})).toBeVisible();
+});
+
+it('fits a whole A4 page in the embedded viewport before zooming',async()=>{
+ const view=await render(QuotePdfPreview,{bytes:pdfFixture()});
+ await expect.poll(()=>view.container.querySelector('canvas')?.width??0).toBeGreaterThan(0);
+ const viewport=view.container.querySelector<HTMLElement>('.pdf-viewport')!;
+ viewport.style.width='900px';viewport.style.height='400px';
+ await expect.poll(()=>view.container.querySelector('.pdf-page')!.getBoundingClientRect().height).toBeLessThanOrEqual(viewport.clientHeight);
+});
