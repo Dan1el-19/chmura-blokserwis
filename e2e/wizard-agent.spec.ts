@@ -15,10 +15,10 @@ for(const width of [390,1440]) test(`agent correction to approved PDF at ${width
  await page.setViewportSize({width,height:900});
  await page.addInitScript(()=>Object.assign(window,{__internal_ClerkUICtor:class{},Clerk:{user:{id:'member'},session:{id:'session',status:'active',getToken:async()=>'token'},load:async()=>{},addListener:()=>()=>{},signOut:async()=>{}}}));
  await page.route('http://localhost:8787/**',r=>r.fulfill({headers:{'access-control-allow-origin':'*'},json:{}}));
- const quote=create(pb.QuoteSchema,{id:'agent-e2e',draftVersion:1n,draft:{title:'Drużynowa',client:'Dom dziecka',documentDate:'2026-11-16',documentSchemaVersion:2,priceMode:pb.QuotePriceMode.GROSS,lines:[{name:'Zwora 600 SL',quantity:'1',unitPrice:'330'}]}});
+ const quote=create(pb.QuoteSchema,{id:'agent-e2e',draftVersion:1n,draft:{title:'Drużynowa',client:'Dom dziecka',documentDate:'2026-11-16',documentSchemaVersion:2,priceMode:pb.QuotePriceMode.GROSS,lines:[{name:'zwora 600 sl',description:'Stary opis pozycji.',quantity:'1',unitPrice:'330'}]}});
  let turn=0;let applied=false;let published=false;let watched=false;let releasePublishedPdf=false;let publishedPdfRequests=0;
  const methods:string[]=[];const proposalDownloads:string[]=[];
- const operation=()=>create(pb.GetQuoteOperationResponseSchema,{operationId:`op-${turn}`,draftVersion:1n,status:watched?'succeeded':'running',partialText:watched?'':'Piszę opis zwory',lastEventSequence:1n,events:[{sequence:1n,kind:'search',text:'Sprawdzam źródło producenta',url:'https://example.com/model',title:'Producent'}],proposedLineTexts:watched?[{lineIndex:0,name:'Zwora 600 SL',description:turn===1?'Zwora elektromagnetyczna do kontroli dostępu.':'Zwora do kontroli dostępu.'}]:[]});
+ const operation=()=>create(pb.GetQuoteOperationResponseSchema,{operationId:`op-${turn}`,draftVersion:1n,status:watched?'succeeded':'running',partialText:watched?'':'Piszę opis zwory',lastEventSequence:1n,events:[{sequence:1n,kind:'search',text:'Sprawdzam źródło producenta',url:'https://example.com/model',title:'Producent'}],proposedScopeSections:watched?[{heading:'Kontrola dostępu',body:turn===1?'Zwora elektromagnetyczna do kontroli dostępu.':'Zwora do kontroli dostępu.'}]:[],proposedLineTexts:watched?[{lineIndex:0,name:'Zwora 600 SL',description:''}]:[]});
  await page.route('http://localhost:8788/**',async route=>{
   const headers={'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'POST, OPTIONS'};
   if(route.request().method()==='OPTIONS')return route.fulfill({status:204,headers});
@@ -43,13 +43,13 @@ for(const width of [390,1440]) test(`agent correction to approved PDF at ${width
   }
   if(method==='ApplyQuoteText'){
    const req=fromBinary(pb.ApplyQuoteTextRequestSchema,route.request().postDataBuffer()!);expect(req.applyLineTexts).toBe(true);expect(req.expectedVersion).toBe(1n);
-   expect(quote.draft!.lines[0].description).toBe('');quote.draft!.lines[0].description='Zwora do kontroli dostępu.';quote.draftVersion=2n;applied=true;return reply(pb.ApplyQuoteTextResponseSchema,{quote});
+   expect(quote.draft!.lines[0].description).toBe('Stary opis pozycji.');quote.draft!.lines[0].description='';quote.draft!.lines[0].name='Zwora 600 SL';quote.draft!.scopeSections=operation().proposedScopeSections;quote.draftVersion=2n;applied=true;return reply(pb.ApplyQuoteTextResponseSchema,{quote});
   }
   if(method==='GetQuotePdf'){
    const request=fromBinary(pb.GetQuotePdfRequestSchema,route.request().postDataBuffer()!);
    if(request.revision)publishedPdfRequests++;
    const proposalId=request.proposalOperationId||(!request.revision&&applied?'op-2':'');
-   return reply(pb.GetQuotePdfResponseSchema,{status:request.revision&&!releasePublishedPdf?'queued':'succeeded',url:request.revision&&!releasePublishedPdf?'':proposalId?`https://pdf.example/${proposalId}.pdf`:'https://pdf.example/quote.pdf',revision:request.revision,draftVersion:request.revision?0n:request.proposalOperationId?1n:quote.draftVersion,templateVersion:'4',proposalOperationId:proposalId});
+   return reply(pb.GetQuotePdfResponseSchema,{status:request.revision&&!releasePublishedPdf?'queued':'succeeded',url:request.revision&&!releasePublishedPdf?'':proposalId?`https://pdf.example/${proposalId}.pdf`:'https://pdf.example/quote.pdf',revision:request.revision,draftVersion:request.revision?0n:request.proposalOperationId?1n:quote.draftVersion,templateVersion:'5',proposalOperationId:proposalId});
   }
   if(method==='ApproveQuote'){
    expect(applied).toBe(true);expect(quote.draft!.lines[0].unitPrice).toBe('330');expect(quote.draft!.lines[0].quantity).toBe('1');
@@ -63,12 +63,16 @@ for(const width of [390,1440]) test(`agent correction to approved PDF at ${width
  await expect(page.getByRole('heading',{name:'Sprawdź dane'})).toBeVisible();
  await page.getByRole('button',{name:'Dalej: dane wyceny'}).click();
  await expect(page.getByRole('heading',{name:'Dane wyceny',exact:true})).toBeVisible();
- await page.getByRole('button',{name:'Tak, przygotuj opisy'}).click();
- await expect(page.getByLabel('Proponowane opisy pozycji')).toContainText('Zwora elektromagnetyczna do kontroli dostępu.');
- expect(quote.draft!.lines[0].description).toBe('');
+ await page.getByRole('button',{name:'Przygotuj opis rozwiązania'}).click();
+ await expect(page.getByLabel('Opis rozwiązania i zakres prac')).toContainText('Zwora elektromagnetyczna do kontroli dostępu.');
+ expect(quote.draft!.lines[0].description).toBe('Stary opis pozycji.');
+ expect(quote.draft!.scopeSections).toHaveLength(0);
  await page.getByLabel('Co chcesz zmienić?').fill('Skróć opis');await page.getByRole('button',{name:'Wyślij wiadomość'}).click();
- await expect(page.getByLabel('Proponowane opisy pozycji')).toContainText('Zwora do kontroli dostępu.');
+ await expect(page.getByLabel('Opis rozwiązania i zakres prac')).toContainText('Zwora do kontroli dostępu.');
  await page.screenshot({path:`/tmp/quotes-agent-${width}.png`,fullPage:true});
+ await page.getByText('Podgląd PDF propozycji', {exact:true}).click();
+ await expect(page.locator('.textLayer')).toContainText('Hello PDF');
+ expect(applied).toBe(false);
  await expect.poll(()=>proposalDownloads.includes('op-2')).toBe(true);
  await page.locator('.wizard-header').getByRole('button',{name:'Zastosuj propozycję'}).click();
  await expect(page.getByRole('heading',{name:'Podgląd i zatwierdzenie'})).toBeVisible();

@@ -44,7 +44,10 @@
 	let previewAbort: AbortController | undefined;
 	let proposalAbort: AbortController | undefined;
 	let warmedProposalKey = '';
-	let proposalPdfCache: { operationId: string; sourceVersion: bigint; templateVersion: string; bytes: Uint8Array } | undefined;
+	let proposalPdfCache = $state.raw<{ operationId: string; templateVersion: string; bytes: Uint8Array }>();
+	let proposalPdfError = $state<{ operationId: string; message: string; failed: boolean }>();
+	const readyProposal = $derived(operation?.status === 'succeeded' && operation.operationId !== dismissedProposal &&
+		(operation.proposedScopeSections?.length || operation.proposedLineTexts?.length) ? operation : undefined);
 	let previewTimer: ReturnType<typeof setTimeout> | undefined;
 	let previewRevision = $state(0n);
 	let previewError = $state('');
@@ -338,7 +341,11 @@
 		previewAbort?.abort();
 		const controller = new AbortController(); previewAbort = controller;
 		const request = ++previewRequest;
-		const identity: PdfIdentity = { quoteId: id, revision, draftVersion: revision ? 0n : quote.draftVersion, templateVersion: '4' };
+		const expectedTemplate = revision ? revisions.find(entry => entry.revision === revision)?.templateVersion : undefined;
+		const identity: PdfIdentity = {
+			quoteId: id, revision, draftVersion: revision ? 0n : quote.draftVersion,
+			templateVersion: expectedTemplate ?? previewIdentity?.templateVersion ?? ''
+		};
 		previewRevision = revision; previewError = '';
 		if (previewIdentity && previewBytes && samePdfIdentity(previewIdentity, identity)) { previewLoading = false; return; }
 		if (wizardMode) { previewBytes = undefined; displayedPreviewBytes = undefined; previewIdentity = undefined; }
@@ -364,8 +371,9 @@
 					throw reason;
 				}
 				if (!current()) return;
-				if (result.revision !== identity.revision || result.draftVersion !== identity.draftVersion || result.templateVersion !== identity.templateVersion) throw new Error('Otrzymano PDF innej wersji wyceny.');
+				if (result.revision !== identity.revision || result.draftVersion !== identity.draftVersion || !matchesPdfTemplate(result.templateVersion, expectedTemplate)) throw new Error('Otrzymano PDF innej wersji wyceny.');
 				if (result.status === 'failed') throw new Error('Generowanie PDF nie powiodło się.');
+				identity.templateVersion = result.templateVersion;
 				if (result.status !== 'succeeded' || !result.url) { await pause(); continue; }
 				let bytes: Uint8Array;
 				const cached = proposalPdfCache;
@@ -389,11 +397,17 @@
 
  // Proposal PDFs have a separate identity: preparing them must never change the
  // saved draft or make an unaccepted proposal look like the current document.
- async function warmProposalPdf(operationId: string, sourceVersion: bigint) {
+ function matchesPdfTemplate(version: string, expected?: string) {
+  return expected ? version === expected : version === '4' || version === '5';
+ }
+
+ async function warmProposalPdf(operationId: string, sourceVersion: bigint, retryFailed = false) {
   proposalAbort?.abort();
   const controller = new AbortController();
   proposalAbort = controller;
+  proposalPdfError = undefined;
   const current = () => !disposed && !controller.signal.aborted;
+  let failed = false;
   const pause = () => new Promise<void>((resolve) => {
    const timeout = setTimeout(() => { controller.signal.removeEventListener('abort', aborted); resolve(); }, 1000);
    function aborted() { clearTimeout(timeout); resolve(); }
@@ -401,26 +415,35 @@
   });
   try {
    const api = getQuoteClient();
+   if (retryFailed) {
+    const keyScope = `retry-proposal-pdf:${operationId}`;
+    await api.retryQuotePdf({quoteId:id, proposalOperationId:operationId, idempotencyKey:commandKey(keyScope)});
+    keys.delete(keyScope);
+   }
    let generated = false;
    while (current()) {
     let result: GetQuotePdfResponse;
     try { result = await api.getQuotePdf({quoteId:id, proposalOperationId:operationId}, {signal:controller.signal}); }
     catch (reason) {
-     if (!isMissing(reason) || generated || !current()) return;
+     if (!isMissing(reason) || generated || !current()) throw reason;
      await api.generateDraftPdf({quoteId:id, expectedVersion:sourceVersion, proposalOperationId:operationId, idempotencyKey:commandKey(`proposal-pdf:${operationId}`)});
      generated = true; await pause(); continue;
     }
     if (!current()) return;
-    if (result.proposalOperationId !== operationId || result.draftVersion !== sourceVersion || result.revision !== 0n || result.templateVersion !== '4') return;
-    if (result.status === 'failed') return;
+    if (result.proposalOperationId !== operationId || result.draftVersion !== sourceVersion || result.revision !== 0n || !matchesPdfTemplate(result.templateVersion)) {
+     throw new Error('Otrzymano PDF innej propozycji.');
+    }
+    if (result.status === 'failed') {
+     failed = true;
+     throw new Error('Generowanie PDF propozycji nie powiodło się.');
+    }
     if (result.status !== 'succeeded' || !result.url) { await pause(); continue; }
     const bytes = await readPdfResponse(await fetch(result.url, {signal:controller.signal, credentials:'omit', cache:'no-store'}));
-    if (current()) proposalPdfCache = {operationId, sourceVersion, templateVersion:result.templateVersion, bytes};
+    if (current()) proposalPdfCache = {operationId, templateVersion:result.templateVersion, bytes};
     return;
    }
-  } catch {
-   // Warming is best effort. Explicit apply/preview still checks the authoritative
-   // draft PDF and offers retry; a prefetch failure must not block the AI proposal.
+  } catch (reason) {
+   if (current()) proposalPdfError = {operationId, message:quoteError(reason), failed};
   }
  }
 
@@ -569,10 +592,10 @@
   await wizardGo(wizardMode?.stage==='review'?'review':'preview');
  }
  $effect(() => {
-  const proposal = operation;
+  const proposal = readyProposal;
   const version = quote?.draftVersion;
   const wizard = wizardMode;
-  if (wizard && proposal?.status === 'succeeded' && proposal.draftVersion === version) untrack(() => {
+  if (wizard && proposal && proposal.draftVersion === version) untrack(() => {
    const key = `${proposal.operationId}:${version}`;
    if (warmedProposalKey !== key) {
     warmedProposalKey = key;
@@ -708,7 +731,7 @@
   <header class="wizard-header">
    <div class="wizard-heading">
     {#if wizardMode.stage!=='import'}<button type="button" class="back-step" aria-label="Wróć do poprzedniego kroku" disabled={busy||saving||transitioning} onclick={()=>wizardMode?.editing?void finishEditing():void wizardGo(wizardStages[Math.max(0,wizardStep(wizardMode!.stage)-1)])}>←</button>{/if}
-    <div><p class="mb-1 text-xs text-text-muted">Krok {wizardStep(wizardMode.stage)+1} z {wizardStages.length}{quote.number?` · ${quote.number}`:''}</p><h1 class="text-2xl font-semibold">{wizardMode.editing?'Edytuj wycenę':wizardLabels[wizardMode.stage]}</h1><p class="mt-2 max-w-2xl text-sm text-text-muted">{wizardMode.editing?'Popraw dane, pozycje i zakres prac. Zmiany zapisują się automatycznie.':wizardMode.stage==='review'?'Sprawdź rozpoznane pozycje, ilości i ceny. W następnym kroku uzupełnisz dane dokumentu.':wizardMode.stage==='details'?'Nadaj wycenie nazwę i wskaż, dla kogo ją przygotowujesz.':wizardMode.stage==='agent'?'Sprawdź propozycję asystenta i zdecyduj, które zmiany zastosować.':wizardMode.stage==='preview'?'Sprawdź szkic i zatwierdź gotowy dokument. Kliknij PDF, aby go powiększyć.':wizardMode.stage==='summary'?'Wycena została zatwierdzona. Pobierz dokument z nadanym numerem.':'Wybierz arkusz XLSX z pozycjami i cenami.'}</p></div>
+    <div><p class="mb-1 text-xs text-text-muted">Krok {wizardStep(wizardMode.stage)+1} z {wizardStages.length}{quote.number?` · ${quote.number}`:''}</p><h1 class="text-2xl font-semibold">{wizardMode.editing?'Edytuj wycenę':wizardLabels[wizardMode.stage]}</h1><p class="mt-2 max-w-2xl text-sm text-text-muted">{wizardMode.editing?'Popraw dane, pozycje i opis rozwiązania. Zmiany zapisują się automatycznie.':wizardMode.stage==='review'?'Sprawdź rozpoznane pozycje, ilości i ceny. W następnym kroku uzupełnisz dane dokumentu.':wizardMode.stage==='details'?'Nadaj wycenie nazwę i wskaż, dla kogo ją przygotowujesz.':wizardMode.stage==='agent'?'Sprawdź opis asystenta i zdecyduj, czy zastosować propozycję.':wizardMode.stage==='preview'?'Sprawdź szkic i zatwierdź gotowy dokument. Kliknij PDF, aby go powiększyć.':wizardMode.stage==='summary'?'Wycena została zatwierdzona. Pobierz dokument z nadanym numerem.':'Wybierz arkusz XLSX z pozycjami i cenami.'}</p></div>
    </div>
    <div class="wizard-header-actions">
     {#if wizardMode.stage==='import'}
@@ -718,9 +741,9 @@
     {:else if wizardMode.stage==='review'}
      <button class={button} disabled={busy||saving} onclick={()=>wizardGo('review',true)}>Edytuj pozycje</button><button class={primary} disabled={busy||saving||!visibleLines.length} onclick={async()=>{if(await applyReviewed())await wizardGo('details');}}>Dalej: dane wyceny</button>
     {:else if wizardMode.stage==='details'}
-     <button class={button} disabled={busy||saving||transitioning} onclick={()=>continueReview(false)}>Kontynuuj bez AI</button><button class={primary} disabled={busy||saving||transitioning} onclick={()=>continueReview(true)}>Tak, przygotuj opisy</button>
+     <button class={button} disabled={busy||saving||transitioning} onclick={()=>continueReview(false)}>Kontynuuj bez AI</button><button class={primary} disabled={busy||saving||transitioning} onclick={()=>continueReview(true)}>Przygotuj opis rozwiązania</button>
     {:else if wizardMode.stage==='agent'}
-     {#if operation?.status==='succeeded'&&operation.operationId!==dismissedProposal}<button class={primary} disabled={busy||saving||dirty||operation.draftVersion!==quote.draftVersion} onclick={applyAgent}>{operation.proposedLineTexts?.length?'Zastosuj propozycję':'Zastosuj zakres'}</button>{/if}
+     {#if readyProposal}<button class={primary} disabled={busy||saving||dirty||readyProposal.draftVersion!==quote.draftVersion} onclick={applyAgent}>Zastosuj propozycję</button>{/if}
      {#if operation && !pending(operation.status) && operation.status!=='succeeded'}<button class={primary} disabled={busy||saving} onclick={startAgent}>Spróbuj ponownie</button>{/if}
      <button class={button} disabled={busy||saving||pending(operation?.status)} onclick={()=>wizardGo('preview')}>Kontynuuj bez zmian</button>
     {:else if wizardMode.stage==='preview'||wizardMode.stage==='summary'}
@@ -743,8 +766,28 @@
 {/snippet}
 {#snippet agentPanel()}
  {#if operation}<QuoteAiActivity {operation} proposal />{/if}
- {#if operation?.status==='succeeded'&&operation.operationId!==dismissedProposal&&draft&&quote}
-  <QuoteAiProposal showActions={wizardMode?.stage!=='agent'||wizardMode.editing} current={draft.scopeSections} proposal={operation.proposedScopeSections} lines={draft.lines} proposedLines={operation.proposedLineTexts??[]} stale={dirty||saving||operation.draftVersion!==quote.draftVersion} onapply={()=>void applyAgent()} ondismiss={()=>dismissedProposal=operation?.operationId??''}/>
+ {#if readyProposal && draft && quote}
+  {@const stale = dirty || saving || readyProposal.draftVersion !== quote.draftVersion}
+  <QuoteAiProposal showActions={wizardMode?.stage!=='agent'||wizardMode.editing} current={draft.scopeSections} proposal={readyProposal.proposedScopeSections} lines={draft.lines} proposedLines={readyProposal.proposedLineTexts??[]} {stale} onapply={()=>void applyAgent()} ondismiss={()=>dismissedProposal=readyProposal?.operationId??''}/>
+  {#if !stale}
+   {#key readyProposal.operationId}
+    <details class="mt-4 rounded-lg border border-border-line p-4">
+     <summary class="cursor-pointer font-medium">Podgląd PDF propozycji</summary>
+     <div class="mt-3">
+      {#if proposalPdfCache?.operationId === readyProposal.operationId}
+       <QuotePdfPreview bytes={proposalPdfCache.bytes}/>
+      {:else if proposalPdfError?.operationId === readyProposal.operationId}
+       <p role="alert">{proposalPdfError.message}</p>
+       <button type="button" class={button} onclick={() => {
+        if (readyProposal) void warmProposalPdf(readyProposal.operationId, readyProposal.draftVersion, proposalPdfError?.failed);
+       }}>Ponów podgląd PDF</button>
+      {:else}
+       <p role="status">Przygotowuję PDF propozycji…</p>
+      {/if}
+     </div>
+    </details>
+   {/key}
+  {/if}
  {/if}
  <QuoteAgentChat {messages} active={pending(operation?.status)} partialText={operation?.partialText} onsend={sendAgent} oncancel={()=>void cancelAgent()}/>
 {/snippet}
@@ -772,7 +815,7 @@
      <fieldset class={panel} disabled={busy||saving}><legend class="px-2 font-semibold">Pozycje wyceny</legend>
      {#if reviewImport}<QuoteLines bind:lines={reviewed} bind:sourceRows onchange={reviewedChanged} />{:else}<QuoteLines bind:lines={draft.lines} net={draft.priceMode===QuotePriceMode.NET} onchange={changed}/>{/if}
      <p class="flex justify-between gap-3 border-t border-border-line pt-4 font-semibold"><span>Łączna wartość</span><span>{formatQuoteTotal(visibleLines)}</span></p></fieldset>
-     <fieldset class={panel} disabled={busy||saving}><legend class="px-2 font-semibold">Zakres prac</legend><QuoteScopeEditor bind:sections={draft.scopeSections} onchange={changed}/></fieldset>
+     <fieldset class={panel} disabled={busy||saving}><legend class="px-2 font-semibold">Opis rozwiązania i zakres prac</legend><QuoteScopeEditor bind:sections={draft.scopeSections} onchange={changed}/></fieldset>
     </div>
     <aside class="{panel} wizard-chat" class:tab-hidden={chatTab!=='agent'}>{@render agentPanel()}</aside>
    </div>
@@ -784,7 +827,7 @@
    </section>
   {:else if wizardMode.stage==='details'}
    <section class="{panel} document-details"><h2 class="font-semibold">Dane dokumentu</h2><p class="text-sm text-text-muted">Wszystkie trzy pola są wymagane. Nazwa, klient i data pojawią się na dokumencie.</p>{@render editableData()}
-    <div class="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm"><h2 class="font-semibold">Opisy z pomocą AI</h2><p class="mt-1 text-text-muted">Asystent wyszuka informacje o urządzeniach i zaproponuje opisy. Możesz też przejść bezpośrednio do podglądu.</p></div>
+    <div class="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm"><h2 class="font-semibold">Opis całej oferty</h2><p class="mt-1 text-text-muted">Asystent przygotuje opis proponowanego rozwiązania i potwierdzonych prac na podstawie danych wyceny i odczytanych źródeł. Możesz go sprawdzić i poprawić przed zastosowaniem.</p></div>
    </section>
   {:else if wizardMode.stage==='agent'}
    <section class={panel}>{@render agentPanel()}</section>
@@ -860,7 +903,7 @@
 		{@render importPanel()}
 
 		<fieldset id="quote-content" class={panel} disabled={busy || quote.archived}>
-			<legend class="px-1 font-semibold">{draft.documentSchemaVersion === 2 ? 'Zakres' : 'Treść oferty'}</legend>
+			<legend class="px-1 font-semibold">{draft.documentSchemaVersion === 2 ? 'Opis rozwiązania i zakres prac' : 'Treść oferty'}</legend>
 			{#if draft.documentSchemaVersion === 2}
 				<label class="block text-sm">Standard opisu
 					<select class={field} bind:value={draft.descriptionStandard} onchange={changed}>
@@ -877,12 +920,12 @@
 				if (!quote) return;
 				if (operation?.status === 'uncertain' && !window.confirm('Rozpocząć nowe, potencjalnie płatne generowanie?')) return;
 				await getQuoteClient().generateQuoteText({ quoteId: id, expectedVersion: quote.draftVersion, idempotencyKey: key });
-			})}>{pending(operation?.status) ? 'Generowanie opisu…' : 'Generuj opis AI'}</button>
+			})}>{pending(operation?.status) ? 'Generowanie opisu…' : 'Przygotuj opis rozwiązania'}</button>
 			{#if operation}<QuoteAiActivity {operation} proposal={draft.documentSchemaVersion === 2} />{/if}
-			{#if draft.documentSchemaVersion === 2 && operation?.status === 'succeeded' && operation.operationId !== dismissedProposal}
-				<QuoteAiProposal current={draft.scopeSections} proposal={operation.proposedScopeSections} stale={dirty || saving || operation.draftVersion !== quote.draftVersion} ondismiss={() => dismissedProposal = operation?.operationId || ''} onapply={() => act('apply-text', async (key) => {
+			{#if draft.documentSchemaVersion === 2 && readyProposal}
+				<QuoteAiProposal current={draft.scopeSections} proposal={readyProposal.proposedScopeSections} lines={draft.lines} proposedLines={readyProposal.proposedLineTexts} stale={dirty || saving || readyProposal.draftVersion !== quote.draftVersion} ondismiss={() => dismissedProposal = readyProposal?.operationId || ''} onapply={() => act('apply-text', async (key) => {
 					if (!quote || !operation || dirty || operation.draftVersion !== quote.draftVersion) return;
-					const result = await getQuoteClient().applyQuoteText({quoteId:id, operationId:operation.operationId, expectedVersion:quote.draftVersion, idempotencyKey:key});
+					const result = await getQuoteClient().applyQuoteText({quoteId:id, operationId:operation.operationId, expectedVersion:quote.draftVersion, idempotencyKey:key, applyLineTexts: Boolean(operation.proposedLineTexts?.length)});
 					dismissedProposal = operation.operationId;
 					if (result.quote) adopt(result.quote);
 				}, false)} />

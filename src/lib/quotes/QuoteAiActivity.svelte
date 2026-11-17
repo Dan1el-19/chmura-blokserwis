@@ -6,6 +6,7 @@
 
 	let { operation, proposal = false }: { operation: GetQuoteOperationResponse; proposal?: boolean } = $props();
 	let active = $derived(operation.status === 'queued' || operation.status === 'running');
+	const hasProposal = $derived(Boolean(operation.proposedScopeSections?.length || operation.proposedLineTexts?.length));
 	let sections = $derived(partialDescription(operation.partialJson));
 	let events = $derived(operation.events ?? []);
 	let sources = $derived(researchSources([...operation.searches, { sources: events.filter(event => event.url).map(event => ({ title:event.title, url:event.url })) }]));
@@ -16,7 +17,7 @@
 		operation.status === 'uncertain' ? 'Nie udało się potwierdzić wyniku' :
 		operation.status === 'cancelled' ? 'Praca asystenta zatrzymana' :
 		operation.status === 'failed' ? 'Nie udało się wygenerować opisu' :
-		operation.status === 'succeeded' ? (proposal ? 'Propozycja gotowa' : 'Opis jest gotowy') :
+		operation.status === 'succeeded' ? (proposal ? (hasProposal ? 'Propozycja gotowa' : 'Asystent zakończył pracę') : 'Opis jest gotowy') :
 		latest && active ? latest.text :
 		operation.researchStatus === 'searching' ? 'Szukam informacji o urządzeniach' :
 		sections.length ? 'Piszę treść oferty' : 'Przygotowuję treść oferty'
@@ -35,7 +36,7 @@
 				{:else if operation.status === 'uncertain'}Nowa próba może zostać ponownie rozliczona.
 				{:else if operation.status === 'failed'}Możesz spróbować ponownie.{operation.errorCode ? ` Kod błędu: ${operation.errorCode}.` : ''}
 				{:else if active}Możesz w tym czasie edytować szkic. Podgląd poniżej jest tymczasowy.
-				{:else if operation.status === 'succeeded'}{proposal ? 'Sprawdź propozycję i zdecyduj, czy ją zastosować.' : 'Sprawdź wygenerowany tekst w polach poniżej.'}
+				{:else if operation.status === 'succeeded' && (!proposal || hasProposal)}{proposal ? 'Sprawdź propozycję i zdecyduj, czy ją zastosować.' : 'Sprawdź wygenerowany tekst w polach poniżej.'}
 				{/if}
 			</p>
 		</div>

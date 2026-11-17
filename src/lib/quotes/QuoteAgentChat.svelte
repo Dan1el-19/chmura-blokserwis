@@ -13,6 +13,7 @@
  let viewport=$state<HTMLDivElement>();
  let following=$state(true);
  let historyOpen=$state(false);
+ const latest=$derived(messages.at(-1));
  $effect(()=>{
   const count=messages.length; const partial=partialText;
   void count; void partial;
@@ -28,6 +29,9 @@
 <section class="agent-chat space-y-4" aria-label="Rozmowa z asystentem AI">
  <div class="flex items-center justify-between gap-3"><h2 class="font-semibold">Asystent AI</h2>{#if active}<button class={button} type="button" onclick={oncancel}>Zatrzymaj</button>{/if}</div>
  {#if messages.length}
+ {#if !historyOpen && !active && latest?.role==='assistant'}
+ <article class="message"><p class="mb-1 text-xs font-medium text-text-muted">Asystent</p><QuoteMarkdown text={latest.text}/></article>
+ {/if}
  <Collapsible.Root bind:open={historyOpen}>
   <Collapsible.Trigger class="min-h-11 text-sm font-medium text-primary">{historyOpen?'Ukryj rozmowę':'Zobacz rozmowę'} ({messages.length})</Collapsible.Trigger>
   <Collapsible.Content>
@@ -42,7 +46,7 @@
  {/if}
  <form onsubmit={(event)=>{event.preventDefault();void send();}} class="space-y-2">
   <label class="block text-sm font-medium" for="quote-agent-input">Co chcesz zmienić?</label>
-  <textarea id="quote-agent-input" class={field} rows="3" maxlength="4000" placeholder="Np. skróć opisy i użyj prostszego języka" bind:value={input} disabled={sending}></textarea>
+  <textarea id="quote-agent-input" class={field} rows="3" maxlength="4000" placeholder="Np. skróć opis lub doprecyzuj zakres prac" bind:value={input} disabled={sending}></textarea>
   <div class="flex flex-wrap items-center justify-between gap-2"><p class="text-xs text-text-muted">Asystent zaproponuje zmiany do sprawdzenia.</p><button class={primary} type="submit" disabled={active||sending||!input.trim()} aria-label="Wyślij wiadomość">{sending?'Wysyłanie…':'Wyślij'}</button></div>
  </form>
 </section>

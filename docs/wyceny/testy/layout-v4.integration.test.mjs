@@ -119,3 +119,73 @@ test('long client identifiers wrap without clipping', async () => {
   assert.equal(result.layout.status,'ready'); assert.equal(result.client,data.client); assert.equal(result.overflow,false);
  } finally { await page.close(); }
 });
+
+test('v5 prints the solution under the total, without legacy line descriptions', async () => {
+  const data = fixture(4);
+  data.solutionDescription = true;
+  data.sections = [{heading:'Kontrola wejścia', body:'Przycisk pozwala otworzyć drzwi od wewnątrz.'}];
+  const page = await render(data);
+  try {
+    assert.equal(await page.locator('.sheet').count(), 1);
+    assert.equal(await page.locator('.sheet .item small').count(), 0);
+    assert.equal(await page.locator('.sheet .scope-heading h2').textContent(), 'Opis rozwiązania i zakres prac');
+    assert.equal(await page.locator('.scopebox').evaluate(box => Boolean(box.previousElementSibling?.previousElementSibling?.querySelector('.sumline'))), true);
+    const [text] = await printedPages(page, 'short');
+    assert.match(text, /ŁĄCZNA WARTOŚĆ BRUTTO[\s\S]*Opis rozwiązania i zakres prac[\s\S]*Kontrola wejścia/u);
+    assert.doesNotMatch(text, /Opis pozycji/u);
+  } finally { await page.close(); }
+});
+
+test('v5 moves a complete short section when there is no space after the total', async () => {
+  const data = fixture(43);
+  data.solutionDescription = true;
+  data.sections = [{heading:'Działanie systemu', body:'Pierwsze zdanie.\n'.repeat(10) + 'Zamknięcie opisu.'}];
+  const page = await render(data);
+  try {
+    const pages = await printedPages(page, 'next-page');
+    const total = pages.findIndex(text => text.includes('ŁĄCZNA WARTOŚĆ BRUTTO'));
+    const scope = pages.findIndex(text => text.includes('Opis rozwiązania i zakres prac'));
+    assert.ok(total >= 0);
+    assert.equal(scope, total + 1);
+    assert.match(pages[scope], /Działanie systemu[\s\S]*Pierwsze zdanie\.[\s\S]*Zamknięcie opisu\./u);
+    assert.equal(pages.filter(text => text.includes('Działanie systemu')).length, 1);
+  } finally { await page.close(); }
+});
+
+test('v5 prints all rows and every sentence of a long paragraph across pages', async () => {
+  const data = fixture(88);
+  data.solutionDescription = true;
+  const sentence = 'Przewód biegnie w istniejącym korycie teletechnicznym.';
+  data.sections = [{heading:'Trasa przewodu', body:(sentence + ' ').repeat(115).trim()}];
+  const page = await render(data);
+  try {
+    const pages = await printedPages(page, 'long');
+    const total = pages.findIndex(text => text.includes('ŁĄCZNA WARTOŚĆ BRUTTO'));
+    const start = pages.findIndex(text => text.includes('Trasa przewodu'));
+    assert.ok(total >= 1);
+    assert.ok(start === total || start === total + 1);
+    assert.ok(pages[start].includes('Przewód biegnie'));
+    assert.ok(pages.slice(start + 1).some(text => text.includes('Przewód biegnie')));
+    assert.equal(pages.filter(text => text.includes('Trasa przewodu')).length, 1);
+    assert.match(pages[total], /Pozycja 88\b/u);
+    assert.ok(pages.every(text => text.includes('POZYCJA') || text.includes('korycie')));
+    const strip = text => text.replace(/\s+/gu, '');
+    assert.equal(strip(pages.join('')).split(strip(sentence)).length - 1, 115);
+  } finally { await page.close(); }
+});
+
+async function printedPages(page, name) {
+  const { execFileSync } = await import('node:child_process');
+  const { writeFile } = await import('node:fs/promises');
+  const layout = await page.evaluate(() => window.__quoteLayout);
+  assert.equal(layout.status, 'ready', JSON.stringify(layout));
+  const bytes = await page.pdf({printBackground:true, preferCSSPageSize:true});
+  if (process.env.QUOTES_TEST_FIXTURE_OUTPUT) {
+    await writeFile(resolve(process.env.QUOTES_TEST_FIXTURE_OUTPUT, `solution-${name}.pdf`), bytes);
+  }
+  const python = process.env.QUOTES_TEST_PYTHON || 'python3';
+  const result = execFileSync(python, ['-c', 'import io,json,sys; from pypdf import PdfReader; print(json.dumps([p.extract_text() for p in PdfReader(io.BytesIO(sys.stdin.buffer.read())).pages]))'], {input:bytes, encoding:'utf8'});
+  const pages = JSON.parse(result);
+  assert.equal(pages.length, layout.pageCount, 'printed page count must match the layout plan');
+  return pages;
+}
