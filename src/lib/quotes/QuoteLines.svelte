@@ -73,7 +73,7 @@
 	.line-description summary { cursor: pointer; padding: .25rem 0; font-weight: 500; }
 	.line-description { display: block; margin-top: 0.375rem; font-size: 0.75rem; color: var(--color-text-muted); }
 	.value { align-self: center; font-size: 0.875rem; overflow-wrap: anywhere; }
-	.value .mobile-label { display: inline; margin: 0; }
+	.value .mobile-label { display: inline; margin: 0 0.375rem 0 0; }
 	.remove { text-align: right; }
 	.remove button { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
 	@container (min-width: 520px) {
